@@ -1,0 +1,15 @@
+node_modules
+.output
+.nitro
+.tanstack
+.wrangler
+dist
+dist-ssr
+.git
+.github
+*.log
+.env
+.env.*
+!.env.example
+/tmp
+coverage

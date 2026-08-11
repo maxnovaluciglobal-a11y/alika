@@ -1,0 +1,1 @@
+ALTER TABLE public.clinical_note_reviews ADD COLUMN IF NOT EXISTS note_version integer;

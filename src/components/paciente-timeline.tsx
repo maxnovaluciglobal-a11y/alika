@@ -1,0 +1,65 @@
+import { Link } from "@tanstack/react-router";
+
+import type { Paciente } from "@/lib/clinic-data";
+import { cn } from "@/lib/utils";
+
+export function PacienteTimeline({ paciente, conEncabezado = true }: { paciente: Paciente; conEncabezado?: boolean }) {
+  return (
+    <div className="space-y-6">
+      {conEncabezado && (
+        <div className="flex gap-4">
+          {paciente.foto ? (
+            <img
+              src={paciente.foto}
+              alt={paciente.nombre}
+              width={512}
+              height={512}
+              loading="lazy"
+              className="size-12 rounded-xl object-cover"
+            />
+          ) : (
+            <span className="grid size-12 place-items-center rounded-xl bg-secondary font-display text-sm font-semibold text-muted-foreground">
+              {paciente.nombre
+                .split(" ")
+                .map((n) => n[0])
+                .slice(0, 2)
+                .join("")}
+            </span>
+          )}
+          <div>
+            <Link to="/pacientes/$pacienteId" params={{ pacienteId: paciente.id }} className="text-sm font-semibold hover:underline">
+              {paciente.nombre}
+            </Link>
+            <p className="text-xs text-muted-foreground">
+              ID: {paciente.documento} • {paciente.edad} años
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {paciente.timeline.map((e) => (
+          <div
+            key={e.fecha + e.titulo}
+            className={cn("relative border-l-2 border-hairline pl-6", !e.actual && "opacity-70")}
+          >
+            <span
+              className={cn(
+                "absolute -left-[9px] top-0 size-4 rounded-full border-4 border-card",
+                e.actual ? "bg-brand" : "bg-border",
+              )}
+            />
+            <p className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">{e.fecha}</p>
+            <p className="text-sm font-medium">{e.titulo}</p>
+            {e.detalle && <p className="mt-1 text-xs text-muted-foreground">{e.detalle}</p>}
+            {e.tipo === "imagen" && (
+              <div className="mt-2 grid size-16 place-items-center rounded-md bg-secondary">
+                <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">RX</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
