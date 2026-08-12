@@ -9,39 +9,38 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as PortalRouteImport } from './routes/portal'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PortalIndexRouteImport } from './routes/portal.index'
-import { Route as PortalTratamientosRouteImport } from './routes/portal.tratamientos'
-import { Route as PortalReservarRouteImport } from './routes/portal.reservar'
-import { Route as PortalDocumentosRouteImport } from './routes/portal.documentos'
-import { Route as AuthenticatedSinAccesoRouteImport } from './routes/_authenticated/sin-acceso'
-import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PortalRouteImport } from './routes/portal'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedClinicRouteRouteImport } from './routes/_authenticated/_clinic/route'
-import { Route as AuthenticatedClinicTratamientosRouteImport } from './routes/_authenticated/_clinic/tratamientos'
-import { Route as AuthenticatedClinicSandboxEmailRouteImport } from './routes/_authenticated/_clinic/sandbox-email'
-import { Route as AuthenticatedClinicPruebasEmailRouteImport } from './routes/_authenticated/_clinic/pruebas-email'
-import { Route as AuthenticatedClinicPreferenciasRouteImport } from './routes/_authenticated/_clinic/preferencias'
-import { Route as AuthenticatedClinicPermisosRouteImport } from './routes/_authenticated/_clinic/permisos'
-import { Route as AuthenticatedClinicEquipoRouteImport } from './routes/_authenticated/_clinic/equipo'
-import { Route as AuthenticatedClinicDominioEmailRouteImport } from './routes/_authenticated/_clinic/dominio-email'
-import { Route as AuthenticatedClinicDashboardRouteImport } from './routes/_authenticated/_clinic/dashboard'
-import { Route as AuthenticatedClinicComplianceRouteImport } from './routes/_authenticated/_clinic/compliance'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedSinAccesoRouteImport } from './routes/_authenticated/sin-acceso'
+import { Route as PortalIndexRouteImport } from './routes/portal.index'
+import { Route as PortalDocumentosRouteImport } from './routes/portal.documentos'
+import { Route as PortalReservarRouteImport } from './routes/portal.reservar'
+import { Route as PortalTratamientosRouteImport } from './routes/portal.tratamientos'
 import { Route as AuthenticatedClinicAgendaRouteImport } from './routes/_authenticated/_clinic/agenda'
+import { Route as AuthenticatedClinicComplianceRouteImport } from './routes/_authenticated/_clinic/compliance'
+import { Route as AuthenticatedClinicDashboardRouteImport } from './routes/_authenticated/_clinic/dashboard'
+import { Route as AuthenticatedClinicDominioEmailRouteImport } from './routes/_authenticated/_clinic/dominio-email'
+import { Route as AuthenticatedClinicEquipoRouteImport } from './routes/_authenticated/_clinic/equipo'
+import { Route as AuthenticatedClinicPermisosRouteImport } from './routes/_authenticated/_clinic/permisos'
+import { Route as AuthenticatedClinicPreferenciasRouteImport } from './routes/_authenticated/_clinic/preferencias'
+import { Route as AuthenticatedClinicPruebasEmailRouteImport } from './routes/_authenticated/_clinic/pruebas-email'
+import { Route as AuthenticatedClinicSandboxEmailRouteImport } from './routes/_authenticated/_clinic/sandbox-email'
+import { Route as AuthenticatedClinicTratamientosRouteImport } from './routes/_authenticated/_clinic/tratamientos'
 import { Route as AuthenticatedClinicPacientesIndexRouteImport } from './routes/_authenticated/_clinic/pacientes.index'
 import { Route as AuthenticatedClinicPacientesPacienteIdRouteImport } from './routes/_authenticated/_clinic/pacientes.$pacienteId'
 
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PortalRoute = PortalRouteImport.update({
-  id: '/portal',
-  path: '/portal',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -49,28 +48,34 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const PortalRoute = PortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedClinicRouteRoute =
+  AuthenticatedClinicRouteRouteImport.update({
+    id: '/_clinic',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSinAccesoRoute = AuthenticatedSinAccesoRouteImport.update({
+  id: '/sin-acceso',
+  path: '/sin-acceso',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => PortalRoute,
-} as any)
-const PortalTratamientosRoute = PortalTratamientosRouteImport.update({
-  id: '/tratamientos',
-  path: '/tratamientos',
-  getParentRoute: () => PortalRoute,
-} as any)
-const PortalReservarRoute = PortalReservarRouteImport.update({
-  id: '/reservar',
-  path: '/reservar',
   getParentRoute: () => PortalRoute,
 } as any)
 const PortalDocumentosRoute = PortalDocumentosRouteImport.update({
@@ -78,67 +83,20 @@ const PortalDocumentosRoute = PortalDocumentosRouteImport.update({
   path: '/documentos',
   getParentRoute: () => PortalRoute,
 } as any)
-const AuthenticatedSinAccesoRoute = AuthenticatedSinAccesoRouteImport.update({
-  id: '/sin-acceso',
-  path: '/sin-acceso',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const PortalReservarRoute = PortalReservarRouteImport.update({
+  id: '/reservar',
+  path: '/reservar',
+  getParentRoute: () => PortalRoute,
 } as any)
-const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const PortalTratamientosRoute = PortalTratamientosRouteImport.update({
+  id: '/tratamientos',
+  path: '/tratamientos',
+  getParentRoute: () => PortalRoute,
 } as any)
-const AuthenticatedClinicRouteRoute =
-  AuthenticatedClinicRouteRouteImport.update({
-    id: '/_clinic',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedClinicTratamientosRoute =
-  AuthenticatedClinicTratamientosRouteImport.update({
-    id: '/tratamientos',
-    path: '/tratamientos',
-    getParentRoute: () => AuthenticatedClinicRouteRoute,
-  } as any)
-const AuthenticatedClinicSandboxEmailRoute =
-  AuthenticatedClinicSandboxEmailRouteImport.update({
-    id: '/sandbox-email',
-    path: '/sandbox-email',
-    getParentRoute: () => AuthenticatedClinicRouteRoute,
-  } as any)
-const AuthenticatedClinicPruebasEmailRoute =
-  AuthenticatedClinicPruebasEmailRouteImport.update({
-    id: '/pruebas-email',
-    path: '/pruebas-email',
-    getParentRoute: () => AuthenticatedClinicRouteRoute,
-  } as any)
-const AuthenticatedClinicPreferenciasRoute =
-  AuthenticatedClinicPreferenciasRouteImport.update({
-    id: '/preferencias',
-    path: '/preferencias',
-    getParentRoute: () => AuthenticatedClinicRouteRoute,
-  } as any)
-const AuthenticatedClinicPermisosRoute =
-  AuthenticatedClinicPermisosRouteImport.update({
-    id: '/permisos',
-    path: '/permisos',
-    getParentRoute: () => AuthenticatedClinicRouteRoute,
-  } as any)
-const AuthenticatedClinicEquipoRoute =
-  AuthenticatedClinicEquipoRouteImport.update({
-    id: '/equipo',
-    path: '/equipo',
-    getParentRoute: () => AuthenticatedClinicRouteRoute,
-  } as any)
-const AuthenticatedClinicDominioEmailRoute =
-  AuthenticatedClinicDominioEmailRouteImport.update({
-    id: '/dominio-email',
-    path: '/dominio-email',
-    getParentRoute: () => AuthenticatedClinicRouteRoute,
-  } as any)
-const AuthenticatedClinicDashboardRoute =
-  AuthenticatedClinicDashboardRouteImport.update({
-    id: '/dashboard',
-    path: '/dashboard',
+const AuthenticatedClinicAgendaRoute =
+  AuthenticatedClinicAgendaRouteImport.update({
+    id: '/agenda',
+    path: '/agenda',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
 const AuthenticatedClinicComplianceRoute =
@@ -147,10 +105,52 @@ const AuthenticatedClinicComplianceRoute =
     path: '/compliance',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
-const AuthenticatedClinicAgendaRoute =
-  AuthenticatedClinicAgendaRouteImport.update({
-    id: '/agenda',
-    path: '/agenda',
+const AuthenticatedClinicDashboardRoute =
+  AuthenticatedClinicDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
+const AuthenticatedClinicDominioEmailRoute =
+  AuthenticatedClinicDominioEmailRouteImport.update({
+    id: '/dominio-email',
+    path: '/dominio-email',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
+const AuthenticatedClinicEquipoRoute =
+  AuthenticatedClinicEquipoRouteImport.update({
+    id: '/equipo',
+    path: '/equipo',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
+const AuthenticatedClinicPermisosRoute =
+  AuthenticatedClinicPermisosRouteImport.update({
+    id: '/permisos',
+    path: '/permisos',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
+const AuthenticatedClinicPreferenciasRoute =
+  AuthenticatedClinicPreferenciasRouteImport.update({
+    id: '/preferencias',
+    path: '/preferencias',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
+const AuthenticatedClinicPruebasEmailRoute =
+  AuthenticatedClinicPruebasEmailRouteImport.update({
+    id: '/pruebas-email',
+    path: '/pruebas-email',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
+const AuthenticatedClinicSandboxEmailRoute =
+  AuthenticatedClinicSandboxEmailRouteImport.update({
+    id: '/sandbox-email',
+    path: '/sandbox-email',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
+const AuthenticatedClinicTratamientosRoute =
+  AuthenticatedClinicTratamientosRouteImport.update({
+    id: '/tratamientos',
+    path: '/tratamientos',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
 const AuthenticatedClinicPacientesIndexRoute =
@@ -326,25 +326,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/portal': {
-      id: '/portal'
-      path: '/portal'
-      fullPath: '/portal'
-      preLoaderRoute: typeof PortalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -354,46 +340,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/portal/': {
-      id: '/portal/'
-      path: '/'
-      fullPath: '/portal/'
-      preLoaderRoute: typeof PortalIndexRouteImport
-      parentRoute: typeof PortalRoute
+    '/portal': {
+      id: '/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/portal/tratamientos': {
-      id: '/portal/tratamientos'
-      path: '/tratamientos'
-      fullPath: '/portal/tratamientos'
-      preLoaderRoute: typeof PortalTratamientosRouteImport
-      parentRoute: typeof PortalRoute
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/portal/reservar': {
-      id: '/portal/reservar'
-      path: '/reservar'
-      fullPath: '/portal/reservar'
-      preLoaderRoute: typeof PortalReservarRouteImport
-      parentRoute: typeof PortalRoute
-    }
-    '/portal/documentos': {
-      id: '/portal/documentos'
-      path: '/documentos'
-      fullPath: '/portal/documentos'
-      preLoaderRoute: typeof PortalDocumentosRouteImport
-      parentRoute: typeof PortalRoute
-    }
-    '/_authenticated/sin-acceso': {
-      id: '/_authenticated/sin-acceso'
-      path: '/sin-acceso'
-      fullPath: '/sin-acceso'
-      preLoaderRoute: typeof AuthenticatedSinAccesoRouteImport
+    '/_authenticated/_clinic': {
+      id: '/_authenticated/_clinic'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedClinicRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/onboarding': {
@@ -403,67 +375,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/_clinic': {
-      id: '/_authenticated/_clinic'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedClinicRouteRouteImport
+    '/_authenticated/sin-acceso': {
+      id: '/_authenticated/sin-acceso'
+      path: '/sin-acceso'
+      fullPath: '/sin-acceso'
+      preLoaderRoute: typeof AuthenticatedSinAccesoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/_clinic/tratamientos': {
-      id: '/_authenticated/_clinic/tratamientos'
+    '/portal/': {
+      id: '/portal/'
+      path: '/'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof PortalIndexRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/documentos': {
+      id: '/portal/documentos'
+      path: '/documentos'
+      fullPath: '/portal/documentos'
+      preLoaderRoute: typeof PortalDocumentosRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/reservar': {
+      id: '/portal/reservar'
+      path: '/reservar'
+      fullPath: '/portal/reservar'
+      preLoaderRoute: typeof PortalReservarRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/tratamientos': {
+      id: '/portal/tratamientos'
       path: '/tratamientos'
-      fullPath: '/tratamientos'
-      preLoaderRoute: typeof AuthenticatedClinicTratamientosRouteImport
-      parentRoute: typeof AuthenticatedClinicRouteRoute
+      fullPath: '/portal/tratamientos'
+      preLoaderRoute: typeof PortalTratamientosRouteImport
+      parentRoute: typeof PortalRoute
     }
-    '/_authenticated/_clinic/sandbox-email': {
-      id: '/_authenticated/_clinic/sandbox-email'
-      path: '/sandbox-email'
-      fullPath: '/sandbox-email'
-      preLoaderRoute: typeof AuthenticatedClinicSandboxEmailRouteImport
-      parentRoute: typeof AuthenticatedClinicRouteRoute
-    }
-    '/_authenticated/_clinic/pruebas-email': {
-      id: '/_authenticated/_clinic/pruebas-email'
-      path: '/pruebas-email'
-      fullPath: '/pruebas-email'
-      preLoaderRoute: typeof AuthenticatedClinicPruebasEmailRouteImport
-      parentRoute: typeof AuthenticatedClinicRouteRoute
-    }
-    '/_authenticated/_clinic/preferencias': {
-      id: '/_authenticated/_clinic/preferencias'
-      path: '/preferencias'
-      fullPath: '/preferencias'
-      preLoaderRoute: typeof AuthenticatedClinicPreferenciasRouteImport
-      parentRoute: typeof AuthenticatedClinicRouteRoute
-    }
-    '/_authenticated/_clinic/permisos': {
-      id: '/_authenticated/_clinic/permisos'
-      path: '/permisos'
-      fullPath: '/permisos'
-      preLoaderRoute: typeof AuthenticatedClinicPermisosRouteImport
-      parentRoute: typeof AuthenticatedClinicRouteRoute
-    }
-    '/_authenticated/_clinic/equipo': {
-      id: '/_authenticated/_clinic/equipo'
-      path: '/equipo'
-      fullPath: '/equipo'
-      preLoaderRoute: typeof AuthenticatedClinicEquipoRouteImport
-      parentRoute: typeof AuthenticatedClinicRouteRoute
-    }
-    '/_authenticated/_clinic/dominio-email': {
-      id: '/_authenticated/_clinic/dominio-email'
-      path: '/dominio-email'
-      fullPath: '/dominio-email'
-      preLoaderRoute: typeof AuthenticatedClinicDominioEmailRouteImport
-      parentRoute: typeof AuthenticatedClinicRouteRoute
-    }
-    '/_authenticated/_clinic/dashboard': {
-      id: '/_authenticated/_clinic/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedClinicDashboardRouteImport
+    '/_authenticated/_clinic/agenda': {
+      id: '/_authenticated/_clinic/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AuthenticatedClinicAgendaRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
     '/_authenticated/_clinic/compliance': {
@@ -473,11 +424,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicComplianceRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
-    '/_authenticated/_clinic/agenda': {
-      id: '/_authenticated/_clinic/agenda'
-      path: '/agenda'
-      fullPath: '/agenda'
-      preLoaderRoute: typeof AuthenticatedClinicAgendaRouteImport
+    '/_authenticated/_clinic/dashboard': {
+      id: '/_authenticated/_clinic/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedClinicDashboardRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
+    '/_authenticated/_clinic/dominio-email': {
+      id: '/_authenticated/_clinic/dominio-email'
+      path: '/dominio-email'
+      fullPath: '/dominio-email'
+      preLoaderRoute: typeof AuthenticatedClinicDominioEmailRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
+    '/_authenticated/_clinic/equipo': {
+      id: '/_authenticated/_clinic/equipo'
+      path: '/equipo'
+      fullPath: '/equipo'
+      preLoaderRoute: typeof AuthenticatedClinicEquipoRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
+    '/_authenticated/_clinic/permisos': {
+      id: '/_authenticated/_clinic/permisos'
+      path: '/permisos'
+      fullPath: '/permisos'
+      preLoaderRoute: typeof AuthenticatedClinicPermisosRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
+    '/_authenticated/_clinic/preferencias': {
+      id: '/_authenticated/_clinic/preferencias'
+      path: '/preferencias'
+      fullPath: '/preferencias'
+      preLoaderRoute: typeof AuthenticatedClinicPreferenciasRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
+    '/_authenticated/_clinic/pruebas-email': {
+      id: '/_authenticated/_clinic/pruebas-email'
+      path: '/pruebas-email'
+      fullPath: '/pruebas-email'
+      preLoaderRoute: typeof AuthenticatedClinicPruebasEmailRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
+    '/_authenticated/_clinic/sandbox-email': {
+      id: '/_authenticated/_clinic/sandbox-email'
+      path: '/sandbox-email'
+      fullPath: '/sandbox-email'
+      preLoaderRoute: typeof AuthenticatedClinicSandboxEmailRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
+    '/_authenticated/_clinic/tratamientos': {
+      id: '/_authenticated/_clinic/tratamientos'
+      path: '/tratamientos'
+      fullPath: '/tratamientos'
+      preLoaderRoute: typeof AuthenticatedClinicTratamientosRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
     '/_authenticated/_clinic/pacientes/': {
@@ -577,3 +577,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
