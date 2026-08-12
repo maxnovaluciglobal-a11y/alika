@@ -5,6 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/route-guards";
 import { PacienteTimeline } from "@/components/paciente-timeline";
 import { NotasClinicas } from "@/components/notas-clinicas";
+import { Odontogram } from "@/components/odontogram";
 import { hasPermission } from "@/lib/access";
 import { formatoMoneda, type Paciente } from "@/lib/clinic-data";
 import { getPatient } from "@/lib/patients.functions";
@@ -203,14 +204,24 @@ function PacienteDetalle() {
             </div>
 
             {puedeVerClinico ? (
-              <NotasClinicas
-                paciente={paciente}
-                clinicId={access.clinic?.id ?? null}
-                clinicaNombre={access.clinic?.name ?? "Oralia"}
-                puedeEditar={hasPermission(access.role, "clinical:write")}
-                userId={access.userId}
-                rol={access.role}
-              />
+              <>
+                <NotasClinicas
+                  paciente={paciente}
+                  clinicId={access.clinic?.id ?? null}
+                  clinicaNombre={access.clinic?.name ?? "Oralia"}
+                  puedeEditar={hasPermission(access.role, "clinical:write")}
+                  userId={access.userId}
+                  rol={access.role}
+                />
+
+                {access.clinic?.id && (
+                  <Odontogram
+                    clinicId={access.clinic.id}
+                    patientId={paciente.id}
+                    puedeEditar={hasPermission(access.role, "clinical:write")}
+                  />
+                )}
+              </>
             ) : (
               <div className="card-clinical flex items-center gap-3 p-6 text-sm text-muted-foreground">
                 <ShieldAlert className="size-4 shrink-0" />
@@ -233,7 +244,7 @@ function PacienteDetalle() {
             </div>
 
             <div className="card-clinical divide-y divide-hairline">
-              {["Odontograma", "Radiografías", "Consentimientos", "Presupuestos"].map((a) => (
+              {["Radiografías", "Consentimientos", "Presupuestos"].map((a) => (
                 <button
                   key={a}
                   disabled

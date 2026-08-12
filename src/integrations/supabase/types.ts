@@ -995,6 +995,73 @@ export type Database = {
           },
         ];
       };
+      odontogram_marks: {
+        Row: {
+          clinic_id: string;
+          condition: Database["public"]["Enums"]["tooth_condition"];
+          id: string;
+          material: string | null;
+          notes: string | null;
+          patient_id: string;
+          recorded_at: string;
+          recorded_by: string;
+          superseded_at: string | null;
+          superseded_by: string | null;
+          surface: Database["public"]["Enums"]["tooth_surface"];
+          tooth_number: number;
+        };
+        Insert: {
+          clinic_id: string;
+          condition: Database["public"]["Enums"]["tooth_condition"];
+          id?: string;
+          material?: string | null;
+          notes?: string | null;
+          patient_id: string;
+          recorded_at?: string;
+          recorded_by?: string;
+          superseded_at?: string | null;
+          superseded_by?: string | null;
+          surface: Database["public"]["Enums"]["tooth_surface"];
+          tooth_number: number;
+        };
+        Update: {
+          clinic_id?: string;
+          condition?: Database["public"]["Enums"]["tooth_condition"];
+          id?: string;
+          material?: string | null;
+          notes?: string | null;
+          patient_id?: string;
+          recorded_at?: string;
+          recorded_by?: string;
+          superseded_at?: string | null;
+          superseded_by?: string | null;
+          surface?: Database["public"]["Enums"]["tooth_surface"];
+          tooth_number?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "odontogram_marks_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "odontogram_marks_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "odontogram_marks_superseded_by_fkey";
+            columns: ["superseded_by"];
+            isOneToOne: false;
+            referencedRelation: "odontogram_marks";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1025,6 +1092,18 @@ export type Database = {
       patient_status: "active" | "new" | "inactive";
       appointment_status:
         "tentativa" | "confirmada" | "en-sala" | "ausente" | "finalizada" | "cancelada";
+      tooth_surface: "mesial" | "distal" | "oclusal" | "vestibular" | "lingual" | "whole";
+      tooth_condition:
+        | "sano"
+        | "caries"
+        | "obturacion"
+        | "endodoncia"
+        | "corona"
+        | "implante"
+        | "ausente"
+        | "sellante"
+        | "fractura"
+        | "protesis";
     };
     CompositeTypes: {
       [_ in never]: never;
