@@ -25,9 +25,11 @@ import {
   etiquetaEstado,
   formatoFechaLarga,
   HORA_INICIO,
-  HOY,
+  hoyISO,
   type EstadoCita,
 } from "@/lib/clinic-data";
+
+const HOY = hoyISO();
 import { listBranches, listProfessionals } from "@/lib/clinic-catalog.functions";
 import { listPatients } from "@/lib/patients.functions";
 import { createAppointment, listAppointments } from "@/lib/appointments.functions";

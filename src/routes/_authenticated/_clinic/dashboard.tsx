@@ -7,7 +7,7 @@ import { CalendarClock, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/route-guards";
 import { AgendaGrid } from "@/components/agenda-grid";
-import { HOY, formatoFecha } from "@/lib/clinic-data";
+import { formatoFecha, hoyISO } from "@/lib/clinic-data";
 import { listProfessionals } from "@/lib/clinic-catalog.functions";
 import { listPatients } from "@/lib/patients.functions";
 import { listAppointments } from "@/lib/appointments.functions";
@@ -61,13 +61,15 @@ function Dashboard() {
     queryFn: () => fetchProfessionals({ data: { clinicId: clinicId! } }),
   });
 
-  const citasHoy = useMemo(() => citas.filter((c) => c.fecha === HOY), [citas]);
+  const hoy = hoyISO();
+
+  const citasHoy = useMemo(() => citas.filter((c) => c.fecha === hoy), [citas, hoy]);
   const en7Dias = useMemo(() => {
-    const limite = new Date(HOY);
+    const limite = new Date(hoy);
     limite.setDate(limite.getDate() + 7);
     const limiteISO = limite.toISOString().slice(0, 10);
-    return citas.filter((c) => c.fecha >= HOY && c.fecha <= limiteISO);
-  }, [citas]);
+    return citas.filter((c) => c.fecha >= hoy && c.fecha <= limiteISO);
+  }, [citas, hoy]);
   const pacientesNuevos = useMemo(
     () => pacientes.filter((p) => p.estado === "nuevo").length,
     [pacientes],
@@ -76,15 +78,15 @@ function Dashboard() {
   const proximasCitas = useMemo(
     () =>
       [...citas]
-        .filter((c) => c.fecha >= HOY)
+        .filter((c) => c.fecha >= hoy)
         .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.inicio - b.inicio)
         .slice(0, 6),
-    [citas],
+    [citas, hoy],
   );
 
   const kpis = [
     { label: "Pacientes totales", valor: pacientes.length, nota: "Clínica completa" },
-    { label: "Citas hoy", valor: citasHoy.length, nota: formatoFecha(HOY) },
+    { label: "Citas hoy", valor: citasHoy.length, nota: formatoFecha(hoy) },
     { label: "Próximos 7 días", valor: en7Dias.length, nota: "Citas agendadas" },
     { label: "Pacientes nuevos", valor: pacientesNuevos, nota: "Estado: nuevo" },
   ];
@@ -110,7 +112,7 @@ function Dashboard() {
               <h2 className="font-display text-xl font-semibold">Agenda de hoy</h2>
               <Link
                 to="/agenda"
-                search={{ q: "", fecha: HOY, sucursal: "", profesional: "", estado: "", page: 1 }}
+                search={{ q: "", fecha: hoy, sucursal: "", profesional: "", estado: "", page: 1 }}
                 className="rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium transition-colors hover:bg-secondary"
               >
                 Abrir agenda
@@ -139,7 +141,7 @@ function Dashboard() {
                   <span
                     className={cn(
                       "grid size-9 shrink-0 place-items-center rounded-lg",
-                      c.fecha === HOY
+                      c.fecha === hoy
                         ? "bg-brand-soft text-brand"
                         : "bg-secondary text-muted-foreground",
                     )}
@@ -151,7 +153,7 @@ function Dashboard() {
                     <p className="truncate text-xs text-muted-foreground">{c.tratamiento}</p>
                   </div>
                   <span className="shrink-0 text-right text-xs text-muted-foreground">
-                    <p>{c.fecha === HOY ? "Hoy" : formatoFecha(c.fecha)}</p>
+                    <p>{c.fecha === hoy ? "Hoy" : formatoFecha(c.fecha)}</p>
                     <p>{horaDeCita(c.inicio)}</p>
                   </span>
                 </Link>

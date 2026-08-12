@@ -10,7 +10,9 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { HOY } from "@/lib/clinic-data";
+import { hoyISO } from "@/lib/clinic-data";
+
+const HOY = hoyISO();
 import { busquedaGlobal, type GrupoResultado } from "@/lib/search";
 
 const iconos: Record<GrupoResultado, typeof User> = {
