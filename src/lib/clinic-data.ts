@@ -59,8 +59,10 @@ export interface Paciente {
   /** ISO yyyy-mm-dd de la última visita, para filtros por rango */
   ultimaVisitaISO: string;
   proximoControl: string | null;
-  saldo: number;
-  riesgoAusencia: number;
+  /** null = sin facturación registrada todavía (módulo de finanzas, fase 3) */
+  saldo: number | null;
+  /** null = aún no calculado (IA de predicción de ausencias, fase 4) */
+  riesgoAusencia: number | null;
   etiquetas: string[];
   foto?: string;
   resumenIA: string;

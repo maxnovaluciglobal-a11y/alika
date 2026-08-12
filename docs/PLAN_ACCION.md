@@ -67,17 +67,46 @@ depende de que exista un paciente y una cita de verdad.
 - [x] `.gitignore` con `.env`
 - [x] `launch.json` local para preview
 
-### Fase 1 — Pacientes y Agenda reales (la que desbloquea todo)
-Reemplazar `clinic-data.ts` por tablas reales `patients` y `appointments`,
-siguiendo el patrón ya probado de `clinical_notes` (RLS por `clinic_id`,
-SECURITY DEFINER helpers, server functions con `useServerFn`, migración SQL
-versionada). Diseño técnico detallado encargado a un agente en paralelo — ver
-sección 5. Alcance mínimo: tabla `patients`, tabla `appointments`, server
-functions para CRUD + listado por rango de fecha, rewire de `agenda.tsx`,
-`pacientes.index.tsx`, `pacientes.$pacienteId.tsx` y los KPIs de `dashboard.tsx`
-uno por uno (no todo junto, para no romper la demo mientras se migra). Incluye
-seed de datos de ejemplo para no perder la experiencia de "app con contenido"
-que hoy da el fixture.
+### Fase 1 — Pacientes y Agenda reales ✅ código completo, ⚠️ pendiente de aplicar
+
+**Hecho (2026-08-11):**
+- Migración `supabase/migrations/20260811120000_...sql`: tablas `patients`,
+  `appointments`, `waitlist_entries` + enums `patient_status`/`appointment_status`
+  + columna `professionals.default_operatory_id`. RLS calcada del patrón
+  existente (mismo set de roles que ya definía `patients:manage`/`agenda:manage`
+  en `access.ts`).
+- Server functions nuevas: `patients.functions.ts`, `appointments.functions.ts`,
+  `waitlist.functions.ts`, `clinic-catalog.functions.ts` (branches/professionals,
+  la tabla `professionals` ya existía pero nunca se había leído desde código).
+- 4 rutas reescritas para leer datos reales: `dashboard.tsx`, `agenda.tsx`,
+  `pacientes.index.tsx`, `pacientes.$pacienteId.tsx`. Con alta de paciente y de
+  cita (diálogos simples, sin drag-and-drop todavía — tampoco lo tenía la demo).
+- `saldo`/`riesgoAusencia`/`resumenIA` quedaron nullable y explícitamente
+  "Sin datos" en vez de fabricar un 0% o un texto de IA falso.
+- Guard de `/pacientes/:id` cambiado de `clinical:view` a `patients:view`
+  (bug real que encontramos: bloqueaba a recepción de ver hasta el teléfono
+  del paciente); las notas clínicas siguen gateadas por `clinical:view` aparte.
+- `clinical_notes.patient_ref` no necesitó migración — ya era `text` libre.
+- Typecheck (`tsc --noEmit`) y lint limpios en los 8 archivos nuevos/reescritos.
+  `types.ts` (generado por Supabase) parcheado a mano con las tablas nuevas
+  hasta que se pueda correr `supabase gen types` de verdad.
+
+**⚠️ Bloqueador real — falta aplicar la migración:**
+No tenemos `SUPABASE_DB_URL` ni `SUPABASE_SERVICE_ROLE_KEY` en este entorno, así
+que la migración SQL está escrita pero **no aplicada** contra el Supabase que
+hostea Lovable. Verificado en local: build, typecheck y landing/auth funcionan
+contra el proyecto real; una cuenta de prueba se creó de punta a punta. Pero
+`/dashboard`, `/agenda`, `/pacientes` van a fallar en runtime hasta que la
+migración se aplique, porque las tablas no existen todavía. Dos formas de
+desbloquear:
+1. Pegar el contenido del `.sql` en el SQL Editor de Supabase (cero credenciales
+   nuevas, la vía más simple).
+2. Agregar `SUPABASE_DB_URL` al `.env` local (no compartido en el chat) para
+   correr la migración por `psql`/CLI.
+
+**Deliberadamente fuera de esta fase:** odontograma/periodontograma,
+presupuestos, `treatment_plans` reales, inventario — igual que decía el punto 4
+de la sección "Qué NO hacer todavía".
 
 **Por qué primero:** notas clínicas ya cuelga de un `Paciente` — hoy ese
 paciente es fake. Odontograma, presupuestos, IA de ausencias, timeline

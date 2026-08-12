@@ -176,7 +176,7 @@ function TratamientosPage() {
                     {etiquetaEstadoTratamiento[t.estado]}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {p && p.saldo > 0 ? formatoMoneda(p.saldo) : "Sin saldo"}
+                    {p?.saldo ? formatoMoneda(p.saldo) : "Sin saldo"}
                   </span>
                 </div>
               );

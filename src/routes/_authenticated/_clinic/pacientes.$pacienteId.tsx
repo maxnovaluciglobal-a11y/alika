@@ -1,17 +1,22 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Mail, Phone, Sparkles } from "lucide-react";
+import { ArrowLeft, Mail, Phone, ShieldAlert, Sparkles } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/route-guards";
 import { PacienteTimeline } from "@/components/paciente-timeline";
 import { NotasClinicas } from "@/components/notas-clinicas";
 import { hasPermission } from "@/lib/access";
-import { formatoMoneda, getPaciente, type Paciente } from "@/lib/clinic-data";
+import { formatoMoneda, type Paciente } from "@/lib/clinic-data";
+import { getPatient } from "@/lib/patients.functions";
 
 export const Route = createFileRoute("/_authenticated/_clinic/pacientes/$pacienteId")({
-  beforeLoad: requirePermission("clinical:view"),
-  loader: ({ params }): { paciente: Paciente } => {
-    const paciente = getPaciente(params.pacienteId);
+  // Datos demográficos (nombre, teléfono, próximo control) son de agenda/recepción,
+  // no solo del equipo clínico — separado de "clinical:view" que gatea las notas.
+  beforeLoad: requirePermission("patients:view"),
+  loader: async ({ params, context }): Promise<{ paciente: Paciente }> => {
+    const clinicId = context.access.clinic?.id;
+    if (!clinicId) throw notFound();
+    const paciente = await getPatient({ data: { clinicId, patientId: params.pacienteId } });
     if (!paciente) throw notFound();
     return { paciente };
   },
@@ -22,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/pacientes/$pacient
       };
     }
     const titulo = `${loaderData.paciente.nombre} · Ficha clínica | Oralia`;
-    const desc = `Ficha clínica de ${loaderData.paciente.nombre}: timeline, resumen de IA, saldo y próximos controles.`;
+    const desc = `Ficha clínica de ${loaderData.paciente.nombre}: timeline, saldo y próximos controles.`;
     return {
       meta: [
         { title: titulo },
@@ -44,8 +49,19 @@ function PacienteNoEncontrado() {
     <AppShell title="Paciente" access={access}>
       <p className="text-sm text-muted-foreground">
         No encontramos esa ficha.{" "}
-        <Link to="/pacientes"
-          search={{ q: "", sucursal: "", profesional: "", estado: "", desde: "", hasta: "", page: 1 }} className="text-brand hover:underline">
+        <Link
+          to="/pacientes"
+          search={{
+            q: "",
+            sucursal: "",
+            profesional: "",
+            estado: "",
+            desde: "",
+            hasta: "",
+            page: 1,
+          }}
+          className="text-brand hover:underline"
+        >
           Volver al listado
         </Link>
       </p>
@@ -59,8 +75,19 @@ function PacienteError() {
     <AppShell title="Paciente" access={access}>
       <p className="text-sm text-muted-foreground">
         No pudimos cargar la ficha.{" "}
-        <Link to="/pacientes"
-          search={{ q: "", sucursal: "", profesional: "", estado: "", desde: "", hasta: "", page: 1 }} className="text-brand hover:underline">
+        <Link
+          to="/pacientes"
+          search={{
+            q: "",
+            sucursal: "",
+            profesional: "",
+            estado: "",
+            desde: "",
+            hasta: "",
+            page: 1,
+          }}
+          className="text-brand hover:underline"
+        >
           Volver al listado
         </Link>
       </p>
@@ -71,12 +98,24 @@ function PacienteError() {
 function PacienteDetalle() {
   const { access } = Route.useRouteContext();
   const { paciente } = Route.useLoaderData() as { paciente: Paciente };
+  const puedeVerClinico = hasPermission(access.role, "clinical:view");
 
   return (
     <AppShell title="Ficha del paciente" access={access}>
       <div className="space-y-6">
-        <Link to="/pacientes"
-          search={{ q: "", sucursal: "", profesional: "", estado: "", desde: "", hasta: "", page: 1 }} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+        <Link
+          to="/pacientes"
+          search={{
+            q: "",
+            sucursal: "",
+            profesional: "",
+            estado: "",
+            desde: "",
+            hasta: "",
+            page: 1,
+          }}
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="size-3.5" /> Pacientes
         </Link>
 
@@ -105,11 +144,14 @@ function PacienteDetalle() {
                   <div>
                     <h2 className="font-display text-2xl font-semibold">{paciente.nombre}</h2>
                     <p className="text-xs text-muted-foreground">
-                      ID: {paciente.documento} • {paciente.edad} años
+                      ID: {paciente.documento || "Sin documento"} • {paciente.edad} años
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {paciente.etiquetas.map((t) => (
-                        <span key={t} className="rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        <span
+                          key={t}
+                          className="rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                        >
                           {t}
                         </span>
                       ))}
@@ -118,40 +160,63 @@ function PacienteDetalle() {
                 </div>
                 <div className="space-y-1 text-xs text-muted-foreground">
                   <p className="flex items-center gap-2">
-                    <Phone className="size-3.5" /> {paciente.telefono}
+                    <Phone className="size-3.5" /> {paciente.telefono || "Sin teléfono"}
                   </p>
                   <p className="flex items-center gap-2">
-                    <Mail className="size-3.5" /> {paciente.email}
+                    <Mail className="size-3.5" /> {paciente.email || "Sin email"}
                   </p>
                 </div>
               </div>
 
               <div className="mt-6 grid gap-4 border-t border-hairline pt-5 sm:grid-cols-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Saldo</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Saldo
+                  </p>
                   <p className="font-display text-xl font-semibold">
-                    {paciente.saldo > 0 ? formatoMoneda(paciente.saldo) : "Al día"}
+                    {paciente.saldo == null
+                      ? "Sin datos"
+                      : paciente.saldo > 0
+                        ? formatoMoneda(paciente.saldo)
+                        : "Al día"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Próximo control</p>
-                  <p className="font-display text-xl font-semibold">{paciente.proximoControl ?? "Sin agendar"}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Próximo control
+                  </p>
+                  <p className="font-display text-xl font-semibold">
+                    {paciente.proximoControl ?? "Sin agendar"}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Riesgo de ausencia</p>
-                  <p className="font-display text-xl font-semibold">{paciente.riesgoAusencia}%</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Riesgo de ausencia
+                  </p>
+                  <p className="font-display text-xl font-semibold">
+                    {paciente.riesgoAusencia == null
+                      ? "Sin calcular"
+                      : `${paciente.riesgoAusencia}%`}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <NotasClinicas
-              paciente={paciente}
-              clinicId={access.clinic?.id ?? null}
-              clinicaNombre={access.clinic?.name ?? "Oralia"}
-              puedeEditar={hasPermission(access.role, "clinical:write")}
-              userId={access.userId}
-              rol={access.role}
-            />
+            {puedeVerClinico ? (
+              <NotasClinicas
+                paciente={paciente}
+                clinicId={access.clinic?.id ?? null}
+                clinicaNombre={access.clinic?.name ?? "Oralia"}
+                puedeEditar={hasPermission(access.role, "clinical:write")}
+                userId={access.userId}
+                rol={access.role}
+              />
+            ) : (
+              <div className="card-clinical flex items-center gap-3 p-6 text-sm text-muted-foreground">
+                <ShieldAlert className="size-4 shrink-0" />
+                Tu rol no tiene acceso a la historia clínica de este paciente.
+              </div>
+            )}
 
             <div className="card-clinical p-6">
               <h3 className="mb-5 font-display text-lg font-semibold">Timeline clínica</h3>
@@ -168,13 +233,15 @@ function PacienteDetalle() {
             </div>
 
             <div className="card-clinical divide-y divide-hairline">
-              {["Odontograma", "Radiografías (4)", "Consentimientos", "Presupuestos"].map((a) => (
+              {["Odontograma", "Radiografías", "Consentimientos", "Presupuestos"].map((a) => (
                 <button
                   key={a}
-                  className="flex w-full items-center justify-between px-5 py-3 text-left text-sm text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+                  disabled
+                  title="Próximamente"
+                  className="flex w-full cursor-not-allowed items-center justify-between px-5 py-3 text-left text-sm text-muted-foreground/60"
                 >
                   <span>{a}</span>
-                  <span aria-hidden>→</span>
+                  <span className="text-[10px] uppercase tracking-wide">Próximamente</span>
                 </button>
               ))}
             </div>
