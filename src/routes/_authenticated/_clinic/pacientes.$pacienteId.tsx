@@ -180,7 +180,9 @@ function PacienteDetalle() {
                       ? "Sin datos"
                       : paciente.saldo > 0
                         ? formatoMoneda(paciente.saldo)
-                        : "Al día"}
+                        : paciente.saldo < 0
+                          ? `${formatoMoneda(-paciente.saldo)} a favor`
+                          : "Al día"}
                   </p>
                 </div>
                 <div>

@@ -1325,6 +1325,86 @@ export type Database = {
           },
         ];
       };
+      payments: {
+        Row: {
+          amount_cents: number;
+          clinic_id: string;
+          created_at: string;
+          created_by: string;
+          currency: string;
+          id: string;
+          method: Database["public"]["Enums"]["payment_method"];
+          notes: string | null;
+          paid_at: string;
+          patient_id: string;
+          reference: string | null;
+          treatment_item_id: string | null;
+          treatment_plan_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          amount_cents: number;
+          clinic_id: string;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          id?: string;
+          method?: Database["public"]["Enums"]["payment_method"];
+          notes?: string | null;
+          paid_at?: string;
+          patient_id: string;
+          reference?: string | null;
+          treatment_item_id?: string | null;
+          treatment_plan_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          amount_cents?: number;
+          clinic_id?: string;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          id?: string;
+          method?: Database["public"]["Enums"]["payment_method"];
+          notes?: string | null;
+          paid_at?: string;
+          patient_id?: string;
+          reference?: string | null;
+          treatment_item_id?: string | null;
+          treatment_plan_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payments_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_treatment_plan_id_fkey";
+            columns: ["treatment_plan_id"];
+            isOneToOne: false;
+            referencedRelation: "treatment_plans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_treatment_item_id_fkey";
+            columns: ["treatment_item_id"];
+            isOneToOne: false;
+            referencedRelation: "treatment_items";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       treatment_items: {
         Row: {
           clinic_id: string;
@@ -1436,6 +1516,7 @@ export type Database = {
         | "converted";
       treatment_plan_status: "active" | "on_hold" | "completed" | "cancelled";
       treatment_item_status: "pending" | "in_progress" | "completed" | "skipped";
+      payment_method: "cash" | "debit_card" | "credit_card" | "transfer" | "other";
       tooth_condition:
         | "sano"
         | "caries"

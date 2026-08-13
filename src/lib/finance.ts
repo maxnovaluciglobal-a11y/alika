@@ -112,6 +112,49 @@ export interface TreatmentPlan {
   items: TreatmentItem[];
 }
 
+export const PAYMENT_METHODS = [
+  "cash",
+  "debit_card",
+  "credit_card",
+  "transfer",
+  "other",
+] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  cash: "Efectivo",
+  debit_card: "Tarjeta débito",
+  credit_card: "Tarjeta crédito",
+  transfer: "Transferencia",
+  other: "Otro",
+};
+
+export interface Payment {
+  id: string;
+  amountCents: number;
+  currency: string;
+  method: PaymentMethod;
+  reference: string | null;
+  paidAt: string;
+  notes: string | null;
+  treatmentPlanId: string | null;
+  treatmentItemId: string | null;
+  createdById: string;
+}
+
+/**
+ * Saldo del paciente calculado en runtime desde treatment_items vs payments.
+ * `totalBilledCents` = suma de precios de todos los ítems (pending o no).
+ * `totalPaidCents` = suma de todos los pagos del paciente.
+ * `balanceCents` = billed − paid. Positivo = paciente debe. Negativo = crédito.
+ */
+export interface PatientBalance {
+  totalBilledCents: number;
+  totalPaidCents: number;
+  balanceCents: number;
+  currency: string;
+}
+
 /** Formato de moneda (defaults a CLP; respeta currency del quote/plan). */
 export function formatMoney(cents: number, currency = "CLP"): string {
   return new Intl.NumberFormat("es-CL", {

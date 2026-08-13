@@ -177,8 +177,33 @@ export const getPatient = createServerFn({ method: "GET" })
         actual: i === 0,
       }));
 
+    // Saldo calculado en runtime: total facturado en treatment_items vs total
+    // pagado en payments. Sobrescribe row.balance_cents (que se dejó nullable
+    // en Fase 1 y ahora se ignora — la fuente de verdad es la agregación).
+    const [{ data: billedRows }, { data: paidRows }] = await Promise.all([
+      supabase
+        .from("treatment_items")
+        .select("price_cents, treatment_plans!inner(patient_id, clinic_id)")
+        .eq("clinic_id", data.clinicId)
+        .eq("treatment_plans.patient_id", data.patientId),
+      supabase
+        .from("payments")
+        .select("amount_cents")
+        .eq("clinic_id", data.clinicId)
+        .eq("patient_id", data.patientId),
+    ]);
+    const totalBilled = (billedRows ?? []).reduce(
+      (s, r) => s + ((r as { price_cents: number }).price_cents ?? 0),
+      0,
+    );
+    const totalPaid = (paidRows ?? []).reduce((s, r) => s + (r.amount_cents ?? 0), 0);
+    const balance = totalBilled - totalPaid;
+
     return {
       ...mapPatientRow(row as PatientRow, ultimaYProxima(appointments, data.patientId)),
+      // null cuando no hay actividad financiera (nada facturado, nada pagado);
+      // número (positivo = paciente debe, negativo = a favor) cuando hay algo
+      saldo: totalBilled === 0 && totalPaid === 0 ? null : balance,
       timeline,
     };
   });

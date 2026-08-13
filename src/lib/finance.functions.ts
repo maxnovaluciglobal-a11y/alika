@@ -4,9 +4,12 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { TOOTH_SURFACES } from "@/lib/odontogram";
 import {
+  PAYMENT_METHODS,
   QUOTE_STATUSES,
   TREATMENT_ITEM_STATUSES,
   TREATMENT_PLAN_STATUSES,
+  type PatientBalance,
+  type Payment,
   type Procedure,
   type Quote,
   type QuoteItem,
@@ -493,4 +496,142 @@ export const setTreatmentPlanStatus = createServerFn({ method: "POST" })
       .eq("id", data.planId);
     if (error) throw new Error("No pudimos actualizar el plan.");
     return { ok: true };
+  });
+
+// ─── PAYMENTS ────────────────────────────────────────────────────────────
+
+const PAYMENT_COLUMNS =
+  "id, amount_cents, currency, method, reference, paid_at, notes, treatment_plan_id, treatment_item_id, created_by";
+
+type PaymentRow = {
+  id: string;
+  amount_cents: number;
+  currency: string;
+  method: string;
+  reference: string | null;
+  paid_at: string;
+  notes: string | null;
+  treatment_plan_id: string | null;
+  treatment_item_id: string | null;
+  created_by: string;
+};
+
+function mapPayment(row: PaymentRow): Payment {
+  return {
+    id: row.id,
+    amountCents: row.amount_cents,
+    currency: row.currency,
+    method: row.method as Payment["method"],
+    reference: row.reference,
+    paidAt: row.paid_at,
+    notes: row.notes,
+    treatmentPlanId: row.treatment_plan_id,
+    treatmentItemId: row.treatment_item_id,
+    createdById: row.created_by,
+  };
+}
+
+/** Pagos del paciente ordenados del más reciente al más viejo. */
+export const listPayments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<Payment[]> => {
+    const { data: rows, error } = await context.supabase
+      .from("payments")
+      .select(PAYMENT_COLUMNS)
+      .eq("clinic_id", data.clinicId)
+      .eq("patient_id", data.patientId)
+      .order("paid_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return (rows ?? []).map((r) => mapPayment(r as PaymentRow));
+  });
+
+export const registerPayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        patientId: z.string().uuid(),
+        amountCents: z.number().int().positive("El monto debe ser mayor a cero."),
+        currency: z.string().length(3).default("CLP"),
+        method: z.enum(PAYMENT_METHODS).default("cash"),
+        reference: z.string().trim().max(120).optional(),
+        paidAt: z.string().optional(),
+        notes: z.string().trim().max(500).optional(),
+        treatmentPlanId: z.string().uuid().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ id: string }> => {
+    const { data: inserted, error } = await context.supabase
+      .from("payments")
+      .insert({
+        clinic_id: data.clinicId,
+        patient_id: data.patientId,
+        amount_cents: data.amountCents,
+        currency: data.currency,
+        method: data.method,
+        reference: data.reference || null,
+        paid_at: data.paidAt ?? new Date().toISOString(),
+        notes: data.notes || null,
+        treatment_plan_id: data.treatmentPlanId ?? null,
+      })
+      .select("id")
+      .single();
+
+    if (error) throw new Error("No tienes permisos para registrar pagos. " + error.message);
+    return { id: inserted.id };
+  });
+
+/**
+ * Saldo agregado del paciente. Total facturado desde treatment_items (todos
+ * los ítems del plan cuentan, no solo los completados — un plan aceptado se
+ * asume comprometido a pagar). Total pagado desde payments. Diferencia > 0
+ * = paciente debe; < 0 = a favor.
+ */
+export const getPatientBalance = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<PatientBalance> => {
+    const { supabase } = context;
+
+    // Sumar treatment_items via join con treatment_plans para respetar RLS por clinic
+    const [itemsRes, paymentsRes] = await Promise.all([
+      supabase
+        .from("treatment_items")
+        .select("price_cents, treatment_plans!inner(patient_id, clinic_id)")
+        .eq("clinic_id", data.clinicId)
+        .eq("treatment_plans.patient_id", data.patientId),
+      supabase
+        .from("payments")
+        .select("amount_cents, currency")
+        .eq("clinic_id", data.clinicId)
+        .eq("patient_id", data.patientId),
+    ]);
+
+    if (itemsRes.error) throw new Error(itemsRes.error.message);
+    if (paymentsRes.error) throw new Error(paymentsRes.error.message);
+
+    const totalBilled = (itemsRes.data ?? []).reduce(
+      (s, r) => s + ((r as { price_cents: number }).price_cents ?? 0),
+      0,
+    );
+    const totalPaid = (paymentsRes.data ?? []).reduce((s, r) => s + (r.amount_cents ?? 0), 0);
+    // La moneda se toma del primer pago o del primer ítem; asumimos consistencia
+    // por clínica en Fase 3B (una sola moneda por instalación).
+    const currency =
+      ((paymentsRes.data ?? [])[0]?.currency as string | undefined) ?? "CLP";
+
+    return {
+      totalBilledCents: totalBilled,
+      totalPaidCents: totalPaid,
+      balanceCents: totalBilled - totalPaid,
+      currency,
+    };
   });

@@ -1,7 +1,17 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ChevronDown, ChevronUp, FileText, Loader2, Plus, Trash2, X } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  CircleDollarSign,
+  FileText,
+  Loader2,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,21 +26,27 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
+  PAYMENT_METHODS,
+  PAYMENT_METHOD_LABELS,
   QUOTE_STATUS_LABELS,
   TREATMENT_ITEM_STATUSES,
   TREATMENT_ITEM_STATUS_LABELS,
   TREATMENT_PLAN_STATUS_LABELS,
   formatMoney,
+  type PaymentMethod,
   type Procedure,
   type QuoteStatus,
   type TreatmentItemStatus,
+  type TreatmentPlan,
 } from "@/lib/finance";
 import {
   createProcedure,
   createQuote,
+  listPayments,
   listProcedures,
   listQuotes,
   listTreatmentPlans,
+  registerPayment,
   setQuoteStatus,
   setTreatmentItemStatus,
 } from "@/lib/finance.functions";
@@ -441,6 +457,151 @@ function NuevoPresupuestoDialog({
   );
 }
 
+function NuevoPagoDialog({
+  clinicId,
+  patientId,
+  plans,
+  suggestedAmountCents,
+}: {
+  clinicId: string;
+  patientId: string;
+  plans: TreatmentPlan[];
+  suggestedAmountCents: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState(suggestedAmountCents);
+  const [method, setMethod] = useState<PaymentMethod>("cash");
+  const [planId, setPlanId] = useState<string>("");
+  const [reference, setReference] = useState("");
+  const [notes, setNotes] = useState("");
+  const queryClient = useQueryClient();
+  const payFn = useServerFn(registerPayment);
+
+  const create = useMutation({
+    mutationFn: () =>
+      payFn({
+        data: {
+          clinicId,
+          patientId,
+          amountCents: amount,
+          method,
+          treatmentPlanId: planId || undefined,
+          reference: reference.trim() || undefined,
+          notes: notes.trim() || undefined,
+        },
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["payments", clinicId, patientId] });
+      await queryClient.invalidateQueries({ queryKey: ["patient", clinicId, patientId] });
+      queryClient.invalidateQueries({ queryKey: ["patients", clinicId] });
+      toast.success("Pago registrado");
+      setOpen(false);
+      setAmount(0);
+      setMethod("cash");
+      setPlanId("");
+      setReference("");
+      setNotes("");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (o) setAmount(suggestedAmountCents);
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <CircleDollarSign className="size-4" /> Registrar pago
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Registrar pago</DialogTitle>
+          <DialogDescription>
+            El saldo del paciente se recalcula automáticamente al guardar.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="pay-amount">Monto (CLP)</Label>
+              <input
+                id="pay-amount"
+                type="number"
+                min={0}
+                value={amount}
+                onChange={(e) => setAmount(Number(e.target.value))}
+                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pay-method">Método</Label>
+              <select
+                id="pay-method"
+                value={method}
+                onChange={(e) => setMethod(e.target.value as PaymentMethod)}
+                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              >
+                {PAYMENT_METHODS.map((m) => (
+                  <option key={m} value={m}>
+                    {PAYMENT_METHOD_LABELS[m]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pay-plan">Aplicar a</Label>
+            <select
+              id="pay-plan"
+              value={planId}
+              onChange={(e) => setPlanId(e.target.value)}
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+            >
+              <option value="">A cuenta (sin asignar a un plan)</option>
+              {plans.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} · {formatMoney(p.totalCents, p.currency)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pay-ref">Referencia (opcional)</Label>
+            <input
+              id="pay-ref"
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              placeholder="Nº de transacción, comprobante…"
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pay-notes">Notas</Label>
+            <textarea
+              id="pay-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => create.mutate()} disabled={create.isPending || amount <= 0}>
+            {create.isPending && <Loader2 className="size-3.5 animate-spin" />}
+            Guardar pago
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function FinanceSection({ clinicId, patientId, puedeEditar }: Props) {
   const queryClient = useQueryClient();
   const [expandedQuote, setExpandedQuote] = useState<string | null>(null);
@@ -449,6 +610,7 @@ export function FinanceSection({ clinicId, patientId, puedeEditar }: Props) {
   const fetchQuotes = useServerFn(listQuotes);
   const fetchPlans = useServerFn(listTreatmentPlans);
   const fetchProcedures = useServerFn(listProcedures);
+  const fetchPayments = useServerFn(listPayments);
   const setStatusFn = useServerFn(setQuoteStatus);
   const setItemFn = useServerFn(setTreatmentItemStatus);
 
@@ -464,6 +626,21 @@ export function FinanceSection({ clinicId, patientId, puedeEditar }: Props) {
     queryKey: ["procedures", clinicId],
     queryFn: () => fetchProcedures({ data: { clinicId } }),
   });
+  const { data: payments = [] } = useQuery({
+    queryKey: ["payments", clinicId, patientId],
+    queryFn: () => fetchPayments({ data: { clinicId, patientId } }),
+  });
+
+  // Resumen de saldo calculado client-side desde plans + payments — coincide con
+  // el saldo del header (calculado server-side en getPatient) porque usa la
+  // misma agregación.
+  const totalBilled = plans.reduce(
+    (s, p) => s + p.items.reduce((si, it) => si + it.priceCents, 0),
+    0,
+  );
+  const totalPaid = payments.reduce((s, p) => s + p.amountCents, 0);
+  const balance = totalBilled - totalPaid;
+  const currency = plans[0]?.currency ?? payments[0]?.currency ?? "CLP";
 
   const accept = useMutation({
     mutationFn: (quoteId: string) => setStatusFn({ data: { quoteId, status: "accepted" } }),
@@ -500,13 +677,52 @@ export function FinanceSection({ clinicId, patientId, puedeEditar }: Props) {
           </p>
         </div>
         {puedeEditar && (
-          <NuevoPresupuestoDialog
-            clinicId={clinicId}
-            patientId={patientId}
-            procedures={procedures}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <NuevoPagoDialog
+              clinicId={clinicId}
+              patientId={patientId}
+              plans={plans}
+              suggestedAmountCents={Math.max(0, balance)}
+            />
+            <NuevoPresupuestoDialog
+              clinicId={clinicId}
+              patientId={patientId}
+              procedures={procedures}
+            />
+          </div>
         )}
       </div>
+
+      {(totalBilled > 0 || totalPaid > 0) && (
+        <div className="mb-5 grid gap-3 rounded-lg border border-hairline bg-secondary/40 p-3 sm:grid-cols-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Facturado</p>
+            <p className="font-display text-base font-semibold">
+              {formatMoney(totalBilled, currency)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Pagado</p>
+            <p className="font-display text-base font-semibold">
+              {formatMoney(totalPaid, currency)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {balance > 0 ? "Saldo pendiente" : balance < 0 ? "A favor del paciente" : "Saldo"}
+            </p>
+            <p
+              className={cn(
+                "font-display text-base font-semibold",
+                balance > 0 && "text-warning",
+                balance < 0 && "text-success",
+              )}
+            >
+              {balance === 0 ? "Al día" : formatMoney(Math.abs(balance), currency)}
+            </p>
+          </div>
+        </div>
+      )}
 
       {isLoading && <p className="text-xs text-muted-foreground">Cargando…</p>}
 
@@ -661,6 +877,45 @@ export function FinanceSection({ clinicId, patientId, puedeEditar }: Props) {
                       )}
                     </>
                   )}
+                </div>
+              );
+            })}
+          </section>
+
+          <section>
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Pagos registrados
+            </p>
+            {payments.length === 0 && (
+              <p className="text-xs text-muted-foreground">Aún no hay pagos registrados.</p>
+            )}
+            {payments.map((pay) => {
+              const plan = plans.find((p) => p.id === pay.treatmentPlanId);
+              return (
+                <div
+                  key={pay.id}
+                  className="mb-2 flex items-center justify-between gap-3 rounded-lg border border-hairline px-4 py-2 text-xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <CircleDollarSign className="size-4 text-success" />
+                    <div>
+                      <p className="text-sm font-medium">
+                        {formatMoney(pay.amountCents, pay.currency)}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {PAYMENT_METHOD_LABELS[pay.method]}
+                        {plan && ` · ${plan.name}`}
+                        {!plan && pay.treatmentPlanId === null && " · A cuenta"}
+                        {pay.reference && ` · Ref. ${pay.reference}`}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-muted-foreground">
+                    {new Date(pay.paidAt).toLocaleString("es-CL", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
+                  </span>
                 </div>
               );
             })}
