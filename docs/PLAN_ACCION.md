@@ -112,46 +112,96 @@ de la sección "Qué NO hacer todavía".
 paciente es fake. Odontograma, presupuestos, IA de ausencias, timeline
 unificado: todo lo del roadmap asume que `/pacientes/:id` es un registro real.
 
-### Fase 2 — Historia clínica clínica completa
-Con pacientes reales: odontograma versionado por pieza/superficie (tabla
-`odontogram_states`, no blob — así lo pide el doc maestro para poder consultar
-"piezas con caries no tratada hace 6 meses"), periodontograma, consentimientos
-firmados. Se apoya en el patrón de versionado que ya existe en notas clínicas.
+### Fase 2 — Odontograma versionado ✅ (2026-08-12, commit `4ecea43`)
 
-### Fase 3 — Dinero: presupuestos, tratamientos, caja
-`treatment_plans` + `treatment_items` + catálogo de `procedures`, `quotes` con
-aceptación y firma digital, pagos (online + registro manual), caja básica.
-Este es el primer módulo con implicancia fiscal por país — revisar temprano
-si conviene el mismo patrón de compliance que se usó en GastroCore 360
-(VeriFactu para España, Openfactura para Chile) en vez de reinventar; LatAm
-target inicial (CL/MX/CO/PE) tiene proveedores de facturación electrónica
-distintos por país, así que esto es más trabajo de integración que de UI.
+Tabla `odontogram_marks` + enums `tooth_surface`/`tooth_condition`, numeración
+FDI (11-48 permanentes + 51-85 primarios). Trigger SECURITY DEFINER
+`close_previous_odontogram_mark` cierra la marca vigente al insertar una nueva
+para el mismo (paciente, pieza, superficie) — nunca se UPDATE. RLS: lectura
+para clínicos (dentist/assistant/admin/owner), escritura solo con
+`clinical:write` (assistant no marca). Componente `<Odontogram>` con SVG por
+pieza (cuatro triángulos periféricos + oclusal central), popover Radix con
+condiciones filtradas por superficie, toggle "Ver historia".
 
-### Fase 4 — Inteligencia operativa
-Predicción de ausencias con scoring, reagendamiento automático desde lista de
-espera, optimización de agenda, WhatsApp como canal primario de confirmación
-(el doc maestro lo marca como diferenciador #1 vs. competencia LatAm — no es
-opcional para el mercado). Recién acá tiene sentido invertir en esto: antes no
-hay agenda real sobre la cual predecir nada.
+Periodontograma y consentimientos firmados quedan para Fase 2B/futuro cuando
+aparezca demanda concreta.
 
-### Fase 5 — Inventario, marketing, BI
+### Fase 3A — Presupuestos → Planes ✅ (2026-08-12, commit `b15338c`)
+
+5 tablas nuevas: `procedures` (catálogo editable), `quotes` + `quote_items`
+(con estado y correlativo `P-YYYY-NNNN`), `treatment_plans` +
+`treatment_items` (con status por ítem). Trigger SECURITY DEFINER
+`convert_accepted_quote_to_plan` corre en BEFORE UPDATE de quotes: cuando el
+status pasa a 'accepted', copia todos los items al plan y marca el quote como
+'converted' en el mismo update. La app solo llama a `setQuoteStatus`, cero
+código de conversión en JS. Snapshots inmutables (`name_snapshot`) — renombrar
+un procedimiento no afecta presupuestos existentes. `<FinanceSection>` en la
+ficha del paciente con diálogo de creación (catálogo + alta inline), aceptar/
+rechazar en presupuestos colapsables, plan con progreso.
+
+### Fase 3B — Pagos + saldo real ✅ (2026-08-13, commit `49aedc0`)
+
+Tabla `payments` + enum `payment_method` (cash/debit_card/credit_card/
+transfer/other). FK opcional a `treatment_plan_id` (null = pago a cuenta) y
+`treatment_item_id` reservada para futuro. `getPatient` actualizado para
+calcular `saldo` en runtime como `sum(treatment_items.price_cents) −
+sum(payments.amount_cents)` — sobrescribe el campo nullable
+`patients.balance_cents` que quedó de Fase 1. El header del paciente muestra
+saldo real sin cambios de UI. Diálogo `<NuevoPagoDialog>` con monto pre-lleno
+al saldo pendiente. Bloque summary Facturado/Pagado/Saldo pendiente en
+`FinanceSection`.
+
+### Fase 3C — Facturación electrónica por país (pendiente)
+
+VeriFactu (adaptación desde GastroCore España), Openfactura para SII Chile,
+DTE en otros. Requerido para operación legal — necesario si aparece el primer
+cliente pago real. Scope grande por país; se puede empezar por CL solo.
+
+### Fase 4A — WhatsApp por wa.me ✅ (2026-08-13, commit `31012a0`)
+
+2 tablas: `message_templates` (catálogo editable por clínica, seed con 4
+defaults: appointment_reminder/confirmation, quote_sent, payment_receipt) y
+`messages` (historial completo con FK a appointment/quote/template).
+Enfoque de bajo costo: `sendWhatsAppFromTemplate` renderiza el template, guarda
+el message con status='sent', y devuelve URL `wa.me/{numero}?text=...` que el
+cliente abre en tab nueva. El operador manda desde SU WhatsApp — sin
+proveedor, sin approval Meta. `<WhatsAppButton>` reutilizable, integrado en
+cada fila de la agenda (recordatorio) y en cada presupuesto expandido (envío
+del quote). `<MessagesHistory>` nueva sección en la ficha del paciente.
+
+El diseño de la tabla `messages` ya soporta SMS/email/API real (`direction=
+inbound`, `external_id`, `delivered_at`, `read_at`) — Fase 4B lo aprovecha
+sin migración adicional.
+
+### Fase 4B — Automatización + Twilio API (pendiente)
+
+Cron automático de recordatorios 24h/3h antes de cada cita (opciones: pg_cron
+en Supabase, Vercel Cron, EventBridge). Integración Twilio WhatsApp Business
+API para envío no-manual (requiere approval Meta, cuenta pagada). Webhooks de
+respuestas del paciente para marcar delivered/read y parsear "SÍ"/"RE" para
+auto-confirmar o disparar reagendamiento. UI para editar templates.
+
+### Fase 5 — Inventario / marketing / BI (pendiente)
+
 Consumo automático de insumos por procedimiento, campañas a "paciente perdido",
 dashboards configurables. Menor urgencia — dependen de que exista actividad
 real (tratamientos, citas) para tener datos que consumir.
 
-### Fase 6 — Endurecimiento y operación
-- Backups cifrados (patrón `age` + offsite ya usado en GastroCore 360,
-  aplicable directo — acá hay PHI real, es requisito no opcional apenas haya
-  clínicas reales usando el sistema)
-- Auditoría multi-agente (patrón de 4 agentes UX/Perf/Seguridad/Correctitud que
-  ya se usó en GastroCore) — recién tiene sentido correrla cuando haya código
-  real que auditar en Fases 1-3, no sobre la demo actual
-- Decisión Lovable sync: si se sigue editando desde el editor de Lovable en
-  paralelo a este repo, hay que acordar una sola fuente de verdad para evitar
-  conflictos (recomendado: local/GitHub como fuente de verdad, Lovable solo
-  para prototipar UI nueva antes de portarla)
-- Runner de migraciones para self-host (VPS) si se decide no depender de
-  Supabase hosting de Lovable a largo plazo
+### Fase 6 — Endurecimiento y operación (en curso 2026-08-13)
+- Auditoría multi-agente: 3 agentes en background auditando (a) seguridad+RLS,
+  (b) correctitud+bugs, (c) reuso+simplificación+performance. Findings se
+  aplican después. Es el paso previo antes de abrir a clínicas reales — evita
+  descubrir un bug de RLS con PHI real de por medio.
+- Backups: Supabase Cloud (Lovable-hosted) hace backups automáticos por su
+  cuenta (Free tier: snapshots diarios 7 días; Pro: PITR 14 días). No hay
+  acceso al VPS para agregar `age` + offsite como en GastroCore. Alternativa:
+  script de export a JSON encriptado que se puede correr desde CI — pendiente
+  hasta que haya clínicas reales.
+- Test automatizado de aislamiento multi-tenant (RLS): crear 2 clínicas
+  ficticias con service_role y verificar que un user de A no ve B. Pendiente.
+- Decisión Lovable sync: local/GitHub es la fuente de verdad; editar en
+  Lovable solo si se quiere prototipar UI nueva antes de portarla. Nada de
+  force-push en `main` (rompe el sync — AGENTS.md).
 
 ### Fase 7 — Go-to-market
 Ambiente de demo público con datos de ejemplo realistas (mismo patrón que
@@ -161,17 +211,39 @@ landing propia.
 
 ## 4. Qué NO hacer todavía
 
-- No construir odontograma/presupuestos/inventario antes de que exista un
-  paciente real — quedaría colgando de un fixture, doble trabajo.
-- No correr auditoría de seguridad multi-agente sobre el código actual del
-  fixture — no hay superficie real que auditar ahí, mejor gastar esos créditos
-  después de la Fase 1-3.
-- No migrar a self-host / Supabase propio todavía — no hay tráfico real que lo
-  justifique y agrega fricción a la Fase 1.
+- No migrar a self-host / Supabase propio hasta que aparezca la primera
+  clínica pago real que lo justifique — Supabase Cloud (Lovable) alcanza
+  para todo el desarrollo actual y la fase de prueba.
+- No integrar Twilio API real (Fase 4B) hasta que el flujo manual de wa.me
+  haya validado la utilidad de los mensajes con clínicas reales — el approval
+  de Meta para WhatsApp Business API tarda y cuesta plata.
+- No arrancar Fase 3C (facturación electrónica) especulativamente — cada
+  país es un proveedor distinto (Openfactura CL, SAT MX, DIAN CO, SUNAT PE);
+  arrancar por el país donde aparezca la primera venta real.
 
-## 5. Trabajo delegado en paralelo
+## 5. Patrones establecidos (usar en fases nuevas)
 
-Se despachó un agente (Plan) para diseñar el esquema técnico completo de la
-Fase 1 (tablas `patients`/`appointments`, RLS, server functions, plan de
-migración ruta por ruta, seed de datos). Su resultado se revisa antes de
-ejecutar — evita improvisar el modelo de datos más importante del producto.
+- **RLS obligatoria** en toda tabla con helpers `is_clinic_member(id)`,
+  `has_clinic_role(id, roles[])`, `can_manage_clinic(id)` (SECURITY DEFINER).
+- **Triggers de dominio SECURITY DEFINER** hacen el trabajo pesado, la app
+  solo dispara. Ejemplos: conversión de quote a plan, cierre de marca de
+  odontograma. Patrón repetible para historia clínica versionada.
+- **Snapshots inmutables** cuando un ítem depende de un catálogo — copiar
+  el nombre al momento de crear, con FK `ON DELETE SET NULL`. Renombrar el
+  catálogo no muta el histórico.
+- **Nunca UPDATE de eventos versionados** — nueva fila con
+  `superseded_at` NULL + trigger cierra la anterior. Usado en `odontogram_marks`.
+- **Placeholders nullable** (`saldo`, `no_show_risk`, `ai_summary`) en vez de
+  fabricar cero. UI muestra "Sin datos" cuando null.
+- **Server functions** en `src/lib/*.functions.ts` con
+  `createServerFn().middleware([requireSupabaseAuth]).inputValidator(zod).handler(...)`.
+  Queries separadas + join con `Map` en JS (evitar embedded selects que los
+  tipos generados no siempre pillan).
+- **types.ts se parchea a MANO** cuando se agrega tabla/enum — no hay
+  Supabase CLI configurado.
+- **Diálogos**: Radix Dialog + `useMutation` + `queryClient.invalidateQueries`
+  + `toast`. Reset de campos en `onSuccess`.
+- **Route guards**: `beforeLoad: requirePermission("perm")` con permisos
+  definidos en `src/lib/access.ts`.
+- **Fechas**: usar `hoyISO(timeZone)` de `clinic-data.ts` — nunca
+  `new Date().toISOString().slice(0,10)` que da timezone del server.

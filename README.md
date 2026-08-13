@@ -6,19 +6,26 @@ prototipo en [Lovable](https://lovable.dev), en desarrollo activo desde este rep
 > El nombre de proyecto en Lovable es "Aurora Dental OS"; la marca del producto,
 > en todo el código y la documentación, es **Oralia**.
 
-## Estado actual (2026-08-11)
+## Estado actual (2026-08-13)
 
-Prototipo navegable con auth, creación de clínica y roles reales sobre Supabase.
-**Agenda, Pacientes, Dashboard y Tratamientos corren sobre datos de muestra
-(`src/lib/clinic-data.ts`), todavía no sobre tablas reales** — ver
-[`docs/PLAN_ACCION.md`](docs/PLAN_ACCION.md) para el detalle y las fases siguientes.
+Fases completas end-to-end verificadas contra la base de datos real:
 
-Módulos con backend real (Supabase + RLS, sin datos de muestra):
-notas clínicas (versionado, revisión, auditoría), notificaciones en tiempo real,
-equipo y permisos, exportación de compliance, y el subsistema de dominio/email.
+- **Fase 0** — higiene local + rebranding a Oralia
+- **Fase 1** — Pacientes + Agenda reales (`patients`, `appointments`, `waitlist_entries`)
+- **Fase 2** — Odontograma versionado FDI con trigger de cierre inmutable
+- **Fase 3A** — Presupuestos → Planes de tratamiento (trigger de conversión)
+- **Fase 3B** — Pagos manuales + saldo real calculado
+- **Fase 4A** — WhatsApp por links `wa.me` + catálogo de templates + historial
 
-Ver también [`docs/Oralia_Documento_Maestro_v1.md`](docs/Oralia_Documento_Maestro_v1.md)
-para visión de producto, modelo de datos objetivo y roadmap completo.
+Módulos que ya venían del prototipo Lovable (backend real desde el arranque):
+notas clínicas con versionado/revisión/auditoría, notificaciones realtime,
+equipo y permisos con RLS testeada, exportación de compliance, subsistema
+completo de email/DNS.
+
+Ver [`docs/PLAN_ACCION.md`](docs/PLAN_ACCION.md) para detalle de cada fase,
+patrones establecidos y fases pendientes. Ver
+[`docs/Oralia_Documento_Maestro_v1.md`](docs/Oralia_Documento_Maestro_v1.md)
+para visión de producto original.
 
 ## Desarrollo local
 
