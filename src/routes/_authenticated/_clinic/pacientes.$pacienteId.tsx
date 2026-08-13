@@ -7,6 +7,7 @@ import { PacienteTimeline } from "@/components/paciente-timeline";
 import { NotasClinicas } from "@/components/notas-clinicas";
 import { Odontogram } from "@/components/odontogram";
 import { FinanceSection } from "@/components/finance-section";
+import { MessagesHistory } from "@/components/messages-history";
 import { hasPermission } from "@/lib/access";
 import { formatoMoneda, type Paciente } from "@/lib/clinic-data";
 import { getPatient } from "@/lib/patients.functions";
@@ -235,9 +236,14 @@ function PacienteDetalle() {
             {access.clinic?.id && (
               <FinanceSection
                 clinicId={access.clinic.id}
+                clinicaNombre={access.clinic.name}
                 patientId={paciente.id}
                 puedeEditar={hasPermission(access.role, "patients:manage")}
               />
+            )}
+
+            {access.clinic?.id && (
+              <MessagesHistory clinicId={access.clinic.id} patientId={paciente.id} />
             )}
 
             <div className="card-clinical p-6">

@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { WhatsAppButton } from "@/components/whatsapp-button";
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,7 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   clinicId: string;
+  clinicaNombre: string;
   patientId: string;
   puedeEditar: boolean;
 }
@@ -602,7 +604,7 @@ function NuevoPagoDialog({
   );
 }
 
-export function FinanceSection({ clinicId, patientId, puedeEditar }: Props) {
+export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar }: Props) {
   const queryClient = useQueryClient();
   const [expandedQuote, setExpandedQuote] = useState<string | null>(null);
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
@@ -856,25 +858,42 @@ export function FinanceSection({ clinicId, patientId, puedeEditar }: Props) {
                           </div>
                         ))}
                       </div>
-                      {canAccept && (
-                        <div className="flex items-center gap-2 border-t border-hairline px-4 py-2">
-                          <Button
-                            size="sm"
-                            onClick={() => accept.mutate(quote.id)}
-                            disabled={accept.isPending}
-                          >
-                            <Check className="size-3.5" /> Aceptar
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => reject.mutate(quote.id)}
-                            disabled={reject.isPending}
-                          >
-                            <X className="size-3.5" /> Rechazar
-                          </Button>
+                      <div className="flex flex-wrap items-center gap-2 border-t border-hairline px-4 py-2">
+                        {canAccept && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => accept.mutate(quote.id)}
+                              disabled={accept.isPending}
+                            >
+                              <Check className="size-3.5" /> Aceptar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => reject.mutate(quote.id)}
+                              disabled={reject.isPending}
+                            >
+                              <X className="size-3.5" /> Rechazar
+                            </Button>
+                          </>
+                        )}
+                        <div className="ml-auto">
+                          <WhatsAppButton
+                            clinicId={clinicId}
+                            patientId={patientId}
+                            quoteId={quote.id}
+                            templateKind="quote_sent"
+                            variant="full"
+                            label="Enviar por WhatsApp"
+                            variables={{
+                              numero_presupuesto: quote.number,
+                              total: formatMoney(quote.totalCents, quote.currency),
+                              clinica: clinicaNombre,
+                            }}
+                          />
                         </div>
-                      )}
+                      </div>
                     </>
                   )}
                 </div>

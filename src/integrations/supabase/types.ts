@@ -1325,6 +1325,148 @@ export type Database = {
           },
         ];
       };
+      messages: {
+        Row: {
+          appointment_id: string | null;
+          body: string;
+          channel: Database["public"]["Enums"]["message_channel"];
+          clinic_id: string;
+          created_at: string;
+          delivered_at: string | null;
+          direction: Database["public"]["Enums"]["message_direction"];
+          error: string | null;
+          external_id: string | null;
+          id: string;
+          patient_id: string;
+          quote_id: string | null;
+          read_at: string | null;
+          recipient: string;
+          sent_at: string | null;
+          sent_by: string | null;
+          status: Database["public"]["Enums"]["message_status"];
+          template_id: string | null;
+          template_kind: Database["public"]["Enums"]["message_template_kind"] | null;
+        };
+        Insert: {
+          appointment_id?: string | null;
+          body: string;
+          channel?: Database["public"]["Enums"]["message_channel"];
+          clinic_id: string;
+          created_at?: string;
+          delivered_at?: string | null;
+          direction?: Database["public"]["Enums"]["message_direction"];
+          error?: string | null;
+          external_id?: string | null;
+          id?: string;
+          patient_id: string;
+          quote_id?: string | null;
+          read_at?: string | null;
+          recipient: string;
+          sent_at?: string | null;
+          sent_by?: string | null;
+          status?: Database["public"]["Enums"]["message_status"];
+          template_id?: string | null;
+          template_kind?: Database["public"]["Enums"]["message_template_kind"] | null;
+        };
+        Update: {
+          appointment_id?: string | null;
+          body?: string;
+          channel?: Database["public"]["Enums"]["message_channel"];
+          clinic_id?: string;
+          created_at?: string;
+          delivered_at?: string | null;
+          direction?: Database["public"]["Enums"]["message_direction"];
+          error?: string | null;
+          external_id?: string | null;
+          id?: string;
+          patient_id?: string;
+          quote_id?: string | null;
+          read_at?: string | null;
+          recipient?: string;
+          sent_at?: string | null;
+          sent_by?: string | null;
+          status?: Database["public"]["Enums"]["message_status"];
+          template_id?: string | null;
+          template_kind?: Database["public"]["Enums"]["message_template_kind"] | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "messages_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "messages_appointment_id_fkey";
+            columns: ["appointment_id"];
+            isOneToOne: false;
+            referencedRelation: "appointments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "messages_quote_id_fkey";
+            columns: ["quote_id"];
+            isOneToOne: false;
+            referencedRelation: "quotes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "messages_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "message_templates";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      message_templates: {
+        Row: {
+          body: string;
+          channel: Database["public"]["Enums"]["message_channel"];
+          clinic_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          is_active: boolean;
+          kind: Database["public"]["Enums"]["message_template_kind"];
+          name: string;
+          updated_at: string;
+        };
+        Insert: {
+          body: string;
+          channel?: Database["public"]["Enums"]["message_channel"];
+          clinic_id: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          is_active?: boolean;
+          kind?: Database["public"]["Enums"]["message_template_kind"];
+          name: string;
+          updated_at?: string;
+        };
+        Update: {
+          body?: string;
+          channel?: Database["public"]["Enums"]["message_channel"];
+          clinic_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          is_active?: boolean;
+          kind?: Database["public"]["Enums"]["message_template_kind"];
+          name?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       payments: {
         Row: {
           amount_cents: number;
@@ -1517,6 +1659,16 @@ export type Database = {
       treatment_plan_status: "active" | "on_hold" | "completed" | "cancelled";
       treatment_item_status: "pending" | "in_progress" | "completed" | "skipped";
       payment_method: "cash" | "debit_card" | "credit_card" | "transfer" | "other";
+      message_channel: "whatsapp" | "sms" | "email";
+      message_direction: "outbound" | "inbound";
+      message_status: "draft" | "queued" | "sent" | "delivered" | "read" | "failed";
+      message_template_kind:
+        | "appointment_reminder"
+        | "appointment_confirmation"
+        | "quote_sent"
+        | "payment_receipt"
+        | "nps_survey"
+        | "custom";
       tooth_condition:
         | "sano"
         | "caries"

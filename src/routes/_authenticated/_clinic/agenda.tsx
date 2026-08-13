@@ -9,6 +9,7 @@ import { AppShell } from "@/components/app-shell";
 import { DateField, FilterBar, Paginacion, SearchField, SelectField } from "@/components/filters";
 import { AgendaGrid } from "@/components/agenda-grid";
 import { Button } from "@/components/ui/button";
+import { WhatsAppButton } from "@/components/whatsapp-button";
 import {
   Dialog,
   DialogContent,
@@ -400,43 +401,68 @@ function AgendaPage() {
                 Listado de citas filtradas
               </div>
               <div className="divide-y divide-hairline">
-                {pagina.items.map((c) => (
-                  <Link
-                    key={c.id}
-                    to="/pacientes/$pacienteId"
-                    params={{ pacienteId: c.pacienteId }}
-                    className="grid gap-2 px-5 py-3 transition-colors hover:bg-secondary/50 sm:grid-cols-[auto_2fr_1.5fr_1fr_auto] sm:items-center sm:gap-4"
-                  >
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {horaDeCita(c.inicio)}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{c.paciente}</p>
-                      <p className="truncate text-xs text-muted-foreground">{c.tratamiento}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {profesionales.find((p) => p.id === c.profesionalId)?.nombre ?? "—"} ·{" "}
-                      {sucursales.find((s) => s.id === c.sucursalId)?.nombre ?? "—"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{c.duracion} min</span>
-                    <span
-                      className={cn(
-                        "w-fit rounded px-1.5 py-0.5 text-[10px] font-medium",
-                        c.estado === "ausente"
-                          ? "bg-destructive/10 text-destructive"
-                          : c.estado === "en-sala"
-                            ? "bg-warning-soft text-warning"
-                            : c.estado === "tentativa"
-                              ? "bg-ai-soft text-ai"
-                              : c.estado === "finalizada"
-                                ? "bg-secondary text-muted-foreground"
-                                : "bg-brand-soft text-brand",
-                      )}
+                {pagina.items.map((c) => {
+                  const profesionalNombre =
+                    profesionales.find((p) => p.id === c.profesionalId)?.nombre ?? "—";
+                  const sucursalNombre =
+                    sucursales.find((s) => s.id === c.sucursalId)?.nombre ?? "—";
+                  return (
+                    <Link
+                      key={c.id}
+                      to="/pacientes/$pacienteId"
+                      params={{ pacienteId: c.pacienteId }}
+                      className="grid gap-2 px-5 py-3 transition-colors hover:bg-secondary/50 sm:grid-cols-[auto_2fr_1.5fr_1fr_auto_auto] sm:items-center sm:gap-4"
                     >
-                      {etiquetaEstado[c.estado]}
-                    </span>
-                  </Link>
-                ))}
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {horaDeCita(c.inicio)}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{c.paciente}</p>
+                        <p className="truncate text-xs text-muted-foreground">{c.tratamiento}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {profesionalNombre} · {sucursalNombre}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{c.duracion} min</span>
+                      <span
+                        className={cn(
+                          "w-fit rounded px-1.5 py-0.5 text-[10px] font-medium",
+                          c.estado === "ausente"
+                            ? "bg-destructive/10 text-destructive"
+                            : c.estado === "en-sala"
+                              ? "bg-warning-soft text-warning"
+                              : c.estado === "tentativa"
+                                ? "bg-ai-soft text-ai"
+                                : c.estado === "finalizada"
+                                  ? "bg-secondary text-muted-foreground"
+                                  : "bg-brand-soft text-brand",
+                        )}
+                      >
+                        {etiquetaEstado[c.estado]}
+                      </span>
+                      {clinicId && access.clinic?.name && (
+                        <span
+                          onClick={(e) => e.preventDefault()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                        >
+                          <WhatsAppButton
+                            clinicId={clinicId}
+                            patientId={c.pacienteId}
+                            appointmentId={c.id}
+                            templateKind="appointment_reminder"
+                            variables={{
+                              tratamiento: c.tratamiento,
+                              fecha_larga: formatoFechaLarga(c.fecha),
+                              hora: horaDeCita(c.inicio),
+                              profesional: profesionalNombre,
+                              clinica: access.clinic.name,
+                            }}
+                          />
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
                 {!isLoading && pagina.items.length === 0 && (
                   <p className="px-5 py-10 text-center text-sm text-muted-foreground">
                     No hay citas que coincidan con los filtros aplicados.
