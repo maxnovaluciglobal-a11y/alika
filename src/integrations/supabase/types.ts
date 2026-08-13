@@ -1062,6 +1062,340 @@ export type Database = {
           },
         ];
       };
+      procedures: {
+        Row: {
+          category: string | null;
+          clinic_id: string;
+          code: string | null;
+          created_at: string;
+          created_by: string;
+          currency: string;
+          default_price_cents: number;
+          duration_min: number | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          updated_at: string;
+        };
+        Insert: {
+          category?: string | null;
+          clinic_id: string;
+          code?: string | null;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          default_price_cents?: number;
+          duration_min?: number | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          updated_at?: string;
+        };
+        Update: {
+          category?: string | null;
+          clinic_id?: string;
+          code?: string | null;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          default_price_cents?: number;
+          duration_min?: number | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "procedures_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      quotes: {
+        Row: {
+          accepted_at: string | null;
+          accepted_by_name: string | null;
+          clinic_id: string;
+          created_at: string;
+          created_by: string;
+          currency: string;
+          discount_cents: number;
+          id: string;
+          notes: string | null;
+          number: string;
+          patient_id: string;
+          rejected_at: string | null;
+          sent_at: string | null;
+          status: Database["public"]["Enums"]["quote_status"];
+          subtotal_cents: number;
+          total_cents: number;
+          updated_at: string;
+          valid_until: string | null;
+        };
+        Insert: {
+          accepted_at?: string | null;
+          accepted_by_name?: string | null;
+          clinic_id: string;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          discount_cents?: number;
+          id?: string;
+          notes?: string | null;
+          number: string;
+          patient_id: string;
+          rejected_at?: string | null;
+          sent_at?: string | null;
+          status?: Database["public"]["Enums"]["quote_status"];
+          subtotal_cents?: number;
+          total_cents?: number;
+          updated_at?: string;
+          valid_until?: string | null;
+        };
+        Update: {
+          accepted_at?: string | null;
+          accepted_by_name?: string | null;
+          clinic_id?: string;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          discount_cents?: number;
+          id?: string;
+          notes?: string | null;
+          number?: string;
+          patient_id?: string;
+          rejected_at?: string | null;
+          sent_at?: string | null;
+          status?: Database["public"]["Enums"]["quote_status"];
+          subtotal_cents?: number;
+          total_cents?: number;
+          updated_at?: string;
+          valid_until?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quotes_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "quotes_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      quote_items: {
+        Row: {
+          clinic_id: string;
+          created_at: string;
+          discount_cents: number;
+          id: string;
+          name_snapshot: string;
+          notes: string | null;
+          position: number;
+          procedure_id: string | null;
+          quantity: number;
+          quote_id: string;
+          surface: Database["public"]["Enums"]["tooth_surface"] | null;
+          tooth_number: number | null;
+          total_cents: number;
+          unit_price_cents: number;
+        };
+        Insert: {
+          clinic_id: string;
+          created_at?: string;
+          discount_cents?: number;
+          id?: string;
+          name_snapshot: string;
+          notes?: string | null;
+          position?: number;
+          procedure_id?: string | null;
+          quantity?: number;
+          quote_id: string;
+          surface?: Database["public"]["Enums"]["tooth_surface"] | null;
+          tooth_number?: number | null;
+          total_cents: number;
+          unit_price_cents: number;
+        };
+        Update: {
+          clinic_id?: string;
+          created_at?: string;
+          discount_cents?: number;
+          id?: string;
+          name_snapshot?: string;
+          notes?: string | null;
+          position?: number;
+          procedure_id?: string | null;
+          quantity?: number;
+          quote_id?: string;
+          surface?: Database["public"]["Enums"]["tooth_surface"] | null;
+          tooth_number?: number | null;
+          total_cents?: number;
+          unit_price_cents?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_quote_id_fkey";
+            columns: ["quote_id"];
+            isOneToOne: false;
+            referencedRelation: "quotes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "quote_items_procedure_id_fkey";
+            columns: ["procedure_id"];
+            isOneToOne: false;
+            referencedRelation: "procedures";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      treatment_plans: {
+        Row: {
+          clinic_id: string;
+          completed_at: string | null;
+          created_at: string;
+          created_by: string;
+          currency: string;
+          id: string;
+          name: string;
+          notes: string | null;
+          patient_id: string;
+          quote_id: string | null;
+          started_at: string | null;
+          status: Database["public"]["Enums"]["treatment_plan_status"];
+          total_cents: number;
+          updated_at: string;
+        };
+        Insert: {
+          clinic_id: string;
+          completed_at?: string | null;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          id?: string;
+          name: string;
+          notes?: string | null;
+          patient_id: string;
+          quote_id?: string | null;
+          started_at?: string | null;
+          status?: Database["public"]["Enums"]["treatment_plan_status"];
+          total_cents?: number;
+          updated_at?: string;
+        };
+        Update: {
+          clinic_id?: string;
+          completed_at?: string | null;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          id?: string;
+          name?: string;
+          notes?: string | null;
+          patient_id?: string;
+          quote_id?: string | null;
+          started_at?: string | null;
+          status?: Database["public"]["Enums"]["treatment_plan_status"];
+          total_cents?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "treatment_plans_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "treatment_plans_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      treatment_items: {
+        Row: {
+          clinic_id: string;
+          completed_at: string | null;
+          completed_by: string | null;
+          created_at: string;
+          id: string;
+          name_snapshot: string;
+          notes: string | null;
+          plan_id: string;
+          position: number;
+          price_cents: number;
+          procedure_id: string | null;
+          professional_id: string | null;
+          quote_item_id: string | null;
+          scheduled_appointment_id: string | null;
+          status: Database["public"]["Enums"]["treatment_item_status"];
+          surface: Database["public"]["Enums"]["tooth_surface"] | null;
+          tooth_number: number | null;
+          updated_at: string;
+        };
+        Insert: {
+          clinic_id: string;
+          completed_at?: string | null;
+          completed_by?: string | null;
+          created_at?: string;
+          id?: string;
+          name_snapshot: string;
+          notes?: string | null;
+          plan_id: string;
+          position?: number;
+          price_cents: number;
+          procedure_id?: string | null;
+          professional_id?: string | null;
+          quote_item_id?: string | null;
+          scheduled_appointment_id?: string | null;
+          status?: Database["public"]["Enums"]["treatment_item_status"];
+          surface?: Database["public"]["Enums"]["tooth_surface"] | null;
+          tooth_number?: number | null;
+          updated_at?: string;
+        };
+        Update: {
+          clinic_id?: string;
+          completed_at?: string | null;
+          completed_by?: string | null;
+          created_at?: string;
+          id?: string;
+          name_snapshot?: string;
+          notes?: string | null;
+          plan_id?: string;
+          position?: number;
+          price_cents?: number;
+          procedure_id?: string | null;
+          professional_id?: string | null;
+          quote_item_id?: string | null;
+          scheduled_appointment_id?: string | null;
+          status?: Database["public"]["Enums"]["treatment_item_status"];
+          surface?: Database["public"]["Enums"]["tooth_surface"] | null;
+          tooth_number?: number | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "treatment_items_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "treatment_plans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1093,6 +1427,15 @@ export type Database = {
       appointment_status:
         "tentativa" | "confirmada" | "en-sala" | "ausente" | "finalizada" | "cancelada";
       tooth_surface: "mesial" | "distal" | "oclusal" | "vestibular" | "lingual" | "whole";
+      quote_status:
+        | "draft"
+        | "sent"
+        | "accepted"
+        | "rejected"
+        | "expired"
+        | "converted";
+      treatment_plan_status: "active" | "on_hold" | "completed" | "cancelled";
+      treatment_item_status: "pending" | "in_progress" | "completed" | "skipped";
       tooth_condition:
         | "sano"
         | "caries"

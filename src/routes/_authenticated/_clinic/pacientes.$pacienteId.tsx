@@ -6,6 +6,7 @@ import { requirePermission } from "@/lib/route-guards";
 import { PacienteTimeline } from "@/components/paciente-timeline";
 import { NotasClinicas } from "@/components/notas-clinicas";
 import { Odontogram } from "@/components/odontogram";
+import { FinanceSection } from "@/components/finance-section";
 import { hasPermission } from "@/lib/access";
 import { formatoMoneda, type Paciente } from "@/lib/clinic-data";
 import { getPatient } from "@/lib/patients.functions";
@@ -227,6 +228,14 @@ function PacienteDetalle() {
                 <ShieldAlert className="size-4 shrink-0" />
                 Tu rol no tiene acceso a la historia clínica de este paciente.
               </div>
+            )}
+
+            {access.clinic?.id && (
+              <FinanceSection
+                clinicId={access.clinic.id}
+                patientId={paciente.id}
+                puedeEditar={hasPermission(access.role, "patients:manage")}
+              />
             )}
 
             <div className="card-clinical p-6">
