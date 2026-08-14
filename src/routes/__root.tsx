@@ -12,6 +12,10 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
+import { captureException, initSentry } from "@/lib/sentry";
+
+// Se ejecuta una sola vez al importar el módulo raíz. No-op si no hay DSN.
+initSentry();
 
 function NotFoundComponent() {
   return (
@@ -40,6 +44,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    captureException(error, { tags: { boundary: "tanstack_root_error_component" } });
   }, [error]);
 
   return (

@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
-// TODO: reemplazar por la URL del proyecto cuando exista dominio propio.
-const BASE_URL = "";
+// Se puede sobreescribir con PUBLIC_APP_URL para preview/staging distintos.
+const BASE_URL = (typeof process !== "undefined" && process.env.PUBLIC_APP_URL) || "https://alika.com";
 
 interface SitemapEntry {
   path: string;

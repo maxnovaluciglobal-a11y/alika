@@ -1,2 +1,21 @@
 User-agent: *
 Allow: /
+Allow: /auth
+
+# La app clínica y el portal del paciente NO se indexan
+Disallow: /dashboard
+Disallow: /pacientes
+Disallow: /agenda
+Disallow: /tratamientos
+Disallow: /equipo
+Disallow: /permisos
+Disallow: /compliance
+Disallow: /preferencias
+Disallow: /sandbox-email
+Disallow: /dominio-email
+Disallow: /pruebas-email
+Disallow: /configuracion
+Disallow: /portal
+Disallow: /onboarding
+
+Sitemap: https://alika.com/sitemap.xml
