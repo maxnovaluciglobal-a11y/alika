@@ -31,6 +31,7 @@ import { Route as AuthenticatedClinicPreferenciasRouteImport } from './routes/_a
 import { Route as AuthenticatedClinicPruebasEmailRouteImport } from './routes/_authenticated/_clinic/pruebas-email'
 import { Route as AuthenticatedClinicSandboxEmailRouteImport } from './routes/_authenticated/_clinic/sandbox-email'
 import { Route as AuthenticatedClinicTratamientosRouteImport } from './routes/_authenticated/_clinic/tratamientos'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
 import { Route as AuthenticatedClinicPacientesIndexRouteImport } from './routes/_authenticated/_clinic/pacientes.index'
 import { Route as AuthenticatedClinicPacientesPacienteIdRouteImport } from './routes/_authenticated/_clinic/pacientes.$pacienteId'
 
@@ -153,6 +154,11 @@ const AuthenticatedClinicTratamientosRoute =
     path: '/tratamientos',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe/webhook',
+  path: '/api/stripe/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedClinicPacientesIndexRoute =
   AuthenticatedClinicPacientesIndexRouteImport.update({
     id: '/pacientes/',
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/pruebas-email': typeof AuthenticatedClinicPruebasEmailRoute
   '/sandbox-email': typeof AuthenticatedClinicSandboxEmailRoute
   '/tratamientos': typeof AuthenticatedClinicTratamientosRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
   '/pacientes/': typeof AuthenticatedClinicPacientesIndexRoute
 }
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/pruebas-email': typeof AuthenticatedClinicPruebasEmailRoute
   '/sandbox-email': typeof AuthenticatedClinicSandboxEmailRoute
   '/tratamientos': typeof AuthenticatedClinicTratamientosRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
   '/pacientes': typeof AuthenticatedClinicPacientesIndexRoute
 }
@@ -237,6 +245,7 @@ export interface FileRoutesById {
   '/_authenticated/_clinic/pruebas-email': typeof AuthenticatedClinicPruebasEmailRoute
   '/_authenticated/_clinic/sandbox-email': typeof AuthenticatedClinicSandboxEmailRoute
   '/_authenticated/_clinic/tratamientos': typeof AuthenticatedClinicTratamientosRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/_authenticated/_clinic/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
   '/_authenticated/_clinic/pacientes/': typeof AuthenticatedClinicPacientesIndexRoute
 }
@@ -263,6 +272,7 @@ export interface FileRouteTypes {
     | '/pruebas-email'
     | '/sandbox-email'
     | '/tratamientos'
+    | '/api/stripe/webhook'
     | '/pacientes/$pacienteId'
     | '/pacientes/'
   fileRoutesByTo: FileRoutesByTo
@@ -286,6 +296,7 @@ export interface FileRouteTypes {
     | '/pruebas-email'
     | '/sandbox-email'
     | '/tratamientos'
+    | '/api/stripe/webhook'
     | '/pacientes/$pacienteId'
     | '/pacientes'
   id:
@@ -312,6 +323,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_clinic/pruebas-email'
     | '/_authenticated/_clinic/sandbox-email'
     | '/_authenticated/_clinic/tratamientos'
+    | '/api/stripe/webhook'
     | '/_authenticated/_clinic/pacientes/$pacienteId'
     | '/_authenticated/_clinic/pacientes/'
   fileRoutesById: FileRoutesById
@@ -322,6 +334,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   PortalRoute: typeof PortalRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -480,6 +493,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicTratamientosRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
+    '/api/stripe/webhook': {
+      id: '/api/stripe/webhook'
+      path: '/api/stripe/webhook'
+      fullPath: '/api/stripe/webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/_clinic/pacientes/': {
       id: '/_authenticated/_clinic/pacientes/'
       path: '/pacientes'
@@ -573,6 +593,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   PortalRoute: PortalRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
