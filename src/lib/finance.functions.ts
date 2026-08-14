@@ -462,6 +462,105 @@ export const listTreatmentPlans = createServerFn({ method: "GET" })
     return plans.map((p) => mapPlan(p, itemsByPlan.get(p.id) ?? []));
   });
 
+/** Listado a nivel clínica para la vista /tratamientos. No trae los items
+ * enteros — solo el conteo + completados para computar avance. Esto lo hace
+ * viable con volumen alto (evita traer miles de items para pintar barras de
+ * progreso). Si necesitás el detalle de un plan, el usuario abre la ficha
+ * del paciente y ahí sí se hidrata con listTreatmentPlans(patientId).
+ *
+ * treatment_plans no tiene professional_id ni branch_id en el schema —
+ * la asignación es a nivel item — así que la vista solo filtra por
+ * estado, fecha y búsqueda de texto en nombre del plan o del paciente.
+ */
+export const listClinicTreatmentPlans = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ clinicId: z.string().uuid() }).parse(input),
+  )
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<
+      Array<{
+        id: string;
+        name: string;
+        patientId: string;
+        patientName: string;
+        patientDocument: string | null;
+        status: TreatmentPlan["status"];
+        currency: string;
+        createdAt: string;
+        startedAt: string | null;
+        totalCents: number;
+        itemsCount: number;
+        itemsCompleted: number;
+      }>
+    > => {
+      const { supabase } = context;
+
+      const { data: planRows, error } = await supabase
+        .from("treatment_plans")
+        .select("id, name, patient_id, status, total_cents, currency, started_at, created_at")
+        .eq("clinic_id", data.clinicId)
+        .order("created_at", { ascending: false })
+        .limit(500);
+
+      if (error) throw new Error(error.message);
+      const plans = planRows ?? [];
+      if (!plans.length) return [];
+
+      const patientIds = [...new Set(plans.map((p) => p.patient_id))];
+      const planIds = plans.map((p) => p.id);
+
+      const [{ data: patients, error: pErr }, { data: items, error: iErr }] = await Promise.all([
+        supabase
+          .from("patients")
+          .select("id, full_name, document_id")
+          .eq("clinic_id", data.clinicId)
+          .in("id", patientIds),
+        supabase
+          .from("treatment_items")
+          .select("plan_id, status")
+          .eq("clinic_id", data.clinicId)
+          .in("plan_id", planIds),
+      ]);
+      if (pErr) throw new Error(pErr.message);
+      if (iErr) throw new Error(iErr.message);
+
+      const patientById = new Map(
+        (patients ?? []).map((p) => [p.id, p]),
+      );
+
+      const countsByPlan = new Map<string, { total: number; completed: number }>();
+      for (const it of items ?? []) {
+        const c = countsByPlan.get(it.plan_id) ?? { total: 0, completed: 0 };
+        c.total += 1;
+        if (it.status === "completed") c.completed += 1;
+        countsByPlan.set(it.plan_id, c);
+      }
+
+      return plans.map((p) => {
+        const patient = patientById.get(p.patient_id);
+        const counts = countsByPlan.get(p.id) ?? { total: 0, completed: 0 };
+        return {
+          id: p.id,
+          name: p.name,
+          patientId: p.patient_id,
+          patientName: patient?.full_name ?? "Paciente",
+          patientDocument: patient?.document_id ?? null,
+          status: p.status as TreatmentPlan["status"],
+          currency: p.currency,
+          createdAt: p.created_at,
+          startedAt: p.started_at,
+          totalCents: p.total_cents,
+          itemsCount: counts.total,
+          itemsCompleted: counts.completed,
+        };
+      });
+    },
+  );
+
 export const setTreatmentItemStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
