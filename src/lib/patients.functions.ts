@@ -93,34 +93,56 @@ function mapPatientRow(
 const PATIENT_COLUMNS =
   "id, full_name, document_id, birth_date, phone, email, branch_id, primary_professional_id, status, tags, avatar_url, balance_cents, no_show_risk, ai_summary";
 
-/** Listado de pacientes de la clínica. RLS: solo clínicas donde el usuario es miembro. */
+/** Listado de pacientes de la clínica. RLS: solo clínicas donde el usuario es miembro.
+ *
+ * Antes traía TODAS las citas de la clínica (limit 5000) para calcular en JS
+ * la última/próxima por paciente. O(P×A) en memoria + silencioso cap con
+ * volumen real. Ahora usa la RPC `list_patients_with_last_and_next_appointment`
+ * que hace el cálculo en Postgres con índice `appointments_clinic_patient_idx`
+ * y devuelve solo 1 fila por paciente.
+ */
 export const listPatients = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<Paciente[]> => {
     const { supabase } = context;
 
-    const [{ data: rows, error }, { data: appts, error: apptError }] = await Promise.all([
+    const [{ data: rows, error }, { data: apptRows, error: apptError }] = await Promise.all([
       supabase
         .from("patients")
         .select(PATIENT_COLUMNS)
         .eq("clinic_id", data.clinicId)
         .order("full_name", { ascending: true })
         .limit(1000),
-      supabase
-        .from("appointments")
-        .select("patient_id, starts_at, status")
-        .eq("clinic_id", data.clinicId)
-        .limit(5000),
+      supabase.rpc("list_patients_with_last_and_next_appointment", {
+        p_clinic_id: data.clinicId,
+      }),
     ]);
 
     if (error) throw new Error(error.message);
     if (apptError) throw new Error(apptError.message);
 
-    const appointments = (appts ?? []) as AppointmentSlim[];
-    return (rows ?? []).map((row) =>
-      mapPatientRow(row as PatientRow, ultimaYProxima(appointments, row.id)),
+    type ApptSummary = {
+      patient_id: string;
+      last_appointment_at: string | null;
+      next_appointment_at: string | null;
+    };
+    const summaryByPatient = new Map<string, ApptSummary>(
+      (apptRows ?? []).map((r) => [(r as ApptSummary).patient_id, r as ApptSummary]),
     );
+
+    return (rows ?? []).map((row) => {
+      const s = summaryByPatient.get(row.id);
+      return mapPatientRow(row as PatientRow, {
+        ultimaVisita: s?.last_appointment_at
+          ? formatoFecha(s.last_appointment_at.slice(0, 10))
+          : "Sin visitas",
+        ultimaVisitaISO: s?.last_appointment_at ? s.last_appointment_at.slice(0, 10) : "",
+        proximoControl: s?.next_appointment_at
+          ? formatoFecha(s.next_appointment_at.slice(0, 10))
+          : null,
+      });
+    });
   });
 
 /** Ficha de un paciente, con timeline construido desde citas reales. */
@@ -217,7 +239,19 @@ export const createPatient = createServerFn({ method: "POST" })
         clinicId: z.string().uuid(),
         nombre: z.string().trim().min(1, "El nombre es obligatorio."),
         documento: z.string().trim().optional(),
-        fechaNacimiento: z.string().min(1, "La fecha de nacimiento es obligatoria."),
+        fechaNacimiento: z
+          .string()
+          .min(1, "La fecha de nacimiento es obligatoria.")
+          .refine((s) => /^\d{4}-\d{2}-\d{2}/.test(s), "Formato de fecha inválido.")
+          .refine((s) => {
+            const d = new Date(s);
+            const today = new Date();
+            return d <= today;
+          }, "La fecha de nacimiento no puede ser futura.")
+          .refine((s) => {
+            const d = new Date(s);
+            return d >= new Date("1900-01-01");
+          }, "Fecha de nacimiento fuera de rango."),
         telefono: z.string().trim().optional(),
         email: z.string().trim().email("Email inválido.").optional().or(z.literal("")),
         sucursalId: z.string().uuid().optional(),

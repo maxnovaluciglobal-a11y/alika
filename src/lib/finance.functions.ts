@@ -8,7 +8,6 @@ import {
   QUOTE_STATUSES,
   TREATMENT_ITEM_STATUSES,
   TREATMENT_PLAN_STATUSES,
-  type PatientBalance,
   type Payment,
   type Procedure,
   type Quote,
@@ -579,10 +578,13 @@ export const setTreatmentItemStatus = createServerFn({ method: "POST" })
     z.object({ itemId: z.string().uuid(), status: z.enum(TREATMENT_ITEM_STATUSES) }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const patch = {
-      status: data.status,
-      ...(data.status === "completed" && { completed_at: new Date().toISOString() }),
-    };
+    const { userId } = context;
+    const isCompleted = data.status === "completed";
+    // Al completar registramos quién y cuándo. Al des-completar limpiamos
+    // ambos campos para no dejar auditoría inconsistente.
+    const patch = isCompleted
+      ? { status: data.status, completed_at: new Date().toISOString(), completed_by: userId }
+      : { status: data.status, completed_at: null, completed_by: null };
     const { error } = await context.supabase
       .from("treatment_items")
       .update(patch)
@@ -671,7 +673,17 @@ export const registerPayment = createServerFn({ method: "POST" })
         currency: z.string().length(3).default("CLP"),
         method: z.enum(PAYMENT_METHODS).default("cash"),
         reference: z.string().trim().max(120).optional(),
-        paidAt: z.string().optional(),
+        paidAt: z
+          .string()
+          .optional()
+          .refine(
+            (s) => !s || !Number.isNaN(new Date(s).getTime()),
+            "Fecha de pago inválida.",
+          )
+          .refine(
+            (s) => !s || new Date(s) <= new Date(),
+            "No se puede registrar un pago con fecha futura.",
+          ),
         notes: z.string().trim().max(500).optional(),
         treatmentPlanId: z.string().uuid().optional(),
       })
@@ -698,53 +710,9 @@ export const registerPayment = createServerFn({ method: "POST" })
     return { id: inserted.id };
   });
 
-/**
- * Saldo agregado del paciente. Total facturado desde treatment_items (todos
- * los ítems del plan cuentan, no solo los completados — un plan aceptado se
- * asume comprometido a pagar). Total pagado desde payments. Diferencia > 0
- * = paciente debe; < 0 = a favor.
- */
-export const getPatientBalance = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
-  )
-  .handler(async ({ data, context }): Promise<PatientBalance> => {
-    const { supabase } = context;
-
-    // Sumar treatment_items via join con treatment_plans para respetar RLS por clinic.
-    // Excluir planes cancelados: la deuda de un plan cancelado ya no está comprometida.
-    const [itemsRes, paymentsRes] = await Promise.all([
-      supabase
-        .from("treatment_items")
-        .select("price_cents, treatment_plans!inner(patient_id, clinic_id, status)")
-        .eq("clinic_id", data.clinicId)
-        .eq("treatment_plans.patient_id", data.patientId)
-        .neq("treatment_plans.status", "cancelled"),
-      supabase
-        .from("payments")
-        .select("amount_cents, currency")
-        .eq("clinic_id", data.clinicId)
-        .eq("patient_id", data.patientId),
-    ]);
-
-    if (itemsRes.error) throw new Error(itemsRes.error.message);
-    if (paymentsRes.error) throw new Error(paymentsRes.error.message);
-
-    const totalBilled = (itemsRes.data ?? []).reduce(
-      (s, r) => s + ((r as { price_cents: number }).price_cents ?? 0),
-      0,
-    );
-    const totalPaid = (paymentsRes.data ?? []).reduce((s, r) => s + (r.amount_cents ?? 0), 0);
-    // La moneda se toma del primer pago o del primer ítem; asumimos consistencia
-    // por clínica en Fase 3B (una sola moneda por instalación).
-    const currency =
-      ((paymentsRes.data ?? [])[0]?.currency as string | undefined) ?? "CLP";
-
-    return {
-      totalBilledCents: totalBilled,
-      totalPaidCents: totalPaid,
-      balanceCents: totalBilled - totalPaid,
-      currency,
-    };
-  });
+// getPatientBalance eliminado: era dead code. El cálculo del saldo del
+// paciente vive en dos lugares —server-side en `getPatient` (para el header
+// de la ficha) y client-side en FinanceSection (sobre listPayments +
+// listTreatmentPlans). Ambos aplican la misma regla: excluir planes
+// cancelados. Si en el futuro necesitamos exponer el balance como endpoint
+// separado (portal del paciente, dashboard financiero), reintroducir aquí.

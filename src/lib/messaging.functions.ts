@@ -159,8 +159,8 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
       let body: string;
       if (data.rawBody) {
         body = renderTemplate(data.rawBody, {
-          paciente: patient.full_name,
           ...data.variables,
+          paciente: patient.full_name,
         });
       } else {
         let templateQuery = supabase
@@ -180,8 +180,8 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
         templateId = template.id;
         templateKind = template.kind as (typeof MESSAGE_TEMPLATE_KINDS)[number];
         body = renderTemplate(template.body, {
-          paciente: patient.full_name,
           ...data.variables,
+          paciente: patient.full_name,
         });
       }
 

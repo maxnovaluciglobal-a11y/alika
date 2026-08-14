@@ -580,16 +580,23 @@ export function hoyISO(timeZone = "America/Santiago"): string {
   }).format(new Date());
 }
 
-export function formatoFecha(iso: string) {
+/** Guard común: acepta null/undefined/"" y strings mal formados sin explotar. */
+function parseIsoDate(iso: string | null | undefined): Date | null {
+  if (!iso) return null;
+  if (!/^\d{4}-\d{2}-\d{2}/.test(iso)) return null;
   const [y, m, d] = iso.split("-").map(Number);
-  return new Intl.DateTimeFormat("es-CL", { day: "2-digit", month: "short", year: "numeric" }).format(
-    new Date(y, (m ?? 1) - 1, d),
-  );
+  const date = new Date(y!, (m ?? 1) - 1, d!);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
-export function formatoFechaLarga(iso: string) {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Intl.DateTimeFormat("es-CL", { weekday: "long", day: "numeric", month: "long" }).format(
-    new Date(y, (m ?? 1) - 1, d),
-  );
+export function formatoFecha(iso: string | null | undefined) {
+  const date = parseIsoDate(iso);
+  if (!date) return "—";
+  return new Intl.DateTimeFormat("es-CL", { day: "2-digit", month: "short", year: "numeric" }).format(date);
+}
+
+export function formatoFechaLarga(iso: string | null | undefined) {
+  const date = parseIsoDate(iso);
+  if (!date) return "—";
+  return new Intl.DateTimeFormat("es-CL", { weekday: "long", day: "numeric", month: "long" }).format(date);
 }

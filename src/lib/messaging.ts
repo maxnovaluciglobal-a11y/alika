@@ -59,6 +59,10 @@ export interface Message {
  * Renderiza un template sustituyendo `{variable}` por su valor.
  * Variables desconocidas se dejan como estaban — no rompen el envío ni
  * fingen un valor vacío que un humano no note.
+ *
+ * Nota: el caller es responsable del orden de las keys si hay reservadas
+ * como `paciente` — hacer `{ ...vars, paciente: nombreReal }` (paciente al
+ * final) para evitar que un cliente malicioso lo sobreescriba.
  */
 export function renderTemplate(body: string, vars: Record<string, string>): string {
   return body.replace(/\{(\w+)\}/g, (match, key) => {
