@@ -260,14 +260,26 @@ export const createQuote = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<{ id: string; number: string }> => {
     const { supabase } = context;
 
-    // Correlativo: cuenta los quotes existentes de la clínica y suma 1. Barato
-    // para volúmenes iniciales; si se necesita algo estrictamente monotónico
-    // en concurrencia alta, se reemplaza por una secuencia SQL por clinic.
-    const { count } = await supabase
-      .from("quotes")
-      .select("id", { count: "exact", head: true })
-      .eq("clinic_id", data.clinicId);
-    const nextNumber = `P-${new Date().getFullYear()}-${String((count ?? 0) + 1).padStart(4, "0")}`;
+    // Correlativo atómico via RPC SECURITY DEFINER. Reset por año en tz de
+    // la clínica (evita que un quote creado a las 22:00 del 31-dic en Chile
+    // lleve el año siguiente porque el server está en UTC).
+    const { data: clinic } = await supabase
+      .from("clinics")
+      .select("timezone")
+      .eq("id", data.clinicId)
+      .maybeSingle();
+    const tz = clinic?.timezone || "America/Santiago";
+    const year = Number(
+      new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric" }).format(new Date()),
+    );
+
+    const { data: nextValue, error: rpcErr } = await supabase.rpc("next_clinic_counter", {
+      p_clinic_id: data.clinicId,
+      p_kind: "quote",
+      p_year: year,
+    });
+    if (rpcErr) throw new Error("No pudimos generar el número de presupuesto. " + rpcErr.message);
+    const nextNumber = `P-${year}-${String(nextValue as number).padStart(4, "0")}`;
 
     const itemsWithTotals = data.items.map((it, i) => {
       const total = Math.max(0, it.quantity * it.unitPriceCents - it.discountCents);

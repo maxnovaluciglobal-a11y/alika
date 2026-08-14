@@ -152,7 +152,7 @@ function NuevaCitaDialog({
         <DialogHeader>
           <DialogTitle>Nueva cita</DialogTitle>
           <DialogDescription>
-            La hora se interpreta en el huso horario del servidor.
+            La hora se interpreta en el huso horario de la sucursal seleccionada.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">

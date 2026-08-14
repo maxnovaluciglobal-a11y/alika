@@ -112,6 +112,43 @@ export const listAppointments = createServerFn({ method: "GET" })
     );
   });
 
+/**
+ * Interpreta un wall-clock local "YYYY-MM-DDTHH:mm[:ss]" (formato del
+ * <input type="datetime-local">) como ese mismo instante en la timezone
+ * dada y devuelve el Date en UTC. Sin luxon: usa Intl.DateTimeFormat
+ * para descubrir el offset UTC en esa fecha concreta (respeta DST).
+ */
+function wallTimeInTzToUtc(localIso: string, timeZone: string): Date {
+  const normalized = localIso.length === 16 ? localIso + ":00" : localIso;
+  // Interpretar el string como si fuera UTC → medir cuánto se aleja al
+  // renderizarlo en la timezone objetivo. El delta es el offset.
+  const asUtc = new Date(normalized + "Z");
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+  const parts = fmt.formatToParts(asUtc).reduce<Record<string, string>>((acc, p) => {
+    if (p.type !== "literal") acc[p.type] = p.value;
+    return acc;
+  }, {});
+  const asIfUtc = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour) % 24,
+    Number(parts.minute),
+    Number(parts.second),
+  );
+  const offsetMs = asIfUtc - asUtc.getTime();
+  return new Date(asUtc.getTime() - offsetMs);
+}
+
 export const createAppointment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -122,10 +159,10 @@ export const createAppointment = createServerFn({ method: "POST" })
         patientId: z.string().uuid(),
         professionalId: z.string().uuid(),
         tratamiento: z.string().trim().min(1, "Indica el tratamiento o motivo."),
-        // Valor de <input type="datetime-local">, sin zona horaria explícita.
-        // Simplificación de fase 1: se interpreta en la zona horaria del servidor,
-        // no en la de la sucursal. Suficiente mientras haya una sola sucursal por
-        // despliegue; a revisar cuando haya clínicas multi-huso horario reales.
+        // Valor crudo del <input type="datetime-local"> ("YYYY-MM-DDTHH:mm").
+        // Se interpreta como wall-clock EN LA TIMEZONE DE LA SUCURSAL, no del
+        // servidor. En Vercel el server corre en UTC — sin este fix las citas
+        // creadas por recepción en Santiago quedaban corridas 3-4 hrs.
         startsAt: z.string().min(1, "Falta la fecha y hora de inicio."),
         duracionMin: z.number().int().min(5).max(480),
         prioridad: z.boolean().optional(),
@@ -133,7 +170,17 @@ export const createAppointment = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<{ id: string }> => {
-    const startsAt = new Date(data.startsAt);
+    const { data: branch, error: branchErr } = await context.supabase
+      .from("branches")
+      .select("timezone")
+      .eq("clinic_id", data.clinicId)
+      .eq("id", data.branchId)
+      .maybeSingle();
+    if (branchErr) throw new Error(branchErr.message);
+    if (!branch) throw new Error("La sucursal no existe o no es tuya.");
+    const timeZone = branch.timezone || DEFAULT_TIMEZONE;
+
+    const startsAt = wallTimeInTzToUtc(data.startsAt, timeZone);
     if (Number.isNaN(startsAt.getTime())) throw new Error("Fecha/hora de inicio inválida.");
     const endsAt = new Date(startsAt.getTime() + data.duracionMin * 60_000);
 

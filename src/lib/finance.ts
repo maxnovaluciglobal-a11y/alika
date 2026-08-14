@@ -155,23 +155,52 @@ export interface PatientBalance {
   currency: string;
 }
 
-/** Formato de moneda (defaults a CLP; respeta currency del quote/plan). */
+/**
+ * Monedas ISO 4217 sin subunidades (o con subunidad no cotidiana). Para
+ * estas guardamos "cents" = unidad entera. Para el resto, cents = 1/100
+ * de la unidad. Fuente: la tabla de currency exponent de ISO. Los que
+ * importan para LatAm y adyacentes son CLP, PYG, COP, VND, JPY, KRW.
+ */
+const ZERO_DECIMAL_CURRENCIES = new Set([
+  "CLP",
+  "PYG",
+  "COP",
+  "VND",
+  "JPY",
+  "KRW",
+  "CLF",
+  "BIF",
+  "DJF",
+  "GNF",
+  "ISK",
+  "KMF",
+  "MGA",
+  "PYG",
+  "RWF",
+  "UGX",
+  "VUV",
+  "XAF",
+  "XOF",
+  "XPF",
+]);
+
+function centsFactor(currency: string) {
+  return ZERO_DECIMAL_CURRENCIES.has(currency.toUpperCase()) ? 1 : 100;
+}
+
+/** Formato de moneda. Respeta currency del quote/plan/payment. */
 export function formatMoney(cents: number, currency = "CLP"): string {
+  const isZeroDec = ZERO_DECIMAL_CURRENCIES.has(currency.toUpperCase());
   return new Intl.NumberFormat("es-CL", {
     style: "currency",
     currency,
-    maximumFractionDigits: 0,
-  }).format(cents / (currency === "CLP" ? 1 : 100));
+    maximumFractionDigits: isZeroDec ? 0 : 2,
+  }).format(cents / centsFactor(currency));
 }
 
-/**
- * Números CLP se guardan sin decimales (pesos enteros). Otras monedas de
- * LatAm suelen usar 2 decimales — dejamos el helper preparado para cuando
- * agreguemos MXN/PEN/COP.
- */
 export function toCents(pesos: number, currency = "CLP"): number {
-  return Math.round(pesos * (currency === "CLP" ? 1 : 100));
+  return Math.round(pesos * centsFactor(currency));
 }
 export function fromCents(cents: number, currency = "CLP"): number {
-  return cents / (currency === "CLP" ? 1 : 100);
+  return cents / centsFactor(currency);
 }
