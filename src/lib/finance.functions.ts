@@ -601,13 +601,15 @@ export const getPatientBalance = createServerFn({ method: "GET" })
   .handler(async ({ data, context }): Promise<PatientBalance> => {
     const { supabase } = context;
 
-    // Sumar treatment_items via join con treatment_plans para respetar RLS por clinic
+    // Sumar treatment_items via join con treatment_plans para respetar RLS por clinic.
+    // Excluir planes cancelados: la deuda de un plan cancelado ya no está comprometida.
     const [itemsRes, paymentsRes] = await Promise.all([
       supabase
         .from("treatment_items")
-        .select("price_cents, treatment_plans!inner(patient_id, clinic_id)")
+        .select("price_cents, treatment_plans!inner(patient_id, clinic_id, status)")
         .eq("clinic_id", data.clinicId)
-        .eq("treatment_plans.patient_id", data.patientId),
+        .eq("treatment_plans.patient_id", data.patientId)
+        .neq("treatment_plans.status", "cancelled"),
       supabase
         .from("payments")
         .select("amount_cents, currency")

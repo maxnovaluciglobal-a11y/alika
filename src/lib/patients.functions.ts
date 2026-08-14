@@ -183,9 +183,10 @@ export const getPatient = createServerFn({ method: "GET" })
     const [{ data: billedRows }, { data: paidRows }] = await Promise.all([
       supabase
         .from("treatment_items")
-        .select("price_cents, treatment_plans!inner(patient_id, clinic_id)")
+        .select("price_cents, treatment_plans!inner(patient_id, clinic_id, status)")
         .eq("clinic_id", data.clinicId)
-        .eq("treatment_plans.patient_id", data.patientId),
+        .eq("treatment_plans.patient_id", data.patientId)
+        .neq("treatment_plans.status", "cancelled"),
       supabase
         .from("payments")
         .select("amount_cents")

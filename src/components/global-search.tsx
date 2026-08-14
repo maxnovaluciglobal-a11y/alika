@@ -11,8 +11,6 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { hoyISO } from "@/lib/clinic-data";
-
-const HOY = hoyISO();
 import { busquedaGlobal, type GrupoResultado } from "@/lib/search";
 
 const iconos: Record<GrupoResultado, typeof User> = {
@@ -47,7 +45,10 @@ export function GlobalSearch() {
     if (destino === "pacientes") {
       navigate({ to: "/pacientes/$pacienteId", params: { pacienteId } });
     } else if (destino === "agenda") {
-      navigate({ to: "/agenda", search: { q: titulo.split(" — ").pop() ?? "", fecha: HOY, sucursal: "", profesional: "", estado: "", page: 1 } });
+      // hoyISO() sin arg usa Santiago como fallback (no tenemos acceso al
+      // contexto de clínica desde este componente global). La agenda al abrirse
+      // recalculará con la timezone real de la clínica activa.
+      navigate({ to: "/agenda", search: { q: titulo.split(" — ").pop() ?? "", fecha: hoyISO(), sucursal: "", profesional: "", estado: "", page: 1 } });
     } else {
       navigate({ to: "/tratamientos", search: { q: titulo, sucursal: "", profesional: "", estado: "", desde: "", hasta: "", page: 1 } });
     }

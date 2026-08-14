@@ -88,7 +88,13 @@ export type ClinicAccess = {
   fullName: string | null;
   email: string | null;
   avatarUrl: string | null;
-  clinic: { id: string; name: string; onboardingCompleted: boolean } | null;
+  clinic: {
+    id: string;
+    name: string;
+    onboardingCompleted: boolean;
+    /** IANA timezone (ej. "America/Santiago"). Fallback a Santiago si la clínica no lo tiene seteado. */
+    timezone: string;
+  } | null;
   /** Rol vigente en la interfaz: el real, o el simulado si el admin activó la simulación. */
   role: ClinicRole | null;
   /** Rol real del usuario en la clínica (autoritativo, el que aplica en RLS). */

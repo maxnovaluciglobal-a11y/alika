@@ -40,6 +40,7 @@ function horaDeCita(inicio: number) {
 function Dashboard() {
   const { access } = Route.useRouteContext();
   const clinicId = access.clinic?.id;
+  const clinicTz = access.clinic?.timezone;
 
   const fetchPatients = useServerFn(listPatients);
   const fetchAppointments = useServerFn(listAppointments);
@@ -61,7 +62,7 @@ function Dashboard() {
     queryFn: () => fetchProfessionals({ data: { clinicId: clinicId! } }),
   });
 
-  const hoy = hoyISO();
+  const hoy = hoyISO(clinicTz);
 
   const citasHoy = useMemo(() => citas.filter((c) => c.fecha === hoy), [citas, hoy]);
   const en7Dias = useMemo(() => {

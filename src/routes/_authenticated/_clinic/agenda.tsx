@@ -30,6 +30,9 @@ import {
   type EstadoCita,
 } from "@/lib/clinic-data";
 
+// Fallback para el default de validateSearch (no tiene acceso al contexto
+// de la ruta ni a la clínica activa). Dentro del componente usamos la
+// timezone real de la clínica vía access.clinic?.timezone.
 const HOY = hoyISO();
 import { listBranches, listProfessionals } from "@/lib/clinic-catalog.functions";
 import { listPatients } from "@/lib/patients.functions";
@@ -258,6 +261,7 @@ function AgendaPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const clinicId = access.clinic?.id;
+  const hoy = hoyISO(access.clinic?.timezone);
 
   const fetchAppointments = useServerFn(listAppointments);
   const fetchBranches = useServerFn(listBranches);
@@ -325,7 +329,7 @@ function AgendaPage() {
   const pagina = paginar(ordenadas, search.page);
   const activos =
     [search.q, search.sucursal, search.profesional, search.estado].filter(Boolean).length +
-    (search.fecha !== HOY ? 1 : 0);
+    (search.fecha !== hoy ? 1 : 0);
 
   return (
     <AppShell title="Agenda" access={access}>
@@ -345,7 +349,7 @@ function AgendaPage() {
           activos={activos}
           onReset={() =>
             navigate({
-              search: { q: "", fecha: HOY, sucursal: "", profesional: "", estado: "", page: 1 },
+              search: { q: "", fecha: hoy, sucursal: "", profesional: "", estado: "", page: 1 },
             })
           }
         >

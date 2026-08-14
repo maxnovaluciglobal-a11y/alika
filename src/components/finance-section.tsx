@@ -633,16 +633,18 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
     queryFn: () => fetchPayments({ data: { clinicId, patientId } }),
   });
 
-  // Resumen de saldo calculado client-side desde plans + payments — coincide con
-  // el saldo del header (calculado server-side en getPatient) porque usa la
-  // misma agregación.
-  const totalBilled = plans.reduce(
+  // Resumen de saldo calculado client-side desde plans + payments — tiene que
+  // coincidir con el saldo del header (calculado server-side en getPatient).
+  // Los planes cancelados no cuentan en la deuda comprometida (misma regla en
+  // ambos lados).
+  const planesActivos = plans.filter((p) => p.status !== "cancelled");
+  const totalBilled = planesActivos.reduce(
     (s, p) => s + p.items.reduce((si, it) => si + it.priceCents, 0),
     0,
   );
   const totalPaid = payments.reduce((s, p) => s + p.amountCents, 0);
   const balance = totalBilled - totalPaid;
-  const currency = plans[0]?.currency ?? payments[0]?.currency ?? "CLP";
+  const currency = planesActivos[0]?.currency ?? payments[0]?.currency ?? "CLP";
 
   const accept = useMutation({
     mutationFn: (quoteId: string) => setStatusFn({ data: { quoteId, status: "accepted" } }),

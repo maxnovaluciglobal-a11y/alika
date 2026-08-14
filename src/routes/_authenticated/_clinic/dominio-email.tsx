@@ -99,10 +99,16 @@ function DominioEmailPage() {
       toast.error("Introduce un dominio válido, por ejemplo tuclinica.com");
       return;
     }
+    if (!access.clinic?.id) {
+      toast.error("Todavía no elegiste clínica activa.");
+      return;
+    }
     setCargando(true);
     setError(null);
     try {
-      const resultado = await verificar({ data: { domain, dkimSelector: selector } });
+      const resultado = await verificar({
+        data: { clinicId: access.clinic.id, domain, dkimSelector: selector },
+      });
       setVerificacion(resultado);
       guardarVerificacion(resultado);
       if (resultado.aprobado) {

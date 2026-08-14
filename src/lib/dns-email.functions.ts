@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   calcularAprobado,
   esDominioValido,
@@ -11,17 +13,23 @@ import {
   type DnsVerification,
 } from "@/lib/dns-email";
 
-type DnsInput = { domain: string; dkimSelector: string };
-
 /**
  * Consulta real de los registros de autenticación de email vía DNS-over-HTTPS.
- * Se ejecuta en el servidor para evitar restricciones del navegador.
+ * Se ejecuta en el servidor para evitar restricciones del navegador. Exige
+ * autenticación y clinicId como cinturón contra uso anónimo — antes era el
+ * único endpoint sin middleware y se prestaba a DoH-resolver gratuito y DoS.
  */
 export const verificarDnsEmail = createServerFn({ method: "POST" })
-  .inputValidator((input: DnsInput) => ({
-    domain: String(input?.domain ?? "").trim(),
-    dkimSelector: String(input?.dkimSelector ?? "").trim(),
-  }))
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        domain: z.string().trim().max(253),
+        dkimSelector: z.string().trim().max(63).default(""),
+      })
+      .parse(input),
+  )
   .handler(async ({ data }): Promise<DnsVerification> => {
     const domain = normalizarDominio(data.domain);
     const selector = data.dkimSelector.replace(/[^A-Za-z0-9._-]/g, "") || "default";

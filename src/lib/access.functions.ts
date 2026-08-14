@@ -20,7 +20,7 @@ export const getMyAccess = createServerFn({ method: "GET" })
       supabase.from("profiles").select("full_name, email, avatar_url").eq("id", userId).maybeSingle(),
       supabase
         .from("clinic_members")
-        .select("role, clinics(id, name, onboarding_completed)")
+        .select("role, clinics(id, name, onboarding_completed, timezone)")
         .eq("user_id", userId)
         .order("created_at", { ascending: true }),
     ]);
@@ -40,6 +40,7 @@ export const getMyAccess = createServerFn({ method: "GET" })
             id: membership.clinics.id,
             name: membership.clinics.name,
             onboardingCompleted: membership.clinics.onboarding_completed,
+            timezone: membership.clinics.timezone || "America/Santiago",
           }
         : null,
       role,
