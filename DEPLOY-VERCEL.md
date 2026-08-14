@@ -1,4 +1,4 @@
-# Oralia en Vercel — variables de entorno
+# Alika en Vercel — variables de entorno
 
 Guía completa de las variables que necesita el proyecto al desplegarse en Vercel:
 qué son, ejemplos de valores, si son de **cliente** (build-time, viajan al navegador)
@@ -87,7 +87,7 @@ asistentes de notas devuelven error de configuración.
 
 | Variable | Ejemplo | Notas |
 |---|---|---|
-| `PUBLIC_APP_URL` | `https://oralia.tuclinica.com` | Enlaces absolutos en emails y retornos de OAuth. En Preview usa la URL de despliegue |
+| `PUBLIC_APP_URL` | `https://alika.tuclinica.com` | Enlaces absolutos en emails y retornos de OAuth. En Preview usa la URL de despliegue |
 
 ---
 

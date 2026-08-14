@@ -8,7 +8,7 @@ import { usePortal } from "@/lib/portal-store";
 export const Route = createFileRoute("/portal/documentos")({
   head: () => ({
     meta: [
-      { title: "Enviar documentación · Portal Oralia" },
+      { title: "Enviar documentación · Portal Alika" },
       { name: "description", content: "Envía radiografías, órdenes médicas y credenciales de seguro a tu clínica." },
       { name: "robots", content: "noindex" },
     ],

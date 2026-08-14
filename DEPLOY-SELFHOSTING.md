@@ -1,6 +1,6 @@
-# Oralia — Guía de self-hosting (VPS propia)
+# Alika — Guía de self-hosting (VPS propia)
 
-Oralia es una app **TanStack Start + Vite**. En producción se construye con **Nitro**,
+Alika es una app **TanStack Start + Vite**. En producción se construye con **Nitro**,
 que genera un servidor Node autónomo en `.output/server/index.mjs`.
 
 ---
@@ -34,11 +34,11 @@ Copia `.env.example` a `.env` y complétalo.
 ## 3. Despliegue con Docker (recomendado)
 
 ```bash
-git clone <tu-repo> oralia && cd oralia
+git clone <tu-repo> alika && cd alika
 cp .env.example .env && nano .env
 
 docker compose up -d --build
-docker compose logs -f oralia
+docker compose logs -f alika
 ```
 
 La app queda en `http://TU_IP:3000`.
@@ -63,27 +63,27 @@ bun run build
 NODE_ENV=production PORT=3000 HOST=0.0.0.0 node .output/server/index.mjs
 ```
 
-Servicio systemd (`/etc/systemd/system/oralia.service`):
+Servicio systemd (`/etc/systemd/system/alika.service`):
 
 ```ini
 [Unit]
-Description=Oralia
+Description=Alika
 After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/opt/oralia
-EnvironmentFile=/opt/oralia/.env
-ExecStart=/usr/bin/node /opt/oralia/.output/server/index.mjs
+WorkingDirectory=/opt/alika
+EnvironmentFile=/opt/alika/.env
+ExecStart=/usr/bin/node /opt/alika/.output/server/index.mjs
 Restart=always
-User=oralia
+User=alika
 
 [Install]
 WantedBy=multi-user.target
 ```
 
 ```bash
-sudo systemctl daemon-reload && sudo systemctl enable --now oralia
+sudo systemctl daemon-reload && sudo systemctl enable --now alika
 ```
 
 ---
@@ -91,7 +91,7 @@ sudo systemctl daemon-reload && sudo systemctl enable --now oralia
 ## 5. Reverse proxy con TLS (Caddy)
 
 ```caddyfile
-oralia.tuclinica.com {
+alika.tuclinica.com {
     reverse_proxy 127.0.0.1:3000
 }
 ```

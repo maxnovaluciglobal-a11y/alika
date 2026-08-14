@@ -5,7 +5,7 @@ import { PortalProvider } from "@/lib/portal-store";
 export const Route = createFileRoute("/portal")({
   head: () => ({
     meta: [
-      { title: "Portal del paciente · Oralia" },
+      { title: "Portal del paciente · Alika" },
       {
         name: "description",
         content: "Reserva turnos, revisa tus tratamientos y envía documentación a tu clínica dental desde el celular.",

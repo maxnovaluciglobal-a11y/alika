@@ -35,8 +35,8 @@ COPY --from=build /app/.output ./.output
 COPY --from=build /app/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
-RUN addgroup -S oralia && adduser -S oralia -G oralia && chown -R oralia:oralia /app
-USER oralia
+RUN addgroup -S alika && adduser -S alika -G alika && chown -R alika:alika /app
+USER alika
 
 EXPOSE 3000
 

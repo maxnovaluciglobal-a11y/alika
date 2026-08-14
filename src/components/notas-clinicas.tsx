@@ -80,7 +80,7 @@ type Props = {
 export function NotasClinicas({
   paciente,
   clinicId,
-  clinicaNombre = "Oralia",
+  clinicaNombre = "Alika",
   puedeEditar,
   userId = null,
   rol = null,

@@ -78,14 +78,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Oralia · Software de gestión dental" },
+      { title: "Alika · Software de gestión dental" },
       {
         name: "description",
         content:
-          "Oralia es el sistema operativo de la clínica dental: agenda, pacientes, historia clínica e IA en una sola plataforma.",
+          "Alika es el sistema operativo de la clínica dental: agenda, pacientes, historia clínica e IA en una sola plataforma.",
       },
-      { name: "author", content: "Oralia" },
-      { property: "og:title", content: "Oralia · Software de gestión dental" },
+      { name: "author", content: "Alika" },
+      { property: "og:title", content: "Alika · Software de gestión dental" },
       {
         property: "og:description",
         content: "Agenda, pacientes, historia clínica e IA para clínicas dentales de LatAm.",

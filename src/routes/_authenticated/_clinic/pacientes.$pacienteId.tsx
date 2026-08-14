@@ -26,10 +26,10 @@ export const Route = createFileRoute("/_authenticated/_clinic/pacientes/$pacient
   head: ({ loaderData }) => {
     if (!loaderData) {
       return {
-        meta: [{ title: "Ficha no disponible | Oralia" }, { name: "robots", content: "noindex" }],
+        meta: [{ title: "Ficha no disponible | Alika" }, { name: "robots", content: "noindex" }],
       };
     }
-    const titulo = `${loaderData.paciente.nombre} · Ficha clínica | Oralia`;
+    const titulo = `${loaderData.paciente.nombre} · Ficha clínica | Alika`;
     const desc = `Ficha clínica de ${loaderData.paciente.nombre}: timeline, saldo y próximos controles.`;
     return {
       meta: [
@@ -212,7 +212,7 @@ function PacienteDetalle() {
                 <NotasClinicas
                   paciente={paciente}
                   clinicId={access.clinic?.id ?? null}
-                  clinicaNombre={access.clinic?.name ?? "Oralia"}
+                  clinicaNombre={access.clinic?.name ?? "Alika"}
                   puedeEditar={hasPermission(access.role, "clinical:write")}
                   userId={access.userId}
                   rol={access.role}

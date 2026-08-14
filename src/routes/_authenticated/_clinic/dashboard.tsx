@@ -17,12 +17,12 @@ export const Route = createFileRoute("/_authenticated/_clinic/dashboard")({
   beforeLoad: requirePermission("dashboard:view"),
   head: () => ({
     meta: [
-      { title: "Dashboard clínico | Oralia" },
+      { title: "Dashboard clínico | Alika" },
       {
         name: "description",
-        content: "Oralia: KPIs en vivo y agenda del día de tu clínica dental.",
+        content: "Alika: KPIs en vivo y agenda del día de tu clínica dental.",
       },
-      { property: "og:title", content: "Dashboard clínico | Oralia" },
+      { property: "og:title", content: "Dashboard clínico | Alika" },
       {
         property: "og:description",
         content: "KPIs en vivo y agenda del día de tu clínica dental.",

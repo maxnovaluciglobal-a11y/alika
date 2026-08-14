@@ -129,11 +129,11 @@ export function tratamientosDelPaciente(pacienteId = PACIENTE_PORTAL_ID) {
 }
 
 export function nombreProfesional(id: string) {
-  return getProfesional(id)?.nombre ?? "Equipo Oralia";
+  return getProfesional(id)?.nombre ?? "Equipo Alika";
 }
 
 export function nombreSucursal(id: string) {
-  return getSucursal(id)?.nombre ?? "Oralia";
+  return getSucursal(id)?.nombre ?? "Alika";
 }
 
 export function formatoFechaCorta(iso: string) {

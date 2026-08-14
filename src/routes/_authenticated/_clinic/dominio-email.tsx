@@ -32,13 +32,13 @@ export const Route = createFileRoute("/_authenticated/_clinic/dominio-email")({
   beforeLoad: requirePermission("team:manage"),
   head: () => ({
     meta: [
-      { title: "Autenticación del dominio de email | Oralia" },
+      { title: "Autenticación del dominio de email | Alika" },
       {
         name: "description",
         content:
           "Asistente guiado para configurar SPF, DKIM y DMARC y validar que el dominio pasa antes de habilitar los envíos en producción.",
       },
-      { property: "og:title", content: "Autenticación del dominio de email | Oralia" },
+      { property: "og:title", content: "Autenticación del dominio de email | Alika" },
       {
         property: "og:description",
         content: "Verifica SPF, DKIM y DMARC de tu clínica antes de enviar correos reales.",

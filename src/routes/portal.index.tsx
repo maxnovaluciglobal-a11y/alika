@@ -14,7 +14,7 @@ import { usePortal } from "@/lib/portal-store";
 export const Route = createFileRoute("/portal/")({
   head: () => ({
     meta: [
-      { title: "Mi clínica · Portal Oralia" },
+      { title: "Mi clínica · Portal Alika" },
       { name: "description", content: "Resumen de tus próximas citas, tratamientos activos y saldo en la clínica." },
       { name: "robots", content: "noindex" },
     ],

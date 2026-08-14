@@ -68,7 +68,7 @@ export function PermissionsMatrix() {
         <div>
           <h2 className="font-display text-xl font-semibold">Acceso por módulo</h2>
           <p className="text-sm text-muted-foreground">
-            Qué secciones de Oralia puede abrir cada rol. Las reglas se aplican también en el servidor.
+            Qué secciones de Alika puede abrir cada rol. Las reglas se aplican también en el servidor.
           </p>
         </div>
 

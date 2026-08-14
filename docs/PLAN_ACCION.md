@@ -1,4 +1,4 @@
-# Oralia — Plan de acción
+# Alika — Plan de acción
 
 _Auditado y escrito el 2026-08-11, tras importar el proyecto de Lovable y correrlo en local._
 
@@ -49,9 +49,9 @@ depende de que exista un paciente y una cita de verdad.
 
 ## 2. Decisiones ya tomadas (no bloquean, se documentan)
 
-- **Marca = Oralia.** "Aurora Dental OS" es solo el nombre de proyecto en Lovable;
-  en código, `.env`, doc maestro y la propia UI (`<title>Oralia`, logo) todo dice
-  Oralia. `package.json` y `README.md` ya corregidos en este repo.
+- **Marca = Alika.** "Aurora Dental OS" es solo el nombre de proyecto en Lovable;
+  en código, `.env`, doc maestro y la propia UI (`<title>Alika`, logo) todo dice
+  Alika. `package.json` y `README.md` ya corregidos en este repo.
 - **Un solo lockfile.** Se eliminó `bun.lock`; el proyecto usa `npm` (coincide
   con `vercel.json` → `installCommand: npm install`).
 - **`.env` fuera de git.** El `.gitignore` de Lovable no lo excluía; corregido.
@@ -62,7 +62,7 @@ depende de que exista un paciente y una cita de verdad.
 ## 3. Fases
 
 ### Fase 0 — Higiene (hecho en esta sesión)
-- [x] Rename `package.json` → `oralia`
+- [x] Rename `package.json` → `alika`
 - [x] README real (estado, cómo correr, links)
 - [x] `.gitignore` con `.env`
 - [x] `launch.json` local para preview

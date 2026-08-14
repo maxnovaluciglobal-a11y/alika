@@ -1,22 +1,22 @@
-# Oralia — Documento maestro de producto
+# Alika — Documento maestro de producto
 ### Software de gestión odontológica cloud-first para Latinoamérica
 
 Versión 1.0 · Documento de arquitectura, producto y estrategia
-Marca: **Oralia** · Dirección visual: *Precision clinical mint* (teal `#0d9488`, acento IA violeta `#8b5cf6`, tipografía Outfit + Inter)
+Marca: **Alika** · Dirección visual: *Precision clinical mint* (teal `#0d9488`, acento IA violeta `#8b5cf6`, tipografía Outfit + Inter)
 
 ---
 
 ## 1. Visión y posicionamiento
 
-Oralia es el **sistema operativo de la clínica dental**: una sola plataforma donde ocurre la agenda, la historia clínica, el dinero y la relación con el paciente. No es un ERP con módulos pegados; es un producto con una superficie coherente, rápida y silenciosa.
+Alika es el **sistema operativo de la clínica dental**: una sola plataforma donde ocurre la agenda, la historia clínica, el dinero y la relación con el paciente. No es un ERP con módulos pegados; es un producto con una superficie coherente, rápida y silenciosa.
 
-**Tesis de producto:** el 60–70% del tiempo administrativo de una clínica dental latinoamericana se consume en tres actividades: confirmar/reagendar citas, escribir y buscar registros clínicos, y perseguir cobros. Oralia ataca esas tres con automatización e IA antes que con más formularios.
+**Tesis de producto:** el 60–70% del tiempo administrativo de una clínica dental latinoamericana se consume en tres actividades: confirmar/reagendar citas, escribir y buscar registros clínicos, y perseguir cobros. Alika ataca esas tres con automatización e IA antes que con más formularios.
 
 **Promesa medible (North Star):** *horas administrativas ahorradas por sillón por semana*. Métricas satélite: tasa de ausencias, ocupación de box, ticket promedio, % de presupuestos aceptados, tiempo medio de registro clínico por consulta.
 
 ### Lectura del mercado
 
-| Plataforma | Fortaleza | Brecha que Oralia explota |
+| Plataforma | Fortaleza | Brecha que Alika explota |
 |---|---|---|
 | Dentalink / Dentidesk | Fuerte en LatAm, buen soporte local | UX con carga cognitiva alta, IA marginal, movilidad limitada |
 | Open Dental | Extensible, económico | On-premise, curva de aprendizaje alta, no cloud-native |
@@ -25,7 +25,7 @@ Oralia es el **sistema operativo de la clínica dental**: una sola plataforma do
 | CareStack | All-in-one con BI | Complejo de implementar en clínicas chicas |
 | NexHealth | Excelente capa de paciente y agendamiento | Es capa, no sistema de registro |
 
-**Diferenciadores de Oralia:** (1) IA operativa que explica y actúa, no solo transcribe; (2) predicción de ausencias con reagendamiento automático desde lista de espera; (3) historia clínica con autoguardado, versionado y firma digital nativa; (4) multi-tenant real con jerarquía red → sucursal → box; (5) API-first desde el día uno; (6) precio y facturación pensados para LatAm (moneda local, boleta/factura electrónica por país, WhatsApp como canal primario).
+**Diferenciadores de Alika:** (1) IA operativa que explica y actúa, no solo transcribe; (2) predicción de ausencias con reagendamiento automático desde lista de espera; (3) historia clínica con autoguardado, versionado y firma digital nativa; (4) multi-tenant real con jerarquía red → sucursal → box; (5) API-first desde el día uno; (6) precio y facturación pensados para LatAm (moneda local, boleta/factura electrónica por país, WhatsApp como canal primario).
 
 ---
 
@@ -154,7 +154,7 @@ Permisos por combinación `rol × recurso × acción`, evaluados en base de dato
 DASHBOARD
 ┌──────────┬─────────────────────────────────────────────────┐
 │ Sidebar  │ Header: título · tema · usuario                 │
-│ Oralia   ├─────────────────────────────────────────────────┤
+│ Alika   ├─────────────────────────────────────────────────┤
 │ Dashboard│ [KPI][KPI][KPI][Urgencias — bloque teal]        │
 │ Agenda   ├──────────────────────────────┬──────────────────┤
 │ Pacientes│ Agenda del día               │ Timeline clínico │
@@ -285,4 +285,4 @@ Convenciones: errores RFC 7807; `429` con `Retry-After`; webhooks firmados con H
 
 ---
 
-*Documento maestro Oralia v1.0 — acompaña al prototipo navegable de Dashboard, Agenda, Pacientes y Ficha clínica.*
+*Documento maestro Alika v1.0 — acompaña al prototipo navegable de Dashboard, Agenda, Pacientes y Ficha clínica.*

@@ -4,13 +4,13 @@ import { CalendarDays, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Oralia · Software de gestión dental para LatAm" },
+      { title: "Alika · Software de gestión dental para LatAm" },
       {
         name: "description",
         content:
-          "Oralia unifica agenda, pacientes, historia clínica y finanzas de tu clínica dental con inteligencia artificial y acceso por roles.",
+          "Alika unifica agenda, pacientes, historia clínica y finanzas de tu clínica dental con inteligencia artificial y acceso por roles.",
       },
-      { property: "og:title", content: "Oralia · Software de gestión dental para LatAm" },
+      { property: "og:title", content: "Alika · Software de gestión dental para LatAm" },
       {
         property: "og:description",
         content: "Agenda, pacientes, historia clínica y finanzas en un solo lugar, con IA y roles por equipo.",
@@ -53,7 +53,7 @@ function Landing() {
           <span className="grid size-8 place-items-center rounded-lg bg-brand">
             <span className="size-4 rounded-full border-2 border-brand-foreground" />
           </span>
-          <span className="font-display text-xl font-bold tracking-tight text-brand">Oralia</span>
+          <span className="font-display text-xl font-bold tracking-tight text-brand">Alika</span>
         </span>
         <div className="flex items-center gap-2">
           <Link

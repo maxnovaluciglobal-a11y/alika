@@ -29,16 +29,16 @@ export const Route = createFileRoute("/_authenticated/_clinic/sandbox-email")({
   beforeLoad: requirePermission("team:manage"),
   head: () => ({
     meta: [
-      { title: "Modo sandbox de email | Oralia" },
+      { title: "Modo sandbox de email | Alika" },
       {
         name: "description",
         content:
           "Bloquea los envíos reales y desvía todos los emails a direcciones de prueba mientras validas la entregabilidad.",
       },
-      { property: "og:title", content: "Modo sandbox de email | Oralia" },
+      { property: "og:title", content: "Modo sandbox de email | Alika" },
       {
         property: "og:description",
-        content: "Control de envíos de prueba y bloqueo de emails reales en Oralia.",
+        content: "Control de envíos de prueba y bloqueo de emails reales en Alika.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -380,7 +380,7 @@ function SandboxEmailPage() {
         <section className="rounded-xl border border-border bg-card p-5">
           <h2 className="font-heading text-base font-semibold">Simulador de destinatario</h2>
           <p className="text-sm text-muted-foreground">
-            Comprueba qué haría Oralia con un destinatario concreto sin enviar nada.
+            Comprueba qué haría Alika con un destinatario concreto sin enviar nada.
           </p>
           <input
             type="email"

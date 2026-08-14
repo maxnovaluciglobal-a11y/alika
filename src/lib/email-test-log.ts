@@ -54,7 +54,7 @@ const V = {
   clinica: {
     clave: "clinica",
     label: "Nombre de la clínica",
-    ejemplo: "Clínica Oralia Centro",
+    ejemplo: "Clínica Alika Centro",
     requerida: true,
   },
   profesional: {
@@ -67,7 +67,7 @@ const V = {
   enlace: {
     clave: "enlace",
     label: "Enlace a la nota",
-    ejemplo: "https://oralia.app/pacientes/123",
+    ejemplo: "https://alika.app/pacientes/123",
     requerida: true,
   },
   comentario: {
@@ -128,7 +128,7 @@ export const EMAIL_TEST_TEMPLATES: EmailTemplateDef[] = [
   {
     id: "smoke_test",
     label: "Prueba de entregabilidad",
-    asunto: "{{clinica}}: prueba de entregabilidad de Oralia",
+    asunto: "{{clinica}}: prueba de entregabilidad de Alika",
     cuerpo:
       "Este es un correo de prueba enviado desde {{clinica}} para medir tiempos de entrega, rebotes y filtros de spam.",
     descripcion: "Correo mínimo para medir tiempos, rebotes y filtros de spam.",
@@ -189,7 +189,7 @@ export type EmailTestEntry = {
   errorCode: string | null;
 };
 
-const STORAGE_KEY = "oralia:email-test-log";
+const STORAGE_KEY = "alika:email-test-log";
 const MAX_ENTRIES = 200;
 
 export function leerEmailTestLog(): EmailTestEntry[] {
@@ -369,7 +369,7 @@ export async function ejecutarPruebaEmail({
   }
 
   const plantilla = EMAIL_TEST_TEMPLATES.find((t) => t.id === template);
-  const asuntoBase = renderPlantilla(plantilla?.asunto ?? "Prueba de Oralia", datos);
+  const asuntoBase = renderPlantilla(plantilla?.asunto ?? "Prueba de Alika", datos);
   const resultados: EmailTestEntry[] = [];
 
 

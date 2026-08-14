@@ -53,16 +53,16 @@ export const Route = createFileRoute("/_authenticated/_clinic/pruebas-email")({
   beforeLoad: requirePermission("team:manage"),
   head: () => ({
     meta: [
-      { title: "Pruebas de email | Oralia" },
+      { title: "Pruebas de email | Alika" },
       {
         name: "description",
         content:
           "Ejecuta emails de prueba, revisa el estado por destinatario y consulta el registro de tiempos y errores de envío.",
       },
-      { property: "og:title", content: "Pruebas de email | Oralia" },
+      { property: "og:title", content: "Pruebas de email | Alika" },
       {
         property: "og:description",
-        content: "Panel de validación de entregabilidad de correos en Oralia.",
+        content: "Panel de validación de entregabilidad de correos en Alika.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -293,7 +293,7 @@ function PruebasEmailPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `oralia-pruebas-email-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `alika-pruebas-email-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }

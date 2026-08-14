@@ -5,7 +5,7 @@ import { nombreProfesional, nombreSucursal, pacientePortal, tratamientosDelPacie
 export const Route = createFileRoute("/portal/tratamientos")({
   head: () => ({
     meta: [
-      { title: "Mis tratamientos · Portal Oralia" },
+      { title: "Mis tratamientos · Portal Alika" },
       { name: "description", content: "Revisa el avance de tus planes de tratamiento y tu historial de atención." },
       { name: "robots", content: "noindex" },
     ],

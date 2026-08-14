@@ -11,16 +11,16 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
     meta: [
-      { title: "Configura tu clínica — Oralia" },
+      { title: "Configura tu clínica — Alika" },
       {
         name: "description",
         content:
           "Asistente de primera configuración: crea tu clínica, su sucursal, boxes, especialidades y equipo profesional.",
       },
-      { property: "og:title", content: "Configura tu clínica — Oralia" },
+      { property: "og:title", content: "Configura tu clínica — Alika" },
       {
         property: "og:description",
-        content: "Deja tu clínica dental operativa en cuatro pasos con Oralia.",
+        content: "Deja tu clínica dental operativa en cuatro pasos con Alika.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -126,7 +126,7 @@ function OnboardingPage() {
             <span className="grid size-8 place-items-center rounded-lg bg-brand">
               <span className="size-4 rounded-full border-2 border-brand-foreground" />
             </span>
-            <span className="font-display text-xl font-bold tracking-tight text-brand">Oralia</span>
+            <span className="font-display text-xl font-bold tracking-tight text-brand">Alika</span>
           </div>
           <h1 className="font-display text-2xl font-semibold sm:text-3xl">Configura tu clínica</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -175,7 +175,7 @@ function OnboardingPage() {
                   id="clinicName"
                   value={clinicName}
                   onChange={(e) => setClinicName(e.target.value)}
-                  placeholder="Clínica Dental Oralia"
+                  placeholder="Clínica Dental Alika"
                   className={inputClass}
                 />
               </Field>

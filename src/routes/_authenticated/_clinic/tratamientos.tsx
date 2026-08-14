@@ -42,13 +42,13 @@ export const Route = createFileRoute("/_authenticated/_clinic/tratamientos")({
   beforeLoad: requirePermission("treatments:view"),
   head: () => ({
     meta: [
-      { title: "Tratamientos | Oralia" },
+      { title: "Tratamientos | Alika" },
       {
         name: "description",
         content:
           "Planes de tratamiento con filtros por sucursal, profesional, estado y fecha de inicio, avance por sesión y saldo asociado.",
       },
-      { property: "og:title", content: "Tratamientos | Oralia" },
+      { property: "og:title", content: "Tratamientos | Alika" },
       {
         property: "og:description",
         content: "Planes de tratamiento filtrables por estado, profesional y sucursal, con avance y saldo.",

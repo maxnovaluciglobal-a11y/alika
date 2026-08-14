@@ -21,10 +21,10 @@ export const Route = createFileRoute("/_authenticated/_clinic/equipo")({
   beforeLoad: requirePermission("team:view"),
   head: () => ({
     meta: [
-      { title: "Equipo y permisos | Oralia" },
+      { title: "Equipo y permisos | Alika" },
       {
         name: "description",
-        content: "Gestiona los integrantes de tu clínica y qué puede ver cada rol dentro de Oralia.",
+        content: "Gestiona los integrantes de tu clínica y qué puede ver cada rol dentro de Alika.",
       },
       { name: "robots", content: "noindex" },
     ],

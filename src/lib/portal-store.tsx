@@ -5,7 +5,7 @@ import {
   type ReservaPortal,
 } from "@/lib/portal-data";
 
-const STORAGE_KEY = "oralia-portal-v1";
+const STORAGE_KEY = "alika-portal-v1";
 
 interface PortalState {
   reservas: ReservaPortal[];

@@ -49,13 +49,13 @@ export const Route = createFileRoute("/_authenticated/_clinic/pacientes/")({
   beforeLoad: requirePermission("patients:view"),
   head: () => ({
     meta: [
-      { title: "Pacientes | Oralia" },
+      { title: "Pacientes | Alika" },
       {
         name: "description",
         content:
           "Listado de pacientes con búsqueda global, filtros por sucursal, profesional, estado y rango de fechas, más paginación.",
       },
-      { property: "og:title", content: "Pacientes | Oralia" },
+      { property: "og:title", content: "Pacientes | Alika" },
       {
         property: "og:description",
         content:

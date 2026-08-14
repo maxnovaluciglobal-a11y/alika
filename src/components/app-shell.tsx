@@ -105,7 +105,7 @@ export function AppShell({
             <span className="grid size-8 place-items-center rounded-lg bg-brand">
               <span className="size-4 rounded-full border-2 border-brand-foreground" />
             </span>
-            <span className="font-display text-xl font-bold tracking-tight text-brand">Oralia</span>
+            <span className="font-display text-xl font-bold tracking-tight text-brand">Alika</span>
           </Link>
           {access.clinic && (
             <p className="mt-2 truncate text-xs text-muted-foreground">{access.clinic.name}</p>

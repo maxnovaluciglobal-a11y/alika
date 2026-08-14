@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/portal/reservar")({
   head: () => ({
     meta: [
-      { title: "Reservar hora · Portal Oralia" },
+      { title: "Reservar hora · Portal Alika" },
       { name: "description", content: "Elige sucursal, profesional, día y hora para agendar tu próxima atención." },
       { name: "robots", content: "noindex" },
     ],

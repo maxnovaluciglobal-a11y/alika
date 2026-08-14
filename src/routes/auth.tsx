@@ -8,16 +8,16 @@ import { lovable } from "@/integrations/lovable/index";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Acceder a Oralia — Gestión odontológica" },
+      { title: "Acceder a Alika — Gestión odontológica" },
       {
         name: "description",
         content:
-          "Inicia sesión o crea tu cuenta de Oralia para configurar tu clínica dental, sucursales y equipo profesional.",
+          "Inicia sesión o crea tu cuenta de Alika para configurar tu clínica dental, sucursales y equipo profesional.",
       },
-      { property: "og:title", content: "Acceder a Oralia — Gestión odontológica" },
+      { property: "og:title", content: "Acceder a Alika — Gestión odontológica" },
       {
         property: "og:description",
-        content: "Accede a Oralia y configura tu clínica dental en minutos.",
+        content: "Accede a Alika y configura tu clínica dental en minutos.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -98,7 +98,7 @@ function AuthPage() {
           <span className="grid size-8 place-items-center rounded-lg bg-brand">
             <span className="size-4 rounded-full border-2 border-brand-foreground" />
           </span>
-          <span className="font-display text-2xl font-bold tracking-tight text-brand">Oralia</span>
+          <span className="font-display text-2xl font-bold tracking-tight text-brand">Alika</span>
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">

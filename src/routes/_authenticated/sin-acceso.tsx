@@ -9,8 +9,8 @@ export const Route = createFileRoute("/_authenticated/sin-acceso")({
   loader: () => getMyAccess({}),
   head: () => ({
     meta: [
-      { title: "Acceso restringido | Oralia" },
-      { name: "description", content: "Tu rol no tiene permisos para ver esta sección de Oralia." },
+      { title: "Acceso restringido | Alika" },
+      { name: "description", content: "Tu rol no tiene permisos para ver esta sección de Alika." },
       { name: "robots", content: "noindex" },
     ],
   }),

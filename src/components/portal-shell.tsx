@@ -28,7 +28,7 @@ export function PortalShell() {
               <span className="size-3.5 rounded-full border-2 border-brand-foreground" />
             </span>
             <div className="min-w-0">
-              <p className="truncate font-display text-sm font-bold tracking-tight text-brand">Oralia</p>
+              <p className="truncate font-display text-sm font-bold tracking-tight text-brand">Alika</p>
               <p className="truncate text-xs text-muted-foreground">Portal del paciente</p>
             </div>
           </div>
