@@ -18,9 +18,8 @@ import { Route as AuthenticatedClinicRouteRouteImport } from './routes/_authenti
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedSinAccesoRouteImport } from './routes/_authenticated/sin-acceso'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
-import { Route as PortalDocumentosRouteImport } from './routes/portal.documentos'
-import { Route as PortalReservarRouteImport } from './routes/portal.reservar'
-import { Route as PortalTratamientosRouteImport } from './routes/portal.tratamientos'
+import { Route as PortalTokenRouteImport } from './routes/portal.$token'
+import { Route as PortalInicioRouteImport } from './routes/portal.inicio'
 import { Route as AuthenticatedClinicAgendaRouteImport } from './routes/_authenticated/_clinic/agenda'
 import { Route as AuthenticatedClinicComplianceRouteImport } from './routes/_authenticated/_clinic/compliance'
 import { Route as AuthenticatedClinicDashboardRouteImport } from './routes/_authenticated/_clinic/dashboard'
@@ -79,19 +78,14 @@ const PortalIndexRoute = PortalIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PortalRoute,
 } as any)
-const PortalDocumentosRoute = PortalDocumentosRouteImport.update({
-  id: '/documentos',
-  path: '/documentos',
+const PortalTokenRoute = PortalTokenRouteImport.update({
+  id: '/$token',
+  path: '/$token',
   getParentRoute: () => PortalRoute,
 } as any)
-const PortalReservarRoute = PortalReservarRouteImport.update({
-  id: '/reservar',
-  path: '/reservar',
-  getParentRoute: () => PortalRoute,
-} as any)
-const PortalTratamientosRoute = PortalTratamientosRouteImport.update({
-  id: '/tratamientos',
-  path: '/tratamientos',
+const PortalInicioRoute = PortalInicioRouteImport.update({
+  id: '/inicio',
+  path: '/inicio',
   getParentRoute: () => PortalRoute,
 } as any)
 const AuthenticatedClinicAgendaRoute =
@@ -179,9 +173,8 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
-  '/portal/documentos': typeof PortalDocumentosRoute
-  '/portal/reservar': typeof PortalReservarRoute
-  '/portal/tratamientos': typeof PortalTratamientosRoute
+  '/portal/$token': typeof PortalTokenRoute
+  '/portal/inicio': typeof PortalInicioRoute
   '/portal/': typeof PortalIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
   '/compliance': typeof AuthenticatedClinicComplianceRoute
@@ -203,9 +196,8 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
-  '/portal/documentos': typeof PortalDocumentosRoute
-  '/portal/reservar': typeof PortalReservarRoute
-  '/portal/tratamientos': typeof PortalTratamientosRoute
+  '/portal/$token': typeof PortalTokenRoute
+  '/portal/inicio': typeof PortalInicioRoute
   '/portal': typeof PortalIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
   '/compliance': typeof AuthenticatedClinicComplianceRoute
@@ -231,9 +223,8 @@ export interface FileRoutesById {
   '/_authenticated/_clinic': typeof AuthenticatedClinicRouteRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/sin-acceso': typeof AuthenticatedSinAccesoRoute
-  '/portal/documentos': typeof PortalDocumentosRoute
-  '/portal/reservar': typeof PortalReservarRoute
-  '/portal/tratamientos': typeof PortalTratamientosRoute
+  '/portal/$token': typeof PortalTokenRoute
+  '/portal/inicio': typeof PortalInicioRoute
   '/portal/': typeof PortalIndexRoute
   '/_authenticated/_clinic/agenda': typeof AuthenticatedClinicAgendaRoute
   '/_authenticated/_clinic/compliance': typeof AuthenticatedClinicComplianceRoute
@@ -258,9 +249,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/onboarding'
     | '/sin-acceso'
-    | '/portal/documentos'
-    | '/portal/reservar'
-    | '/portal/tratamientos'
+    | '/portal/$token'
+    | '/portal/inicio'
     | '/portal/'
     | '/agenda'
     | '/compliance'
@@ -282,9 +272,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/onboarding'
     | '/sin-acceso'
-    | '/portal/documentos'
-    | '/portal/reservar'
-    | '/portal/tratamientos'
+    | '/portal/$token'
+    | '/portal/inicio'
     | '/portal'
     | '/agenda'
     | '/compliance'
@@ -309,9 +298,8 @@ export interface FileRouteTypes {
     | '/_authenticated/_clinic'
     | '/_authenticated/onboarding'
     | '/_authenticated/sin-acceso'
-    | '/portal/documentos'
-    | '/portal/reservar'
-    | '/portal/tratamientos'
+    | '/portal/$token'
+    | '/portal/inicio'
     | '/portal/'
     | '/_authenticated/_clinic/agenda'
     | '/_authenticated/_clinic/compliance'
@@ -402,25 +390,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalIndexRouteImport
       parentRoute: typeof PortalRoute
     }
-    '/portal/documentos': {
-      id: '/portal/documentos'
-      path: '/documentos'
-      fullPath: '/portal/documentos'
-      preLoaderRoute: typeof PortalDocumentosRouteImport
+    '/portal/$token': {
+      id: '/portal/$token'
+      path: '/$token'
+      fullPath: '/portal/$token'
+      preLoaderRoute: typeof PortalTokenRouteImport
       parentRoute: typeof PortalRoute
     }
-    '/portal/reservar': {
-      id: '/portal/reservar'
-      path: '/reservar'
-      fullPath: '/portal/reservar'
-      preLoaderRoute: typeof PortalReservarRouteImport
-      parentRoute: typeof PortalRoute
-    }
-    '/portal/tratamientos': {
-      id: '/portal/tratamientos'
-      path: '/tratamientos'
-      fullPath: '/portal/tratamientos'
-      preLoaderRoute: typeof PortalTratamientosRouteImport
+    '/portal/inicio': {
+      id: '/portal/inicio'
+      path: '/inicio'
+      fullPath: '/portal/inicio'
+      preLoaderRoute: typeof PortalInicioRouteImport
       parentRoute: typeof PortalRoute
     }
     '/_authenticated/_clinic/agenda': {
@@ -571,16 +552,14 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface PortalRouteChildren {
-  PortalDocumentosRoute: typeof PortalDocumentosRoute
-  PortalReservarRoute: typeof PortalReservarRoute
-  PortalTratamientosRoute: typeof PortalTratamientosRoute
+  PortalTokenRoute: typeof PortalTokenRoute
+  PortalInicioRoute: typeof PortalInicioRoute
   PortalIndexRoute: typeof PortalIndexRoute
 }
 
 const PortalRouteChildren: PortalRouteChildren = {
-  PortalDocumentosRoute: PortalDocumentosRoute,
-  PortalReservarRoute: PortalReservarRoute,
-  PortalTratamientosRoute: PortalTratamientosRoute,
+  PortalTokenRoute: PortalTokenRoute,
+  PortalInicioRoute: PortalInicioRoute,
   PortalIndexRoute: PortalIndexRoute,
 }
 

@@ -8,6 +8,7 @@ import { NotasClinicas } from "@/components/notas-clinicas";
 import { Odontogram } from "@/components/odontogram";
 import { FinanceSection } from "@/components/finance-section";
 import { MessagesHistory } from "@/components/messages-history";
+import { PortalLinkButton } from "@/components/portal-link-button";
 import { hasPermission } from "@/lib/access";
 import { formatoMoneda, type Paciente } from "@/lib/clinic-data";
 import { getPatient } from "@/lib/patients.functions";
@@ -244,6 +245,19 @@ function PacienteDetalle() {
 
             {access.clinic?.id && (
               <MessagesHistory clinicId={access.clinic.id} patientId={paciente.id} />
+            )}
+
+            {access.clinic?.id && hasPermission(access.role, "patients:manage") && (
+              <div className="card-clinical p-6">
+                <div className="mb-3">
+                  <h3 className="font-display text-lg font-semibold">Portal del paciente</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Generá un link firmado (7 días) y compartilo por WhatsApp. Sin login, sin
+                    Twilio.
+                  </p>
+                </div>
+                <PortalLinkButton clinicId={access.clinic.id} patientId={paciente.id} />
+              </div>
             )}
 
             <div className="card-clinical p-6">
