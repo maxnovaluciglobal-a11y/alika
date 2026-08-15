@@ -36,6 +36,7 @@ export const PERMISSIONS = [
   "clinical:view",
   "clinical:write",
   "treatments:view",
+  "finance:view",
   "team:view",
   "team:manage",
   "settings:manage",
@@ -67,7 +68,7 @@ const ROLE_PERMISSIONS: Record<ClinicRole, Permission[]> = {
     "treatments:view",
     "team:view",
   ],
-  accounting: ["dashboard:view", "patients:view", "treatments:view", "team:view"],
+  accounting: ["dashboard:view", "patients:view", "treatments:view", "finance:view", "team:view"],
 };
 
 export function permissionsForRole(role: ClinicRole): Permission[] {

@@ -27,6 +27,7 @@ const PERMISSION_LABELS: Record<Permission, string> = {
   "clinical:view": "Ver historia clínica",
   "clinical:write": "Escribir historia clínica",
   "treatments:view": "Ver tratamientos",
+  "finance:view": "Ver finanzas",
   "team:view": "Ver equipo",
   "team:manage": "Gestionar equipo",
   "settings:manage": "Configuración de la clínica",

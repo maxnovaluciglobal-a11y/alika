@@ -18,6 +18,7 @@ import {
   Moon,
   Sun,
   MessageCircleMore,
+  Landmark,
 } from "lucide-react";
 
 import { GlobalSearch } from "@/components/global-search";
@@ -39,6 +40,7 @@ const nav = [
   },
   { to: "/pacientes", label: "Pacientes", icon: Users, permission: "patients:view" },
   { to: "/tratamientos", label: "Tratamientos", icon: Stethoscope, permission: "treatments:view" },
+  { to: "/finanzas", label: "Finanzas", icon: Landmark, permission: "finance:view" },
   { to: "/equipo", label: "Equipo", icon: UsersRound, permission: "team:view" },
   { to: "/permisos", label: "Permisos", icon: ShieldCheck, permission: "team:manage" },
   { to: "/compliance", label: "Compliance", icon: FileSearch, permission: "team:manage" },
