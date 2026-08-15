@@ -414,6 +414,7 @@ export type Database = {
           created_by: string;
           currency: string;
           id: string;
+          is_demo: boolean;
           legal_name: string | null;
           logo_url: string | null;
           name: string;
@@ -428,6 +429,7 @@ export type Database = {
           created_by?: string;
           currency?: string;
           id?: string;
+          is_demo?: boolean;
           legal_name?: string | null;
           logo_url?: string | null;
           name: string;
@@ -442,6 +444,7 @@ export type Database = {
           created_by?: string;
           currency?: string;
           id?: string;
+          is_demo?: boolean;
           legal_name?: string | null;
           logo_url?: string | null;
           name?: string;
@@ -1789,6 +1792,7 @@ export type Database = {
         Args: { p_clinic_id: string; p_kind: string; p_year: number };
         Returns: number;
       };
+      reset_demo_clinic: { Args: Record<PropertyKey, never>; Returns: undefined };
       list_patients_with_last_and_next_appointment: {
         Args: { p_clinic_id: string };
         Returns: {

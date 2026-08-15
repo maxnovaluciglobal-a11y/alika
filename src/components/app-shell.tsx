@@ -25,6 +25,7 @@ import { GlobalSearch } from "@/components/global-search";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { RoleSimulationBar } from "@/components/role-simulation-bar";
 import { TrialBanner } from "@/components/trial-banner";
+import { DemoBanner } from "@/components/demo-banner";
 import { supabase } from "@/integrations/supabase/client";
 import { hasPermission, ROLE_LABELS, type ClinicAccess, type Permission } from "@/lib/access";
 import { cn } from "@/lib/utils";
@@ -198,7 +199,11 @@ export function AppShell({
         </header>
 
         <RoleSimulationBar access={access} />
-        {access.clinic && <TrialBanner clinicId={access.clinic.id} />}
+        {access.clinic?.isDemo ? (
+          <DemoBanner />
+        ) : (
+          access.clinic && <TrialBanner clinicId={access.clinic.id} />
+        )}
 
         <nav className="flex gap-1 overflow-x-auto border-b border-border bg-card px-5 py-2 lg:hidden">
           {visibleNav.map(({ to, label }) => {

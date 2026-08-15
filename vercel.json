@@ -7,6 +7,12 @@
   "github": {
     "silent": true
   },
+  "crons": [
+    {
+      "path": "/api/demo-reset",
+      "schedule": "5 5 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

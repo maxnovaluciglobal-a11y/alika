@@ -1,5 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarDays, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
+import {
+  CalendarDays,
+  CircleUserRound,
+  PlayCircle,
+  ShieldCheck,
+  Sparkles,
+  Stethoscope,
+  Wallet,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -73,6 +81,24 @@ const estadoLabel: Record<(typeof mockCitas)[number]["estado"], string> = {
   "en-sala": "En sala",
   tentativa: "Por confirmar",
 };
+
+const pasos = [
+  {
+    icon: CircleUserRound,
+    title: "Creá tu clínica",
+    text: "Nombre, sucursal y equipo profesional. Menos de 5 minutos, sin instalar nada.",
+  },
+  {
+    icon: CalendarDays,
+    title: "Cargá pacientes y agenda",
+    text: "A mano, o importando tu planilla actual de un solo golpe.",
+  },
+  {
+    icon: Wallet,
+    title: "Atendé y cobrá",
+    text: "Historia clínica, presupuestos, pagos y recordatorios por WhatsApp, todo conectado.",
+  },
+];
 
 /**
  * Preview del producto para el hero. No es un screenshot (no hay clínicas
@@ -157,6 +183,12 @@ function Landing() {
           >
             Portal paciente
           </Link>
+          <a
+            href="/demo"
+            className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Ver demo
+          </a>
           <Link
             to="/auth"
             className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90"
@@ -192,6 +224,13 @@ function Landing() {
               >
                 Ya tengo cuenta
               </Link>
+              <a
+                href="/demo"
+                className="flex items-center gap-2 rounded-lg px-5 py-3 text-sm font-medium text-clay transition-colors hover:bg-clay-soft"
+              >
+                <PlayCircle className="size-4" />
+                Ver demo sin registrarte
+              </a>
             </div>
             <p className="mt-8 flex items-center gap-2 text-xs text-muted-foreground">
               <ShieldCheck className="size-3.5 shrink-0 text-brand" />
@@ -203,7 +242,32 @@ function Landing() {
           <ProductPreview />
         </section>
 
-        <section className="grid gap-5 sm:grid-cols-2">
+        <section className="border-y border-hairline py-16">
+          <div className="mb-10 max-w-xl">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-clay">
+              Cómo funciona
+            </p>
+            <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+              De cero a tu primera cita agendada, hoy mismo.
+            </h2>
+          </div>
+          <div className="grid gap-8 sm:grid-cols-3">
+            {pasos.map(({ icon: Icon, title, text }, i) => (
+              <div key={title} className="relative">
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-clay-soft text-sm font-semibold text-clay">
+                    {i + 1}
+                  </span>
+                  <Icon className="size-5 text-muted-foreground" />
+                </div>
+                <h3 className="mb-1.5 font-display font-semibold">{title}</h3>
+                <p className="text-sm text-muted-foreground">{text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid gap-5 pt-16 sm:grid-cols-2">
           {features.map(({ icon: Icon, title, text, featured }) => (
             <article
               key={title}

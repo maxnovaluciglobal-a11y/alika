@@ -95,6 +95,8 @@ export type ClinicAccess = {
     onboardingCompleted: boolean;
     /** IANA timezone (ej. "America/Santiago"). Fallback a Santiago si la clínica no lo tiene seteado. */
     timezone: string;
+    /** Clínica demo pública: solo lectura a nivel de trigger, ver migración 20260815180000. */
+    isDemo: boolean;
   } | null;
   /** Rol vigente en la interfaz: el real, o el simulado si el admin activó la simulación. */
   role: ClinicRole | null;

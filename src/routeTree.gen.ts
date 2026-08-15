@@ -12,11 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedClinicRouteRouteImport } from './routes/_authenticated/_clinic/route'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedSinAccesoRouteImport } from './routes/_authenticated/sin-acceso'
+import { Route as ApiDemoResetRouteImport } from './routes/api.demo-reset'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as PortalInicioRouteImport } from './routes/portal.inicio'
@@ -51,6 +53,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PortalRoute = PortalRouteImport.update({
   id: '/portal',
   path: '/portal',
@@ -75,6 +82,11 @@ const AuthenticatedSinAccesoRoute = AuthenticatedSinAccesoRouteImport.update({
   id: '/sin-acceso',
   path: '/sin-acceso',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiDemoResetRoute = ApiDemoResetRouteImport.update({
+  id: '/api/demo-reset',
+  path: '/api/demo-reset',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/',
@@ -190,10 +202,12 @@ const AuthenticatedClinicPacientesPacienteIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/demo': typeof DemoRoute
   '/portal': typeof PortalRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
+  '/api/demo-reset': typeof ApiDemoResetRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
   '/portal/': typeof PortalIndexRoute
@@ -217,9 +231,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/demo': typeof DemoRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
+  '/api/demo-reset': typeof ApiDemoResetRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
   '/portal': typeof PortalIndexRoute
@@ -245,11 +261,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/demo': typeof DemoRoute
   '/portal': typeof PortalRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/_clinic': typeof AuthenticatedClinicRouteRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/sin-acceso': typeof AuthenticatedSinAccesoRoute
+  '/api/demo-reset': typeof ApiDemoResetRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
   '/portal/': typeof PortalIndexRoute
@@ -275,10 +293,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/demo'
     | '/portal'
     | '/sitemap.xml'
     | '/onboarding'
     | '/sin-acceso'
+    | '/api/demo-reset'
     | '/portal/$token'
     | '/portal/inicio'
     | '/portal/'
@@ -302,9 +322,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/demo'
     | '/sitemap.xml'
     | '/onboarding'
     | '/sin-acceso'
+    | '/api/demo-reset'
     | '/portal/$token'
     | '/portal/inicio'
     | '/portal'
@@ -329,11 +351,13 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/demo'
     | '/portal'
     | '/sitemap.xml'
     | '/_authenticated/_clinic'
     | '/_authenticated/onboarding'
     | '/_authenticated/sin-acceso'
+    | '/api/demo-reset'
     | '/portal/$token'
     | '/portal/inicio'
     | '/portal/'
@@ -359,8 +383,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  DemoRoute: typeof DemoRoute
   PortalRoute: typeof PortalRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiDemoResetRoute: typeof ApiDemoResetRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
 
@@ -385,6 +411,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/portal': {
@@ -421,6 +454,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sin-acceso'
       preLoaderRoute: typeof AuthenticatedSinAccesoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/demo-reset': {
+      id: '/api/demo-reset'
+      path: '/api/demo-reset'
+      fullPath: '/api/demo-reset'
+      preLoaderRoute: typeof ApiDemoResetRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/portal/': {
       id: '/portal/'
@@ -637,8 +677,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  DemoRoute: DemoRoute,
   PortalRoute: PortalRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiDemoResetRoute: ApiDemoResetRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
