@@ -25,7 +25,10 @@ export const generatePortalLink = createServerFn({ method: "POST" })
         clinicId: z.string().uuid(),
         patientId: z.string().uuid(),
         baseUrl: z.string().url(),
-        ttlDays: z.number().int().min(1).max(90).default(7),
+        // Tope bajado de 90 a 14 días — el trade-off del link sin login es
+        // que quien lo abra ve PHI del paciente; una ventana de exposición
+        // más corta limita el daño si el link se reenvía o se filtra.
+        ttlDays: z.number().int().min(1).max(14).default(7),
       })
       .parse(input),
   )

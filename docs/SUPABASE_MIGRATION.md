@@ -13,10 +13,7 @@ Ejecutada 2026-08-14. Alika ahora corre contra la cuenta Supabase propia de Walt
 
 - **Schema**: las 23 migraciones de `supabase/migrations/*.sql` → 30 tablas + RLS + triggers + RPCs.
 - **Data**: `clinica Patricia` completa (1 clínica, 1 sucursal, 4 boxes, 2 profesionales, 8 especialidades, 3 procedures, 1 paciente María Fernanda Torres con odontograma + presupuesto P-2026-0001 + plan + pago + mensaje WA).
-- **auth.users**: 3 users recreados con Admin API preservando IDs. Passwords fijadas manualmente:
-  - `walterlamadriz@gmail.com` — `Oralia2026Test!` (misma que Lovable Cloud)
-  - `qa.fase1.oralia@mailinator.com` — `QAtemp2026!` (era desconocida en Lovable)
-  - `ana.rivas.demo@oralia.test` — `Demo2026!` (demo)
+- **auth.users**: 3 users recreados con Admin API preservando IDs (`walterlamadriz@gmail.com`, `qa.fase1.oralia@mailinator.com`, `ana.rivas.demo@oralia.test`). Passwords rotadas el 2026-08-15 — viven en memoria privada, no en este repo público. Ver `alika_auditoria_multiagente_2026_08_15.md`.
 
 ## Env vars actualizadas
 

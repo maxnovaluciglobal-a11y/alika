@@ -26,7 +26,7 @@ Importado de Lovable en ago-2026. Se sigue desarrollando desde este repo local; 
 
 - **Preferido:** `preview_start({name: "alika"})` — entrada en `~/Documents/.claude/launch.json` puerto 8080.
 - Directo: `npm run dev` desde el repo → puerto 8080 (Vite).
-- Login owner de la clínica "clinica Patricia": `walterlamadriz@gmail.com` / password `Oralia2026Test!` (⚠️ **la contraseña sigue con "Oralia..."** — reseteada via SQL directo en Fase 1, no se cambió con el rebrand).
+- Login owner de la clínica "clinica Patricia": `walterlamadriz@gmail.com` — password rotada el 2026-08-15 (ver memoria `alika_auditoria_multiagente_2026_08_15.md`, no en el repo: este repo es público en GitHub).
 - Paciente de prueba con datos reales: María Fernanda Torres, ID `d8db4f25-c160-4394-938a-3076282f66c4`.
 
 ## Stack
@@ -100,8 +100,7 @@ Enfoque **wa.me sin proveedor** — cero costo. `sendWhatsAppFromTemplate` rende
 ## Gotchas vigentes
 
 - **`types.ts` divergente** — parcheado a mano. Si Lovable regenera desde su editor podría sobrescribir; confirmar antes de aplicar cambios de Lovable.
-- **Password owner sigue "Oralia2026Test!"** — reseteada pre-rebrand.
-- **Contraseña usa mixed-case** — cuidado al citarla.
+- **Nunca commitear passwords en texto plano** — este repo es público en GitHub. La password de la cuenta de prueba vive en memoria privada, no acá.
 - **Doble lockfile eliminado** — `bun.lock` fuera desde Fase 0, npm es el único.
 - **Sub-sistema email/DNS ya construido** (`/dominio-email`, `/pruebas-email`, `/sandbox-email` + libs `dns-email.ts`, `email-preflight.ts`, `email-sandbox.ts`) — no re-inventar cuando llegue Fase 4B para envío por email.
 - **Sentry en producción SOLO si `VITE_SENTRY_DSN` está seteado** — sin DSN el init es no-op silencioso.
