@@ -15,7 +15,8 @@ Importado de Lovable en ago-2026. Se sigue desarrollando desde este repo local; 
 | Local | `~/Documents/05 - Aurora Dental OS/` (⚠️ **ruta con espacios y guión** — citar siempre entre comillas en shell) |
 | GitHub | `walterlamadriz-ai/aurora-dental-os` rama `main` |
 | Lovable editor | `https://lovable.dev/projects/9f5bde21-41b4-43c0-bc81-ea2215cab660` |
-| Supabase (via Lovable Cloud) | proyecto `9f5bde21-41b4-43c0-bc81-ea2215cab660` — sin dashboard directo, acceso vía Lovable MCP `mcp__f132d7d4-*__query_database` |
+| Supabase propio | proyecto `hvfkygoguxvpmwslrccb` en `sa-east-1` (São Paulo). Dashboard: https://supabase.com/dashboard/project/hvfkygoguxvpmwslrccb. Migrado desde Lovable Cloud el 2026-08-14 (ver `docs/SUPABASE_MIGRATION.md`). Acceso vía psql con pooler `aws-0-sa-east-1.pooler.supabase.com:5432`. |
+| Supabase Lovable Cloud (huérfano) | proyecto `9f5bde21-41b4-43c0-bc81-ea2215cab660` — sigue existiendo por si hay que rollback; acceso vía `mcp__f132d7d4-*__query_database`. No borrar hasta que prod tenga 48hs corriendo en el propio. |
 | Doc maestro | `docs/Alika_Documento_Maestro_v1.md` |
 | Plan por fases | `docs/PLAN_ACCION.md` |
 | Runbook DR | `docs/DISASTER_RECOVERY.md` |
@@ -52,7 +53,7 @@ Fases completas end-to-end contra DB real (para el detalle histórico + cronolog
 2. **`clinical_notes*` SOLO owner/admin/dentist/assistant.** `payments` excluye assistant. No revertir estas policies sin auditoría (ver `oralia_audit_fase6.md`).
 3. **Nunca `git push --force` a main** — rompe el sync de Lovable (ver `AGENTS.md`). Nunca renombrar el repo GitHub ni el proyecto en Lovable.
 4. **`types.ts` de Supabase se parchea a MANO** cuando agregás tabla/enum nuevo (no hay CLI configurado). Bloque `Row/Insert/Update/Relationships` + añadir al `Enums`.
-5. **Migraciones tienen dos pasos:** (a) archivo en `supabase/migrations/` versionado, (b) aplicar al Supabase real via `mcp__f132d7d4-*__query_database` con `project_id: "9f5bde21-41b4-43c0-bc81-ea2215cab660"`. Sin este segundo paso el schema queda desfasado.
+5. **Migraciones tienen dos pasos:** (a) archivo en `supabase/migrations/` versionado, (b) aplicar al Supabase propio via `psql "postgresql://postgres.hvfkygoguxvpmwslrccb@aws-0-sa-east-1.pooler.supabase.com:5432/postgres" -f <archivo>` con `PGPASSWORD` del `.env`. Sin este segundo paso el schema queda desfasado. (Legacy vía Lovable MCP sigue funcionando contra el proyecto huérfano, no usarlo salvo rollback).
 6. **Dinero:** `bigint` cents. `formatMoney(cents, currency)` respeta ISO zero-decimal (CLP/PYG/COP/JPY/etc). Nunca dividir por 100 asumiendo.
 7. **Fechas y timezones:** `hoyISO(timezone)` con `access.clinic?.timezone`, nunca sin argumento. `wallTimeInTzToUtc` en `appointments.functions.ts` es la referencia para interpretar `<input datetime-local>` en tz de la sucursal.
 8. **Correlativos** (presupuestos, futuros): vía RPC atómica `next_clinic_counter(clinic_id, kind, year)`. Nunca `count(*)+1`.

@@ -1,0 +1,56 @@
+# Migración Lovable Cloud → Supabase propio
+
+Ejecutada 2026-08-14. Alika ahora corre contra la cuenta Supabase propia de Walter, aislada del proyecto FinanceOSpro (que vive en la misma cuenta pero es otro project).
+
+## Proyecto nuevo
+
+- **URL**: `https://hvfkygoguxvpmwslrccb.supabase.co`
+- **Región**: `sa-east-1` (São Paulo) — mejor latencia LatAm
+- **Plan**: Free tier (500 MB DB, 50k MAU) — alcanza para piloto
+- **DB pooler**: `aws-0-sa-east-1.pooler.supabase.com:5432` (session pooler; el hostname directo `db.<ref>.supabase.co` fue deprecado por Supabase)
+
+## Qué migró
+
+- **Schema**: las 23 migraciones de `supabase/migrations/*.sql` → 30 tablas + RLS + triggers + RPCs.
+- **Data**: `clinica Patricia` completa (1 clínica, 1 sucursal, 4 boxes, 2 profesionales, 8 especialidades, 3 procedures, 1 paciente María Fernanda Torres con odontograma + presupuesto P-2026-0001 + plan + pago + mensaje WA).
+- **auth.users**: 3 users recreados con Admin API preservando IDs. Passwords fijadas manualmente:
+  - `walterlamadriz@gmail.com` — `Oralia2026Test!` (misma que Lovable Cloud)
+  - `qa.fase1.oralia@mailinator.com` — `QAtemp2026!` (era desconocida en Lovable)
+  - `ana.rivas.demo@oralia.test` — `Demo2026!` (demo)
+
+## Env vars actualizadas
+
+`.env` local (ver `.env.lovable-backup.*` para el snapshot previo si se necesita rollback):
+
+```
+VITE_SUPABASE_URL=https://hvfkygoguxvpmwslrccb.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_tghhM1Df9vkrHNkZoyPIrQ_kvfWwWpn
+VITE_SUPABASE_PROJECT_ID=hvfkygoguxvpmwslrccb
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...   (⚠️ nunca commitear)
+```
+
+**Vercel Env Vars: pendiente rotar** — requiere `vercel login` + `vercel env add` de los 4 valores anteriores. Hasta que se roten, prod SIGUE en Lovable Cloud. Cuando se rote, hay unos ~15 min de propagación entre "cambio env vars" y "redeploy activo".
+
+## Verificado end-to-end en dev
+
+- Login `walterlamadriz@gmail.com` OK → dashboard `clinica Patricia` con 1 paciente / 1 nueva.
+- `/pacientes` lista María Fernanda Torres con datos correctos (RUT, edad, contacto).
+- `/pacientes/:id` ficha completa: saldo **$50.000** ($90.000 plan - $40.000 pago), teléfono, mail, edad.
+- Odontograma con 2 marks (caries superseded por obturación en pieza 16 oclusal).
+- Plan de tratamiento activo con 2 items (limpieza + obturación).
+- Historial de mensajes con el WA enviado.
+
+## Lovable Cloud queda huérfano
+
+- El proyecto Supabase que corre bajo Lovable Cloud (`jysoyttegoxynwrbgnlg.supabase.co`) sigue existiendo pero no lo apunta nadie.
+- Cuando prod también migre, se puede pausar/cancelar desde el dashboard de Lovable → ahorro de MAU.
+- **NO borrar antes de tener prod migrado y verificado 48 hs** — es el rollback más rápido si algo falla.
+
+## Rollback
+
+Si algo se rompe, revertir el `.env` local desde `.env.lovable-backup.<timestamp>` (se creó automáticamente durante la migración). Para prod, cambiar env vars en Vercel al Lovable Cloud y redeploy.
+
+## Referencias
+
+- Migración de data: `/private/tmp/claude-501/.../scratchpad/migrate/data.sql` (no versionada — puede borrarse).
+- Migraciones de schema: `supabase/migrations/` (canónico, versionado en git).
