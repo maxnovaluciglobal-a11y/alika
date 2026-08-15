@@ -7,7 +7,6 @@ import {
   Lock,
   MessageCircle,
   PlayCircle,
-  ShieldCheck,
   Sparkles,
   Wallet,
 } from "lucide-react";
@@ -220,7 +219,7 @@ function Landing() {
   return (
     <div className="min-h-screen bg-background text-ink">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-hairline bg-background/80 backdrop-blur-md">
+      <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
           <span className="flex items-center gap-2">
             <span className="grid size-8 place-items-center rounded-lg bg-ink">
@@ -327,21 +326,6 @@ function Landing() {
           </div>
         </section>
 
-        {/* Barra de confianza */}
-        <section className="border-y border-hairline bg-bone">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-3 px-6 py-5">
-            {trust.map((t) => (
-              <span
-                key={t}
-                className="flex items-center gap-2 text-xs font-medium text-muted-foreground"
-              >
-                <ShieldCheck className="size-4 text-mint-strong" />
-                {t}
-              </span>
-            ))}
-          </div>
-        </section>
-
         {/* El dolor */}
         <section className="mx-auto max-w-6xl px-6 py-20">
           <div className="mb-12 max-w-2xl">
@@ -368,22 +352,22 @@ function Landing() {
         </section>
 
         {/* Demo protagónica — banda oscura (momento de drama) */}
-        <section className="bg-ink text-ink-foreground">
+        <section>
           <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-20 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-mint">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-mint-strong">
                 Probala vos
               </p>
               <h2 className="font-precise text-3xl font-bold leading-tight sm:text-[2.75rem]">
                 No te pedimos que nos creas. Entrá y comprobalo.
               </h2>
-              <p className="mt-5 max-w-md text-base leading-relaxed text-ink-foreground/70">
+              <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
                 Una clínica de ejemplo, cargada y lista. Agendá un paciente, mandá un recordatorio,
                 cargá un presupuesto. Sin formulario, sin llamada de ventas, sin dar tu mail.
               </p>
               <a
                 href="/demo"
-                className="group mt-8 inline-flex items-center gap-2 rounded-xl bg-mint px-6 py-3.5 text-sm font-semibold text-ink shadow-lg shadow-mint/20 transition-all hover:-translate-y-0.5"
+                className="group mt-8 inline-flex items-center gap-2 rounded-xl bg-ink px-6 py-3.5 text-sm font-semibold text-ink-foreground shadow-lg shadow-ink/20 transition-all hover:-translate-y-0.5"
               >
                 <PlayCircle className="size-4" />
                 Entrar a la demo
@@ -420,7 +404,7 @@ function Landing() {
         </section>
 
         {/* Features por resultado */}
-        <section className="border-t border-hairline bg-bone">
+        <section>
           <div className="mx-auto max-w-6xl space-y-16 px-6 py-20">
             <div className="max-w-xl">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-mint-strong">
@@ -489,7 +473,7 @@ function Landing() {
         </section>
 
         {/* Precio / prueba */}
-        <section className="border-y border-hairline bg-bone">
+        <section>
           <div className="mx-auto max-w-3xl px-6 py-20 text-center">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-mint-strong">
               Precio fundador
@@ -524,9 +508,9 @@ function Landing() {
           <h2 className="mb-10 font-precise text-3xl font-bold sm:text-4xl">
             Las dudas de siempre.
           </h2>
-          <div className="divide-y divide-hairline border-y border-hairline">
+          <div className="space-y-2">
             {faqs.map((f) => (
-              <details key={f.q} className="group py-4">
+              <details key={f.q} className="group rounded-2xl bg-secondary/40 px-5 py-4">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold [&::-webkit-details-marker]:hidden">
                   {f.q}
                   <span className="grid size-6 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-transform group-open:rotate-45">
@@ -563,25 +547,25 @@ function Landing() {
         </section>
 
         {/* CTA final */}
-        <section className="bg-ink text-ink-foreground">
+        <section>
           <div className="mx-auto max-w-3xl px-6 py-20 text-center">
             <h2 className="font-precise text-3xl font-bold leading-tight sm:text-5xl">
               Ordená tu clínica de una vez.
             </h2>
-            <p className="mx-auto mt-5 max-w-md text-base text-ink-foreground/70">
+            <p className="mx-auto mt-5 max-w-md text-base text-muted-foreground">
               Entrá a la demo ahora, sin dar tu mail. O creá tu clínica gratis en 5 minutos.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <a
                 href="/demo"
-                className="group flex items-center gap-2 rounded-xl bg-mint px-6 py-3.5 text-sm font-semibold text-ink transition-all hover:-translate-y-0.5"
+                className="group flex items-center gap-2 rounded-xl bg-ink px-6 py-3.5 text-sm font-semibold text-ink-foreground shadow-lg shadow-ink/20 transition-all hover:-translate-y-0.5"
               >
                 Probá la demo ahora
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
               </a>
               <Link
                 to="/auth"
-                className="rounded-xl border border-ink-foreground/25 bg-transparent px-6 py-3.5 text-sm font-semibold text-ink-foreground transition-colors hover:bg-ink-foreground/10"
+                className="rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
               >
                 Empezá gratis
               </Link>
@@ -598,9 +582,9 @@ function Landing() {
             </span>
             <span className="font-precise font-bold text-ink">Alika</span>
           </span>
-          <span className="text-xs">
-            Software de gestión dental · Hecho para Latinoamérica · Lock:{" "}
-            <Lock className="inline size-3" /> tus datos son tuyos
+          <span className="flex items-center gap-1.5 text-xs">
+            Software de gestión dental · Hecho para Latinoamérica
+            <Lock className="size-3" /> tus datos son tuyos
           </span>
         </div>
       </footer>
