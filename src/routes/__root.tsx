@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { captureException, initSentry } from "@/lib/sentry";
+import { Toaster } from "@/components/ui/sonner";
 
 // Se ejecuta una sola vez al importar el módulo raíz. No-op si no hay DSN.
 initSentry();
@@ -150,6 +151,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <Toaster richColors closeButton />
     </QueryClientProvider>
   );
 }
