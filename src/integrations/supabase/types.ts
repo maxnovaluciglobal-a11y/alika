@@ -491,6 +491,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      portal_access_log: {
+        Row: {
+          id: string;
+          clinic_id: string;
+          patient_id: string;
+          event: string;
+          ip_hint: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          clinic_id: string;
+          patient_id: string;
+          event: string;
+          ip_hint?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          clinic_id?: string;
+          patient_id?: string;
+          event?: string;
+          ip_hint?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       stripe_events: {
         Row: {
           id: string;

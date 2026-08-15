@@ -84,6 +84,33 @@ async function requirePortalSession(): Promise<PortalTokenPayload> {
   }
 }
 
+/**
+ * Registra un acceso al portal (audit trail). Best-effort: si falla no
+ * rompe el flujo del paciente, solo queda un log en el server — igual
+ * que `notificar()` en clinical-notes.functions.ts.
+ */
+async function logPortalAccess(
+  clinicId: string,
+  patientId: string,
+  event: "session_opened" | "overview_viewed",
+) {
+  try {
+    const req = getRequest();
+    const ipHint = req?.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+    const userAgent = req?.headers.get("user-agent") ?? null;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("portal_access_log").insert({
+      clinic_id: clinicId,
+      patient_id: patientId,
+      event,
+      ip_hint: ipHint,
+      user_agent: userAgent,
+    });
+  } catch (err) {
+    console.error("[portal] no se pudo registrar el acceso", err);
+  }
+}
+
 /** Consume el token de la URL, valida, setea cookie. Se llama una vez al abrir /portal/[token]. */
 export const openPortalSession = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ token: z.string().min(20) }).parse(input))
@@ -98,6 +125,7 @@ export const openPortalSession = createServerFn({ method: "POST" })
       "Set-Cookie",
       `${PORTAL_COOKIE_NAME}=${encodeURIComponent(data.token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${PORTAL_COOKIE_MAX_AGE_SECONDS}${secureFlag}`,
     );
+    await logPortalAccess(payload.clinicId, payload.patientId, "session_opened");
     return { ok: true, patientId: payload.patientId };
   });
 
@@ -108,6 +136,7 @@ export const getMyPortalOverview = createServerFn({ method: "GET" }).handler(asy
   // Cliente admin: el portal no tiene JWT de Supabase, va con service_role
   // + filtros explícitos por clinic_id + patient_id.
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await logPortalAccess(clinicId, patientId, "overview_viewed");
 
   const [
     { data: patient, error: pErr },
@@ -266,6 +295,47 @@ export const declineAppointmentRequest = createServerFn({ method: "POST" })
       .eq("id", data.requestId);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+export interface PortalAccessLogEntry {
+  id: string;
+  patientId: string;
+  event: "session_opened" | "overview_viewed";
+  ipHint: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}
+
+/** Auditoría de accesos al portal. Solo staff de la clínica (RLS). */
+export const listPortalAccessLog = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        patientId: z.string().uuid().optional(),
+        limit: z.number().int().min(1).max(200).default(50),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<PortalAccessLogEntry[]> => {
+    let q = context.supabase
+      .from("portal_access_log")
+      .select("id, patient_id, event, ip_hint, user_agent, created_at")
+      .eq("clinic_id", data.clinicId)
+      .order("created_at", { ascending: false })
+      .limit(data.limit);
+    if (data.patientId) q = q.eq("patient_id", data.patientId);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return (rows ?? []).map((r) => ({
+      id: r.id,
+      patientId: r.patient_id,
+      event: r.event as "session_opened" | "overview_viewed",
+      ipHint: r.ip_hint,
+      userAgent: r.user_agent,
+      createdAt: r.created_at,
+    }));
   });
 
 /** Vincula una solicitud a la cita real recién creada y la cierra. */
