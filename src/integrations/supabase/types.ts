@@ -911,6 +911,7 @@ export type Database = {
           id: string;
           no_show_risk: number | null;
           phone: string | null;
+          portal_revoked_at: string | null;
           primary_professional_id: string | null;
           status: Database["public"]["Enums"]["patient_status"];
           tags: string[];
@@ -933,6 +934,7 @@ export type Database = {
           id?: string;
           no_show_risk?: number | null;
           phone?: string | null;
+          portal_revoked_at?: string | null;
           primary_professional_id?: string | null;
           status?: Database["public"]["Enums"]["patient_status"];
           tags?: string[];
@@ -955,6 +957,7 @@ export type Database = {
           id?: string;
           no_show_risk?: number | null;
           phone?: string | null;
+          portal_revoked_at?: string | null;
           primary_professional_id?: string | null;
           status?: Database["public"]["Enums"]["patient_status"];
           tags?: string[];

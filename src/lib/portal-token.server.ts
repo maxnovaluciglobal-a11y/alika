@@ -42,14 +42,18 @@ function getSecret(): Uint8Array {
   );
 }
 
-export interface PortalTokenPayload {
+export interface PortalTokenClaims {
   patientId: string;
   clinicId: string;
 }
 
+export interface PortalTokenPayload extends PortalTokenClaims {
+  issuedAt: Date;
+}
+
 /** Firma un JWT con clinic+patient y expiración. */
 export async function signPortalToken(
-  payload: PortalTokenPayload,
+  payload: PortalTokenClaims,
   ttlDays = DEFAULT_TTL_DAYS,
 ): Promise<string> {
   return await new SignJWT({
@@ -71,10 +75,10 @@ export async function verifyPortalToken(token: string): Promise<PortalTokenPaylo
   });
   const patientId = payload.patient_id as string | undefined;
   const clinicId = payload.clinic_id as string | undefined;
-  if (!patientId || !clinicId) {
+  if (!patientId || !clinicId || !payload.iat) {
     throw new Error("Token de portal inválido: faltan claims.");
   }
-  return { patientId, clinicId };
+  return { patientId, clinicId, issuedAt: new Date(payload.iat * 1000) };
 }
 
 export const PORTAL_COOKIE_NAME = "alika_portal_session";

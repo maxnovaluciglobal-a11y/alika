@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Copy, Link2, Loader2, MessageCircle } from "lucide-react";
+import { Check, Copy, Link2, Loader2, MessageCircle, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 
-import { generatePortalLink } from "@/lib/portal.functions";
+import { generatePortalLink, revokePortalAccess } from "@/lib/portal.functions";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -96,5 +96,43 @@ export function PortalLinkButton({ clinicId, patientId }: Props) {
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * Corta todos los links del portal ya emitidos para este paciente — para
+ * cuando uno se filtró o se reenvió a quien no correspondía. No hace
+ * falta "restaurar": el próximo link que se genere ya funciona solo.
+ */
+export function RevokePortalAccessButton({ clinicId, patientId }: Props) {
+  const revoke = useServerFn(revokePortalAccess);
+
+  const mut = useMutation({
+    mutationFn: () => revoke({ data: { clinicId, patientId } }),
+    onSuccess: () => toast.success("Acceso al portal revocado. Los links anteriores ya no sirven."),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  function handleClick() {
+    const ok = window.confirm(
+      "¿Revocar el acceso al portal de este paciente? Todos los links que se hayan enviado antes van a dejar de funcionar. Podés generar uno nuevo después sin problema.",
+    );
+    if (ok) mut.mutate();
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={mut.isPending}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-destructive/40 hover:text-destructive disabled:opacity-50"
+    >
+      {mut.isPending ? (
+        <Loader2 className="size-3.5 animate-spin" />
+      ) : (
+        <ShieldOff className="size-3.5" />
+      )}
+      Revocar acceso al portal
+    </button>
   );
 }

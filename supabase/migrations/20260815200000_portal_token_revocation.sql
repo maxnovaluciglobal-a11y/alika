@@ -1,0 +1,14 @@
+-- Revocación de acceso al portal por paciente individual.
+--
+-- Los tokens del portal son JWT stateless (ver portal-token.server.ts) sin
+-- denylist: la única forma de cortar un link específico era esperar el TTL.
+-- Este campo resuelve el caso real ("el link se filtró/reenvió, cortalo
+-- ya"): cualquier token con `iat` <= portal_revoked_at deja de servir.
+-- Generar un link nuevo después de revocar funciona sin pasos extra — su
+-- `iat` va a ser posterior al revoked_at, así que no hace falta un botón
+-- de "restaurar".
+--
+-- Revocación a nivel de TODA la clínica (ej. compromiso del secret) ya
+-- tiene mecanismo: rotar PORTAL_TOKEN_SECRET invalida todos los tokens de
+-- inmediato — no se agrega un segundo mecanismo redundante para eso.
+ALTER TABLE public.patients ADD COLUMN portal_revoked_at timestamptz NULL;

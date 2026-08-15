@@ -63,6 +63,26 @@ export const generatePortalLink = createServerFn({ method: "POST" })
     },
   );
 
+/**
+ * Corta todos los links del portal de un paciente ya emitidos (útil si un
+ * link se filtró o se reenvió a quien no correspondía). Generar un link
+ * nuevo después funciona sin pasos extra — su `iat` va a ser posterior.
+ */
+export const revokePortalAccess = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("patients")
+      .update({ portal_revoked_at: new Date().toISOString() })
+      .eq("clinic_id", data.clinicId)
+      .eq("id", data.patientId);
+    if (error) throw new Error("No tienes permisos para revocar el acceso de este paciente.");
+    return { ok: true };
+  });
+
 // ────────────────────────────────────────────────────────────
 // Cara paciente: middleware de sesión + fns del portal
 // ────────────────────────────────────────────────────────────
@@ -74,14 +94,32 @@ function readPortalCookie(): string | null {
   return match ? decodeURIComponent(match[1]!) : null;
 }
 
+/** true si el token es de antes de la última revocación del paciente. */
+async function isPortalTokenRevoked(payload: PortalTokenPayload): Promise<boolean> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("patients")
+    .select("portal_revoked_at")
+    .eq("id", payload.patientId)
+    .eq("clinic_id", payload.clinicId)
+    .maybeSingle();
+  if (!data?.portal_revoked_at) return false;
+  return payload.issuedAt <= new Date(data.portal_revoked_at);
+}
+
 async function requirePortalSession(): Promise<PortalTokenPayload> {
   const token = readPortalCookie();
   if (!token) throw new Error("Portal no autorizado.");
+  let payload: PortalTokenPayload;
   try {
-    return await verifyPortalToken(token);
+    payload = await verifyPortalToken(token);
   } catch {
     throw new Error("Sesión del portal vencida.");
   }
+  if (await isPortalTokenRevoked(payload)) {
+    throw new Error("Este link ya no es válido. Pedile a tu clínica uno nuevo.");
+  }
+  return payload;
 }
 
 /**
@@ -116,6 +154,9 @@ export const openPortalSession = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ token: z.string().min(20) }).parse(input))
   .handler(async ({ data }) => {
     const payload = await verifyPortalToken(data.token);
+    if (await isPortalTokenRevoked(payload)) {
+      throw new Error("Este link ya no es válido. Pedile a tu clínica uno nuevo.");
+    }
     // Secure solo en producción — localhost sirve por http y el flag lo
     // bloquearía. Path=/ porque los server functions viven en /_serverFn/*
     // que no está bajo /portal; el cookie tiene que viajar en cualquier

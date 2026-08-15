@@ -8,7 +8,7 @@ import { NotasClinicas } from "@/components/notas-clinicas";
 import { Odontogram } from "@/components/odontogram";
 import { FinanceSection } from "@/components/finance-section";
 import { MessagesHistory } from "@/components/messages-history";
-import { PortalLinkButton } from "@/components/portal-link-button";
+import { PortalLinkButton, RevokePortalAccessButton } from "@/components/portal-link-button";
 import { hasPermission } from "@/lib/access";
 import { formatoMoneda, type Paciente } from "@/lib/clinic-data";
 import { getPatient } from "@/lib/patients.functions";
@@ -256,7 +256,10 @@ function PacienteDetalle() {
                     Twilio.
                   </p>
                 </div>
-                <PortalLinkButton clinicId={access.clinic.id} patientId={paciente.id} />
+                <div className="flex flex-wrap items-start gap-2">
+                  <PortalLinkButton clinicId={access.clinic.id} patientId={paciente.id} />
+                  <RevokePortalAccessButton clinicId={access.clinic.id} patientId={paciente.id} />
+                </div>
               </div>
             )}
 
