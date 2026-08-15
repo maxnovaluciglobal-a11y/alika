@@ -2,8 +2,9 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Plus } from "lucide-react";
+import { AlertTriangle, FileUp, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import Papa from "papaparse";
 
 import { AppShell } from "@/components/app-shell";
 import { DateField, FilterBar, Paginacion, SearchField, SelectField } from "@/components/filters";
@@ -22,7 +23,12 @@ import { requirePermission } from "@/lib/route-guards";
 import { hasPermission } from "@/lib/access";
 import { etiquetaEstadoPaciente, formatoMoneda, type EstadoPaciente } from "@/lib/clinic-data";
 import { listBranches, listProfessionals } from "@/lib/clinic-catalog.functions";
-import { createPatient, listPatients } from "@/lib/patients.functions";
+import {
+  createPatient,
+  importPatients,
+  listPatients,
+  type ImportPatientsResult,
+} from "@/lib/patients.functions";
 import { coincide, num, paginar, str } from "@/lib/search";
 import { cn } from "@/lib/utils";
 
@@ -181,6 +187,197 @@ function NuevoPacienteDialog({ clinicId }: { clinicId: string }) {
   );
 }
 
+interface FilaCsv {
+  nombre: string;
+  documento?: string;
+  fechaNacimiento?: string;
+  telefono?: string;
+  email?: string;
+}
+
+const MAX_FILAS_IMPORT = 2000;
+
+/** "Fecha de Nacimiento" / "fecha_nacimiento" / "Fecha nacimiento" → fecha_nacimiento. */
+function normalizarHeader(h: string): string {
+  return h.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, "_");
+}
+
+const CAMPO_POR_HEADER: Record<string, keyof FilaCsv> = {
+  nombre: "nombre",
+  nombre_completo: "nombre",
+  documento: "documento",
+  rut: "documento",
+  dni: "documento",
+  documento_id: "documento",
+  fecha_nacimiento: "fechaNacimiento",
+  fecha_de_nacimiento: "fechaNacimiento",
+  nacimiento: "fechaNacimiento",
+  telefono: "telefono",
+  celular: "telefono",
+  email: "email",
+  correo: "email",
+  mail: "email",
+};
+
+function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
+  const [open, setOpen] = useState(false);
+  const [filas, setFilas] = useState<FilaCsv[]>([]);
+  const [sinNombre, setSinNombre] = useState(0);
+  const [truncado, setTruncado] = useState(false);
+  const [resultado, setResultado] = useState<ImportPatientsResult | null>(null);
+
+  const queryClient = useQueryClient();
+  const importFn = useServerFn(importPatients);
+
+  const reset = () => {
+    setFilas([]);
+    setSinNombre(0);
+    setTruncado(false);
+    setResultado(null);
+  };
+
+  const onFile = (file: File) => {
+    reset();
+    Papa.parse<Record<string, string>>(file, {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: normalizarHeader,
+      complete: (res) => {
+        const parseadas: FilaCsv[] = [];
+        let sinNombreCount = 0;
+        for (const row of res.data) {
+          const fila: FilaCsv = { nombre: "" };
+          for (const [header, valor] of Object.entries(row)) {
+            const campo = CAMPO_POR_HEADER[header];
+            if (campo && valor?.trim()) fila[campo] = valor.trim();
+          }
+          if (!fila.nombre) {
+            sinNombreCount += 1;
+            continue;
+          }
+          parseadas.push(fila);
+        }
+        setSinNombre(sinNombreCount);
+        setTruncado(parseadas.length > MAX_FILAS_IMPORT);
+        setFilas(parseadas.slice(0, MAX_FILAS_IMPORT));
+      },
+      error: (err) => toast.error("No pudimos leer el CSV: " + err.message),
+    });
+  };
+
+  const importar = useMutation({
+    mutationFn: () => importFn({ data: { clinicId, rows: filas } }),
+    onSuccess: (res) => {
+      setResultado(res);
+      queryClient.invalidateQueries({ queryKey: ["patients", clinicId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) reset();
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <FileUp className="size-4" /> Importar CSV
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Importar pacientes desde CSV</DialogTitle>
+          <DialogDescription>
+            Columnas reconocidas: nombre, documento, fecha_nacimiento, telefono, email. Solo nombre
+            es obligatorio. No importa citas — eso se sigue cargando desde la agenda.
+          </DialogDescription>
+        </DialogHeader>
+
+        {!resultado && (
+          <div className="space-y-3">
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onFile(file);
+              }}
+              className="w-full rounded-lg border border-dashed border-hairline px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium"
+            />
+
+            {filas.length > 0 && (
+              <div className="rounded-lg border border-hairline p-3 text-xs text-muted-foreground">
+                <p>
+                  <strong className="text-foreground">{filas.length}</strong> paciente
+                  {filas.length === 1 ? "" : "s"} listo{filas.length === 1 ? "" : "s"} para
+                  importar.
+                  {sinNombre > 0 && ` ${sinNombre} fila(s) sin nombre se ignoraron.`}
+                </p>
+                {truncado && (
+                  <p className="mt-1 flex items-center gap-1 text-warning">
+                    <AlertTriangle className="size-3.5" /> El archivo tiene más de{" "}
+                    {MAX_FILAS_IMPORT} filas — se importarán solo las primeras {MAX_FILAS_IMPORT}.
+                  </p>
+                )}
+                <ul className="mt-2 max-h-32 space-y-1 overflow-y-auto">
+                  {filas.slice(0, 5).map((f, i) => (
+                    <li key={i} className="truncate">
+                      {f.nombre} {f.documento ? `· ${f.documento}` : ""}
+                    </li>
+                  ))}
+                  {filas.length > 5 && <li>… y {filas.length - 5} más.</li>}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {resultado && (
+          <div className="space-y-2 rounded-lg border border-hairline p-3 text-sm">
+            <p>
+              <strong className="text-success">{resultado.created}</strong> pacientes importados.
+            </p>
+            {resultado.skipped > 0 && (
+              <p className="text-muted-foreground">
+                {resultado.skipped} se saltearon por documento duplicado.
+              </p>
+            )}
+            {resultado.warnings.length > 0 && (
+              <p className="text-warning">
+                {resultado.warnings.length} con fecha de nacimiento inválida (se importaron sin
+                ella).
+              </p>
+            )}
+            {resultado.errors.length > 0 && (
+              <p className="text-destructive">
+                {resultado.errors.length} lote(s) fallaron: {resultado.errors[0].message}
+              </p>
+            )}
+          </div>
+        )}
+
+        <DialogFooter>
+          {!resultado ? (
+            <Button
+              onClick={() => importar.mutate()}
+              disabled={filas.length === 0 || importar.isPending}
+            >
+              {importar.isPending && <Loader2 className="size-3.5 animate-spin" />}
+              Importar {filas.length > 0 ? filas.length : ""} paciente
+              {filas.length === 1 ? "" : "s"}
+            </Button>
+          ) : (
+            <Button onClick={() => setOpen(false)}>Listo</Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function PacientesPage() {
   const { access } = Route.useRouteContext();
   const search = Route.useSearch();
@@ -239,9 +436,12 @@ function PacientesPage() {
   return (
     <AppShell title="Pacientes" access={access}>
       <div className="space-y-6">
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-2">
           {clinicId && hasPermission(access.role, "patients:manage") && (
-            <NuevoPacienteDialog clinicId={clinicId} />
+            <>
+              <ImportarPacientesDialog clinicId={clinicId} />
+              <NuevoPacienteDialog clinicId={clinicId} />
+            </>
           )}
         </div>
 

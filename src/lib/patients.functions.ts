@@ -297,6 +297,127 @@ export const createPatient = createServerFn({ method: "POST" })
     return { id: inserted.id };
   });
 
+const IMPORT_CHUNK_SIZE = 100;
+
+export interface ImportPatientsResult {
+  created: number;
+  skipped: number;
+  warnings: { row: number; nombre: string; message: string }[];
+  errors: { chunkFrom: number; chunkTo: number; message: string }[];
+}
+
+/**
+ * Importador CSV de pacientes — palanca de adquisición para migrar desde
+ * Excel/Dentalink sin cargar a mano. El CSV se parsea en el cliente
+ * (papaparse); acá solo se validan y se insertan las filas ya parseadas.
+ *
+ * A diferencia de createPatient, fechaNacimiento es OPCIONAL: los export
+ * de otros sistemas casi nunca la tienen completa para el 100% de los
+ * pacientes, y birth_date ya es nullable en el schema — exigirla acá
+ * tiraría filas válidas por una razón que no es de seguridad ni de datos
+ * críticos (calcularEdad ya maneja null).
+ *
+ * Solo importa pacientes — citas queda deliberadamente fuera de esta
+ * pasada: matchear profesional/sucursal/fecha desde un CSV externo sin
+ * ningún control de formato es un problema bastante más grande y con
+ * mucho más riesgo de dejar datos mal cargados.
+ */
+export const importPatients = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        rows: z
+          .array(
+            z.object({
+              nombre: z.string().trim().min(1),
+              documento: z.string().trim().optional(),
+              fechaNacimiento: z.string().trim().optional(),
+              telefono: z.string().trim().optional(),
+              email: z.string().trim().optional(),
+            }),
+          )
+          .min(1)
+          .max(2000),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<ImportPatientsResult> => {
+    const { supabase, userId } = context;
+
+    const documentos = [
+      ...new Set(data.rows.map((r) => r.documento?.trim()).filter((d): d is string => Boolean(d))),
+    ];
+    const { data: existentes, error: exError } = await supabase
+      .from("patients")
+      .select("document_id")
+      .eq("clinic_id", data.clinicId)
+      .in("document_id", documentos.length ? documentos : [""]);
+    if (exError) throw new Error(exError.message);
+    const yaExisten = new Set((existentes ?? []).map((e) => e.document_id));
+
+    const warnings: ImportPatientsResult["warnings"] = [];
+    let skipped = 0;
+    const vistosEnEsteLote = new Set<string>();
+
+    const paraInsertar = data.rows.flatMap((r, i) => {
+      const doc = r.documento?.trim() || null;
+      // Duplicado contra la DB o repetido dos veces en el mismo CSV.
+      if (doc && (yaExisten.has(doc) || vistosEnEsteLote.has(doc))) {
+        skipped += 1;
+        return [];
+      }
+      if (doc) vistosEnEsteLote.add(doc);
+
+      let birthDate: string | null = null;
+      if (r.fechaNacimiento) {
+        const d = new Date(r.fechaNacimiento);
+        const valida = !Number.isNaN(d.getTime()) && d <= new Date() && d >= new Date("1900-01-01");
+        if (valida) {
+          birthDate = r.fechaNacimiento.slice(0, 10);
+        } else {
+          warnings.push({
+            row: i + 1,
+            nombre: r.nombre,
+            message: "Fecha de nacimiento inválida — se importó sin ella.",
+          });
+        }
+      }
+
+      return [
+        {
+          clinic_id: data.clinicId,
+          full_name: r.nombre,
+          document_id: doc,
+          birth_date: birthDate,
+          phone: r.telefono || null,
+          email: r.email || null,
+          status: "new" as const,
+          created_by: userId,
+        },
+      ];
+    });
+
+    let created = 0;
+    const errors: ImportPatientsResult["errors"] = [];
+    for (let i = 0; i < paraInsertar.length; i += IMPORT_CHUNK_SIZE) {
+      const chunk = paraInsertar.slice(i, i + IMPORT_CHUNK_SIZE);
+      const { error: insError } = await supabase.from("patients").insert(chunk);
+      if (insError) {
+        errors.push({
+          chunkFrom: i + 1,
+          chunkTo: i + chunk.length,
+          message: insError.message,
+        });
+      } else {
+        created += chunk.length;
+      }
+    }
+
+    return { created, skipped, warnings, errors };
+  });
+
 export const updatePatient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
