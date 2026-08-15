@@ -12,14 +12,14 @@ Runbook para escenarios de falla operacional. Autoridad: Walter (`walterlamadriz
 
 **Recuperación:**
 
-1. **Supabase (Lovable Cloud)** hace backups automáticos diarios (retención 7 días en plan gratuito). El proyecto real es `9f5bde21-41b4-43c0-bc81-ea2215cab660`.
-2. Contactar a Lovable soporte (o abrir chat en el editor de Lovable) pidiendo restore del proyecto Supabase a un timestamp anterior al incidente.
-3. Alternativa manual: si el estado se puede reconstruir de las migraciones, `supabase/migrations/` está versionado en git. Se pueden re-ejecutar en orden vía Lovable MCP (`mcp__f132d7d4-*__query_database`) contra un proyecto nuevo.
-4. Los seeds iniciales (procedures, message_templates de la clínica `58d8e02c-cf1a-47b6-8f9d-457c0373d209`) están en las migraciones respectivas.
+1. ⚠️ **Desde la migración a Supabase propio (`7ca6301`, 2026-08-14) esto YA NO tiene backup automático.** El proyecto real es `hvfkygoguxvpmwslrccb` (`alika-prod`), plan **Free**. Verificado el 2026-08-15 vía `supabase backups list --project-ref hvfkygoguxvpmwslrccb`: `pitr_enabled: false`, `backups: []` — cero backups existen hoy. El plan Free de Supabase no incluye backups automáticos (a diferencia de Lovable Cloud, que sí los hacía — este párrafo describía ese sistema anterior, ya no aplica).
+2. Sin backup propio, la única recuperación posible hoy es reconstruir desde las migraciones versionadas: `supabase/migrations/` está en git, se pueden re-ejecutar en orden contra un proyecto Supabase nuevo vía psql (ver `CLAUDE.md` regla 5). Esto reconstruye el **schema**, no los **datos** — cualquier paciente/cita/pago real cargado hoy se perdería sin remedio.
+3. Los seeds iniciales (procedures, message_templates de la clínica `58d8e02c-cf1a-47b6-8f9d-457c0373d209`) están en las migraciones respectivas — eso sí se recupera.
+4. El proyecto huérfano de Lovable Cloud (`9f5bde21-...`) ya no es un rollback útil una vez que pasen los 30 días de gracia post-migración (borrado pendiente, ver `docs/SUPABASE_MIGRATION.md`) — y de todos modos es un snapshot congelado al 2026-08-14, cada vez más viejo.
 
-**Datos que se perderían:** todo lo generado entre el último backup y el incidente. Sin backup propio adicional al de Supabase.
+**Datos que se perderían:** TODO lo cargado desde la migración del 2026-08-14 en adelante — no hay backup de ningún punto intermedio. Con pacientes reales de piloto ya en la base, este es el hallazgo de mayor riesgo pendiente del proyecto.
 
-**Mitigación futura:** montar backup diario propio (pg_dump vía cron a S3/B2), especialmente crítico si dejamos Lovable Cloud y migramos a Supabase self-hosted.
+**Mitigación — pendiente de decisión de Walter:** (a) subir a Supabase Pro (~US$25/mes) para backups diarios automáticos + PITR opcional, o (b) backup diario propio vía `pg_dump` a S3/B2 mientras se sigue en Free (mismo patrón que GastroCore360, que ya lo tiene con cifrado `age` — ver memoria `gastrocore360_age_encryption` y `gastrocore360_b2_offsite` en el otro proyecto como referencia). Cualquiera de las dos requiere que Walter decida (gasto recurrente o cuenta B2/S3 nueva).
 
 ---
 
