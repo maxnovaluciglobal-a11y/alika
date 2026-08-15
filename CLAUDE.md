@@ -10,17 +10,17 @@ Importado de Lovable en ago-2026. Se sigue desarrollando desde este repo local; 
 
 ## Ubicaciones y accesos
 
-| Qué | Dónde |
-|---|---|
-| Local | `~/Documents/05 - Aurora Dental OS/` (⚠️ **ruta con espacios y guión** — citar siempre entre comillas en shell) |
-| GitHub | `walterlamadriz-ai/aurora-dental-os` rama `main` |
-| Lovable editor | `https://lovable.dev/projects/9f5bde21-41b4-43c0-bc81-ea2215cab660` |
-| Supabase propio | proyecto `hvfkygoguxvpmwslrccb` en `sa-east-1` (São Paulo). Dashboard: https://supabase.com/dashboard/project/hvfkygoguxvpmwslrccb. Migrado desde Lovable Cloud el 2026-08-14 (ver `docs/SUPABASE_MIGRATION.md`). Acceso vía psql con pooler `aws-0-sa-east-1.pooler.supabase.com:5432`. |
-| Supabase Lovable Cloud (huérfano) | proyecto `9f5bde21-41b4-43c0-bc81-ea2215cab660` — sigue existiendo por si hay que rollback; acceso vía `mcp__f132d7d4-*__query_database`. No borrar hasta que prod tenga 48hs corriendo en el propio. |
-| Doc maestro | `docs/Alika_Documento_Maestro_v1.md` |
-| Plan por fases | `docs/PLAN_ACCION.md` |
-| Runbook DR | `docs/DISASTER_RECOVERY.md` |
-| Checklist launch | `docs/DEPLOY_PRODUCTION.md` |
+| Qué                               | Dónde                                                                                                                                                                                                                                                                                    |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local                             | `~/Documents/05 - Aurora Dental OS/` (⚠️ **ruta con espacios y guión** — citar siempre entre comillas en shell)                                                                                                                                                                          |
+| GitHub                            | `walterlamadriz-ai/aurora-dental-os` rama `main`                                                                                                                                                                                                                                         |
+| Lovable editor                    | `https://lovable.dev/projects/9f5bde21-41b4-43c0-bc81-ea2215cab660`                                                                                                                                                                                                                      |
+| Supabase propio                   | proyecto `hvfkygoguxvpmwslrccb` en `sa-east-1` (São Paulo). Dashboard: https://supabase.com/dashboard/project/hvfkygoguxvpmwslrccb. Migrado desde Lovable Cloud el 2026-08-14 (ver `docs/SUPABASE_MIGRATION.md`). Acceso vía psql con pooler `aws-0-sa-east-1.pooler.supabase.com:5432`. |
+| Supabase Lovable Cloud (huérfano) | proyecto `9f5bde21-41b4-43c0-bc81-ea2215cab660` — sigue existiendo por si hay que rollback; acceso vía `mcp__f132d7d4-*__query_database`. No borrar hasta que prod tenga 48hs corriendo en el propio.                                                                                    |
+| Doc maestro                       | `docs/Alika_Documento_Maestro_v1.md`                                                                                                                                                                                                                                                     |
+| Plan por fases                    | `docs/PLAN_ACCION.md`                                                                                                                                                                                                                                                                    |
+| Runbook DR                        | `docs/DISASTER_RECOVERY.md`                                                                                                                                                                                                                                                              |
+| Checklist launch                  | `docs/DEPLOY_PRODUCTION.md`                                                                                                                                                                                                                                                              |
 
 ## Correr en local
 
@@ -66,7 +66,7 @@ Fases completas end-to-end contra DB real (para el detalle histórico + cronolog
 ```ts
 // src/lib/*.functions.ts
 export const doThing = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])                    // JWT + inyecta context.supabase con RLS del user
+  .middleware([requireSupabaseAuth]) // JWT + inyecta context.supabase con RLS del user
   .inputValidator((input: unknown) => Schema.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -104,6 +104,7 @@ Enfoque **wa.me sin proveedor** — cero costo. `sendWhatsAppFromTemplate` rende
 - **Doble lockfile eliminado** — `bun.lock` fuera desde Fase 0, npm es el único.
 - **Sub-sistema email/DNS ya construido** (`/dominio-email`, `/pruebas-email`, `/sandbox-email` + libs `dns-email.ts`, `email-preflight.ts`, `email-sandbox.ts`) — no re-inventar cuando llegue Fase 4B para envío por email.
 - **Sentry en producción SOLO si `VITE_SENTRY_DSN` está seteado** — sin DSN el init es no-op silencioso.
+- **⚠️ Cambios en `vercel.json` (headers/CSP/redirects) NO se prueban en local** — el dev server (`npm run dev`) no aplica esos headers, solo el deploy de Vercel. Verificar SIEMPRE en un preview deploy real. El CSP con `script-src 'self'` (sin `'unsafe-inline'`) tumbó producción entera el 2026-08-15 porque bloqueaba los scripts inline de hidratación de TanStack Start — ver memoria `alika_csp_incident`. Hoy el CSP usa `'unsafe-inline'`; la versión robusta con nonce quedó pendiente.
 - **Tabla `clinic_counters` + RPC `next_clinic_counter`** existen en Supabase real desde `bd88622`; el patrón se puede reusar para futuros correlativos (facturas, órdenes) con distinto `kind`.
 
 ## Antes de acciones destructivas
