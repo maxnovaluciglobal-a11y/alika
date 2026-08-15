@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Clock, Loader2, Plus, Sparkles } from "lucide-react";
+import { Clock, Inbox, Loader2, Plus, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -38,6 +38,12 @@ import { listBranches, listProfessionals } from "@/lib/clinic-catalog.functions"
 import { listPatients } from "@/lib/patients.functions";
 import { createAppointment, listAppointments } from "@/lib/appointments.functions";
 import { listWaitlist } from "@/lib/waitlist.functions";
+import {
+  declineAppointmentRequest,
+  listPendingAppointmentRequests,
+  markAppointmentRequestScheduled,
+  type PendingAppointmentRequest,
+} from "@/lib/portal.functions";
 import { coincide, num, paginar, str } from "@/lib/search";
 import { cn } from "@/lib/utils";
 
@@ -256,6 +262,140 @@ function NuevaCitaDialog({
   );
 }
 
+function AgendarSolicitudDialog({
+  clinicId,
+  sucursales,
+  profesionales,
+  request,
+  open,
+  onOpenChange,
+}: {
+  clinicId: string;
+  sucursales: { id: string; nombre: string }[];
+  profesionales: { id: string; nombre: string; sucursalId: string | null }[];
+  request: PendingAppointmentRequest;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [sucursalId, setSucursalId] = useState("");
+  const [profesionalId, setProfesionalId] = useState("");
+  const [duracion, setDuracion] = useState(30);
+  const [startsAt, setStartsAt] = useState(`${request.preferredDate}T09:00`);
+
+  const queryClient = useQueryClient();
+  const createFn = useServerFn(createAppointment);
+  const markScheduledFn = useServerFn(markAppointmentRequestScheduled);
+
+  const disponibles = profesionales.filter((p) => !sucursalId || p.sucursalId === sucursalId);
+
+  const agendar = useMutation({
+    mutationFn: async () => {
+      const { id } = await createFn({
+        data: {
+          clinicId,
+          branchId: sucursalId,
+          patientId: request.patientId,
+          professionalId: profesionalId,
+          tratamiento: request.reason.slice(0, 200),
+          startsAt,
+          duracionMin: duracion,
+        },
+      });
+      await markScheduledFn({ data: { clinicId, requestId: request.id, appointmentId: id } });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointments", clinicId] });
+      queryClient.invalidateQueries({ queryKey: ["appointment-requests", clinicId] });
+      toast.success("Cita agendada y solicitud cerrada");
+      onOpenChange(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const puedeAgendar = sucursalId && profesionalId && startsAt;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Agendar solicitud de {request.patientName}</DialogTitle>
+          <DialogDescription>{request.reason}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="as-sucursal">Sucursal</Label>
+              <select
+                id="as-sucursal"
+                value={sucursalId}
+                onChange={(e) => {
+                  setSucursalId(e.target.value);
+                  setProfesionalId("");
+                }}
+                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              >
+                <option value="">Elegir sucursal…</option>
+                {sucursales.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="as-profesional">Profesional</Label>
+              <select
+                id="as-profesional"
+                value={profesionalId}
+                onChange={(e) => setProfesionalId(e.target.value)}
+                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              >
+                <option value="">Elegir profesional…</option>
+                {disponibles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="as-inicio">Fecha y hora</Label>
+              <input
+                id="as-inicio"
+                type="datetime-local"
+                value={startsAt}
+                onChange={(e) => setStartsAt(e.target.value)}
+                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="as-duracion">Duración (min)</Label>
+              <input
+                id="as-duracion"
+                type="number"
+                min={5}
+                max={480}
+                step={5}
+                value={duracion}
+                onChange={(e) => setDuracion(Number(e.target.value))}
+                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => agendar.mutate()} disabled={agendar.isPending || !puedeAgendar}>
+            {agendar.isPending && <Loader2 className="size-3.5 animate-spin" />}
+            Confirmar cita
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function AgendaPage() {
   const { access } = Route.useRouteContext();
   const search = Route.useSearch();
@@ -293,6 +433,29 @@ function AgendaPage() {
     queryKey: ["waitlist", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchWaitlist({ data: { clinicId: clinicId! } }),
+  });
+
+  const fetchSolicitudes = useServerFn(listPendingAppointmentRequests);
+  const declineFn = useServerFn(declineAppointmentRequest);
+  const queryClient = useQueryClient();
+
+  const { data: solicitudes = [] } = useQuery({
+    queryKey: ["appointment-requests", clinicId],
+    enabled: Boolean(clinicId),
+    queryFn: () => fetchSolicitudes({ data: { clinicId: clinicId! } }),
+  });
+
+  const [solicitudEnAgenda, setSolicitudEnAgenda] = useState<PendingAppointmentRequest | null>(
+    null,
+  );
+
+  const rechazar = useMutation({
+    mutationFn: (requestId: string) => declineFn({ data: { clinicId: clinicId!, requestId } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointment-requests", clinicId] });
+      toast.success("Solicitud rechazada");
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const set = (patch: Partial<AgendaSearch>) =>
@@ -482,6 +645,58 @@ function AgendaPage() {
           </div>
 
           <aside className="space-y-4 xl:col-span-3">
+            {solicitudes.length > 0 && (
+              <>
+                <h2 className="flex items-center gap-1.5 font-display text-xl font-semibold text-muted-foreground">
+                  <Inbox className="size-4" /> Solicitudes del portal
+                  <span className="ml-1 rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand">
+                    {solicitudes.length}
+                  </span>
+                </h2>
+                <div className="card-clinical divide-y divide-hairline">
+                  {solicitudes.map((s) => (
+                    <div key={s.id} className="space-y-2 p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium">{s.patientName}</p>
+                        <span
+                          className={cn(
+                            "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium",
+                            s.priority === "alta"
+                              ? "bg-destructive/10 text-destructive"
+                              : s.priority === "media"
+                                ? "bg-warning-soft text-warning"
+                                : "bg-secondary text-muted-foreground",
+                          )}
+                        >
+                          {s.priority}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{s.reason}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Prefiere: {formatoFechaLarga(s.preferredDate)}
+                      </p>
+                      {clinicId && hasPermission(access.role, "agenda:manage") && (
+                        <div className="flex gap-2 pt-1">
+                          <Button size="sm" variant="outline" onClick={() => setSolicitudEnAgenda(s)}>
+                            Agendar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-muted-foreground"
+                            disabled={rechazar.isPending}
+                            onClick={() => rechazar.mutate(s.id)}
+                          >
+                            <X className="size-3.5" /> Rechazar
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
             <h2 className="font-display text-xl font-semibold text-muted-foreground">
               Lista de espera
             </h2>
@@ -519,6 +734,17 @@ function AgendaPage() {
           </aside>
         </div>
       </div>
+
+      {clinicId && solicitudEnAgenda && (
+        <AgendarSolicitudDialog
+          clinicId={clinicId}
+          sucursales={sucursales}
+          profesionales={profesionales}
+          request={solicitudEnAgenda}
+          open={Boolean(solicitudEnAgenda)}
+          onOpenChange={(open) => !open && setSolicitudEnAgenda(null)}
+        />
+      )}
     </AppShell>
   );
 }

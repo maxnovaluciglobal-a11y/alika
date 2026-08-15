@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type Stripe from "stripe";
 
 import { getStripe, stripeWebhookSecret } from "@/lib/stripe.server";
+import type { Json } from "@/integrations/supabase/types";
 
 /**
  * Webhook de Stripe. Configurar en el dashboard de Stripe apuntando a
@@ -141,7 +142,7 @@ export const Route = createFileRoute("/api/stripe/webhook")({
             id: event.id,
             type: event.type,
             clinic_id: clinicId,
-            raw: event as unknown as Record<string, unknown>,
+            raw: event as unknown as Json,
           });
 
           return new Response("ok", { status: 200 });

@@ -84,7 +84,7 @@ export const doThing = createServerFn({ method: "POST" })
 - Route guards en `beforeLoad: requirePermission("perm")`. Matriz en `src/lib/access.ts`.
 - **Diálogos:** Radix Dialog + `useMutation` + `queryClient.invalidateQueries` + `toast` en `onSuccess`.
 - **Simulación de rol** disponible para probar UI con otro rol sin cambiar user.
-- **Portal `/portal/*` pausado** — muestra "Muy pronto" hasta v2. Los archivos siguen en `src/routes/portal.*.tsx` pero el layout `portal.tsx` redirige.
+- **Portal `/portal/*` EN VIVO** (Wave C, commit `2a229c5` — reconstruido después de que Wave 1 lo pausara, sin gate). Sin login, expone datos de paciente a quien tenga el link JWT firmado. Bandeja de solicitudes en `/agenda` operativa. Rate limit: 3 solicitudes/paciente/24h.
 
 ## WhatsApp (Fase 4A)
 

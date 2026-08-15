@@ -165,6 +165,22 @@ export const requestPortalAppointment = createServerFn({ method: "POST" })
     const { patientId, clinicId } = await requirePortalSession();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Rate limit: el portal no tiene login, así que un link filtrado/reenviado
+    // podría spammear esta tabla. Tope: 3 solicitudes por paciente en 24h.
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count, error: countErr } = await supabaseAdmin
+      .from("appointment_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("clinic_id", clinicId)
+      .eq("patient_id", patientId)
+      .gte("created_at", since);
+    if (countErr) throw new Error(countErr.message);
+    if ((count ?? 0) >= 3) {
+      throw new Error(
+        "Ya enviaste varias solicitudes hoy. La clínica te va a contactar pronto — evitá duplicarlas.",
+      );
+    }
+
     const { data: inserted, error } = await supabaseAdmin
       .from("appointment_requests")
       .insert({
@@ -179,4 +195,99 @@ export const requestPortalAppointment = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error("No pudimos registrar tu solicitud. " + error.message);
     return { id: inserted.id };
+  });
+
+// ────────────────────────────────────────────────────────────
+// Cara clínica: bandeja de solicitudes pendientes
+// ────────────────────────────────────────────────────────────
+
+export interface PendingAppointmentRequest {
+  id: string;
+  patientId: string;
+  patientName: string;
+  preferredDate: string;
+  reason: string;
+  priority: "baja" | "media" | "alta";
+  createdAt: string;
+}
+
+/** Solicitudes pendientes del portal para la bandeja de agenda. RLS: solo staff de la clínica. */
+export const listPendingAppointmentRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<PendingAppointmentRequest[]> => {
+    const { data: requests, error } = await context.supabase
+      .from("appointment_requests")
+      .select("id, patient_id, preferred_date, reason, priority, created_at")
+      .eq("clinic_id", data.clinicId)
+      .eq("status", "pending")
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    if (!requests || requests.length === 0) return [];
+
+    const patientIds = [...new Set(requests.map((r) => r.patient_id))];
+    const { data: patients, error: pErr } = await context.supabase
+      .from("patients")
+      .select("id, full_name")
+      .eq("clinic_id", data.clinicId)
+      .in("id", patientIds);
+    if (pErr) throw new Error(pErr.message);
+    const nameById = new Map((patients ?? []).map((p) => [p.id, p.full_name]));
+
+    return requests.map((r) => ({
+      id: r.id,
+      patientId: r.patient_id,
+      patientName: nameById.get(r.patient_id) ?? "Paciente",
+      preferredDate: r.preferred_date,
+      reason: r.reason,
+      priority: r.priority as "baja" | "media" | "alta",
+      createdAt: r.created_at,
+    }));
+  });
+
+/** Marca una solicitud como rechazada. Requiere rol con permiso de agenda. */
+export const declineAppointmentRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ clinicId: z.string().uuid(), requestId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("appointment_requests")
+      .update({
+        status: "declined",
+        handled_by: context.userId,
+        handled_at: new Date().toISOString(),
+      })
+      .eq("clinic_id", data.clinicId)
+      .eq("id", data.requestId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Vincula una solicitud a la cita real recién creada y la cierra. */
+export const markAppointmentRequestScheduled = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        requestId: z.string().uuid(),
+        appointmentId: z.string().uuid(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("appointment_requests")
+      .update({
+        status: "scheduled",
+        scheduled_appointment_id: data.appointmentId,
+        handled_by: context.userId,
+        handled_at: new Date().toISOString(),
+      })
+      .eq("clinic_id", data.clinicId)
+      .eq("id", data.requestId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });

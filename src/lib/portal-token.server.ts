@@ -18,10 +18,11 @@ const ISSUER = "alika:portal";
 const AUDIENCE = "alika:portal:patient";
 
 function getSecret(): Uint8Array {
-  const raw =
-    process.env.PORTAL_TOKEN_SECRET ||
-    // Fallback: derivado del SUPABASE_SERVICE_ROLE_KEY si está.
-    process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Nunca cae a SUPABASE_SERVICE_ROLE_KEY: ese secret abre la DB entera con
+  // service_role; reusarlo como HMAC de un token público-facing multiplica
+  // su superficie de exposición. Si el portal lo necesita, PORTAL_TOKEN_SECRET
+  // se setea explícito (ver docs/PORTAL_SETUP.md).
+  const raw = process.env.PORTAL_TOKEN_SECRET;
 
   if (raw) return new TextEncoder().encode(raw);
 

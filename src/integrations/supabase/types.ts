@@ -452,6 +452,120 @@ export type Database = {
         };
         Relationships: [];
       };
+      subscriptions: {
+        Row: {
+          clinic_id: string;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          stripe_price_id: string | null;
+          status: string;
+          trial_end: string | null;
+          current_period_end: string | null;
+          cancel_at_period_end: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          clinic_id: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          stripe_price_id?: string | null;
+          status?: string;
+          trial_end?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          clinic_id?: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          stripe_price_id?: string | null;
+          status?: string;
+          trial_end?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      stripe_events: {
+        Row: {
+          id: string;
+          type: string;
+          received_at: string;
+          clinic_id: string | null;
+          raw: Json | null;
+        };
+        Insert: {
+          id: string;
+          type: string;
+          received_at?: string;
+          clinic_id?: string | null;
+          raw?: Json | null;
+        };
+        Update: {
+          id?: string;
+          type?: string;
+          received_at?: string;
+          clinic_id?: string | null;
+          raw?: Json | null;
+        };
+        Relationships: [];
+      };
+      appointment_requests: {
+        Row: {
+          id: string;
+          clinic_id: string;
+          patient_id: string;
+          preferred_date: string;
+          reason: string;
+          priority: string;
+          source: string;
+          status: string;
+          scheduled_appointment_id: string | null;
+          handled_by: string | null;
+          handled_at: string | null;
+          clinic_notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          clinic_id: string;
+          patient_id: string;
+          preferred_date: string;
+          reason: string;
+          priority?: string;
+          source?: string;
+          status?: string;
+          scheduled_appointment_id?: string | null;
+          handled_by?: string | null;
+          handled_at?: string | null;
+          clinic_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          clinic_id?: string;
+          patient_id?: string;
+          preferred_date?: string;
+          reason?: string;
+          priority?: string;
+          source?: string;
+          status?: string;
+          scheduled_appointment_id?: string | null;
+          handled_by?: string | null;
+          handled_at?: string | null;
+          clinic_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       notification_preferences: {
         Row: {
           created_at: string;
@@ -1641,6 +1755,20 @@ export type Database = {
         Returns: boolean;
       };
       shares_clinic_with: { Args: { _user_id: string }; Returns: boolean };
+      next_clinic_counter: {
+        Args: { p_clinic_id: string; p_kind: string; p_year: number };
+        Returns: number;
+      };
+      list_patients_with_last_and_next_appointment: {
+        Args: { p_clinic_id: string };
+        Returns: {
+          patient_id: string;
+          last_appointment_at: string | null;
+          last_appointment_status: Database["public"]["Enums"]["appointment_status"] | null;
+          next_appointment_at: string | null;
+          next_appointment_status: Database["public"]["Enums"]["appointment_status"] | null;
+        }[];
+      };
     };
     Enums: {
       app_role: "owner" | "admin" | "dentist" | "assistant" | "reception" | "accounting";
