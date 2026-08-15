@@ -17,7 +17,11 @@ export const getMyAccess = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
 
     const [{ data: profile }, { data: memberships, error }] = await Promise.all([
-      supabase.from("profiles").select("full_name, email, avatar_url").eq("id", userId).maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("full_name, email, avatar_url")
+        .eq("id", userId)
+        .maybeSingle(),
       supabase
         .from("clinic_members")
         .select("role, clinics(id, name, onboarding_completed, timezone)")
@@ -28,7 +32,8 @@ export const getMyAccess = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
 
     const membership = (memberships ?? []).find((m) => m.clinics) ?? null;
-    const role = membership && isClinicRole(membership.role) ? (membership.role as ClinicRole) : null;
+    const role =
+      membership && isClinicRole(membership.role) ? (membership.role as ClinicRole) : null;
 
     return {
       userId,
@@ -106,7 +111,8 @@ export const updateMemberRole = createServerFn({ method: "POST" })
     if (readError) throw new Error(readError.message);
     if (!member) throw new Error("No encontramos a ese integrante.");
     if (member.user_id === userId) throw new Error("No puedes cambiar tu propio rol.");
-    if (member.role === "owner") throw new Error("El rol de propietario no se puede modificar aquí.");
+    if (member.role === "owner")
+      throw new Error("El rol de propietario no se puede modificar aquí.");
     if (data.role === "owner") throw new Error("Solo puede existir un propietario por clínica.");
 
     const { error } = await supabase
@@ -133,7 +139,8 @@ export const removeMember = createServerFn({ method: "POST" })
     if (readError) throw new Error(readError.message);
     if (!member) throw new Error("No encontramos a ese integrante.");
     if (member.user_id === userId) throw new Error("No puedes quitarte a ti mismo del equipo.");
-    if (member.role === "owner") throw new Error("No se puede quitar al propietario de la clínica.");
+    if (member.role === "owner")
+      throw new Error("No se puede quitar al propietario de la clínica.");
 
     const { error } = await supabase.from("clinic_members").delete().eq("id", data.memberId);
     if (error) throw new Error("No tienes permisos para quitar integrantes.");

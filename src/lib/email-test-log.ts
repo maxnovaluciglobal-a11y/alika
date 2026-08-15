@@ -22,7 +22,6 @@ function preflightVigente(report: PreflightReport | null): boolean {
   return Date.now() - new Date(report.checkedAt).getTime() < PREFLIGHT_VIGENCIA_MS;
 }
 
-
 export type EmailTestTemplate =
   | "review_requested"
   | "review_approved"
@@ -167,7 +166,6 @@ export function etiquetaPlantilla(id: EmailTestTemplate) {
   return definicionPlantilla(id)?.label ?? id;
 }
 
-
 export type EmailTestStatus = "enviado" | "redirigido" | "bloqueado" | "error";
 
 export type EmailTestEntry = {
@@ -297,7 +295,8 @@ export function estadoPorDestinatario(entries: EmailTestEntry[]): EmailRecipient
         ultimoIntento: ultima.startedAt,
         ultimoEstado: ultima.status,
         ultimoMotivo: ultima.reason,
-        entregados: ordenadas.filter((e) => e.status === "enviado" || e.status === "redirigido").length,
+        entregados: ordenadas.filter((e) => e.status === "enviado" || e.status === "redirigido")
+          .length,
         errores: ordenadas.filter((e) => e.status === "error").length,
         bloqueados: ordenadas.filter((e) => e.status === "bloqueado").length,
         promedioMs: Math.round(
@@ -371,7 +370,6 @@ export async function ejecutarPruebaEmail({
   const plantilla = EMAIL_TEST_TEMPLATES.find((t) => t.id === template);
   const asuntoBase = renderPlantilla(plantilla?.asunto ?? "Prueba de Alika", datos);
   const resultados: EmailTestEntry[] = [];
-
 
   for (const bruto of destinatarios) {
     const requested = normalizeEmail(bruto);

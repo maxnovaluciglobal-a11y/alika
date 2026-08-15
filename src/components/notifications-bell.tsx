@@ -3,10 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  listMyNotifications,
-  markNotificationsRead,
-} from "@/lib/notifications.functions";
+import { listMyNotifications, markNotificationsRead } from "@/lib/notifications.functions";
 import { NOTIFICATION_KIND_LABELS, tiempoRelativo } from "@/lib/notifications";
 
 /** Campana de notificaciones internas con actualización en tiempo real. */

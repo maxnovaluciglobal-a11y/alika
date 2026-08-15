@@ -485,9 +485,7 @@ export const listTreatmentPlans = createServerFn({ method: "GET" })
  */
 export const listClinicTreatmentPlans = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ clinicId: z.string().uuid() }).parse(input),
-  )
+  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(
     async ({
       data,
@@ -539,9 +537,7 @@ export const listClinicTreatmentPlans = createServerFn({ method: "GET" })
       if (pErr) throw new Error(pErr.message);
       if (iErr) throw new Error(iErr.message);
 
-      const patientById = new Map(
-        (patients ?? []).map((p) => [p.id, p]),
-      );
+      const patientById = new Map((patients ?? []).map((p) => [p.id, p]));
 
       const countsByPlan = new Map<string, { total: number; completed: number }>();
       for (const it of items ?? []) {
@@ -676,10 +672,7 @@ export const registerPayment = createServerFn({ method: "POST" })
         paidAt: z
           .string()
           .optional()
-          .refine(
-            (s) => !s || !Number.isNaN(new Date(s).getTime()),
-            "Fecha de pago inválida.",
-          )
+          .refine((s) => !s || !Number.isNaN(new Date(s).getTime()), "Fecha de pago inválida.")
           .refine(
             (s) => !s || new Date(s) <= new Date(),
             "No se puede registrar un pago con fecha futura.",

@@ -14,7 +14,8 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Alika · Software de gestión dental para LatAm" },
       {
         property: "og:description",
-        content: "Agenda, pacientes, historia clínica y finanzas en un solo lugar, con IA y roles por equipo.",
+        content:
+          "Agenda, pacientes, historia clínica y finanzas en un solo lugar, con IA y roles por equipo.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -52,7 +53,12 @@ const features = [
 
 const mockCitas = [
   { hora: "09:00", paciente: "P. González", tratamiento: "Control", estado: "confirmada" as const },
-  { hora: "10:30", paciente: "R. Fernández", tratamiento: "Endodoncia", estado: "en-sala" as const },
+  {
+    hora: "10:30",
+    paciente: "R. Fernández",
+    tratamiento: "Endodoncia",
+    estado: "en-sala" as const,
+  },
   { hora: "11:15", paciente: "M. Silva", tratamiento: "Limpieza", estado: "tentativa" as const },
 ];
 
@@ -78,10 +84,7 @@ const estadoLabel: Record<(typeof mockCitas)[number]["estado"], string> = {
 function ProductPreview() {
   return (
     <div className="relative">
-      <div
-        aria-hidden
-        className="absolute -inset-8 -z-10 rounded-[3rem] bg-clay-soft blur-3xl"
-      />
+      <div aria-hidden className="absolute -inset-8 -z-10 rounded-[3rem] bg-clay-soft blur-3xl" />
       <div className="animate-landing-rise card-clinical overflow-hidden shadow-xl shadow-foreground/5">
         <div className="flex items-center gap-1.5 border-b border-hairline bg-secondary/40 px-4 py-3">
           <span className="size-2.5 rounded-full bg-destructive/30" />
@@ -173,8 +176,8 @@ function Landing() {
               La clínica dental completa, en una sola pantalla.
             </h1>
             <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-              Agenda, pacientes, historia clínica, tratamientos y finanzas con control de acceso por rol y un
-              asistente de IA que trabaja contigo.
+              Agenda, pacientes, historia clínica, tratamientos y finanzas con control de acceso por
+              rol y un asistente de IA que trabaja contigo.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -192,7 +195,8 @@ function Landing() {
             </div>
             <p className="mt-8 flex items-center gap-2 text-xs text-muted-foreground">
               <ShieldCheck className="size-3.5 shrink-0 text-brand" />
-              Seguridad por diseño: cada rol de tu equipo ve solo los datos de paciente que le corresponden.
+              Seguridad por diseño: cada rol de tu equipo ve solo los datos de paciente que le
+              corresponden.
             </p>
           </div>
 

@@ -100,7 +100,13 @@ export function guardarEmailSandbox(config: EmailSandboxConfig) {
 
 export type EmailRecipientDecision =
   | { action: "send"; recipient: string; subjectPrefix: string; reason: string }
-  | { action: "redirect"; recipient: string; original: string; subjectPrefix: string; reason: string }
+  | {
+      action: "redirect";
+      recipient: string;
+      original: string;
+      subjectPrefix: string;
+      reason: string;
+    }
   | { action: "block"; original: string; reason: string };
 
 /**

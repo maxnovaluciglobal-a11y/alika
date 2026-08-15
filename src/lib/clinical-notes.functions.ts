@@ -1,7 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
+
+type SupabaseCtx = SupabaseClient<Database>;
 import type {
   ClinicalEntityKind,
   ClinicalNote,
@@ -13,8 +17,6 @@ import type {
   NoteReviewStatus,
   NoteStatus,
 } from "@/lib/clinical-notes";
-
-
 
 /** Devuelve el mensaje de la base de datos (reglas de permisos) o un texto por defecto. */
 function mensajeDb(error: { message?: string } | null, fallback: string): string {
@@ -30,17 +32,16 @@ const clinicPatient = z.object({
 });
 
 async function nombresPorUsuario(
-  supabase: { from: (t: string) => any },
+  supabase: SupabaseCtx,
   ids: string[],
 ): Promise<Map<string, string | null>> {
   const unicos = [...new Set(ids)].filter(Boolean);
   if (!unicos.length) return new Map();
   const { data } = await supabase.from("profiles").select("id, full_name, email").in("id", unicos);
   return new Map(
-    ((data ?? []) as Array<{ id: string; full_name: string | null; email: string | null }>).map((p) => [
-      p.id,
-      p.full_name ?? p.email,
-    ]),
+    ((data ?? []) as Array<{ id: string; full_name: string | null; email: string | null }>).map(
+      (p) => [p.id, p.full_name ?? p.email],
+    ),
   );
 }
 
@@ -104,15 +105,17 @@ export const getPatientNotes = createServerFn({ method: "GET" })
       const entities = entitiesRes.data ?? [];
       const reviews = reviewsRes.data ?? [];
 
-      const nombres = await nombresPorUsuario(supabase, [
-        ...versions.map((v) => v.author_id),
-        ...audit.map((a) => a.actor_id),
-        ...reviews.map((r) => r.actor_id),
-        ...reviews.map((r) => r.reviewer_id),
-        ...notes.map((n) => n.reviewer_id),
-        ...notes.map((n) => n.review_requested_by),
-      ].filter((id): id is string => Boolean(id)));
-
+      const nombres = await nombresPorUsuario(
+        supabase,
+        [
+          ...versions.map((v) => v.author_id),
+          ...audit.map((a) => a.actor_id),
+          ...reviews.map((r) => r.actor_id),
+          ...reviews.map((r) => r.reviewer_id),
+          ...notes.map((n) => n.reviewer_id),
+          ...notes.map((n) => n.review_requested_by),
+        ].filter((id): id is string => Boolean(id)),
+      );
 
       const versionesPorNota = new Map<string, number>();
       for (const v of versions) {
@@ -194,12 +197,11 @@ export const getPatientNotes = createServerFn({ method: "GET" })
           createdAt: r.created_at,
         })),
       };
-
     },
   );
 
 /** Devuelve el número de versión vigente de una nota. */
-async function versionActual(supabase: any, noteId: string): Promise<number | null> {
+async function versionActual(supabase: SupabaseCtx, noteId: string): Promise<number | null> {
   const { data } = await supabase
     .from("clinical_note_versions")
     .select("version")
@@ -240,7 +242,10 @@ export const saveClinicalNote = createServerFn({ method: "POST" })
         })
         .eq("id", noteId)
         .eq("clinic_id", data.clinicId);
-      if (error) throw new Error(mensajeDb(error, "No tienes permisos para editar notas clínicas en esta clínica."));
+      if (error)
+        throw new Error(
+          mensajeDb(error, "No tienes permisos para editar notas clínicas en esta clínica."),
+        );
     } else {
       accion = "create";
       const { data: created, error } = await supabase
@@ -257,7 +262,10 @@ export const saveClinicalNote = createServerFn({ method: "POST" })
         })
         .select("id")
         .single();
-      if (error || !created) throw new Error(mensajeDb(error, "No tienes permisos para crear notas clínicas en esta clínica."));
+      if (error || !created)
+        throw new Error(
+          mensajeDb(error, "No tienes permisos para crear notas clínicas en esta clínica."),
+        );
       noteId = created.id;
     }
 
@@ -282,7 +290,10 @@ export const saveClinicalNote = createServerFn({ method: "POST" })
       ai_action: data.aiAction ?? null,
       author_id: userId,
     });
-    if (versionError) throw new Error(mensajeDb(versionError, "Guardamos la nota, pero no pudimos registrar la versión."));
+    if (versionError)
+      throw new Error(
+        mensajeDb(versionError, "Guardamos la nota, pero no pudimos registrar la versión."),
+      );
 
     const { error: auditError } = await supabase.from("clinical_note_audit").insert({
       note_id: noteId!,
@@ -351,7 +362,8 @@ export const restoreNoteVersion = createServerFn({ method: "POST" })
         updated_by: userId,
       })
       .eq("id", version.note_id);
-    if (updateError) throw new Error(mensajeDb(updateError, "No tienes permisos para revertir esta nota."));
+    if (updateError)
+      throw new Error(mensajeDb(updateError, "No tienes permisos para revertir esta nota."));
 
     const { data: last } = await supabase
       .from("clinical_note_versions")
@@ -394,7 +406,6 @@ export const restoreNoteVersion = createServerFn({ method: "POST" })
     };
   });
 
-
 /** Firma o reabre una nota. */
 export const setNoteStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -428,7 +439,8 @@ export const setNoteStatus = createServerFn({ method: "POST" })
           : {}),
       })
       .eq("id", data.noteId);
-    if (error) throw new Error(mensajeDb(error, "No tienes permisos para cambiar el estado de la nota."));
+    if (error)
+      throw new Error(mensajeDb(error, "No tienes permisos para cambiar el estado de la nota."));
 
     await supabase.from("clinical_note_audit").insert({
       note_id: data.noteId,
@@ -437,7 +449,6 @@ export const setNoteStatus = createServerFn({ method: "POST" })
       action: data.status === "signed" ? "sign" : "reopen",
       actor_id: userId,
     });
-
 
     return { ok: true };
   });
@@ -496,7 +507,9 @@ export const generateNoteText = createServerFn({ method: "POST" })
     const { gatewayChat } = await import("@/lib/ai-gateway.server");
     const text = await gatewayChat({
       system: `${SYSTEM_BASE}\n\n${PROMPTS[data.action]}${guiaPlantilla}`,
-      user: data.context ? `Contexto del paciente:\n${data.context}\n\nApuntes:\n${data.input}` : data.input,
+      user: data.context
+        ? `Contexto del paciente:\n${data.context}\n\nApuntes:\n${data.input}`
+        : data.input,
     });
 
     await supabase.from("clinical_note_audit").insert({
@@ -532,10 +545,7 @@ const itemSchema = z.object({
 });
 
 /** Tolera que el modelo devuelva strings sueltos en lugar de objetos. */
-const flexibleItem = z.preprocess(
-  (v) => (typeof v === "string" ? { term: v } : v),
-  itemSchema,
-);
+const flexibleItem = z.preprocess((v) => (typeof v === "string" ? { term: v } : v), itemSchema);
 
 const listSchema = z.array(flexibleItem).default([]);
 
@@ -597,7 +607,10 @@ export const extractNoteEntities = createServerFn({ method: "POST" })
 
     let parsed: z.infer<typeof extractionSchema>;
     try {
-      const limpio = raw.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+      const limpio = raw
+        .replace(/^```(?:json)?/i, "")
+        .replace(/```$/, "")
+        .trim();
       parsed = extractionSchema.parse(JSON.parse(limpio));
     } catch {
       throw new Error("La IA no devolvió campos estructurados legibles. Intenta nuevamente.");
@@ -713,7 +726,10 @@ export const deleteNoteEntity = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!entity) throw new Error("No encontramos ese campo.");
 
-    const { error } = await supabase.from("clinical_note_entities").delete().eq("id", data.entityId);
+    const { error } = await supabase
+      .from("clinical_note_entities")
+      .delete()
+      .eq("id", data.entityId);
     if (error) throw new Error("No tienes permisos para eliminar este campo.");
 
     await supabase.from("clinical_note_audit").insert({
@@ -737,7 +753,7 @@ const ROLES_CLINICOS = ["owner", "admin", "dentist", "assistant"] as const;
 const ROLES_REVISORES = ["owner", "admin", "dentist"] as const;
 
 async function rolEnClinica(
-  supabase: { from: (t: string) => any },
+  supabase: SupabaseCtx,
   clinicId: string,
   userId: string,
 ): Promise<string | null> {
@@ -763,12 +779,12 @@ export const listNoteReviewers = createServerFn({ method: "GET" })
         .eq("clinic_id", data.clinicId)
         .in("role", [...ROLES_REVISORES]);
 
-      const miembros = (rows ?? []).filter((m: any) => m.user_id !== userId);
+      const miembros = (rows ?? []).filter((m) => m.user_id !== userId);
       const nombres = await nombresPorUsuario(
         supabase,
-        miembros.map((m: any) => m.user_id),
+        miembros.map((m) => m.user_id),
       );
-      return miembros.map((m: any) => ({
+      return miembros.map((m) => ({
         userId: m.user_id,
         name: nombres.get(m.user_id) ?? "Profesional",
         role: m.role,
@@ -779,7 +795,7 @@ export const listNoteReviewers = createServerFn({ method: "GET" })
 /** Envía una nota firmada a revisión de un supervisor. */
 /** Crea una notificación in-app para un integrante de la clínica (sin romper el flujo si falla). */
 async function notificar(
-  supabase: any,
+  supabase: SupabaseCtx,
   payload: {
     clinicId: string;
     recipientId: string | null | undefined;
@@ -806,7 +822,7 @@ async function notificar(
 }
 
 /** Resuelve el nombre visible de un usuario para los mensajes de notificación. */
-async function nombreDe(supabase: any, userId: string): Promise<string> {
+async function nombreDe(supabase: SupabaseCtx, userId: string): Promise<string> {
   const { data } = await supabase
     .from("profiles")
     .select("full_name, email")
@@ -840,15 +856,14 @@ export const requestNoteReview = createServerFn({ method: "POST" })
       throw new Error("Solo puedes enviar a revisión una nota firmada.");
     if (note.review_status === "pending")
       throw new Error("Esta nota ya está pendiente de aprobación.");
-    if (data.reviewerId === userId)
-      throw new Error("Elige a otro profesional como revisor.");
+    if (data.reviewerId === userId) throw new Error("Elige a otro profesional como revisor.");
 
     const rolSolicitante = await rolEnClinica(supabase, note.clinic_id, userId);
-    if (!rolSolicitante || !ROLES_CLINICOS.includes(rolSolicitante as any))
+    if (!rolSolicitante || !(ROLES_CLINICOS as readonly string[]).includes(rolSolicitante))
       throw new Error("Tu rol no puede solicitar revisiones clínicas.");
 
     const rolRevisor = await rolEnClinica(supabase, note.clinic_id, data.reviewerId);
-    if (!rolRevisor || !ROLES_REVISORES.includes(rolRevisor as any))
+    if (!rolRevisor || !(ROLES_REVISORES as readonly string[]).includes(rolRevisor))
       throw new Error("El revisor debe ser doctor/a, administrador o propietario de la clínica.");
 
     const ahora = new Date().toISOString();
@@ -863,7 +878,8 @@ export const requestNoteReview = createServerFn({ method: "POST" })
         updated_by: userId,
       })
       .eq("id", data.noteId);
-    if (error) throw new Error(mensajeDb(error, "No tienes permisos para enviar esta nota a revisión."));
+    if (error)
+      throw new Error(mensajeDb(error, "No tienes permisos para enviar esta nota a revisión."));
 
     await supabase.from("clinical_note_reviews").insert({
       note_id: data.noteId,
@@ -917,13 +933,15 @@ export const resolveNoteReview = createServerFn({ method: "POST" })
 
     const { data: note } = await supabase
       .from("clinical_notes")
-      .select("clinic_id, patient_ref, status, review_status, reviewer_id, review_requested_by, title")
+      .select(
+        "clinic_id, patient_ref, status, review_status, reviewer_id, review_requested_by, title",
+      )
       .eq("id", data.noteId)
       .maybeSingle();
     if (!note) throw new Error("No encontramos esa nota.");
 
     const rol = await rolEnClinica(supabase, note.clinic_id, userId);
-    if (!rol || !ROLES_CLINICOS.includes(rol as any))
+    if (!rol || !(ROLES_CLINICOS as readonly string[]).includes(rol))
       throw new Error("Tu rol no participa en revisiones clínicas.");
 
     const esRevisor = note.reviewer_id === userId;
@@ -982,7 +1000,8 @@ export const resolveNoteReview = createServerFn({ method: "POST" })
 
     if (Object.keys(patch).length > 1) {
       const { error } = await supabase.from("clinical_notes").update(patch).eq("id", data.noteId);
-      if (error) throw new Error(mensajeDb(error, "No tienes permisos para actualizar esta revisión."));
+      if (error)
+        throw new Error(mensajeDb(error, "No tienes permisos para actualizar esta revisión."));
     }
 
     const accion: NoteReviewAction = data.action;
@@ -1007,8 +1026,7 @@ export const resolveNoteReview = createServerFn({ method: "POST" })
     });
 
     const actor = await nombreDe(supabase, userId);
-    const destinatario =
-      note.reviewer_id === userId ? note.review_requested_by : note.reviewer_id;
+    const destinatario = note.reviewer_id === userId ? note.review_requested_by : note.reviewer_id;
     const titulos: Record<NoteReviewAction, string> = {
       requested: `${actor} solicitó tu revisión`,
       approved: `${actor} aprobó la nota`,

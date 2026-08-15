@@ -18,7 +18,9 @@ import type { Json } from "@/integrations/supabase/types";
  */
 
 async function upsertSubscription(
-  admin: Awaited<ReturnType<typeof import("@/integrations/supabase/client.server").supabaseAdmin.from>>["from"] extends never
+  admin: Awaited<
+    ReturnType<typeof import("@/integrations/supabase/client.server").supabaseAdmin.from>
+  >["from"] extends never
     ? never
     : import("@supabase/supabase-js").SupabaseClient,
   clinicId: string,
@@ -26,23 +28,21 @@ async function upsertSubscription(
 ) {
   const priceId = sub.items.data[0]?.price?.id ?? null;
   const currentPeriodEndTs = (sub as unknown as { current_period_end?: number }).current_period_end;
-  await admin
-    .from("subscriptions")
-    .upsert(
-      {
-        clinic_id: clinicId,
-        stripe_customer_id: typeof sub.customer === "string" ? sub.customer : sub.customer.id,
-        stripe_subscription_id: sub.id,
-        stripe_price_id: priceId,
-        status: sub.status,
-        trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
-        current_period_end: currentPeriodEndTs
-          ? new Date(currentPeriodEndTs * 1000).toISOString()
-          : null,
-        cancel_at_period_end: sub.cancel_at_period_end,
-      },
-      { onConflict: "clinic_id" },
-    );
+  await admin.from("subscriptions").upsert(
+    {
+      clinic_id: clinicId,
+      stripe_customer_id: typeof sub.customer === "string" ? sub.customer : sub.customer.id,
+      stripe_subscription_id: sub.id,
+      stripe_price_id: priceId,
+      status: sub.status,
+      trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+      current_period_end: currentPeriodEndTs
+        ? new Date(currentPeriodEndTs * 1000).toISOString()
+        : null,
+      cancel_at_period_end: sub.cancel_at_period_end,
+    },
+    { onConflict: "clinic_id" },
+  );
 }
 
 export const Route = createFileRoute("/api/stripe/webhook")({

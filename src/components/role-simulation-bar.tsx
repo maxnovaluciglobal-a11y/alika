@@ -49,9 +49,7 @@ export function RoleSimulationBar({ access }: { access: ClinicAccess }) {
         onChange={(e) => aplicar(e.target.value)}
         className="rounded-md border border-border bg-background px-2 py-1 text-xs"
       >
-        <option value="real">
-          Mi rol real {realRole ? `(${ROLE_LABELS[realRole]})` : ""}
-        </option>
+        <option value="real">Mi rol real {realRole ? `(${ROLE_LABELS[realRole]})` : ""}</option>
         {CLINIC_ROLES.map((r) => (
           <option key={r} value={r}>
             Ver como {ROLE_LABELS[r]}

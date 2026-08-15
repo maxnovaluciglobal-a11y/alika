@@ -45,7 +45,10 @@ describe("RLS y transiciones de notas clínicas", () => {
   };
 
   const actualizar = (userId: string, set: string, params: unknown[] = []) =>
-    comoUsuario(client, userId, `UPDATE ${TABLA_NOTAS} SET ${set} WHERE id = $1`, [esc.noteId, ...params]);
+    comoUsuario(client, userId, `UPDATE ${TABLA_NOTAS} SET ${set} WHERE id = $1`, [
+      esc.noteId,
+      ...params,
+    ]);
 
   beforeAll(async () => {
     client = await conectar();
@@ -91,14 +94,18 @@ describe("RLS y transiciones de notas clínicas", () => {
     it("un usuario ajeno no cumple el predicado de membresía", async () => {
       await sembrar();
       await expect(
-        evaluarPolitica(client, esc.usuarios.externo, "public.is_clinic_member($1)", [esc.clinicId]),
+        evaluarPolitica(client, esc.usuarios.externo, "public.is_clinic_member($1)", [
+          esc.clinicId,
+        ]),
       ).resolves.toBe(false);
     });
 
     it("un miembro de la clínica sí cumple el predicado de membresía", async () => {
       await sembrar();
       await expect(
-        evaluarPolitica(client, esc.usuarios.assistant, "public.is_clinic_member($1)", [esc.clinicId]),
+        evaluarPolitica(client, esc.usuarios.assistant, "public.is_clinic_member($1)", [
+          esc.clinicId,
+        ]),
       ).resolves.toBe(true);
     });
 
@@ -106,19 +113,25 @@ describe("RLS y transiciones de notas clínicas", () => {
       await sembrar();
       for (const rol of ["owner", "admin"]) {
         await expect(
-          evaluarPolitica(client, esc.usuarios[rol], "public.can_manage_clinic($1)", [esc.clinicId]),
+          evaluarPolitica(client, esc.usuarios[rol], "public.can_manage_clinic($1)", [
+            esc.clinicId,
+          ]),
         ).resolves.toBe(true);
       }
       for (const rol of ["dentist", "assistant", "reception", "accounting", "externo"]) {
         await expect(
-          evaluarPolitica(client, esc.usuarios[rol], "public.can_manage_clinic($1)", [esc.clinicId]),
+          evaluarPolitica(client, esc.usuarios[rol], "public.can_manage_clinic($1)", [
+            esc.clinicId,
+          ]),
         ).resolves.toBe(false);
       }
     });
 
     it("un usuario ajeno no puede modificar la nota", async () => {
       await sembrar();
-      const msg = await esperaError(client, () => actualizar(esc.usuarios.externo, "content = 'hackeada'"));
+      const msg = await esperaError(client, () =>
+        actualizar(esc.usuarios.externo, "content = 'hackeada'"),
+      );
       expect(msg).toMatch(/no perteneces/i);
     });
   });
@@ -138,13 +151,17 @@ describe("RLS y transiciones de notas clínicas", () => {
 
     it("recepción no puede editar notas clínicas", async () => {
       await sembrar();
-      const msg = await esperaError(client, () => actualizar(esc.usuarios.reception, "content = 'x'"));
+      const msg = await esperaError(client, () =>
+        actualizar(esc.usuarios.reception, "content = 'x'"),
+      );
       expect(msg).toMatch(/no puede modificar/i);
     });
 
     it("no se puede editar una nota firmada", async () => {
       await sembrar({ status: "signed" });
-      const msg = await esperaError(client, () => actualizar(esc.usuarios.dentist, "content = 'x'"));
+      const msg = await esperaError(client, () =>
+        actualizar(esc.usuarios.dentist, "content = 'x'"),
+      );
       expect(msg).toMatch(/firmada/i);
     });
 
@@ -161,7 +178,9 @@ describe("RLS y transiciones de notas clínicas", () => {
 
     it("no se puede reasignar la nota a otro paciente", async () => {
       await sembrar();
-      const msg = await esperaError(client, () => actualizar(esc.usuarios.admin, "patient_ref = 'otro'"));
+      const msg = await esperaError(client, () =>
+        actualizar(esc.usuarios.admin, "patient_ref = 'otro'"),
+      );
       expect(msg).toMatch(/reasignar/i);
     });
   });
@@ -169,7 +188,9 @@ describe("RLS y transiciones de notas clínicas", () => {
   describe("firma y reapertura", () => {
     it("un asistente no puede firmar", async () => {
       await sembrar();
-      const msg = await esperaError(client, () => actualizar(esc.usuarios.assistant, "status = 'signed'"));
+      const msg = await esperaError(client, () =>
+        actualizar(esc.usuarios.assistant, "status = 'signed'"),
+      );
       expect(msg).toMatch(/no puede firmar/i);
     });
 
@@ -188,7 +209,9 @@ describe("RLS y transiciones de notas clínicas", () => {
         reviewerKey: "dentist2",
         requesterKey: "dentist",
       });
-      const msg = await esperaError(client, () => actualizar(esc.usuarios.dentist, "status = 'draft'"));
+      const msg = await esperaError(client, () =>
+        actualizar(esc.usuarios.dentist, "status = 'draft'"),
+      );
       expect(msg).toMatch(/revisión/i);
       await actualizar(esc.usuarios.dentist2, "status = 'draft'");
       expect((await leerNota()).status).toBe("draft");
@@ -254,14 +277,20 @@ describe("RLS y transiciones de notas clínicas", () => {
 
     it("el revisor puede solicitar cambios", async () => {
       await sembrar(pendiente);
-      await actualizar(esc.usuarios.dentist2, "review_status = 'changes_requested', reviewed_at = now()");
+      await actualizar(
+        esc.usuarios.dentist2,
+        "review_status = 'changes_requested', reviewed_at = now()",
+      );
       expect((await leerNota()).review_status).toBe("changes_requested");
     });
 
     it("un asistente no puede cancelar, el solicitante sí", async () => {
       await sembrar(pendiente);
       const cancelar = (userId: string) =>
-        actualizar(userId, "review_status = 'none', reviewer_id = NULL, review_requested_by = NULL");
+        actualizar(
+          userId,
+          "review_status = 'none', reviewer_id = NULL, review_requested_by = NULL",
+        );
       const msg = await esperaError(client, () => cancelar(esc.usuarios.assistant));
       expect(msg).toMatch(/cancelarla|no puede/i);
       await cancelar(esc.usuarios.dentist);
@@ -295,13 +324,17 @@ describe("RLS y transiciones de notas clínicas", () => {
         reviewerKey: "dentist2",
         requesterKey: "dentist",
       });
-      const msg = await esperaError(client, () => insertarRevision(esc.usuarios.assistant, "approved"));
+      const msg = await esperaError(client, () =>
+        insertarRevision(esc.usuarios.assistant, "approved"),
+      );
       expect(msg).toMatch(/revisor asignado|rol/i);
     });
 
     it("recepción no participa en revisiones", async () => {
       await sembrar({ status: "signed" });
-      const msg = await esperaError(client, () => insertarRevision(esc.usuarios.reception, "requested"));
+      const msg = await esperaError(client, () =>
+        insertarRevision(esc.usuarios.reception, "requested"),
+      );
       expect(msg).toMatch(/rol/i);
     });
 

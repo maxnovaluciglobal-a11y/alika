@@ -62,7 +62,12 @@ export async function evaluarPolitica(
   expresion: string,
   params: unknown[] = [],
 ): Promise<boolean> {
-  const filas = await comoUsuario<{ ok: boolean }>(client, userId, `SELECT (${expresion}) AS ok`, params);
+  const filas = await comoUsuario<{ ok: boolean }>(
+    client,
+    userId,
+    `SELECT (${expresion}) AS ok`,
+    params,
+  );
   return filas[0].ok;
 }
 
@@ -82,12 +87,14 @@ export async function esperaError(client: Client, fn: () => Promise<unknown>): P
   throw new Error("Se esperaba un error de permisos y la operación fue permitida.");
 }
 
-
 /**
  * Crea una clínica con un miembro por rol, una nota clínica y su espejo temporal.
  * Todo ocurre dentro de la transacción abierta por el test (se revierte al final).
  */
-export async function sembrarEscenario(client: Client, estado: EstadoNota = {}): Promise<Escenario> {
+export async function sembrarEscenario(
+  client: Client,
+  estado: EstadoNota = {},
+): Promise<Escenario> {
   const clinicId = randomUUID();
   const roles: Rol[] = ["owner", "admin", "dentist", "assistant", "reception", "accounting"];
   const usuarios: Record<string, string> = {};
@@ -95,10 +102,10 @@ export async function sembrarEscenario(client: Client, estado: EstadoNota = {}):
   usuarios.dentist2 = randomUUID();
   usuarios.externo = randomUUID();
 
-  await client.query(`INSERT INTO public.clinics (id, name, created_by) VALUES ($1, 'Clínica Test', $2)`, [
-    clinicId,
-    usuarios.owner,
-  ]);
+  await client.query(
+    `INSERT INTO public.clinics (id, name, created_by) VALUES ($1, 'Clínica Test', $2)`,
+    [clinicId, usuarios.owner],
+  );
   // El trigger de clínicas ya inserta al owner; el resto se agrega explícitamente.
   await client.query(
     `INSERT INTO public.clinic_members (clinic_id, user_id, role)
@@ -136,9 +143,10 @@ export async function sembrarEscenario(client: Client, estado: EstadoNota = {}):
     `CREATE TRIGGER tg_enforce BEFORE UPDATE ON ${TABLA_NOTAS}
        FOR EACH ROW EXECUTE FUNCTION public.enforce_clinical_note_update()`,
   );
-  await client.query(`INSERT INTO ${TABLA_NOTAS} SELECT * FROM public.clinical_notes WHERE id = $1`, [
-    noteId,
-  ]);
+  await client.query(
+    `INSERT INTO ${TABLA_NOTAS} SELECT * FROM public.clinical_notes WHERE id = $1`,
+    [noteId],
+  );
 
   return { clinicId, usuarios, noteId, patientRef };
 }

@@ -58,7 +58,8 @@ const permitido = (detalle = "Permitido"): Resultado => ({ verdict: "allow", det
 const denegado = (detalle: string): Resultado => ({ verdict: "deny", detalle });
 const condicional = (detalle: string): Resultado => ({ verdict: "conditional", detalle });
 
-const esBorrador = (estado: NoteState) => estado === "draft" || estado === "draft_changes_requested";
+const esBorrador = (estado: NoteState) =>
+  estado === "draft" || estado === "draft_changes_requested";
 const enRevision = (estado: NoteState) => estado === "signed_pending";
 
 /**
@@ -66,7 +67,11 @@ const enRevision = (estado: NoteState) => estado === "signed_pending";
  * Refleja las reglas que aplican los triggers `enforce_clinical_note_update`,
  * `enforce_note_review_insert` y `enforce_note_version_insert` en la base de datos.
  */
-export function evaluarAccionNota(role: ClinicRole, estado: NoteState, accion: NoteAction): Resultado {
+export function evaluarAccionNota(
+  role: ClinicRole,
+  estado: NoteState,
+  accion: NoteAction,
+): Resultado {
   const manager = MANAGER.includes(role);
   const clinico = CLINICO.includes(role);
 
@@ -83,9 +88,11 @@ export function evaluarAccionNota(role: ClinicRole, estado: NoteState, accion: N
   switch (accion) {
     case "edit":
     case "version": {
-      if (enRevision(estado)) return denegado("La nota está en revisión: primero hay que resolverla.");
+      if (enRevision(estado))
+        return denegado("La nota está en revisión: primero hay que resolverla.");
       if (!esBorrador(estado)) return denegado("La nota está firmada: hay que reabrirla antes.");
-      if (manager || role === "dentist") return permitido("Doctor/a y administración editan cualquier borrador.");
+      if (manager || role === "dentist")
+        return permitido("Doctor/a y administración editan cualquier borrador.");
       return condicional("El asistente solo puede editar los borradores que creó.");
     }
 
@@ -98,17 +105,20 @@ export function evaluarAccionNota(role: ClinicRole, estado: NoteState, accion: N
     case "reopen": {
       if (esBorrador(estado)) return denegado("La nota ya está en borrador.");
       if (enRevision(estado)) {
-        if (manager) return permitido("Administración puede reabrir aunque haya revisión pendiente.");
+        if (manager)
+          return permitido("Administración puede reabrir aunque haya revisión pendiente.");
         return condicional("Solo el revisor asignado puede reabrirla mientras esté pendiente.");
       }
-      if (manager || role === "dentist") return permitido("Doctor/a y administración pueden reabrir.");
+      if (manager || role === "dentist")
+        return permitido("Doctor/a y administración pueden reabrir.");
       return condicional("El asistente solo reabre si es el autor de la nota.");
     }
 
     case "request_review": {
       if (esBorrador(estado)) return denegado("Solo se envía a revisión una nota firmada.");
       if (enRevision(estado)) return denegado("Ya existe una revisión pendiente.");
-      if (role === "assistant") return condicional("Solo si es autor de la nota; el revisor debe ser otra persona.");
+      if (role === "assistant")
+        return condicional("Solo si es autor de la nota; el revisor debe ser otra persona.");
       return permitido("Debe elegir a otro doctor/a, administrador o propietario como revisor.");
     }
 

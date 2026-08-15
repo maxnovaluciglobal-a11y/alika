@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
 // Se puede sobreescribir con PUBLIC_APP_URL para preview/staging distintos.
-const BASE_URL = (typeof process !== "undefined" && process.env.PUBLIC_APP_URL) || "https://alika.com";
+const BASE_URL =
+  (typeof process !== "undefined" && process.env.PUBLIC_APP_URL) || "https://alika.com";
 
 interface SitemapEntry {
   path: string;

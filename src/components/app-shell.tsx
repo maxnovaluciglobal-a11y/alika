@@ -13,9 +13,6 @@ import {
   BellRing,
   FlaskConical,
   MailCheck,
-
-
-
   LogOut,
   Sparkles,
   Moon,
@@ -43,11 +40,13 @@ const nav = [
   { to: "/dominio-email", label: "Dominio de email", icon: ShieldCheck, permission: "team:manage" },
   { to: "/pruebas-email", label: "Pruebas de email", icon: MailCheck, permission: "team:manage" },
 
-
   { to: "/onboarding", label: "Configuración", icon: Settings, permission: "settings:manage" },
-
-
-] as const satisfies readonly { to: string; label: string; icon: typeof Users; permission: Permission }[];
+] as const satisfies readonly {
+  to: string;
+  label: string;
+  icon: typeof Users;
+  permission: Permission;
+}[];
 
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
@@ -155,7 +154,9 @@ export function AppShell({
             <NotificationsBell userId={access.userId} />
             <ThemeToggle />
             <div className="hidden text-right sm:block">
-              <p className="text-sm font-medium">{access.fullName ?? access.email ?? "Mi cuenta"}</p>
+              <p className="text-sm font-medium">
+                {access.fullName ?? access.email ?? "Mi cuenta"}
+              </p>
               <p className="text-[10px] text-muted-foreground">
                 {access.role ? ROLE_LABELS[access.role] : "Sin rol"}
                 {access.simulatedRole ? " · simulado" : ""}

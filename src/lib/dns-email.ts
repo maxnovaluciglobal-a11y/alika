@@ -111,7 +111,8 @@ export function evaluarSpf(name: string, records: string[]): DnsCheckResult {
       id: "spf",
       name,
       state: "warn",
-      detalle: "El SPF existe pero no termina en `-all` ni `~all`, así que no rechaza suplantaciones.",
+      detalle:
+        "El SPF existe pero no termina en `-all` ni `~all`, así que no rechaza suplantaciones.",
       records: spf,
       sugerencia: "Cierra el registro con `~all` (o `-all` cuando estés seguro del listado).",
     };
@@ -207,7 +208,8 @@ export function evaluarDmarc(name: string, records: string[]): DnsCheckResult {
       id: "dmarc",
       name,
       state: "warn",
-      detalle: "DMARC está en modo observación (`p=none`): no protege todavía, pero es válido para arrancar.",
+      detalle:
+        "DMARC está en modo observación (`p=none`): no protege todavía, pero es válido para arrancar.",
       records: dmarc,
       sugerencia: "Cuando los reportes estén limpios, sube a `p=quarantine`.",
     };

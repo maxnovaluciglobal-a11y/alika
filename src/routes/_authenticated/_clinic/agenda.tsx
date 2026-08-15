@@ -677,7 +677,11 @@ function AgendaPage() {
                       </p>
                       {clinicId && hasPermission(access.role, "agenda:manage") && (
                         <div className="flex gap-2 pt-1">
-                          <Button size="sm" variant="outline" onClick={() => setSolicitudEnAgenda(s)}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSolicitudEnAgenda(s)}
+                          >
                             Agendar
                           </Button>
                           <Button

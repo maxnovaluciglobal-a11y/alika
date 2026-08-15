@@ -48,9 +48,22 @@ export function GlobalSearch() {
       // hoyISO() sin arg usa Santiago como fallback (no tenemos acceso al
       // contexto de clínica desde este componente global). La agenda al abrirse
       // recalculará con la timezone real de la clínica activa.
-      navigate({ to: "/agenda", search: { q: titulo.split(" — ").pop() ?? "", fecha: hoyISO(), sucursal: "", profesional: "", estado: "", page: 1 } });
+      navigate({
+        to: "/agenda",
+        search: {
+          q: titulo.split(" — ").pop() ?? "",
+          fecha: hoyISO(),
+          sucursal: "",
+          profesional: "",
+          estado: "",
+          page: 1,
+        },
+      });
     } else {
-      navigate({ to: "/tratamientos", search: { q: titulo, sucursal: "", profesional: "", estado: "", desde: "", hasta: "", page: 1 } });
+      navigate({
+        to: "/tratamientos",
+        search: { q: titulo, estado: "", desde: "", hasta: "", page: 1 },
+      });
     }
   }
 
@@ -63,7 +76,9 @@ export function GlobalSearch() {
       >
         <Search className="size-4 shrink-0" />
         <span className="hidden flex-1 text-left sm:inline">Buscar en la clínica…</span>
-        <kbd className="hidden rounded border border-border px-1 py-0.5 font-mono text-[10px] sm:inline">⌘K</kbd>
+        <kbd className="hidden rounded border border-border px-1 py-0.5 font-mono text-[10px] sm:inline">
+          ⌘K
+        </kbd>
       </button>
 
       <CommandDialog open={open} onOpenChange={setOpen}>
@@ -74,7 +89,9 @@ export function GlobalSearch() {
         />
         <CommandList>
           <CommandEmpty>
-            {term.trim() ? `Sin resultados para “${term}”.` : "Escribe para buscar en toda la clínica."}
+            {term.trim()
+              ? `Sin resultados para “${term}”.`
+              : "Escribe para buscar en toda la clínica."}
           </CommandEmpty>
           {grupos.map((grupo) => {
             const items = resultados.filter((r) => r.grupo === grupo);

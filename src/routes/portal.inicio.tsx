@@ -11,10 +11,7 @@ import { getMyPortalOverview, requestPortalAppointment } from "@/lib/portal.func
 
 export const Route = createFileRoute("/portal/inicio")({
   head: () => ({
-    meta: [
-      { title: "Mi clínica · Portal Alika" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Mi clínica · Portal Alika" }, { name: "robots", content: "noindex" }],
   }),
   component: PortalInicio,
 });

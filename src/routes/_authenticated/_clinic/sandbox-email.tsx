@@ -169,20 +169,18 @@ function SandboxEmailPage() {
                 confirmada.
               </p>
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                {(
-                  [
-                    {
-                      valor: "sandbox" as const,
-                      titulo: "Sandbox",
-                      detalle: "Envíos reales bloqueados",
-                    },
-                    {
-                      valor: "production" as const,
-                      titulo: "Producción",
-                      detalle: "Envíos reales habilitados",
-                    },
-                  ]
-                ).map((opcion) => (
+                {[
+                  {
+                    valor: "sandbox" as const,
+                    titulo: "Sandbox",
+                    detalle: "Envíos reales bloqueados",
+                  },
+                  {
+                    valor: "production" as const,
+                    titulo: "Producción",
+                    detalle: "Envíos reales habilitados",
+                  },
+                ].map((opcion) => (
                   <button
                     key={opcion.valor}
                     type="button"
@@ -221,7 +219,9 @@ function SandboxEmailPage() {
               <p
                 className={cn(
                   "mt-3 text-sm",
-                  puertaDns.permitido ? "text-muted-foreground" : "text-amber-600 dark:text-amber-400",
+                  puertaDns.permitido
+                    ? "text-muted-foreground"
+                    : "text-amber-600 dark:text-amber-400",
                 )}
               >
                 {puertaDns.motivo}
@@ -232,8 +232,8 @@ function SandboxEmailPage() {
                   <div>
                     <p className="text-sm font-medium">Entregas de prueba exigidas</p>
                     <p className="text-sm text-muted-foreground">
-                      Producción queda bloqueada hasta que se entreguen correctamente al menos
-                      estos emails de prueba.
+                      Producción queda bloqueada hasta que se entreguen correctamente al menos estos
+                      emails de prueba.
                     </p>
                   </div>
                   <label className="flex items-center gap-2 text-sm">
@@ -311,10 +311,7 @@ function SandboxEmailPage() {
           </div>
 
           <div className="border-b border-border p-5">
-            <label
-              htmlFor="redirect-to"
-              className="text-sm font-medium"
-            >
+            <label htmlFor="redirect-to" className="text-sm font-medium">
               Dirección de redirección
             </label>
             <p className="text-sm text-muted-foreground">

@@ -70,7 +70,11 @@ export function AgendaGrid({
       >
         <div className="flex flex-col pr-2 pt-1 text-right text-[10px] text-muted-foreground">
           {Array.from({ length: HORAS_VISIBLES }).map((_, i) => (
-            <div key={i} style={{ height: 60 * PIXELES_POR_MINUTO }} className="border-b border-hairline">
+            <div
+              key={i}
+              style={{ height: 60 * PIXELES_POR_MINUTO }}
+              className="border-b border-hairline"
+            >
               {horaLabel(i)}
             </div>
           ))}
@@ -79,7 +83,11 @@ export function AgendaGrid({
         {profesionales.map((p) => (
           <div key={p.id} className="relative border-l border-hairline">
             {Array.from({ length: HORAS_VISIBLES }).map((_, i) => (
-              <div key={i} style={{ height: 60 * PIXELES_POR_MINUTO }} className="border-b border-hairline" />
+              <div
+                key={i}
+                style={{ height: 60 * PIXELES_POR_MINUTO }}
+                className="border-b border-hairline"
+              />
             ))}
 
             {citas

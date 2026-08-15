@@ -10,18 +10,11 @@ import {
   createCheckoutSession,
   getMySubscription,
 } from "@/lib/billing.functions";
-import {
-  SUBSCRIPTION_STATUS_LABELS,
-  isSubscriptionActive,
-  trialDaysLeft,
-} from "@/lib/billing";
+import { SUBSCRIPTION_STATUS_LABELS, isSubscriptionActive, trialDaysLeft } from "@/lib/billing";
 
 export const Route = createFileRoute("/_authenticated/_clinic/suscripcion")({
   head: () => ({
-    meta: [
-      { title: "Suscripción | Alika" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Suscripción | Alika" }, { name: "robots", content: "noindex" }],
   }),
   component: BillingPage,
 });

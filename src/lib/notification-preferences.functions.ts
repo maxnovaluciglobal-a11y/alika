@@ -65,9 +65,7 @@ export const updateMyNotificationPreferences = createServerFn({ method: "POST" }
       user_id: userId,
       email_enabled: data.emailEnabled ?? actual.emailEnabled,
       inapp_enabled: data.inappEnabled ?? actual.inappEnabled,
-      unsubscribed_at: unsubscribed
-        ? (actual.unsubscribedAt ?? new Date().toISOString())
-        : null,
+      unsubscribed_at: unsubscribed ? (actual.unsubscribedAt ?? new Date().toISOString()) : null,
     };
     for (const key of eventKeys) {
       payload[key] = data.events?.[key] ?? actual.events[key];

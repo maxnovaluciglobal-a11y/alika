@@ -45,17 +45,20 @@ export const Route = createFileRoute("/_authenticated/_clinic/tratamientos")({
       { property: "og:title", content: "Tratamientos | Alika" },
       {
         property: "og:description",
-        content: "Planes de tratamiento filtrables por estado y fecha, con avance por ítems completados.",
+        content:
+          "Planes de tratamiento filtrables por estado y fecha, con avance por ítems completados.",
       },
     ],
   }),
   component: TratamientosPage,
 });
 
-const estados: { value: TreatmentPlanStatus; label: string }[] = TREATMENT_PLAN_STATUSES.map((e) => ({
-  value: e,
-  label: TREATMENT_PLAN_STATUS_LABELS[e],
-}));
+const estados: { value: TreatmentPlanStatus; label: string }[] = TREATMENT_PLAN_STATUSES.map(
+  (e) => ({
+    value: e,
+    label: TREATMENT_PLAN_STATUS_LABELS[e],
+  }),
+);
 
 const estadoClase: Record<TreatmentPlanStatus, string> = {
   active: "bg-brand-soft text-brand",
@@ -78,7 +81,9 @@ function TratamientosPage() {
   });
 
   const set = (patch: Partial<TratamientosSearch>) =>
-    navigate({ search: (prev: TratamientosSearch) => ({ ...prev, ...patch, page: patch.page ?? 1 }) });
+    navigate({
+      search: (prev: TratamientosSearch) => ({ ...prev, ...patch, page: patch.page ?? 1 }),
+    });
 
   const filtrados = useMemo(
     () =>
@@ -101,9 +106,7 @@ function TratamientosPage() {
       <div className="space-y-6">
         <FilterBar
           activos={activos}
-          onReset={() =>
-            navigate({ search: { q: "", estado: "", desde: "", hasta: "", page: 1 } })
-          }
+          onReset={() => navigate({ search: { q: "", estado: "", desde: "", hasta: "", page: 1 } })}
         >
           <SearchField
             label="Buscar"
@@ -118,19 +121,30 @@ function TratamientosPage() {
             allLabel="Todos los estados"
             options={estados}
           />
-          <DateField label="Inicio desde" value={search.desde} onChange={(desde) => set({ desde })} />
-          <DateField label="Inicio hasta" value={search.hasta} onChange={(hasta) => set({ hasta })} />
+          <DateField
+            label="Inicio desde"
+            value={search.desde}
+            onChange={(desde) => set({ desde })}
+          />
+          <DateField
+            label="Inicio hasta"
+            value={search.hasta}
+            onChange={(hasta) => set({ hasta })}
+          />
         </FilterBar>
 
         <div className="card-clinical overflow-hidden">
           <div className="divide-y divide-hairline">
             {isLoading && (
-              <p className="px-5 py-10 text-center text-sm text-muted-foreground">Cargando planes…</p>
+              <p className="px-5 py-10 text-center text-sm text-muted-foreground">
+                Cargando planes…
+              </p>
             )}
 
             {!isLoading &&
               pagina.items.map((t) => {
-                const avance = t.itemsCount > 0 ? Math.round((t.itemsCompleted / t.itemsCount) * 100) : 0;
+                const avance =
+                  t.itemsCount > 0 ? Math.round((t.itemsCompleted / t.itemsCount) * 100) : 0;
                 const fechaInicio = t.startedAt ?? t.createdAt;
                 return (
                   <div
@@ -152,10 +166,15 @@ function TratamientosPage() {
                     <div>
                       <p className="mb-1.5 text-xs text-muted-foreground">
                         {t.name}{" "}
-                        <span className="opacity-70">· inicio {formatoFecha(fechaInicio.slice(0, 10))}</span>
+                        <span className="opacity-70">
+                          · inicio {formatoFecha(fechaInicio.slice(0, 10))}
+                        </span>
                       </p>
                       <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-                        <div className="h-full rounded-full bg-brand" style={{ width: `${avance}%` }} />
+                        <div
+                          className="h-full rounded-full bg-brand"
+                          style={{ width: `${avance}%` }}
+                        />
                       </div>
                     </div>
                     <span className="text-xs text-muted-foreground">

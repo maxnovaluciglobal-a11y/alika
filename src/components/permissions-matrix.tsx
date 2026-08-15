@@ -68,7 +68,8 @@ export function PermissionsMatrix() {
         <div>
           <h2 className="font-display text-xl font-semibold">Acceso por módulo</h2>
           <p className="text-sm text-muted-foreground">
-            Qué secciones de Alika puede abrir cada rol. Las reglas se aplican también en el servidor.
+            Qué secciones de Alika puede abrir cada rol. Las reglas se aplican también en el
+            servidor.
           </p>
         </div>
 
@@ -115,8 +116,8 @@ export function PermissionsMatrix() {
         <div>
           <h2 className="font-display text-xl font-semibold">Notas clínicas por estado</h2>
           <p className="text-sm text-muted-foreground">
-            Reglas que aplica la base de datos según el estado de la nota. “Condicional” significa que
-            depende de la relación con la nota (autor, revisor o solicitante).
+            Reglas que aplica la base de datos según el estado de la nota. “Condicional” significa
+            que depende de la relación con la nota (autor, revisor o solicitante).
           </p>
         </div>
 
@@ -184,8 +185,8 @@ export function PermissionsMatrix() {
 
         <p className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <CircleSlash className="size-3.5" aria-hidden />
-          Estas reglas se validan con triggers en la base de datos: aunque la interfaz muestre un botón,
-          el servidor rechaza cualquier acción fuera de la matriz.
+          Estas reglas se validan con triggers en la base de datos: aunque la interfaz muestre un
+          botón, el servidor rechaza cualquier acción fuera de la matriz.
         </p>
       </section>
     </div>

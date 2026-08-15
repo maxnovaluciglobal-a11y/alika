@@ -171,7 +171,9 @@ export function Paginacion<T>({
             aria-current={p === page ? "page" : undefined}
             className={cn(
               "min-w-8 rounded-md px-2 py-1 text-xs transition-colors",
-              p === page ? "bg-brand font-medium text-brand-foreground" : "text-muted-foreground hover:bg-secondary",
+              p === page
+                ? "bg-brand font-medium text-brand-foreground"
+                : "text-muted-foreground hover:bg-secondary",
             )}
           >
             {p}

@@ -48,7 +48,10 @@ function Tarjeta({ d }: { d: Diagnostico }) {
         <Fila etiqueta="Origen" valor={ORIGEN_LABELS[d.origen]} />
         <Fila etiqueta="Causa" valor={d.causa} />
         {d.matriz && (
-          <Fila etiqueta="Matriz" valor={`${VERDICTO_LABEL[d.matriz.verdict]} — ${d.matriz.detalle}`} />
+          <Fila
+            etiqueta="Matriz"
+            valor={`${VERDICTO_LABEL[d.matriz.verdict]} — ${d.matriz.detalle}`}
+          />
         )}
         <Fila etiqueta="Mensaje" valor={d.mensaje || "(sin mensaje)"} />
       </div>
@@ -65,7 +68,11 @@ function Tarjeta({ d }: { d: Diagnostico }) {
 /** Panel flotante de diagnóstico. Solo se monta en desarrollo. */
 export function DevDiagnosticsPanel() {
   const [abierto, setAbierto] = useState(false);
-  const registros = useSyncExternalStore(suscribirBloqueos, leerBloqueos, () => [] as Diagnostico[]);
+  const registros = useSyncExternalStore(
+    suscribirBloqueos,
+    leerBloqueos,
+    () => [] as Diagnostico[],
+  );
 
   if (!import.meta.env.DEV) return null;
 

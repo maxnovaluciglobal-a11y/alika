@@ -51,7 +51,10 @@ export const Route = createFileRoute("/_authenticated/_clinic/dominio-email")({
   component: DominioEmailPage,
 });
 
-const ESTADO_UI: Record<DnsCheckState, { label: string; clase: string; Icono: typeof CheckCircle2 }> = {
+const ESTADO_UI: Record<
+  DnsCheckState,
+  { label: string; clase: string; Icono: typeof CheckCircle2 }
+> = {
   pass: {
     label: "Correcto",
     clase: "border-primary/30 bg-primary/5 text-primary",
@@ -252,7 +255,10 @@ function DominioEmailPage() {
                       ) : null}
                       {r.sugerencia ? (
                         <p className="mt-2 flex items-start gap-1 text-sm text-foreground">
-                          <ChevronRight className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+                          <ChevronRight
+                            className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                            aria-hidden
+                          />
                           {r.sugerencia}
                         </p>
                       ) : null}

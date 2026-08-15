@@ -62,10 +62,7 @@ export const DEFAULT_PREFERENCES: NotificationPreferences = {
 };
 
 /** Indica si corresponde enviar el email de un evento según las preferencias. */
-export function debeEnviarEmail(
-  prefs: NotificationPreferences,
-  key: EmailEventKey,
-): boolean {
+export function debeEnviarEmail(prefs: NotificationPreferences, key: EmailEventKey): boolean {
   if (!prefs.emailEnabled || prefs.unsubscribedAt) return false;
   return prefs.events[key];
 }

@@ -48,7 +48,6 @@ import {
 } from "@/lib/email-test-log";
 import { cn } from "@/lib/utils";
 
-
 export const Route = createFileRoute("/_authenticated/_clinic/pruebas-email")({
   beforeLoad: requirePermission("team:manage"),
   head: () => ({
@@ -82,7 +81,12 @@ const ESTADO_UI: Record<EmailTestStatus, { label: string; clase: string }> = {
 function EstadoBadge({ estado }: { estado: EmailTestStatus }) {
   const ui = ESTADO_UI[estado];
   return (
-    <span className={cn("inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium", ui.clase)}>
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
+        ui.clase,
+      )}
+    >
       {ui.label}
     </span>
   );
@@ -171,8 +175,6 @@ function PreflightPanel({ report }: { report: PreflightReport | null }) {
   );
 }
 
-
-
 function PruebasEmailPage() {
   const { access } = Route.useRouteContext();
   const [config, setConfig] = useState<EmailSandboxConfig>(DEFAULT_EMAIL_SANDBOX);
@@ -215,9 +217,7 @@ function PruebasEmailPage() {
     const total = log.length;
     const errores = log.filter((e) => e.status === "error").length;
     const bloqueados = log.filter((e) => e.status === "bloqueado").length;
-    const promedio = total
-      ? Math.round(log.reduce((acc, e) => acc + e.durationMs, 0) / total)
-      : 0;
+    const promedio = total ? Math.round(log.reduce((acc, e) => acc + e.durationMs, 0) / total) : 0;
     return { total, errores, bloqueados, promedio };
   }, [log]);
 
@@ -287,7 +287,6 @@ function PruebasEmailPage() {
     }
   }
 
-
   function descargarCsv() {
     const blob = new Blob([exportarLogCsv(log)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -340,8 +339,9 @@ function PruebasEmailPage() {
           <div className="rounded-xl border border-border bg-card p-5">
             <h2 className="font-display text-lg font-semibold text-foreground">Ejecutar prueba</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Política vigente: <span className="font-medium text-foreground">{resumen.titulo}</span>{" "}
-              — {resumen.detalle}
+              Política vigente:{" "}
+              <span className="font-medium text-foreground">{resumen.titulo}</span> —{" "}
+              {resumen.detalle}
             </p>
 
             <div className="mt-4 flex flex-col gap-4">
@@ -442,7 +442,6 @@ function PruebasEmailPage() {
 
               <PreflightPanel report={preflight} />
             </div>
-
           </div>
 
           <div className="rounded-xl border border-border bg-card p-5">
@@ -474,7 +473,9 @@ function PruebasEmailPage() {
                       <span className="inline-flex items-center gap-1">
                         <AlertTriangle className="size-3" aria-hidden /> {d.errores} errores
                       </span>
-                      <span>{d.intentos} intentos · {d.promedioMs} ms medios</span>
+                      <span>
+                        {d.intentos} intentos · {d.promedioMs} ms medios
+                      </span>
                       <span>Último: {formatoFecha(d.ultimoIntento)}</span>
                     </p>
                   </li>
@@ -537,13 +538,27 @@ function PruebasEmailPage() {
               <table className="w-full min-w-[720px] text-left text-sm">
                 <thead className="text-xs uppercase tracking-wide text-muted-foreground">
                   <tr className="border-b border-border">
-                    <th scope="col" className="px-5 py-3 font-medium">Fecha</th>
-                    <th scope="col" className="px-5 py-3 font-medium">Plantilla</th>
-                    <th scope="col" className="px-5 py-3 font-medium">Destinatario</th>
-                    <th scope="col" className="px-5 py-3 font-medium">Entregado a</th>
-                    <th scope="col" className="px-5 py-3 font-medium">Estado</th>
-                    <th scope="col" className="px-5 py-3 font-medium">Tiempo</th>
-                    <th scope="col" className="px-5 py-3 font-medium">Detalle</th>
+                    <th scope="col" className="px-5 py-3 font-medium">
+                      Fecha
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-medium">
+                      Plantilla
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-medium">
+                      Destinatario
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-medium">
+                      Entregado a
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-medium">
+                      Estado
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-medium">
+                      Tiempo
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-medium">
+                      Detalle
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">

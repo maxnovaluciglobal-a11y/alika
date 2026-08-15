@@ -30,8 +30,7 @@ function readEnv(): string {
 }
 
 function readSampleRate(): number {
-  const raw =
-    typeof process !== "undefined" ? process.env?.SENTRY_TRACES_SAMPLE_RATE : undefined;
+  const raw = typeof process !== "undefined" ? process.env?.SENTRY_TRACES_SAMPLE_RATE : undefined;
   const parsed = raw ? Number(raw) : NaN;
   return Number.isFinite(parsed) ? parsed : 0.1;
 }

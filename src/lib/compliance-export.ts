@@ -21,7 +21,9 @@ export const ORIGEN_LABELS: Record<ExportContexto["origen"], string> = {
 /** Etiqueta legible de la acción según el origen del evento. */
 export function etiquetaAccion(evento: ComplianceEvent): string {
   if (evento.source === "review") {
-    return REVIEW_ACTION_LABELS[evento.action as keyof typeof REVIEW_ACTION_LABELS] ?? evento.action;
+    return (
+      REVIEW_ACTION_LABELS[evento.action as keyof typeof REVIEW_ACTION_LABELS] ?? evento.action
+    );
   }
   return AUDIT_LABELS[evento.action] ?? evento.action;
 }
@@ -125,11 +127,7 @@ export function exportarCompliancePdf(eventos: ComplianceEvent[], ctx: ExportCon
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(110);
-  doc.text(
-    `Historial de auditoría y revisión clínica · ${ORIGEN_LABELS[ctx.origen]}`,
-    MARGEN,
-    y,
-  );
+  doc.text(`Historial de auditoría y revisión clínica · ${ORIGEN_LABELS[ctx.origen]}`, MARGEN, y);
   y += 13;
   doc.text(
     `Rango: ${ctx.desde} a ${ctx.hasta}${ctx.pacienteRef ? ` · Paciente: ${ctx.pacienteRef}` : ""} · ${

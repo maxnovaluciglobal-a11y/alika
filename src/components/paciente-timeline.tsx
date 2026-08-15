@@ -3,7 +3,13 @@ import { Link } from "@tanstack/react-router";
 import type { Paciente } from "@/lib/clinic-data";
 import { cn } from "@/lib/utils";
 
-export function PacienteTimeline({ paciente, conEncabezado = true }: { paciente: Paciente; conEncabezado?: boolean }) {
+export function PacienteTimeline({
+  paciente,
+  conEncabezado = true,
+}: {
+  paciente: Paciente;
+  conEncabezado?: boolean;
+}) {
   return (
     <div className="space-y-6">
       {conEncabezado && (
@@ -27,7 +33,11 @@ export function PacienteTimeline({ paciente, conEncabezado = true }: { paciente:
             </span>
           )}
           <div>
-            <Link to="/pacientes/$pacienteId" params={{ pacienteId: paciente.id }} className="text-sm font-semibold hover:underline">
+            <Link
+              to="/pacientes/$pacienteId"
+              params={{ pacienteId: paciente.id }}
+              className="text-sm font-semibold hover:underline"
+            >
               {paciente.nombre}
             </Link>
             <p className="text-xs text-muted-foreground">
@@ -49,12 +59,16 @@ export function PacienteTimeline({ paciente, conEncabezado = true }: { paciente:
                 e.actual ? "bg-brand" : "bg-border",
               )}
             />
-            <p className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">{e.fecha}</p>
+            <p className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+              {e.fecha}
+            </p>
             <p className="text-sm font-medium">{e.titulo}</p>
             {e.detalle && <p className="mt-1 text-xs text-muted-foreground">{e.detalle}</p>}
             {e.tipo === "imagen" && (
               <div className="mt-2 grid size-16 place-items-center rounded-md bg-secondary">
-                <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">RX</span>
+                <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">
+                  RX
+                </span>
               </div>
             )}
           </div>

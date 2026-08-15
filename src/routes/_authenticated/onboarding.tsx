@@ -68,9 +68,7 @@ function OnboardingPage() {
   const [closesAt, setClosesAt] = useState("20:00");
   const [operatories, setOperatories] = useState<string[]>(["Box 1", "Box 2"]);
 
-  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([
-    "Odontología general",
-  ]);
+  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>(["Odontología general"]);
 
   const [professionals, setProfessionals] = useState<ProfessionalDraft[]>([
     { fullName: "", email: "", licenseNumber: "", specialtyName: "", color: "#0d9488" },
@@ -294,9 +292,7 @@ function OnboardingPage() {
                       <button
                         type="button"
                         aria-label={`Eliminar box ${index + 1}`}
-                        onClick={() =>
-                          setOperatories((prev) => prev.filter((_, i) => i !== index))
-                        }
+                        onClick={() => setOperatories((prev) => prev.filter((_, i) => i !== index))}
                         className="grid size-9 shrink-0 place-items-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-secondary"
                       >
                         <Trash2 className="size-4" />
@@ -306,9 +302,7 @@ function OnboardingPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() =>
-                    setOperatories((prev) => [...prev, `Box ${prev.length + 1}`])
-                  }
+                  onClick={() => setOperatories((prev) => [...prev, `Box ${prev.length + 1}`])}
                   className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-brand hover:underline"
                 >
                   <Plus className="size-3.5" /> Agregar box

@@ -1,7 +1,33 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
+
+type SupabaseCtx = SupabaseClient<Database>;
+
+interface AuditRow {
+  id: string;
+  note_id: string | null;
+  patient_ref: string;
+  action: string;
+  detail: string | null;
+  actor_id: string;
+  created_at: string;
+}
+
+interface ReviewRow {
+  id: string;
+  note_id: string | null;
+  patient_ref: string;
+  action: string;
+  comment: string | null;
+  actor_id: string;
+  reviewer_id: string | null;
+  note_version: number | null;
+  created_at: string;
+}
 
 /** Origen del evento dentro del expediente de compliance. */
 export type ComplianceSource = "audit" | "review";
@@ -37,17 +63,16 @@ const filtros = z.object({
 export type ComplianceFilters = z.infer<typeof filtros>;
 
 async function nombres(
-  supabase: { from: (t: string) => any },
+  supabase: SupabaseCtx,
   ids: Array<string | null>,
 ): Promise<Map<string, string | null>> {
   const unicos = [...new Set(ids.filter(Boolean) as string[])];
   if (!unicos.length) return new Map();
   const { data } = await supabase.from("profiles").select("id, full_name, email").in("id", unicos);
   return new Map(
-    ((data ?? []) as Array<{ id: string; full_name: string | null; email: string | null }>).map((p) => [
-      p.id,
-      p.full_name ?? p.email,
-    ]),
+    ((data ?? []) as Array<{ id: string; full_name: string | null; email: string | null }>).map(
+      (p) => [p.id, p.full_name ?? p.email],
+    ),
   );
 }
 
@@ -58,103 +83,109 @@ async function nombres(
 export const getComplianceLog = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => filtros.parse(input))
-  .handler(async ({ data, context }): Promise<{ events: ComplianceEvent[]; truncated: boolean }> => {
-    const { supabase } = context;
-    const desde = new Date(`${data.desde}T00:00:00.000Z`).toISOString();
-    const hasta = new Date(`${data.hasta}T23:59:59.999Z`).toISOString();
+  .handler(
+    async ({ data, context }): Promise<{ events: ComplianceEvent[]; truncated: boolean }> => {
+      const { supabase } = context;
+      const desde = new Date(`${data.desde}T00:00:00.000Z`).toISOString();
+      const hasta = new Date(`${data.hasta}T23:59:59.999Z`).toISOString();
 
-    const pedirAudit = data.source !== "review";
-    const pedirReview = data.source !== "audit";
+      const pedirAudit = data.source !== "review";
+      const pedirReview = data.source !== "audit";
 
-    const consultaAudit = async () => {
-      if (!pedirAudit) return [] as any[];
-      let q = supabase
-        .from("clinical_note_audit")
-        .select("id, note_id, patient_ref, action, detail, actor_id, created_at")
-        .eq("clinic_id", data.clinicId)
-        .gte("created_at", desde)
-        .lte("created_at", hasta)
-        .order("created_at", { ascending: false })
-        .limit(data.limit);
-      if (data.patientRef) q = q.eq("patient_ref", data.patientRef);
-      const { data: filas, error } = await q;
-      if (error) throw new Error("No pudimos leer el registro de auditoría.");
-      return filas ?? [];
-    };
+      const consultaAudit = async (): Promise<AuditRow[]> => {
+        if (!pedirAudit) return [];
+        let q = supabase
+          .from("clinical_note_audit")
+          .select("id, note_id, patient_ref, action, detail, actor_id, created_at")
+          .eq("clinic_id", data.clinicId)
+          .gte("created_at", desde)
+          .lte("created_at", hasta)
+          .order("created_at", { ascending: false })
+          .limit(data.limit);
+        if (data.patientRef) q = q.eq("patient_ref", data.patientRef);
+        const { data: filas, error } = await q;
+        if (error) throw new Error("No pudimos leer el registro de auditoría.");
+        return filas ?? [];
+      };
 
-    const consultaReview = async () => {
-      if (!pedirReview) return [] as any[];
-      let q = supabase
-        .from("clinical_note_reviews")
-        .select("id, note_id, patient_ref, action, comment, actor_id, reviewer_id, note_version, created_at")
-        .eq("clinic_id", data.clinicId)
-        .gte("created_at", desde)
-        .lte("created_at", hasta)
-        .order("created_at", { ascending: false })
-        .limit(data.limit);
-      if (data.patientRef) q = q.eq("patient_ref", data.patientRef);
-      const { data: filas, error } = await q;
-      if (error) throw new Error("No pudimos leer el historial de revisión.");
-      return filas ?? [];
-    };
+      const consultaReview = async (): Promise<ReviewRow[]> => {
+        if (!pedirReview) return [];
+        let q = supabase
+          .from("clinical_note_reviews")
+          .select(
+            "id, note_id, patient_ref, action, comment, actor_id, reviewer_id, note_version, created_at",
+          )
+          .eq("clinic_id", data.clinicId)
+          .gte("created_at", desde)
+          .lte("created_at", hasta)
+          .order("created_at", { ascending: false })
+          .limit(data.limit);
+        if (data.patientRef) q = q.eq("patient_ref", data.patientRef);
+        const { data: filas, error } = await q;
+        if (error) throw new Error("No pudimos leer el historial de revisión.");
+        return filas ?? [];
+      };
 
-    const [auditRows, reviewRows] = await Promise.all([consultaAudit(), consultaReview()]);
+      const [auditRows, reviewRows] = await Promise.all([consultaAudit(), consultaReview()]);
 
-    const noteIds = [
-      ...new Set(
-        [...auditRows, ...reviewRows].map((r: { note_id: string | null }) => r.note_id).filter(Boolean),
-      ),
-    ] as string[];
-    const notasRes = noteIds.length
-      ? await supabase.from("clinical_notes").select("id, title").in("id", noteIds)
-      : { data: [] };
-    const titulos = new Map(
-      ((notasRes.data ?? []) as Array<{ id: string; title: string }>).map((n) => [n.id, n.title]),
-    );
+      const noteIds = [
+        ...new Set(
+          [...auditRows, ...reviewRows]
+            .map((r: { note_id: string | null }) => r.note_id)
+            .filter(Boolean),
+        ),
+      ] as string[];
+      const notasRes = noteIds.length
+        ? await supabase.from("clinical_notes").select("id, title").in("id", noteIds)
+        : { data: [] };
+      const titulos = new Map(
+        ((notasRes.data ?? []) as Array<{ id: string; title: string }>).map((n) => [n.id, n.title]),
+      );
 
-    const mapa = await nombres(supabase, [
-      ...auditRows.map((r: { actor_id: string }) => r.actor_id),
-      ...reviewRows.flatMap((r: { actor_id: string; reviewer_id: string | null }) => [
-        r.actor_id,
-        r.reviewer_id,
-      ]),
-    ]);
+      const mapa = await nombres(supabase, [
+        ...auditRows.map((r: { actor_id: string }) => r.actor_id),
+        ...reviewRows.flatMap((r: { actor_id: string; reviewer_id: string | null }) => [
+          r.actor_id,
+          r.reviewer_id,
+        ]),
+      ]);
 
-    const events: ComplianceEvent[] = [
-      ...auditRows.map((r: any) => ({
-        id: r.id,
-        source: "audit" as const,
-        createdAt: r.created_at,
-        patientRef: r.patient_ref,
-        noteId: r.note_id,
-        noteTitle: r.note_id ? (titulos.get(r.note_id) ?? null) : null,
-        noteVersion: null,
-        action: r.action,
-        detail: r.detail,
-        actorId: r.actor_id,
-        actorName: mapa.get(r.actor_id) ?? null,
-        reviewerId: null,
-        reviewerName: null,
-      })),
-      ...reviewRows.map((r: any) => ({
-        id: r.id,
-        source: "review" as const,
-        createdAt: r.created_at,
-        patientRef: r.patient_ref,
-        noteId: r.note_id,
-        noteTitle: r.note_id ? (titulos.get(r.note_id) ?? null) : null,
-        noteVersion: r.note_version,
-        action: r.action,
-        detail: r.comment,
-        actorId: r.actor_id,
-        actorName: mapa.get(r.actor_id) ?? null,
-        reviewerId: r.reviewer_id,
-        reviewerName: r.reviewer_id ? (mapa.get(r.reviewer_id) ?? null) : null,
-      })),
-    ].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+      const events: ComplianceEvent[] = [
+        ...auditRows.map((r) => ({
+          id: r.id,
+          source: "audit" as const,
+          createdAt: r.created_at,
+          patientRef: r.patient_ref,
+          noteId: r.note_id,
+          noteTitle: r.note_id ? (titulos.get(r.note_id) ?? null) : null,
+          noteVersion: null,
+          action: r.action,
+          detail: r.detail,
+          actorId: r.actor_id,
+          actorName: mapa.get(r.actor_id) ?? null,
+          reviewerId: null,
+          reviewerName: null,
+        })),
+        ...reviewRows.map((r) => ({
+          id: r.id,
+          source: "review" as const,
+          createdAt: r.created_at,
+          patientRef: r.patient_ref,
+          noteId: r.note_id,
+          noteTitle: r.note_id ? (titulos.get(r.note_id) ?? null) : null,
+          noteVersion: r.note_version,
+          action: r.action,
+          detail: r.comment,
+          actorId: r.actor_id,
+          actorName: mapa.get(r.actor_id) ?? null,
+          reviewerId: r.reviewer_id,
+          reviewerName: r.reviewer_id ? (mapa.get(r.reviewer_id) ?? null) : null,
+        })),
+      ].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 
-    return {
-      events,
-      truncated: auditRows.length >= data.limit || reviewRows.length >= data.limit,
-    };
-  });
+      return {
+        events,
+        truncated: auditRows.length >= data.limit || reviewRows.length >= data.limit,
+      };
+    },
+  );

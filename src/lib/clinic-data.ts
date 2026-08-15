@@ -87,9 +87,21 @@ export const sucursales: Sucursal[] = [
 ];
 
 export const profesionales: Profesional[] = [
-  { id: "p1", nombre: "Dr. Méndez", box: "Box 1", especialidad: "Rehabilitación", sucursalId: "s1" },
+  {
+    id: "p1",
+    nombre: "Dr. Méndez",
+    box: "Box 1",
+    especialidad: "Rehabilitación",
+    sucursalId: "s1",
+  },
   { id: "p2", nombre: "Dra. Luna", box: "Box 2", especialidad: "Endodoncia", sucursalId: "s1" },
-  { id: "p3", nombre: "Dra. Rivas", box: "Box 3", especialidad: "Odontopediatría", sucursalId: "s2" },
+  {
+    id: "p3",
+    nombre: "Dra. Rivas",
+    box: "Box 3",
+    especialidad: "Odontopediatría",
+    sucursalId: "s2",
+  },
 ];
 
 export const HORA_INICIO = 8;
@@ -301,8 +313,18 @@ export const pacientes: Paciente[] = [
     resumenIA:
       "Tratamiento de conducto en curso (sesión 1 de 2). Saldo pendiente de $148.000; historial de pago puntual. Recordar consentimiento firmado antes de la segunda sesión.",
     timeline: [
-      { fecha: "Hoy · 09:30", titulo: "Endodoncia conducto — sesión 1", tipo: "consulta", actual: true },
-      { fecha: "12 Oct 2026", titulo: "Presupuesto aceptado", detalle: "Plan integral 4 piezas.", tipo: "presupuesto" },
+      {
+        fecha: "Hoy · 09:30",
+        titulo: "Endodoncia conducto — sesión 1",
+        tipo: "consulta",
+        actual: true,
+      },
+      {
+        fecha: "12 Oct 2026",
+        titulo: "Presupuesto aceptado",
+        detalle: "Plan integral 4 piezas.",
+        tipo: "presupuesto",
+      },
       { fecha: "28 Sep 2026", titulo: "Radiografía periapical", tipo: "imagen" },
     ],
   },
@@ -348,8 +370,18 @@ export const pacientes: Paciente[] = [
     resumenIA:
       "Tres inasistencias en los últimos seis meses, todas en horario matinal. Sugerido reagendar en bloque vespertino y activar recordatorio por WhatsApp 24 h antes.",
     timeline: [
-      { fecha: "Hoy · 13:00", titulo: "Control ortodoncia — ausente", tipo: "control", actual: true },
-      { fecha: "12 Oct 2026", titulo: "Evaluación diagnóstica", detalle: "Caries profunda detectada en 1.7.", tipo: "consulta" },
+      {
+        fecha: "Hoy · 13:00",
+        titulo: "Control ortodoncia — ausente",
+        tipo: "control",
+        actual: true,
+      },
+      {
+        fecha: "12 Oct 2026",
+        titulo: "Evaluación diagnóstica",
+        detalle: "Caries profunda detectada en 1.7.",
+        tipo: "consulta",
+      },
       { fecha: "04 Sep 2026", titulo: "Limpieza general", tipo: "consulta" },
     ],
   },
@@ -417,7 +449,9 @@ export const pacientes: Paciente[] = [
     etiquetas: ["Paciente nuevo"],
     resumenIA:
       "Primera consulta agendada. Registrar antecedentes médicos del apoderado y evaluar ansiedad dental antes del examen.",
-    timeline: [{ fecha: "Hoy · 12:30", titulo: "Primera consulta infantil", tipo: "consulta", actual: true }],
+    timeline: [
+      { fecha: "Hoy · 12:30", titulo: "Primera consulta infantil", tipo: "consulta", actual: true },
+    ],
   },
   {
     id: "pa8",
@@ -567,7 +601,11 @@ export function getSucursal(id: string) {
 }
 
 export function formatoMoneda(valor: number) {
-  return new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(valor);
+  return new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "CLP",
+    maximumFractionDigits: 0,
+  }).format(valor);
 }
 
 /** Fecha real de hoy (YYYY-MM-DD) en la zona horaria por defecto de la clínica. */
@@ -592,11 +630,19 @@ function parseIsoDate(iso: string | null | undefined): Date | null {
 export function formatoFecha(iso: string | null | undefined) {
   const date = parseIsoDate(iso);
   if (!date) return "—";
-  return new Intl.DateTimeFormat("es-CL", { day: "2-digit", month: "short", year: "numeric" }).format(date);
+  return new Intl.DateTimeFormat("es-CL", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
 }
 
 export function formatoFechaLarga(iso: string | null | undefined) {
   const date = parseIsoDate(iso);
   if (!date) return "—";
-  return new Intl.DateTimeFormat("es-CL", { weekday: "long", day: "numeric", month: "long" }).format(date);
+  return new Intl.DateTimeFormat("es-CL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(date);
 }

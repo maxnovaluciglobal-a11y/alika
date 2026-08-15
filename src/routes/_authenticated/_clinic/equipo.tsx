@@ -80,7 +80,9 @@ function EquipoPage() {
 
         <section className="space-y-4">
           <div>
-            <h2 className="font-display text-xl font-semibold">Integrantes de {access.clinic!.name}</h2>
+            <h2 className="font-display text-xl font-semibold">
+              Integrantes de {access.clinic!.name}
+            </h2>
             <p className="text-sm text-muted-foreground">
               {puedeGestionar
                 ? "Cambia el rol de cada persona para ajustar qué secciones puede abrir."
@@ -95,7 +97,9 @@ function EquipoPage() {
               </p>
             )}
             {membersQuery.isError && (
-              <p className="px-5 py-6 text-sm text-muted-foreground">No pudimos cargar el equipo.</p>
+              <p className="px-5 py-6 text-sm text-muted-foreground">
+                No pudimos cargar el equipo.
+              </p>
             )}
             {members.map((m) => {
               const esYo = m.userId === access.userId;

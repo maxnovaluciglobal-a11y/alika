@@ -46,11 +46,7 @@ import {
   type ClinicalNoteEntity,
   type NoteReviewStatus,
 } from "@/lib/clinical-notes";
-import {
-  NOTE_TEMPLATES,
-  NOTE_TEMPLATE_SPECIALTIES,
-  getNoteTemplate,
-} from "@/lib/note-templates";
+import { NOTE_TEMPLATES, NOTE_TEMPLATE_SPECIALTIES, getNoteTemplate } from "@/lib/note-templates";
 import { VersionDiffDialog } from "@/components/version-diff-dialog";
 import { DevDiagnosticsPanel } from "@/components/dev-diagnostics-panel";
 import { estadoNota, reportarBloqueo } from "@/lib/block-diagnostics";
@@ -104,12 +100,13 @@ export function NotasClinicas({
   const [resumen, setResumen] = useState<string | null>(null);
   const [aiUsada, setAiUsada] = useState(false);
   const [panel, setPanel] = useState<"versiones" | "auditoria" | "revision">("versiones");
-  const [comparar, setComparar] = useState<{ desde: number | null; hasta: number | null } | null>(null);
+  const [comparar, setComparar] = useState<{ desde: number | null; hasta: number | null } | null>(
+    null,
+  );
   const [especialidad, setEspecialidad] = useState(NOTE_TEMPLATE_SPECIALTIES[0]);
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [revisorId, setRevisorId] = useState("");
   const [comentarioRevision, setComentarioRevision] = useState("");
-
 
   const queryKey = ["clinical-notes", clinicId, paciente.id];
 
@@ -167,9 +164,6 @@ export function NotasClinicas({
     });
   };
 
-
-
-
   function exportarPdf() {
     if (!notaActual) {
       toast.error("Guarda la nota antes de exportarla.");
@@ -215,7 +209,9 @@ export function NotasClinicas({
       setContenido(plantilla.scaffold);
       setTitulo(plantilla.title);
     } else if (
-      confirm("¿Reemplazar el contenido actual por la plantilla? Se perderán los apuntes no guardados.")
+      confirm(
+        "¿Reemplazar el contenido actual por la plantilla? Se perderán los apuntes no guardados.",
+      )
     ) {
       setContenido(plantilla.scaffold);
       setTitulo(plantilla.title);
@@ -290,7 +286,6 @@ export function NotasClinicas({
     },
     onError: diagError("version"),
   });
-
 
   const cambiarEstado = useMutation({
     mutationFn: (status: "draft" | "signed") => statusFn({ data: { noteId: noteId!, status } }),
@@ -397,7 +392,6 @@ export function NotasClinicas({
     onError: diagError("resolve_review"),
   });
 
-
   const ocupado = ia.isPending || guardar.isPending || restaurar.isPending || estructurar.isPending;
   // Bloqueada para edición: firmada o en revisión pendiente (también validado por la base de datos).
   const firmada = notaActual?.status === "signed";
@@ -429,12 +423,12 @@ export function NotasClinicas({
             <Download className="size-3" /> Exportar PDF
           </button>
           {puedeEditar && (
-          <button
-            onClick={nuevaNota}
-            className="rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium hover:bg-secondary/60"
-          >
-            Nueva nota
-          </button>
+            <button
+              onClick={nuevaNota}
+              className="rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium hover:bg-secondary/60"
+            >
+              Nueva nota
+            </button>
           )}
         </div>
       </div>
@@ -579,15 +573,17 @@ export function NotasClinicas({
                 disabled={ocupado || bloqueada || !contenido.trim()}
                 className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-brand-foreground disabled:opacity-50"
               >
-                {guardar.isPending ? <Loader2 className="size-3 animate-spin" /> : <Save className="size-3" />}
+                {guardar.isPending ? (
+                  <Loader2 className="size-3 animate-spin" />
+                ) : (
+                  <Save className="size-3" />
+                )}
                 Guardar versión
               </button>
               {noteId && (
                 <button
                   onClick={() => cambiarEstado.mutate(firmada ? "draft" : "signed")}
-                  disabled={
-                    cambiarEstado.isPending || (firmada ? !puedeReabrir : !puedeFirmar)
-                  }
+                  disabled={cambiarEstado.isPending || (firmada ? !puedeReabrir : !puedeFirmar)}
                   title={
                     !esProfesional
                       ? "Solo un doctor/a o administrador puede firmar o reabrir la nota"
@@ -738,14 +734,14 @@ export function NotasClinicas({
             </div>
           )}
 
-
-
           {resumen && (
             <div className="rounded-xl border border-ai/15 bg-ai-soft p-4">
               <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-ai">
                 <Sparkles className="size-3" /> Resumen IA
               </p>
-              <p className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">{resumen}</p>
+              <p className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
+                {resumen}
+              </p>
             </div>
           )}
 
@@ -779,7 +775,9 @@ export function NotasClinicas({
                                   e.quantity ? `${e.quantity} u.` : null,
                                   e.severity,
                                   e.status,
-                                  e.confidence != null ? `IA ${Math.round(e.confidence * 100)}%` : null,
+                                  e.confidence != null
+                                    ? `IA ${Math.round(e.confidence * 100)}%`
+                                    : null,
                                 ]
                                   .filter(Boolean)
                                   .join(" · ") || "Sin detalles adicionales"}
@@ -789,7 +787,9 @@ export function NotasClinicas({
                               <div className="flex shrink-0 gap-1">
                                 <button
                                   title={e.confirmed ? "Quitar validación" : "Validar"}
-                                  onClick={() => validar.mutate({ entityId: e.id, confirmed: !e.confirmed })}
+                                  onClick={() =>
+                                    validar.mutate({ entityId: e.id, confirmed: !e.confirmed })
+                                  }
                                   className={`rounded p-1 hover:bg-secondary ${
                                     e.confirmed ? "text-brand" : "text-muted-foreground"
                                   }`}
@@ -813,13 +813,15 @@ export function NotasClinicas({
                 ))}
               </div>
               <p className="mt-3 text-[10px] text-muted-foreground">
-                Campos extraídos por IA para búsqueda y facturación. Valídalos antes de usarlos en un cobro.
+                Campos extraídos por IA para búsqueda y facturación. Valídalos antes de usarlos en
+                un cobro.
               </p>
             </div>
           )}
           {aiUsada && (
             <p className="text-[11px] text-muted-foreground">
-              Texto generado con IA sin guardar. Revísalo: la versión quedará marcada como asistida por IA.
+              Texto generado con IA sin guardar. Revísalo: la versión quedará marcada como asistida
+              por IA.
             </p>
           )}
         </div>
@@ -844,7 +846,6 @@ export function NotasClinicas({
             >
               Auditoría
             </button>
-
           </div>
 
           <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
@@ -870,38 +871,39 @@ export function NotasClinicas({
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
                       {v.authorName ?? "Usuario"} · {formatoFechaHora(v.createdAt)}
                     </p>
-                    <p className="mt-1.5 line-clamp-2 text-[11px] text-muted-foreground">{v.content}</p>
+                    <p className="mt-1.5 line-clamp-2 text-[11px] text-muted-foreground">
+                      {v.content}
+                    </p>
                     <div className="mt-2 flex items-center gap-3">
-                    {v.version > 1 && (
-                      <button
-                        onClick={() => setComparar({ desde: v.version - 1, hasta: v.version })}
-                        className="inline-flex items-center gap-1 text-[11px] text-brand hover:underline"
-                      >
-                        <GitCompare className="size-3" /> Comparar con v{v.version - 1}
-                      </button>
-                    )}
-                    {puedeEditar && v.version !== notaActual?.version && (
-                      <button
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              `¿Revertir el contenido a la v${v.version}? Se creará un nuevo borrador y quedará registrado en auditoría.`,
+                      {v.version > 1 && (
+                        <button
+                          onClick={() => setComparar({ desde: v.version - 1, hasta: v.version })}
+                          className="inline-flex items-center gap-1 text-[11px] text-brand hover:underline"
+                        >
+                          <GitCompare className="size-3" /> Comparar con v{v.version - 1}
+                        </button>
+                      )}
+                      {puedeEditar && v.version !== notaActual?.version && (
+                        <button
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                `¿Revertir el contenido a la v${v.version}? Se creará un nuevo borrador y quedará registrado en auditoría.`,
+                              )
                             )
-                          )
-                            restaurar.mutate(v.id);
-                        }}
-                        disabled={restaurar.isPending || revisionPendiente}
-                        title={
-                          revisionPendiente
-                            ? "Resuelve la revisión pendiente antes de revertir"
-                            : `Revertir a v${v.version} como nuevo borrador`
-                        }
-                        className="inline-flex items-center gap-1 text-[11px] text-brand hover:underline disabled:opacity-50"
-                      >
-                        <RotateCcw className="size-3" /> Revertir a v{v.version}
-                      </button>
-                    )}
-
+                              restaurar.mutate(v.id);
+                          }}
+                          disabled={restaurar.isPending || revisionPendiente}
+                          title={
+                            revisionPendiente
+                              ? "Resuelve la revisión pendiente antes de revertir"
+                              : `Revertir a v${v.version} como nuevo borrador`
+                          }
+                          className="inline-flex items-center gap-1 text-[11px] text-brand hover:underline disabled:opacity-50"
+                        >
+                          <RotateCcw className="size-3" /> Revertir a v{v.version}
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))
@@ -919,8 +921,7 @@ export function NotasClinicas({
                 <ol className="relative space-y-3 border-l border-hairline pl-4">
                   {[...revisiones]
                     .sort(
-                      (x, y) =>
-                        new Date(x.createdAt).getTime() - new Date(y.createdAt).getTime(),
+                      (x, y) => new Date(x.createdAt).getTime() - new Date(y.createdAt).getTime(),
                     )
                     .map((r, i, lista) => {
                       const anterior = lista
@@ -997,7 +998,6 @@ export function NotasClinicas({
                   )}
                 </ol>
               ))}
-
 
             {panel === "auditoria" &&
               !isLoading &&

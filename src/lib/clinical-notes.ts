@@ -5,11 +5,7 @@ export type NoteAiAction = "draft" | "summary" | "polish";
 export type NoteReviewStatus = "none" | "pending" | "approved" | "changes_requested";
 
 export type NoteReviewAction =
-  | "requested"
-  | "approved"
-  | "changes_requested"
-  | "comment"
-  | "cancelled";
+  "requested" | "approved" | "changes_requested" | "comment" | "cancelled";
 
 export interface ClinicalNote {
   id: string;
@@ -45,7 +41,6 @@ export interface ClinicalNoteReview {
   createdAt: string;
 }
 
-
 export const REVIEW_STATUS_LABELS: Record<NoteReviewStatus, string> = {
   none: "Sin revisión",
   pending: "Pendiente de aprobación",
@@ -60,7 +55,6 @@ export const REVIEW_ACTION_LABELS: Record<NoteReviewAction, string> = {
   comment: "Comentó en la revisión",
   cancelled: "Canceló la solicitud",
 };
-
 
 export interface ClinicalNoteVersion {
   id: string;
@@ -113,7 +107,12 @@ export const ENTITY_KIND_LABELS: Record<ClinicalEntityKind, string> = {
   allergy: "Alergias",
 };
 
-export const ENTITY_KIND_ORDER: ClinicalEntityKind[] = ["diagnosis", "treatment", "medication", "allergy"];
+export const ENTITY_KIND_ORDER: ClinicalEntityKind[] = [
+  "diagnosis",
+  "treatment",
+  "medication",
+  "allergy",
+];
 
 export const AUDIT_LABELS: Record<string, string> = {
   create: "Creó la nota",
@@ -134,7 +133,6 @@ export const AUDIT_LABELS: Record<string, string> = {
   review_changes_requested: "Solicitó cambios en la revisión",
   review_comment: "Comentó en la revisión",
   review_cancelled: "Canceló la solicitud de revisión",
-
 };
 
 export const AI_ACTION_LABELS: Record<string, string> = {
@@ -142,7 +140,6 @@ export const AI_ACTION_LABELS: Record<string, string> = {
   summary: "Resumen IA",
   polish: "Redacción IA",
 };
-
 
 export function formatoFechaHora(iso: string) {
   return new Date(iso).toLocaleString("es-419", {

@@ -11,11 +11,7 @@
  * exige un preflight aprobado.
  */
 
-import {
-  puedeActivarProduccion,
-  verificacionVigente,
-  type DnsVerification,
-} from "@/lib/dns-email";
+import { puedeActivarProduccion, verificacionVigente, type DnsVerification } from "@/lib/dns-email";
 import {
   isValidEmail,
   normalizeEmail,
@@ -102,8 +98,7 @@ function checksConexion(input: PreflightInput): PreflightCheck[] {
   });
 
   const modoCoherente =
-    config.mode === "sandbox" ||
-    (config.mode === "production" && puerta.permitido);
+    config.mode === "sandbox" || (config.mode === "production" && puerta.permitido);
   checks.push({
     id: "modo",
     group: "conexion",
@@ -162,10 +157,7 @@ function checksPlantilla(input: PreflightInput): PreflightCheck[] {
     fix: asuntoOk && cuerpoOk ? undefined : "Completa el contenido de la plantilla.",
   });
 
-  const usados = new Set([
-    ...extraerMarcadores(def.asunto),
-    ...extraerMarcadores(def.cuerpo),
-  ]);
+  const usados = new Set([...extraerMarcadores(def.asunto), ...extraerMarcadores(def.cuerpo)]);
   const declarados = new Set(def.variables.map((v) => v.clave));
   const noDeclarados = Array.from(usados).filter((c) => !declarados.has(c));
   const sinUsar = Array.from(declarados).filter((c) => !usados.has(c));
@@ -285,11 +277,7 @@ function checksVariables(input: PreflightInput): {
 export function ejecutarPreflight(input: PreflightInput): PreflightReport {
   const inicio = Date.now();
   const variables = checksVariables(input);
-  const checks = [
-    ...checksConexion(input),
-    ...checksPlantilla(input),
-    ...variables.checks,
-  ];
+  const checks = [...checksConexion(input), ...checksPlantilla(input), ...variables.checks];
 
   const fallidos = checks.filter((c) => c.state === "fail");
 

@@ -1777,13 +1777,7 @@ export type Database = {
       appointment_status:
         "tentativa" | "confirmada" | "en-sala" | "ausente" | "finalizada" | "cancelada";
       tooth_surface: "mesial" | "distal" | "oclusal" | "vestibular" | "lingual" | "whole";
-      quote_status:
-        | "draft"
-        | "sent"
-        | "accepted"
-        | "rejected"
-        | "expired"
-        | "converted";
+      quote_status: "draft" | "sent" | "accepted" | "rejected" | "expired" | "converted";
       treatment_plan_status: "active" | "on_hold" | "completed" | "cancelled";
       treatment_item_status: "pending" | "in_progress" | "completed" | "skipped";
       payment_method: "cash" | "debit_card" | "credit_card" | "transfer" | "other";

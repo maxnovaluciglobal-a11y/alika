@@ -91,7 +91,12 @@ export function busquedaGlobal(termino: string, limitePorGrupo = 5): ResultadoGl
 
   const resTratamientos: ResultadoGlobal[] = tratamientos
     .filter((tr) =>
-      coincide(t, tr.plan, getPaciente(tr.pacienteId)?.nombre, getProfesional(tr.profesionalId)?.nombre),
+      coincide(
+        t,
+        tr.plan,
+        getPaciente(tr.pacienteId)?.nombre,
+        getProfesional(tr.profesionalId)?.nombre,
+      ),
     )
     .slice(0, limitePorGrupo)
     .map((tr) => ({

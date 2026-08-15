@@ -42,7 +42,8 @@ export const completeClinicSetup = createServerFn({ method: "POST" })
       .select("id")
       .single();
 
-    if (clinicError || !clinic) throw new Error(clinicError?.message ?? "No se pudo crear la clínica");
+    if (clinicError || !clinic)
+      throw new Error(clinicError?.message ?? "No se pudo crear la clínica");
     const clinicId = clinic.id;
 
     const { data: branch, error: branchError } = await supabase
@@ -60,7 +61,8 @@ export const completeClinicSetup = createServerFn({ method: "POST" })
       .select("id")
       .single();
 
-    if (branchError || !branch) throw new Error(branchError?.message ?? "No se pudo crear la sucursal");
+    if (branchError || !branch)
+      throw new Error(branchError?.message ?? "No se pudo crear la sucursal");
 
     const { error: opError } = await supabase.from("operatories").insert(
       data.branch.operatories.map((name) => ({

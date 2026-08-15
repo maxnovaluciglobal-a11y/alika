@@ -23,7 +23,7 @@ export function getStripe(): Stripe {
   cached = new Stripe(key, {
     // Fijar apiVersion evita sorpresas cuando Stripe rota su default. Actualizar
     // manualmente después de leer el changelog.
-    apiVersion: "2025-08-27.basil",
+    apiVersion: "2026-07-29.dahlia",
   });
   return cached;
 }

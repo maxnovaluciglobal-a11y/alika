@@ -24,7 +24,7 @@ export type { NoteAction, NoteState };
 const UUID = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
 const EMAIL = /\b[\w.+-]+@[\w-]+\.[\w.-]+\b/g;
 const COMILLAS = /"[^"]{0,400}"|'[^']{0,400}'|«[^»]{0,400}»/g;
-const TOKEN = /\b(?:eyJ[\w-]{10,}|sb_[\w-]{10,}|Bearer\s+[\w.\-]+)/g;
+const TOKEN = /\b(?:eyJ[\w-]{10,}|sb_[\w-]{10,}|Bearer\s+[\w.-]+)/g;
 
 /** Elimina datos sensibles de cualquier texto antes de mostrarlo o guardarlo. */
 export function sanitizar(texto: string | null | undefined, max = 300): string {
@@ -66,15 +66,53 @@ export const ORIGEN_LABELS: Record<Origen, string> = {
 };
 
 const REGLAS: Regla[] = [
-  { test: /en revisi[oó]n/i, causa: "La nota tiene una revisión pendiente; hay que resolverla o cancelarla antes de modificarla.", origen: "trigger" },
-  { test: /firmad/i, causa: "La nota está firmada: primero debe reabrirse a borrador.", origen: "trigger" },
-  { test: /revisor|supervisor|asignad/i, causa: "Solo el revisor asignado o un administrador puede resolver esta revisión.", origen: "trigger" },
-  { test: /no puedes? (auto|asignarte)|mismo usuario|s[ií] mismo/i, causa: "No se permite auto-asignarse la revisión.", origen: "trigger" },
-  { test: /asistente/i, causa: "El rol asistente no puede firmar ni editar borradores ajenos.", origen: "trigger" },
-  { test: /permis|denied|not allowed|violates row-level security|policy/i, causa: "RLS rechazó la operación: el usuario no pertenece a la clínica o su rol no la habilita.", origen: "rls" },
-  { test: /jwt|sesi[oó]n|unauthorized|401/i, causa: "La sesión no llegó al servidor o expiró.", origen: "sesion" },
-  { test: /invalid|required|zod|debe ser|inv[aá]lid/i, causa: "Los datos enviados no pasaron la validación de entrada.", origen: "validacion" },
-  { test: /fetch|network|timeout|500|failed to/i, causa: "Falla de red o del servidor, no de permisos.", origen: "red" },
+  {
+    test: /en revisi[oó]n/i,
+    causa:
+      "La nota tiene una revisión pendiente; hay que resolverla o cancelarla antes de modificarla.",
+    origen: "trigger",
+  },
+  {
+    test: /firmad/i,
+    causa: "La nota está firmada: primero debe reabrirse a borrador.",
+    origen: "trigger",
+  },
+  {
+    test: /revisor|supervisor|asignad/i,
+    causa: "Solo el revisor asignado o un administrador puede resolver esta revisión.",
+    origen: "trigger",
+  },
+  {
+    test: /no puedes? (auto|asignarte)|mismo usuario|s[ií] mismo/i,
+    causa: "No se permite auto-asignarse la revisión.",
+    origen: "trigger",
+  },
+  {
+    test: /asistente/i,
+    causa: "El rol asistente no puede firmar ni editar borradores ajenos.",
+    origen: "trigger",
+  },
+  {
+    test: /permis|denied|not allowed|violates row-level security|policy/i,
+    causa:
+      "RLS rechazó la operación: el usuario no pertenece a la clínica o su rol no la habilita.",
+    origen: "rls",
+  },
+  {
+    test: /jwt|sesi[oó]n|unauthorized|401/i,
+    causa: "La sesión no llegó al servidor o expiró.",
+    origen: "sesion",
+  },
+  {
+    test: /invalid|required|zod|debe ser|inv[aá]lid/i,
+    causa: "Los datos enviados no pasaron la validación de entrada.",
+    origen: "validacion",
+  },
+  {
+    test: /fetch|network|timeout|500|failed to/i,
+    causa: "Falla de red o del servidor, no de permisos.",
+    origen: "red",
+  },
 ];
 
 export interface Diagnostico {
@@ -133,11 +171,14 @@ export function limpiarBloqueos() {
 }
 
 export function reportarBloqueo(entrada: EntradaBloqueo): Diagnostico {
-  const bruto = entrada.error instanceof Error ? entrada.error.message : String(entrada.error ?? "");
+  const bruto =
+    entrada.error instanceof Error ? entrada.error.message : String(entrada.error ?? "");
   const mensaje = sanitizar(bruto);
   const regla = REGLAS.find((r) => r.test.test(bruto));
   const rolEfectivo = entrada.rolSimulado ?? entrada.rolReal ?? null;
-  const matriz = rolEfectivo ? evaluarAccionNota(rolEfectivo, entrada.estado, entrada.accion) : null;
+  const matriz = rolEfectivo
+    ? evaluarAccionNota(rolEfectivo, entrada.estado, entrada.accion)
+    : null;
 
   const diag: Diagnostico = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -151,7 +192,9 @@ export function reportarBloqueo(entrada: EntradaBloqueo): Diagnostico {
     esAutor: entrada.esAutor ?? null,
     esRevisor: entrada.esRevisor ?? null,
     mensaje,
-    causa: regla?.causa ?? "No hay una regla conocida para este mensaje; revisa el trigger o la política implicada.",
+    causa:
+      regla?.causa ??
+      "No hay una regla conocida para este mensaje; revisa el trigger o la política implicada.",
     origen: regla?.origen ?? "desconocido",
     matriz,
     discrepancia: matriz?.verdict === "allow",

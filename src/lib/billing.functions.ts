@@ -2,10 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import {
-  SUBSCRIPTION_STATUSES,
-  type Subscription,
-} from "@/lib/billing";
+import { SUBSCRIPTION_STATUSES, type Subscription } from "@/lib/billing";
 import { clinicMonthlyPriceId, getStripe } from "@/lib/stripe.server";
 
 type SubscriptionRow = {
@@ -20,9 +17,7 @@ type SubscriptionRow = {
 };
 
 function mapSubscription(row: SubscriptionRow): Subscription {
-  const status = (
-    SUBSCRIPTION_STATUSES as readonly string[]
-  ).includes(row.status)
+  const status = (SUBSCRIPTION_STATUSES as readonly string[]).includes(row.status)
     ? (row.status as Subscription["status"])
     : "incomplete";
   return {
@@ -106,7 +101,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
       customer: existing?.stripe_customer_id ?? undefined,
-      customer_email: existing?.stripe_customer_id ? undefined : profile?.email ?? undefined,
+      customer_email: existing?.stripe_customer_id ? undefined : (profile?.email ?? undefined),
       client_reference_id: data.clinicId,
       metadata: {
         clinic_id: data.clinicId,

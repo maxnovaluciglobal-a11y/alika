@@ -161,10 +161,7 @@ function PreferenciasPage() {
               <li key={evento.key} className="flex items-start justify-between gap-4 p-5">
                 <div>
                   <p
-                    className={cn(
-                      "text-sm font-medium",
-                      !emailsActivos && "text-muted-foreground",
-                    )}
+                    className={cn("text-sm font-medium", !emailsActivos && "text-muted-foreground")}
                   >
                     {evento.label}
                   </p>

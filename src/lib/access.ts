@@ -103,7 +103,6 @@ export type ClinicAccess = {
   simulatedRole?: ClinicRole | null;
 };
 
-
 export type ClinicMember = {
   id: string;
   userId: string;
