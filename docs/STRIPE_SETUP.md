@@ -2,13 +2,13 @@
 
 Pasos que necesita hacer Walter para activar el billing skeleton ya wireado en el código (`13c2d27` → Wave B). Una vez completado, la app cobra a las clínicas automáticamente.
 
-## Prerrequisito: pricing decidido
+## Pricing decidido (ago-2026)
 
-Antes de crear productos en Stripe, definir:
-- **Modelo**: flat / per-seat / híbrido.
-- **Precio**: USD/mes (o local). Referencia LatAm dental: Dentalink ~US$50-100/mes por clínica.
-- **Trial**: hoy hardcoded a 14 días (`billing.functions.ts:107`). Cambiar ahí si querés más/menos.
-- **Ciclos adicionales**: anual con descuento, add-ons por sucursal, etc. (opcional).
+- **Modelo**: flat por clínica al mes (sin per-seat).
+- **Precio**: **US$49 / clínica / mes**.
+- **Trial**: 14 días (hardcoded en `billing.functions.ts:116`).
+- **Moneda**: **USD** para todas las clínicas (no monedas locales por ahora).
+- **Ciclo anual**: no implementado en v1.
 
 ## 1. Cuenta Stripe
 
@@ -19,9 +19,9 @@ Antes de crear productos en Stripe, definir:
 ## 2. Crear producto y precio
 
 En el dashboard de Stripe:
-1. Products → Add product → nombre "Alika Clínica".
-2. Add price → Recurring / mensual / USD (o la moneda decidida) / monto.
-3. Copiar el **Price ID** (empieza con `price_...`).
+1. Products → Add product → nombre "Alika Clínica" (description opcional: "Gestión de clínica dental — plan mensual").
+2. Add price → **Recurring / Monthly / USD / $49.00**.
+3. Copiar el **Price ID** (empieza con `price_...`) — va a `STRIPE_PRICE_ID_CLINIC_MONTHLY`.
 
 ## 3. Configurar env vars
 
