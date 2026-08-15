@@ -12,7 +12,12 @@
     "format": "prettier --write .",
     "build:vercel": "NITRO_PRESET=vercel vite build",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": "eslint --fix",
+    "*.{ts,tsx,css,md,json}": "prettier --write"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -88,6 +93,8 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
     "nitro": "3.0.260603-beta",
     "pg": "^8.22.0",
     "prettier": "^3.7.3",
