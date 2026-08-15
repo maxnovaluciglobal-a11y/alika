@@ -213,5 +213,155 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
     },
   );
 
+const DEFAULT_TIMEZONE = "America/Santiago";
+const HORA_48H_MS = 48 * 60 * 60 * 1000;
+const HORA_3H_MS = 3 * 60 * 60 * 1000;
+// Ventanas alrededor de cada hito: se revisa periódicamente (no a un
+// segundo exacto), así que hace falta margen para no perderse una cita
+// entre dos visitas a la página.
+const MARGEN_MS = 4 * 60 * 60 * 1000;
+
+function formatFechaHoraLocal(iso: string, timeZone: string): { fechaLarga: string; hora: string } {
+  const date = new Date(iso);
+  const fechaLarga = new Intl.DateTimeFormat("es-CL", {
+    timeZone,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(date);
+  const hora = new Intl.DateTimeFormat("es-CL", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+  return { fechaLarga, hora };
+}
+
+export interface PendingReminder {
+  appointmentId: string;
+  patientId: string;
+  patientName: string;
+  patientPhone: string | null;
+  treatmentLabel: string;
+  professionalName: string;
+  startsAt: string;
+  fechaLarga: string;
+  hora: string;
+  /** Cuál de los dos avisos le falta a esta cita. */
+  reminderKind: "appointment_reminder" | "appointment_checkin";
+}
+
+/**
+ * Cola de recordatorios: citas futuras que están entrando a la ventana de
+ * 48h o de 3h y todavía no tienen un mensaje de ese tipo registrado. No hay
+ * envío automático (sin Twilio, sin cron) — esto solo arma la lista para que
+ * el staff la despache a mano con un click por fila, reusando
+ * sendWhatsAppFromTemplate (mismo wa.me de siempre).
+ */
+export const listPendingReminders = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<PendingReminder[]> => {
+    const { supabase } = context;
+    const ahora = Date.now();
+    const desde3h = new Date(ahora + HORA_3H_MS - MARGEN_MS).toISOString();
+    const hasta48h = new Date(ahora + HORA_48H_MS + MARGEN_MS).toISOString();
+
+    const { data: appts, error } = await supabase
+      .from("appointments")
+      .select("id, patient_id, professional_id, branch_id, treatment_label, starts_at")
+      .eq("clinic_id", data.clinicId)
+      .neq("status", "cancelada")
+      .gte("starts_at", desde3h)
+      .lte("starts_at", hasta48h)
+      .order("starts_at", { ascending: true });
+    if (error) throw new Error(error.message);
+
+    const candidatas = (appts ?? [])
+      .map((a) => {
+        const faltaMs = new Date(a.starts_at).getTime() - ahora;
+        // Más cerca de la ventana de 3h que de la de 48h → es el aviso corto.
+        const reminderKind: PendingReminder["reminderKind"] =
+          Math.abs(faltaMs - HORA_3H_MS) < Math.abs(faltaMs - HORA_48H_MS)
+            ? "appointment_checkin"
+            : "appointment_reminder";
+        return { ...a, reminderKind };
+      })
+      .filter(
+        (a) =>
+          (a.reminderKind === "appointment_checkin" &&
+            new Date(a.starts_at).getTime() - ahora <= HORA_3H_MS + MARGEN_MS) ||
+          (a.reminderKind === "appointment_reminder" &&
+            new Date(a.starts_at).getTime() - ahora >= HORA_3H_MS + MARGEN_MS),
+      );
+    if (candidatas.length === 0) return [];
+
+    const appointmentIds = candidatas.map((a) => a.id);
+    const { data: enviados, error: msgError } = await supabase
+      .from("messages")
+      .select("appointment_id, template_kind")
+      .eq("clinic_id", data.clinicId)
+      .in("appointment_id", appointmentIds)
+      .in("template_kind", ["appointment_reminder", "appointment_checkin"]);
+    if (msgError) throw new Error(msgError.message);
+
+    const yaEnviado = new Set(
+      (enviados ?? []).map((m) => `${m.appointment_id}:${m.template_kind}`),
+    );
+    const pendientes = candidatas.filter((a) => !yaEnviado.has(`${a.id}:${a.reminderKind}`));
+    if (pendientes.length === 0) return [];
+
+    const patientIds = [...new Set(pendientes.map((a) => a.patient_id))];
+    const professionalIds = [...new Set(pendientes.map((a) => a.professional_id))];
+    const branchIds = [...new Set(pendientes.map((a) => a.branch_id))];
+
+    const [
+      { data: patients, error: pErr },
+      { data: professionals, error: profErr },
+      { data: branches, error: branchErr },
+    ] = await Promise.all([
+      supabase
+        .from("patients")
+        .select("id, full_name, phone")
+        .in("id", patientIds.length ? patientIds : [""]),
+      supabase
+        .from("professionals")
+        .select("id, full_name")
+        .in("id", professionalIds.length ? professionalIds : [""]),
+      supabase
+        .from("branches")
+        .select("id, timezone")
+        .in("id", branchIds.length ? branchIds : [""]),
+    ]);
+    if (pErr) throw new Error(pErr.message);
+    if (profErr) throw new Error(profErr.message);
+    if (branchErr) throw new Error(branchErr.message);
+
+    const patientById = new Map((patients ?? []).map((p) => [p.id, p]));
+    const profNameById = new Map((professionals ?? []).map((p) => [p.id, p.full_name]));
+    const tzByBranch = new Map((branches ?? []).map((b) => [b.id, b.timezone]));
+
+    return pendientes.map((a) => {
+      const patient = patientById.get(a.patient_id);
+      const { fechaLarga, hora } = formatFechaHoraLocal(
+        a.starts_at,
+        tzByBranch.get(a.branch_id) || DEFAULT_TIMEZONE,
+      );
+      return {
+        appointmentId: a.id,
+        patientId: a.patient_id,
+        patientName: patient?.full_name ?? "Paciente",
+        patientPhone: patient?.phone ?? null,
+        treatmentLabel: a.treatment_label || "Consulta",
+        professionalName: profNameById.get(a.professional_id) ?? "—",
+        startsAt: a.starts_at,
+        fechaLarga,
+        hora,
+        reminderKind: a.reminderKind,
+      };
+    });
+  });
+
 // Re-export para consumidores que solo importan de este módulo
 export { MESSAGE_CHANNELS };

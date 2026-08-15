@@ -15,6 +15,7 @@ export const MESSAGE_STATUS_LABELS: Record<MessageStatus, string> = {
 
 export const MESSAGE_TEMPLATE_KINDS = [
   "appointment_reminder",
+  "appointment_checkin",
   "appointment_confirmation",
   "quote_sent",
   "payment_receipt",
@@ -24,7 +25,8 @@ export const MESSAGE_TEMPLATE_KINDS = [
 export type MessageTemplateKind = (typeof MESSAGE_TEMPLATE_KINDS)[number];
 
 export const MESSAGE_TEMPLATE_KIND_LABELS: Record<MessageTemplateKind, string> = {
-  appointment_reminder: "Recordatorio de cita",
+  appointment_reminder: "Recordatorio de cita (48h)",
+  appointment_checkin: "Aviso previo (3h)",
   appointment_confirmation: "Confirmación de cita",
   quote_sent: "Envío de presupuesto",
   payment_receipt: "Recibo de pago",

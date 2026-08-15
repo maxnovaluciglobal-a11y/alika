@@ -17,6 +17,7 @@ import {
   Sparkles,
   Moon,
   Sun,
+  MessageCircleMore,
 } from "lucide-react";
 
 import { GlobalSearch } from "@/components/global-search";
@@ -30,6 +31,12 @@ import { cn } from "@/lib/utils";
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard:view" },
   { to: "/agenda", label: "Agenda", icon: CalendarDays, permission: "agenda:view" },
+  {
+    to: "/recordatorios",
+    label: "Recordatorios",
+    icon: MessageCircleMore,
+    permission: "agenda:manage",
+  },
   { to: "/pacientes", label: "Pacientes", icon: Users, permission: "patients:view" },
   { to: "/tratamientos", label: "Tratamientos", icon: Stethoscope, permission: "treatments:view" },
   { to: "/equipo", label: "Equipo", icon: UsersRound, permission: "team:view" },

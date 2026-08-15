@@ -1816,6 +1816,7 @@ export type Database = {
       message_status: "draft" | "queued" | "sent" | "delivered" | "read" | "failed";
       message_template_kind:
         | "appointment_reminder"
+        | "appointment_checkin"
         | "appointment_confirmation"
         | "quote_sent"
         | "payment_receipt"
