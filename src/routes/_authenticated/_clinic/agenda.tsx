@@ -409,11 +409,12 @@ function AgendaPage() {
   const fetchPatients = useServerFn(listPatients);
   const fetchWaitlist = useServerFn(listWaitlist);
 
-  const { data: citas = [], isLoading } = useQuery({
+  const { data: appointmentsRes, isLoading } = useQuery({
     queryKey: ["appointments", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchAppointments({ data: { clinicId: clinicId! } }),
   });
+  const citas = useMemo(() => appointmentsRes?.items ?? [], [appointmentsRes]);
   const { data: sucursales = [] } = useQuery({
     queryKey: ["branches", clinicId],
     enabled: Boolean(clinicId),
@@ -424,11 +425,12 @@ function AgendaPage() {
     enabled: Boolean(clinicId),
     queryFn: () => fetchProfessionals({ data: { clinicId: clinicId! } }),
   });
-  const { data: pacientes = [] } = useQuery({
+  const { data: pacientesRes } = useQuery({
     queryKey: ["patients", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchPatients({ data: { clinicId: clinicId! } }),
   });
+  const pacientes = useMemo(() => pacientesRes?.items ?? [], [pacientesRes]);
   const { data: listaEspera = [] } = useQuery({
     queryKey: ["waitlist", clinicId],
     enabled: Boolean(clinicId),
@@ -507,6 +509,13 @@ function AgendaPage() {
             />
           )}
         </div>
+
+        {appointmentsRes?.truncated && (
+          <p className="rounded-lg border border-warning/30 bg-warning-soft px-4 py-2.5 text-xs text-warning">
+            Mostrando las primeras {citas.length.toLocaleString("es")} citas. Si buscás una cita muy
+            antigua o muy futura, puede que no aparezca acá.
+          </p>
+        )}
 
         <FilterBar
           activos={activos}

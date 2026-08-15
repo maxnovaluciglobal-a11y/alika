@@ -93,6 +93,16 @@ function mapPatientRow(
 const PATIENT_COLUMNS =
   "id, full_name, document_id, birth_date, phone, email, branch_id, primary_professional_id, status, tags, avatar_url, balance_cents, no_show_risk, ai_summary";
 
+/**
+ * Tope de fila del listado — red de seguridad, no la estrategia de paginado
+ * real (el filtro de "última visita" es un campo calculado vía RPC, no una
+ * columna directa, así que paginar server-side de verdad implicaría mover
+ * ese filtro a la RPC también; con el volumen actual no se justifica).
+ * `truncated` le avisa a la UI que hay más pacientes de los que se trajeron,
+ * en vez de fallar en silencio (ver auditoría de arquitectura 2026-08-15).
+ */
+const PATIENTS_ROW_LIMIT = 5_000;
+
 /** Listado de pacientes de la clínica. RLS: solo clínicas donde el usuario es miembro.
  *
  * Antes traía TODAS las citas de la clínica (limit 5000) para calcular en JS
@@ -104,7 +114,7 @@ const PATIENT_COLUMNS =
 export const listPatients = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
-  .handler(async ({ data, context }): Promise<Paciente[]> => {
+  .handler(async ({ data, context }): Promise<{ items: Paciente[]; truncated: boolean }> => {
     const { supabase } = context;
 
     const [{ data: rows, error }, { data: apptRows, error: apptError }] = await Promise.all([
@@ -113,7 +123,7 @@ export const listPatients = createServerFn({ method: "GET" })
         .select(PATIENT_COLUMNS)
         .eq("clinic_id", data.clinicId)
         .order("full_name", { ascending: true })
-        .limit(1000),
+        .limit(PATIENTS_ROW_LIMIT),
       supabase.rpc("list_patients_with_last_and_next_appointment", {
         p_clinic_id: data.clinicId,
       }),
@@ -121,6 +131,7 @@ export const listPatients = createServerFn({ method: "GET" })
 
     if (error) throw new Error(error.message);
     if (apptError) throw new Error(apptError.message);
+    const truncated = (rows ?? []).length >= PATIENTS_ROW_LIMIT;
 
     type ApptSummary = {
       patient_id: string;
@@ -131,7 +142,7 @@ export const listPatients = createServerFn({ method: "GET" })
       (apptRows ?? []).map((r) => [(r as ApptSummary).patient_id, r as ApptSummary]),
     );
 
-    return (rows ?? []).map((row) => {
+    const items = (rows ?? []).map((row) => {
       const s = summaryByPatient.get(row.id);
       return mapPatientRow(row as PatientRow, {
         ultimaVisita: s?.last_appointment_at
@@ -143,6 +154,7 @@ export const listPatients = createServerFn({ method: "GET" })
           : null,
       });
     });
+    return { items, truncated };
   });
 
 /** Ficha de un paciente, con timeline construido desde citas reales. */

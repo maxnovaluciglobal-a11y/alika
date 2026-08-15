@@ -191,11 +191,12 @@ function PacientesPage() {
   const fetchBranches = useServerFn(listBranches);
   const fetchProfessionals = useServerFn(listProfessionals);
 
-  const { data: pacientes = [], isLoading } = useQuery({
+  const { data: patientsRes, isLoading } = useQuery({
     queryKey: ["patients", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchPatients({ data: { clinicId: clinicId! } }),
   });
+  const pacientes = useMemo(() => patientsRes?.items ?? [], [patientsRes]);
   const { data: sucursales = [] } = useQuery({
     queryKey: ["branches", clinicId],
     enabled: Boolean(clinicId),
@@ -243,6 +244,13 @@ function PacientesPage() {
             <NuevoPacienteDialog clinicId={clinicId} />
           )}
         </div>
+
+        {patientsRes?.truncated && (
+          <p className="rounded-lg border border-warning/30 bg-warning-soft px-4 py-2.5 text-xs text-warning">
+            Mostrando los primeros {pacientes.length.toLocaleString("es")} pacientes. Usá la
+            búsqueda para encontrar a alguien que no aparezca en la lista.
+          </p>
+        )}
 
         <FilterBar
           activos={activos}

@@ -62,14 +62,19 @@ const APPOINTMENT_COLUMNS =
   "id, patient_id, professional_id, branch_id, treatment_label, starts_at, ends_at, status, is_priority";
 
 /**
- * Citas de la clínica (excluye canceladas). Sin límite de fecha por ahora: el
- * volumen de una clínica que recién arranca es bajo; el filtro de fecha lo
- * sigue aplicando la UI, igual que con el fixture que reemplaza.
+ * Tope de fila del listado. El filtro de fecha lo sigue aplicando la UI (así
+ * "Todas las fechas" sigue andando), así que esto es una red de seguridad,
+ * no la estrategia de paginado real — con miles de citas/año, `truncated`
+ * le avisa a la UI que hay más datos de los que se trajeron, en vez de
+ * fallar en silencio como antes (ver auditoría de arquitectura 2026-08-15).
  */
+const APPOINTMENTS_ROW_LIMIT = 10_000;
+
+/** Citas de la clínica (excluye canceladas). */
 export const listAppointments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
-  .handler(async ({ data, context }): Promise<Cita[]> => {
+  .handler(async ({ data, context }): Promise<{ items: Cita[]; truncated: boolean }> => {
     const { supabase } = context;
 
     const { data: rows, error } = await supabase
@@ -78,9 +83,10 @@ export const listAppointments = createServerFn({ method: "GET" })
       .eq("clinic_id", data.clinicId)
       .neq("status", "cancelada")
       .order("starts_at", { ascending: true })
-      .limit(3000);
+      .limit(APPOINTMENTS_ROW_LIMIT);
 
     if (error) throw new Error(error.message);
+    const truncated = (rows ?? []).length >= APPOINTMENTS_ROW_LIMIT;
 
     const appointments = (rows ?? []) as AppointmentRow[];
     const patientIds = [...new Set(appointments.map((a) => a.patient_id))];
@@ -103,13 +109,16 @@ export const listAppointments = createServerFn({ method: "GET" })
     const nameByPatient = new Map((patients ?? []).map((p) => [p.id, p.full_name]));
     const tzByBranch = new Map((branches ?? []).map((b) => [b.id, b.timezone]));
 
-    return appointments.map((row) =>
-      mapAppointmentRow(
-        row,
-        nameByPatient.get(row.patient_id) ?? "Paciente",
-        tzByBranch.get(row.branch_id) || DEFAULT_TIMEZONE,
+    return {
+      items: appointments.map((row) =>
+        mapAppointmentRow(
+          row,
+          nameByPatient.get(row.patient_id) ?? "Paciente",
+          tzByBranch.get(row.branch_id) || DEFAULT_TIMEZONE,
+        ),
       ),
-    );
+      truncated,
+    };
   });
 
 /**

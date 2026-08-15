@@ -50,11 +50,13 @@ function Dashboard() {
     queryKey: ["patients", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchPatients({ data: { clinicId: clinicId! } }),
+    select: (res) => res.items,
   });
   const { data: citas = [], isLoading } = useQuery({
     queryKey: ["appointments", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchAppointments({ data: { clinicId: clinicId! } }),
+    select: (res) => res.items,
   });
   const { data: profesionales = [] } = useQuery({
     queryKey: ["professionals", clinicId],
