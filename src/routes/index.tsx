@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
+  ArrowRight,
   CalendarDays,
-  CircleUserRound,
+  Check,
+  FileText,
+  Lock,
   MessageCircle,
   PlayCircle,
   ShieldCheck,
   Sparkles,
-  Stethoscope,
   Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,13 +20,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Alika unifica agenda, pacientes, historia clínica y finanzas de tu clínica dental con inteligencia artificial y acceso por roles.",
+          "Menos ausencias, cobrás mejor, sin planillas. Agenda, ficha clínica, odontograma y cobranza con recordatorios por WhatsApp. Probá la demo sin registrarte.",
       },
-      { property: "og:title", content: "Alika · Software de gestión dental para LatAm" },
+      { property: "og:title", content: "Alika · La clínica dental entera, bajo control" },
       {
         property: "og:description",
         content:
-          "Agenda, pacientes, historia clínica y finanzas en un solo lugar, con IA y roles por equipo.",
+          "Agenda, historia clínica, presupuestos y cobranza en un solo lugar. Hecho para clínicas de Latinoamérica. Probá la demo sin registrarte.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -34,433 +35,605 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-// ── Motion helpers ──────────────────────────────────────────────────
-
-function usePrefersReducedMotion() {
-  const [reduce, setReduce] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduce(mq.matches);
-    const on = () => setReduce(mq.matches);
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return reduce;
-}
-
-/** El "latido" del demo del hero: 5 beats en loop, cada uno enciende una
- *  cosa (confirmar cita → marcar diente → registrar pago → recordatorio)
- *  y al volver a 0 todo se apaga con transición. Pausa con reduced-motion. */
-function useHeroBeat(reduce: boolean) {
-  const [beat, setBeat] = useState(0);
-  useEffect(() => {
-    if (reduce) {
-      setBeat(4); // estado "poblado" fijo, sin animar
-      return;
-    }
-    const id = setInterval(() => setBeat((b) => (b + 1) % 5), 2400);
-    return () => clearInterval(id);
-  }, [reduce]);
-  return beat;
-}
-
-/** Cuenta ascendente suave hacia `target` cuando cambia. */
-function useCountUp(target: number, reduce: boolean, durationMs = 650) {
-  const [value, setValue] = useState(target);
-  const fromRef = useRef(target);
-  useEffect(() => {
-    if (reduce) {
-      setValue(target);
-      return;
-    }
-    const from = fromRef.current;
-    if (from === target) return;
-    let raf = 0;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / durationMs);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setValue(Math.round(from + (target - from) * eased));
-      if (t < 1) raf = requestAnimationFrame(tick);
-      else fromRef.current = target;
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, reduce, durationMs]);
-  return value;
-}
-
 const clp = new Intl.NumberFormat("es-CL", {
   style: "currency",
   currency: "CLP",
   maximumFractionDigits: 0,
 });
 
-// ── Demo vivo del producto (hero) ───────────────────────────────────
+// ── Fragmentos de producto ──────────────────────────────────────────
 
-const citas = [
-  { hora: "09:00", paciente: "P. González", tratamiento: "Control y limpieza" },
-  { hora: "10:30", paciente: "R. Fernández", tratamiento: "Ortodoncia" },
-  { hora: "11:15", paciente: "M. Silva", tratamiento: "Endodoncia" },
-];
-
-// Fila superior FDI (18→11, 21→28). Algunas piezas ya vienen con condición.
-const dientesFDI = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
-const preMarcados: Record<number, "caries" | "obturacion" | "endodoncia"> = {
-  14: "obturacion",
-  26: "endodoncia",
-};
-const condicionColor: Record<string, string> = {
-  caries: "border-clay bg-clay-soft",
-  obturacion: "border-brand bg-brand-soft",
-  endodoncia: "border-ai bg-ai-soft",
-};
-
-function LiveProductPreview() {
-  const reduce = usePrefersReducedMotion();
-  const beat = useHeroBeat(reduce);
-  const [hovered, setHovered] = useState<number | null>(null);
-
-  // Estado derivado del beat.
-  const citaConfirmada = beat >= 1; // R. Fernández pasa a confirmada
-  const dienteDemo = beat >= 2 ? 16 : null; // se marca la pieza 16
-  const cajaBase = 240000;
-  const cajaTarget = beat >= 3 ? cajaBase + 35000 : cajaBase;
-  const caja = useCountUp(cajaTarget, reduce);
-  const reminderVisible = beat >= 4;
-
+function CardChrome({ label }: { label: string }) {
   return (
-    <div className="animate-preview-float relative">
-      {/* Halo cálido detrás de la tarjeta */}
-      <div
-        aria-hidden
-        className="absolute -inset-6 -z-10 rounded-[3rem] bg-clay-soft/70 blur-3xl"
-      />
+    <div className="flex items-center gap-1.5 border-b border-hairline bg-secondary/50 px-4 py-2.5">
+      <span className="size-2.5 rounded-full bg-border" />
+      <span className="size-2.5 rounded-full bg-border" />
+      <span className="size-2.5 rounded-full bg-border" />
+      <span className="ml-2 text-[11px] font-medium text-muted-foreground">{label}</span>
+    </div>
+  );
+}
 
-      <div className="animate-landing-rise card-clinical overflow-hidden shadow-2xl shadow-foreground/10">
-        {/* Chrome de navegador */}
-        <div className="flex items-center gap-1.5 border-b border-hairline bg-secondary/50 px-4 py-3">
-          <span className="size-2.5 rounded-full bg-destructive/30" />
-          <span className="size-2.5 rounded-full bg-warning/40" />
-          <span className="size-2.5 rounded-full bg-success/40" />
-          <span className="ml-2 text-[11px] font-medium text-muted-foreground">
-            app.alika · Clínica Providencia
-          </span>
-        </div>
-
-        {/* Caja del día — métrica viva */}
-        <div className="flex items-end justify-between border-b border-hairline px-4 py-3.5">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Caja de hoy
-            </p>
-            <p
-              className={cn(
-                "font-display text-2xl font-semibold tabular-nums tracking-tight transition-colors",
-                beat >= 3 ? "text-success" : "text-foreground",
-              )}
-            >
-              {clp.format(caja)}
-            </p>
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-            <span className="grid size-6 place-items-center rounded-md bg-brand-soft text-brand">
-              <Wallet className="size-3.5" />
+function MiniAgenda() {
+  const filas = [
+    { h: "09:00", n: "P. González", t: "Control", chip: "Confirmada", tone: "ok" as const },
+    { h: "10:30", n: "R. Fernández", t: "Ortodoncia", chip: "Recordado", tone: "wa" as const },
+    { h: "11:15", n: "M. Silva", t: "Endodoncia", chip: "En sala", tone: "sala" as const },
+  ];
+  const tones = {
+    ok: "bg-mint-soft text-mint-strong",
+    wa: "bg-mint-soft text-mint-strong",
+    sala: "bg-ink/10 text-ink",
+  };
+  return (
+    <div className="overflow-hidden rounded-xl border border-hairline bg-card">
+      <CardChrome label="Agenda · hoy" />
+      <div className="divide-y divide-hairline">
+        {filas.map((f) => (
+          <div key={f.h} className="flex items-center gap-3 px-4 py-2.5">
+            <span className="font-mono text-[11px] text-muted-foreground">{f.h}</span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium">{f.n}</p>
+              <p className="truncate text-[11px] text-muted-foreground">{f.t}</p>
+            </div>
+            <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", tones[f.tone])}>
+              {f.chip}
             </span>
-            8 pagos
           </div>
-        </div>
-
-        {/* Agenda del día */}
-        <div className="divide-y divide-hairline">
-          {citas.map((c, i) => {
-            const esConfirmada = i === 1 ? citaConfirmada : i === 0;
-            return (
-              <div key={c.hora} className="flex items-center gap-3 px-4 py-2.5">
-                <span className="font-mono text-xs text-muted-foreground">{c.hora}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{c.paciente}</p>
-                  <p className="truncate text-xs text-muted-foreground">{c.tratamiento}</p>
-                </div>
-                <span
-                  className={cn(
-                    "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors",
-                    i === 2
-                      ? "bg-ai-soft text-ai"
-                      : esConfirmada
-                        ? "bg-success-soft text-success"
-                        : "bg-warning-soft text-warning",
-                    i === 1 && citaConfirmada && "animate-confirm-pop",
-                  )}
-                >
-                  {i === 2 ? "En sala" : esConfirmada ? "Confirmada" : "Por confirmar"}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Odontograma FDI interactivo */}
-        <div className="border-t border-hairline bg-secondary/30 px-4 py-3.5">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Odontograma FDI · pieza superior
-            </p>
-            <span className="text-[10px] text-muted-foreground/70">tocá una pieza</span>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {dientesFDI.map((n) => {
-              const cond = preMarcados[n];
-              const isDemo = dienteDemo === n;
-              const isHover = hovered === n;
-              const marked = cond ?? (isDemo || isHover ? "caries" : null);
-              return (
-                <button
-                  key={n}
-                  type="button"
-                  onMouseEnter={() => setHovered(n)}
-                  onMouseLeave={() => setHovered((h) => (h === n ? null : h))}
-                  onFocus={() => setHovered(n)}
-                  onBlur={() => setHovered((h) => (h === n ? null : h))}
-                  aria-label={`Pieza ${n}${cond ? ` — ${cond}` : ""}`}
-                  className={cn(
-                    "grid size-6 place-items-center rounded-[5px] border text-[9px] font-medium tabular-nums transition-all duration-300",
-                    marked
-                      ? condicionColor[marked]
-                      : "border-hairline bg-card text-muted-foreground/60 hover:border-clay/50",
-                    (isHover || isDemo) && "-translate-y-0.5 shadow-sm",
-                  )}
-                >
-                  {n}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Recordatorio de WhatsApp — entra en el último beat */}
-      <div
-        aria-hidden
-        className={cn(
-          "absolute -bottom-5 -left-5 flex max-w-[15rem] items-start gap-2.5 rounded-2xl border border-hairline bg-card p-3 shadow-xl shadow-foreground/10 transition-all duration-500",
-          reminderVisible
-            ? "translate-y-0 opacity-100"
-            : "pointer-events-none translate-y-3 opacity-0",
-        )}
-      >
-        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-success-soft text-success">
-          <MessageCircle className="size-4" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-xs font-semibold leading-tight">Recordatorio enviado</p>
-          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-            “Hola Rocío, te esperamos mañana 10:30 en Providencia 👋”
-          </p>
-        </div>
+        ))}
       </div>
     </div>
   );
 }
 
-// ── Página ──────────────────────────────────────────────────────────
+function MiniCaja() {
+  return (
+    <div className="overflow-hidden rounded-xl border border-hairline bg-card">
+      <CardChrome label="Caja · hoy" />
+      <div className="border-b border-hairline px-4 py-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Cobrado hoy
+        </p>
+        <p className="font-precise text-2xl font-bold text-mint-strong">{clp.format(275000)}</p>
+      </div>
+      <div className="flex items-center justify-between px-4 py-2.5 text-xs">
+        <span className="text-muted-foreground">Por cobrar</span>
+        <span className="font-medium">{clp.format(180000)}</span>
+      </div>
+      <div className="flex items-center justify-between border-t border-hairline px-4 py-2.5 text-xs">
+        <span className="text-muted-foreground">Débito · Efectivo · Transferencia</span>
+        <span className="font-medium text-mint-strong">8 pagos</span>
+      </div>
+    </div>
+  );
+}
 
-const pasos = [
-  {
-    icon: CircleUserRound,
-    title: "Creá tu clínica",
-    text: "Nombre, sucursal y equipo profesional. Menos de 5 minutos, sin instalar nada.",
-  },
+const dientesFDI = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
+function MiniOdontograma() {
+  const marcados: Record<number, string> = {
+    14: "border-ink bg-ink/10",
+    16: "border-mint bg-mint-soft",
+    26: "border-mint bg-mint-soft",
+  };
+  return (
+    <div className="overflow-hidden rounded-xl border border-hairline bg-card">
+      <CardChrome label="Ficha · odontograma FDI" />
+      <div className="px-4 py-4">
+        <div className="flex flex-wrap gap-1">
+          {dientesFDI.map((n) => (
+            <span
+              key={n}
+              className={cn(
+                "grid size-6 place-items-center rounded-[5px] border text-[9px] font-medium tabular-nums",
+                marcados[n] ?? "border-hairline text-muted-foreground/60",
+              )}
+            >
+              {n}
+            </span>
+          ))}
+        </div>
+        <p className="mt-3 text-[11px] text-muted-foreground">
+          Timeline, tratamientos y saldos por paciente — siempre sincronizados.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Datos de secciones ──────────────────────────────────────────────
+
+const trust = [
+  "Sin instalar nada",
+  "Datos cifrados",
+  "Hecho para LatAm",
+  "WhatsApp integrado",
+  "Exportás tus datos",
+];
+
+const dolores = [
   {
     icon: CalendarDays,
-    title: "Cargá pacientes y agenda",
-    text: "A mano, o importando tu planilla actual de un solo golpe.",
+    t: "El paciente no vino y nadie lo llamó",
+    d: "Cada silla vacía es plata que no vuelve. Los recordatorios a mano se te escapan.",
   },
   {
     icon: Wallet,
-    title: "Atendé y cobrá",
-    text: "Historia clínica, presupuestos, pagos y recordatorios por WhatsApp, todo conectado.",
+    t: "No sabés cuánto te deben",
+    d: "Presupuestos en papelitos, pagos sueltos. La cobranza vive en tu cabeza.",
+  },
+  {
+    icon: FileText,
+    t: "La historia clínica en cuadernos",
+    d: "Si se moja, se pierde, o el paciente cambia de sede — adiós al historial.",
+  },
+  {
+    icon: MessageCircle,
+    t: "Alguien pierde horas en WhatsApp",
+    d: "Confirmar cita por cita, a mano, uno por uno. Todos los días.",
   },
 ];
 
-const features = [
+const pasos = [
   {
-    icon: CalendarDays,
-    title: "Agenda por box y profesional",
-    text: "Vista de día, lista de espera inteligente y predicción de ausencias.",
-    featured: true,
+    n: 1,
+    t: "Creá tu clínica",
+    d: "Nombre, sucursal y equipo. Menos de 5 minutos, sin instalar nada.",
   },
   {
-    icon: ShieldCheck,
-    title: "Roles y permisos reales",
-    text: "Doctor, recepción, administración y contabilidad ven solo lo que les toca.",
-    featured: false,
+    n: 2,
+    t: "Cargá o importá",
+    d: "Pacientes y agenda a mano, o subiendo tu planilla actual de un golpe.",
   },
   {
-    icon: Stethoscope,
-    title: "Ficha clínica viva",
-    text: "Timeline por paciente, tratamientos y saldos siempre sincronizados.",
-    featured: false,
-  },
-  {
-    icon: Sparkles,
-    title: "Asistente con IA",
-    text: "Resúmenes clínicos y sugerencias para llenar huecos de agenda.",
-    featured: true,
+    n: 3,
+    t: "Atendé y cobrá",
+    d: "Ficha, presupuestos, pagos y recordatorios por WhatsApp, conectados.",
   },
 ];
+
+const faqs = [
+  {
+    q: "¿Es caro?",
+    a: "Empezás gratis, sin tarjeta. Y un solo paciente que no se te escapa al mes ya paga Alika. Estamos con precio fundador para las primeras clínicas.",
+  },
+  {
+    q: "¿Es complicado? No soy técnico.",
+    a: "Si sabés usar WhatsApp, sabés usar Alika. Configurás tu clínica en una tarde, y podés probar la demo ahora mismo sin registrarte.",
+  },
+  {
+    q: "¿Mi equipo lo va a usar?",
+    a: "Tu equipo ya vive en el celular y en WhatsApp. Alika trabaja ahí, no contra eso. Cada rol ve solo lo que le toca, simple.",
+  },
+  {
+    q: "¿Y mis datos, mis pacientes?",
+    a: "Son tuyos. Cifrados, con acceso por rol, y los exportás cuando quieras. Sin secuestro de datos.",
+  },
+  {
+    q: "¿Y si no me sirve?",
+    a: "Probás gratis, sin tarjeta. Si no te sirve, no pagás nada y te llevás tus datos. Sin letra chica.",
+  },
+];
+
+// ── Página ──────────────────────────────────────────────────────────
 
 function Landing() {
   return (
-    <div className="min-h-screen bg-surface text-foreground">
-      <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <span className="flex items-center gap-2">
-          <span className="grid size-8 place-items-center rounded-lg bg-brand">
-            <span className="size-4 rounded-full border-2 border-brand-foreground" />
+    <div className="min-h-screen bg-background text-ink">
+      {/* Header */}
+      <header className="sticky top-0 z-30 border-b border-hairline bg-background/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
+          <span className="flex items-center gap-2">
+            <span className="grid size-8 place-items-center rounded-lg bg-ink">
+              <span className="size-3.5 rounded-full border-2 border-mint" />
+            </span>
+            <span className="font-precise text-xl font-bold tracking-tight text-ink">Alika</span>
           </span>
-          <span className="font-display text-xl font-bold tracking-tight text-brand">Alika</span>
-        </span>
-        <div className="flex items-center gap-2">
-          <Link
-            to="/portal"
-            className="hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:block"
-          >
-            Portal paciente
-          </Link>
-          <a
-            href="/demo"
-            className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Ver demo
-          </a>
-          <Link
-            to="/auth"
-            className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90"
-          >
-            Entrar
-          </Link>
+          <div className="flex items-center gap-1.5">
+            <a
+              href="/demo"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-ink"
+            >
+              Ver demo
+            </a>
+            <Link
+              to="/auth"
+              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-ink sm:block"
+            >
+              Entrar
+            </Link>
+            <Link
+              to="/auth"
+              className="rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-ink-foreground transition-opacity hover:opacity-90"
+            >
+              Empezá gratis
+            </Link>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 pb-24">
+      <main>
         {/* Hero */}
-        <section className="relative isolate grid items-center gap-12 py-14 sm:py-20 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
-          <div aria-hidden className="hero-aurora" />
-          <div aria-hidden className="hero-grain" />
-
-          <div>
-            <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-clay/20 bg-clay-soft/70 px-3 py-1 text-xs font-medium text-clay backdrop-blur-sm">
-              <span className="size-1.5 rounded-full bg-clay" />
-              Gestión dental moderna para Latinoamérica
-            </p>
-
-            <h1 className="font-serif-display text-[2.75rem] font-medium leading-[0.98] tracking-[-0.03em] text-balance sm:text-6xl lg:text-[4.5rem]">
-              Toda tu clínica,{" "}
-              <span className="relative whitespace-nowrap text-clay">
-                en una pantalla
-                <svg
-                  aria-hidden
-                  viewBox="0 0 300 18"
-                  fill="none"
-                  preserveAspectRatio="none"
-                  className="absolute -bottom-1.5 left-0 h-3 w-full"
-                >
-                  <path
-                    d="M3 12 C 70 4, 150 4, 297 9"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                    className="animate-swash text-clay/50"
-                  />
-                </svg>
-              </span>
-              .
+        <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-16 sm:py-20 lg:grid-cols-[1fr_0.92fr] lg:gap-14">
+          <div className="animate-rise-in">
+            <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-mint/30 bg-mint-soft px-3 py-1 text-xs font-semibold text-mint-strong">
+              <span className="size-1.5 rounded-full bg-mint" />
+              Software de gestión dental · Latinoamérica
+            </span>
+            <h1 className="font-precise text-[2.9rem] font-extrabold leading-[0.95] text-balance sm:text-6xl lg:text-[4.25rem]">
+              Menos ausencias.
+              <br />
+              <span className="text-mint-strong">Cobrás mejor.</span>
+              <br />
+              Sin planillas.
             </h1>
-
-            <p className="mt-7 max-w-md text-lg leading-relaxed text-muted-foreground">
-              Agenda, pacientes, historia clínica, tratamientos y finanzas. Con roles por equipo y
-              un asistente de IA que trabaja con vos.
+            <p className="mt-6 max-w-md text-lg leading-relaxed text-muted-foreground">
+              Agenda, historia clínica, odontograma y cobranza en un solo lugar. Con recordatorios
+              por WhatsApp automáticos.
             </p>
-
-            <div className="mt-9 flex flex-wrap items-center gap-3">
-              <Link
-                to="/auth"
-                className="rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-brand-foreground shadow-lg shadow-brand/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-brand/30"
-              >
-                Crear mi clínica
-              </Link>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
               <a
                 href="/demo"
-                className="flex items-center gap-2 rounded-xl border border-border bg-card/70 px-5 py-3 text-sm font-semibold backdrop-blur-sm transition-colors hover:bg-secondary"
+                className="group flex items-center gap-2 rounded-xl bg-ink px-5 py-3.5 text-sm font-semibold text-ink-foreground shadow-lg shadow-ink/20 transition-all hover:-translate-y-0.5 hover:shadow-xl"
               >
-                <PlayCircle className="size-4 text-clay" />
-                Ver demo en vivo
+                Probá la demo ahora
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
               </a>
+              <Link
+                to="/auth"
+                className="rounded-xl border border-border bg-card px-5 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
+              >
+                Empezá gratis
+              </Link>
             </div>
-
-            <p className="mt-9 flex items-center gap-2 text-xs text-muted-foreground">
-              <ShieldCheck className="size-3.5 shrink-0 text-brand" />
-              Seguridad por diseño: cada rol ve solo los datos de paciente que le corresponden.
+            <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <Check className="size-3.5 text-mint-strong" /> Sin registro
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Check className="size-3.5 text-mint-strong" /> Sin tarjeta
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Check className="size-3.5 text-mint-strong" /> Tus datos son tuyos
+              </span>
             </p>
           </div>
 
-          <LiveProductPreview />
+          {/* Foto + producto flotante (hero híbrido) */}
+          <div className="relative animate-rise-in [animation-delay:120ms]">
+            <div className="overflow-hidden rounded-2xl border border-border shadow-2xl shadow-ink/15">
+              <img
+                src="/landing/dentist.jpg"
+                alt="Dentista atendiendo a un paciente en su consultorio"
+                width={1280}
+                height={853}
+                className="aspect-[4/3] w-full object-cover"
+                loading="eager"
+              />
+            </div>
+            <div className="absolute -bottom-6 -left-6 w-52 rotate-[-2deg]">
+              <MiniCaja />
+            </div>
+            <div className="absolute -right-4 -top-4 hidden rounded-xl border border-hairline bg-card px-3 py-2 shadow-xl shadow-ink/10 sm:block">
+              <div className="flex items-center gap-2">
+                <span className="grid size-7 place-items-center rounded-full bg-mint-soft text-mint-strong">
+                  <MessageCircle className="size-3.5" />
+                </span>
+                <div>
+                  <p className="text-[11px] font-semibold leading-tight">Recordatorio enviado</p>
+                  <p className="text-[10px] text-muted-foreground">Rocío · mañana 10:30</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
-        {/* Cómo funciona */}
-        <section className="border-t border-hairline py-16">
-          <div className="mb-10 max-w-xl">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-clay">
-              Cómo funciona
+        {/* Barra de confianza */}
+        <section className="border-y border-hairline bg-bone">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-3 px-6 py-5">
+            {trust.map((t) => (
+              <span
+                key={t}
+                className="flex items-center gap-2 text-xs font-medium text-muted-foreground"
+              >
+                <ShieldCheck className="size-4 text-mint-strong" />
+                {t}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        {/* El dolor */}
+        <section className="mx-auto max-w-6xl px-6 py-20">
+          <div className="mb-12 max-w-2xl">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-mint-strong">
+              El problema
             </p>
-            <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-              De cero a tu primera cita agendada, hoy mismo.
+            <h2 className="font-precise text-3xl font-bold leading-tight sm:text-4xl">
+              Si tu clínica todavía corre en Excel, WhatsApp y cuadernos, ya sabés lo que se pierde.
             </h2>
           </div>
-          <div className="grid gap-8 sm:grid-cols-3">
-            {pasos.map(({ icon: Icon, title, text }, i) => (
-              <div key={title} className="relative">
-                <div className="mb-4 flex items-center gap-3">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-clay-soft text-sm font-semibold text-clay">
-                    {i + 1}
-                  </span>
-                  <Icon className="size-5 text-muted-foreground" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            {dolores.map(({ icon: Icon, t, d }) => (
+              <div key={t} className="flex gap-4 rounded-2xl border border-hairline bg-card p-6">
+                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-bone text-ink">
+                  <Icon className="size-5" />
+                </span>
+                <div>
+                  <h3 className="mb-1 font-semibold">{t}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{d}</p>
                 </div>
-                <h3 className="mb-1.5 font-display font-semibold">{title}</h3>
-                <p className="text-sm text-muted-foreground">{text}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Features */}
-        <section className="grid gap-5 border-t border-hairline pt-16 sm:grid-cols-2">
-          {features.map(({ icon: Icon, title, text, featured }) => (
-            <article
-              key={title}
-              className={cn(
-                "card-clinical p-7",
-                featured && "sm:col-span-2 sm:flex sm:items-start sm:gap-6",
-              )}
-            >
-              <Icon
-                className={cn("mb-3 shrink-0 text-brand", featured ? "size-7 sm:mb-0" : "size-5")}
-              />
-              <div>
-                <h2
-                  className={cn(
-                    "mb-1.5 font-display font-semibold",
-                    featured ? "text-lg" : "text-base",
-                  )}
-                >
-                  {title}
-                </h2>
-                <p className="text-sm text-muted-foreground">{text}</p>
+        {/* Demo protagónica — banda oscura (momento de drama) */}
+        <section className="bg-ink text-ink-foreground">
+          <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-20 lg:grid-cols-[1.1fr_0.9fr]">
+            <div>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-mint">
+                Probala vos
+              </p>
+              <h2 className="font-precise text-3xl font-bold leading-tight sm:text-[2.75rem]">
+                No te pedimos que nos creas. Entrá y comprobalo.
+              </h2>
+              <p className="mt-5 max-w-md text-base leading-relaxed text-ink-foreground/70">
+                Una clínica de ejemplo, cargada y lista. Agendá un paciente, mandá un recordatorio,
+                cargá un presupuesto. Sin formulario, sin llamada de ventas, sin dar tu mail.
+              </p>
+              <a
+                href="/demo"
+                className="group mt-8 inline-flex items-center gap-2 rounded-xl bg-mint px-6 py-3.5 text-sm font-semibold text-ink shadow-lg shadow-mint/20 transition-all hover:-translate-y-0.5"
+              >
+                <PlayCircle className="size-4" />
+                Entrar a la demo
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+              </a>
+            </div>
+            <div className="rotate-1">
+              <MiniAgenda />
+            </div>
+          </div>
+        </section>
+
+        {/* Cómo funciona */}
+        <section className="mx-auto max-w-6xl px-6 py-20">
+          <div className="mb-12 max-w-xl">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-mint-strong">
+              Cómo funciona
+            </p>
+            <h2 className="font-precise text-3xl font-bold sm:text-4xl">
+              De cero a tu primera cita agendada, hoy mismo.
+            </h2>
+          </div>
+          <div className="grid gap-8 sm:grid-cols-3">
+            {pasos.map(({ n, t, d }) => (
+              <div key={n}>
+                <span className="mb-4 grid size-11 place-items-center rounded-full bg-ink font-precise text-base font-bold text-mint">
+                  {n}
+                </span>
+                <h3 className="mb-1.5 text-lg font-semibold">{t}</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">{d}</p>
               </div>
-            </article>
-          ))}
+            ))}
+          </div>
+        </section>
+
+        {/* Features por resultado */}
+        <section className="border-t border-hairline bg-bone">
+          <div className="mx-auto max-w-6xl space-y-16 px-6 py-20">
+            <div className="max-w-xl">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-mint-strong">
+                Lo que ganás
+              </p>
+              <h2 className="font-precise text-3xl font-bold sm:text-4xl">
+                No son features. Son resultados.
+              </h2>
+            </div>
+
+            <FeatureRow
+              tag="Menos ausencias"
+              title="El recordatorio que hoy hacés a mano, automático."
+              text="Cada cita dispara confirmación y recordatorio por WhatsApp. Menos sillas vacías, sin que nadie pierda la mañana mandando mensajes uno por uno."
+              icon={CalendarDays}
+              media={<MiniAgenda />}
+            />
+            <FeatureRow
+              tag="Cobrás mejor"
+              title="Presupuestos, pagos y saldos, siempre a la vista."
+              text="Sabés cuánto entró hoy y cuánto te deben, al instante. Presupuestos que se convierten en plan de tratamiento con un clic."
+              icon={Wallet}
+              media={<MiniCaja />}
+              flip
+            />
+            <FeatureRow
+              tag="Todo en un lugar"
+              title="Historia clínica y odontograma, digitales y vivos."
+              text="Ficha por paciente con timeline, odontograma FDI, tratamientos y saldos. Accesible desde cualquier lado, con permisos por rol."
+              icon={FileText}
+              media={<MiniOdontograma />}
+            />
+          </div>
+        </section>
+
+        {/* Resultado humano + IA */}
+        <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 lg:grid-cols-2">
+          <div className="overflow-hidden rounded-2xl border border-border shadow-xl shadow-ink/10">
+            <img
+              src="/landing/patient.jpg"
+              alt="Paciente sonriendo con su resultado en el consultorio"
+              width={1100}
+              height={733}
+              className="aspect-[3/2] w-full object-cover"
+              loading="lazy"
+            />
+          </div>
+          <div>
+            <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-mint-strong">
+              <Sparkles className="size-4" /> Asistente con IA
+            </p>
+            <h2 className="font-precise text-3xl font-bold leading-tight sm:text-4xl">
+              Menos trabajo administrativo. Más tiempo con el paciente.
+            </h2>
+            <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
+              Resúmenes clínicos automáticos y sugerencias para llenar los huecos de agenda. Alika
+              se ocupa de lo repetitivo para que vos te ocupes de atender.
+            </p>
+            <div className="mt-6 rounded-xl border border-mint/25 bg-mint-soft p-4">
+              <p className="text-sm leading-relaxed text-ink">
+                “Tenés un hueco el jueves 15:00. 3 pacientes en lista de espera calzan — ¿les
+                aviso?”
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Precio / prueba */}
+        <section className="border-y border-hairline bg-bone">
+          <div className="mx-auto max-w-3xl px-6 py-20 text-center">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-mint-strong">
+              Precio fundador
+            </p>
+            <h2 className="font-precise text-3xl font-bold sm:text-4xl">
+              Probá 14 días gratis. Sin tarjeta.
+            </h2>
+            <p className="mx-auto mt-5 max-w-lg text-base text-muted-foreground">
+              Estamos tomando las primeras clínicas con precio fundador y soporte directo. Empezás
+              gratis hoy y, si te sirve, fijamos el precio juntos.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                to="/auth"
+                className="rounded-xl bg-ink px-6 py-3.5 text-sm font-semibold text-ink-foreground transition-opacity hover:opacity-90"
+              >
+                Empezá gratis
+              </Link>
+              <a
+                href="/demo"
+                className="flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
+              >
+                <PlayCircle className="size-4 text-mint-strong" />
+                Ver la demo primero
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* Objeciones */}
+        <section className="mx-auto max-w-3xl px-6 py-20">
+          <h2 className="mb-10 font-precise text-3xl font-bold sm:text-4xl">
+            Las dudas de siempre.
+          </h2>
+          <div className="divide-y divide-hairline border-y border-hairline">
+            {faqs.map((f) => (
+              <details key={f.q} className="group py-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold [&::-webkit-details-marker]:hidden">
+                  {f.q}
+                  <span className="grid size-6 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-transform group-open:rotate-45">
+                    +
+                  </span>
+                </summary>
+                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                  {f.a}
+                </p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        {/* Fundador */}
+        <section className="mx-auto max-w-3xl px-6 pb-20">
+          <div className="rounded-3xl border border-hairline bg-card p-8 sm:p-10">
+            <div className="flex items-start gap-4">
+              <span className="grid size-12 shrink-0 place-items-center rounded-full bg-ink font-precise text-lg font-bold text-mint">
+                W
+              </span>
+              <div>
+                <p className="text-base leading-relaxed text-ink">
+                  “Soy Walter. Hice Alika porque vi clínicas ahogadas en planillas y recordatorios a
+                  mano. Está pensado para cómo se trabaja acá, en LatAm. Si lo probás y algo te
+                  traba, escribime — te respondo yo.”
+                </p>
+                <p className="mt-3 text-sm font-medium text-muted-foreground">
+                  Walter · fundador de Alika
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA final */}
+        <section className="bg-ink text-ink-foreground">
+          <div className="mx-auto max-w-3xl px-6 py-20 text-center">
+            <h2 className="font-precise text-3xl font-bold leading-tight sm:text-5xl">
+              Ordená tu clínica de una vez.
+            </h2>
+            <p className="mx-auto mt-5 max-w-md text-base text-ink-foreground/70">
+              Entrá a la demo ahora, sin dar tu mail. O creá tu clínica gratis en 5 minutos.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <a
+                href="/demo"
+                className="group flex items-center gap-2 rounded-xl bg-mint px-6 py-3.5 text-sm font-semibold text-ink transition-all hover:-translate-y-0.5"
+              >
+                Probá la demo ahora
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+              </a>
+              <Link
+                to="/auth"
+                className="rounded-xl border border-ink-foreground/25 bg-transparent px-6 py-3.5 text-sm font-semibold text-ink-foreground transition-colors hover:bg-ink-foreground/10"
+              >
+                Empezá gratis
+              </Link>
+            </div>
+          </div>
         </section>
       </main>
+
+      <footer className="mx-auto max-w-6xl px-6 py-10">
+        <div className="flex flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
+          <span className="flex items-center gap-2">
+            <span className="grid size-6 place-items-center rounded-md bg-ink">
+              <span className="size-3 rounded-full border-2 border-mint" />
+            </span>
+            <span className="font-precise font-bold text-ink">Alika</span>
+          </span>
+          <span className="text-xs">
+            Software de gestión dental · Hecho para Latinoamérica · Lock:{" "}
+            <Lock className="inline size-3" /> tus datos son tuyos
+          </span>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function FeatureRow({
+  tag,
+  title,
+  text,
+  icon: Icon,
+  media,
+  flip,
+}: {
+  tag: string;
+  title: string;
+  text: string;
+  icon: typeof CalendarDays;
+  media: React.ReactNode;
+  flip?: boolean;
+}) {
+  return (
+    <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
+      <div className={cn(flip && "lg:order-2")}>
+        <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-mint-strong">
+          <Icon className="size-4" />
+          {tag}
+        </p>
+        <h3 className="font-precise text-2xl font-bold leading-snug sm:text-3xl">{title}</h3>
+        <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">{text}</p>
+      </div>
+      <div className={cn(flip && "lg:order-1")}>{media}</div>
     </div>
   );
 }
