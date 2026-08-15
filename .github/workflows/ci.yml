@@ -35,6 +35,12 @@ jobs:
     # ROLLBACK por test, no dejan datos — ver tests/helpers/db.ts). Sin los
     # 5 secrets de conexión seteados en el repo, este job falla: agregarlos
     # en Settings → Secrets and variables → Actions.
+    #
+    # continue-on-error: silenciado a pedido de Walter el 2026-08-15 — sin
+    # los secrets, cada push mandaba un correo de "workflow failed" aunque
+    # typecheck+lint pasaran bien. SACAR esta línea en cuanto se agreguen
+    # los secrets, para que test vuelva a bloquear el workflow si falla.
+    continue-on-error: true
     env:
       PGHOST: ${{ secrets.PGHOST }}
       PGPORT: ${{ secrets.PGPORT }}
