@@ -10,6 +10,7 @@ import { FinanceSection } from "@/components/finance-section";
 import { MessagesHistory } from "@/components/messages-history";
 import { WhatsAppOptInToggle } from "@/components/whatsapp-opt-in-toggle";
 import { PortalLinkButton, RevokePortalAccessButton } from "@/components/portal-link-button";
+import { ReferralCodeCard } from "@/components/referral-code-card";
 import { hasPermission } from "@/lib/access";
 import { formatoMoneda, type Paciente } from "@/lib/clinic-data";
 import { getPatient } from "@/lib/patients.functions";
@@ -267,6 +268,13 @@ function PacienteDetalle() {
                 <div className="flex flex-wrap items-start gap-2">
                   <PortalLinkButton clinicId={access.clinic.id} patientId={paciente.id} />
                   <RevokePortalAccessButton clinicId={access.clinic.id} patientId={paciente.id} />
+                </div>
+                <div className="mt-3">
+                  <ReferralCodeCard
+                    clinicId={access.clinic.id}
+                    patientName={paciente.nombre}
+                    referralCode={paciente.referralCode}
+                  />
                 </div>
               </div>
             )}

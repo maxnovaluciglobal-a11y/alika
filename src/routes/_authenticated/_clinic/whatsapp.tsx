@@ -381,6 +381,11 @@ function LeadsSection({ clinicId }: { clinicId: string }) {
               <p className="text-sm font-medium">{lead.name || lead.phone}</p>
               {lead.name && <p className="text-xs text-muted-foreground">{lead.phone}</p>}
               <p className="mt-1 truncate text-xs text-muted-foreground">{lead.firstMessage}</p>
+              {lead.referredByName && (
+                <p className="mt-1 text-[11px] font-medium text-brand">
+                  Referido por {lead.referredByName}
+                </p>
+              )}
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
               <button

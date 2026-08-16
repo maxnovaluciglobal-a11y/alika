@@ -2,7 +2,17 @@ import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Clock, MessageCircleMore, Receipt, Sparkles, Star, Wallet } from "lucide-react";
+import {
+  Cake,
+  Clock,
+  MessageCircleMore,
+  Receipt,
+  Sparkles,
+  Star,
+  Stethoscope,
+  Users,
+  Wallet,
+} from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { WhatsAppButton } from "@/components/whatsapp-button";
@@ -67,6 +77,21 @@ const OUTREACH_META: Record<
     icon: Receipt,
     badgeClass: "bg-ai-soft text-ai",
   },
+  birthday_greeting: {
+    label: "Cumpleaños",
+    icon: Cake,
+    badgeClass: "bg-warning-soft text-warning",
+  },
+  treatment_followup: {
+    label: "Seguimiento post-tratamiento",
+    icon: Stethoscope,
+    badgeClass: "bg-brand-soft text-brand",
+  },
+  referral_invite: {
+    label: "Invitación a referir",
+    icon: Users,
+    badgeClass: "bg-ai-soft text-ai",
+  },
 };
 
 function RecordatoriosPage() {
@@ -104,6 +129,9 @@ function RecordatoriosPage() {
       review_request: [],
       payment_due: [],
       quote_follow_up: [],
+      birthday_greeting: [],
+      treatment_followup: [],
+      referral_invite: [],
     };
     for (const item of outreach) groups[item.kind].push(item);
     return groups;
@@ -287,6 +315,12 @@ function outreachDetail(item: PendingOutreachItem): string {
       return item.quoteTotalCents != null
         ? `Presupuesto ${item.quoteNumber ?? ""} · ${formatMoney(item.quoteTotalCents, item.currency ?? "CLP")}`
         : `Presupuesto ${item.quoteNumber ?? ""}`;
+    case "birthday_greeting":
+      return "Cumple hoy 🎂";
+    case "treatment_followup":
+      return item.treatmentLabel ? `Tratamiento: ${item.treatmentLabel}` : "Tratamiento reciente";
+    case "referral_invite":
+      return item.referralCode ? `Código: ${item.referralCode}` : "";
   }
 }
 
@@ -310,6 +344,12 @@ function outreachVariables(item: PendingOutreachItem): Record<string, string> {
             ? formatMoney(item.quoteTotalCents, item.currency ?? "CLP")
             : "",
       };
+    case "birthday_greeting":
+      return {};
+    case "treatment_followup":
+      return {};
+    case "referral_invite":
+      return { codigo: item.referralCode ?? "" };
   }
 }
 
