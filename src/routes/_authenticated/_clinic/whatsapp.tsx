@@ -2,15 +2,28 @@ import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, Loader2, MessageCircle, Unplug } from "lucide-react";
+import {
+  Check,
+  CheckCircle2,
+  Copy,
+  Loader2,
+  MessageCircle,
+  UserPlus,
+  Unplug,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/route-guards";
+import { normalizeToWaMe } from "@/lib/messaging";
 import {
   completeWhatsAppEmbeddedSignup,
   disconnectWhatsAppAccount,
   getWhatsAppAccountStatus,
+  listWhatsAppLeads,
+  updateWhatsAppLeadStatus,
+  type WhatsAppLead,
 } from "@/lib/whatsapp.functions";
 import { cn } from "@/lib/utils";
 
@@ -255,6 +268,14 @@ function WhatsAppPage() {
           </div>
         )}
 
+        {!isLoading && account?.status === "connected" && account.displayPhone && (
+          <WaMeLinkCard displayPhone={account.displayPhone} />
+        )}
+
+        {!isLoading && account?.status === "connected" && clinicId && (
+          <LeadsSection clinicId={clinicId} />
+        )}
+
         {!isLoading && platformConfigured && account?.status !== "connected" && (
           <div className="card-clinical p-6">
             <p className="text-sm font-medium">Sin número conectado</p>
@@ -279,5 +300,112 @@ function WhatsAppPage() {
         )}
       </div>
     </AppShell>
+  );
+}
+
+/** Link fijo para pegar en un QR o en la bio de Instagram — no genera imagen, cualquier generador de QR gratis sirve con este link. */
+function WaMeLinkCard({ displayPhone }: { displayPhone: string }) {
+  const [copiedAt, setCopiedAt] = useState<number | null>(null);
+  const normalized = normalizeToWaMe(displayPhone);
+  const link = normalized ? `https://wa.me/${normalized}` : null;
+  if (!link) return null;
+
+  async function copy() {
+    await navigator.clipboard.writeText(link!);
+    setCopiedAt(Date.now());
+    setTimeout(() => setCopiedAt(null), 2000);
+    toast.success("Link copiado al portapapeles");
+  }
+
+  return (
+    <div className="card-clinical p-6">
+      <p className="text-sm font-medium">Link para captar pacientes nuevos</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Pegalo en la bio de Instagram, en un QR en la clínica, o en cualquier anuncio — quien lo
+        abra te escribe directo a este WhatsApp.
+      </p>
+      <div className="mt-3 flex items-center gap-2">
+        <code className="min-w-0 flex-1 truncate rounded bg-muted px-2 py-1.5 text-xs text-foreground/80">
+          {link}
+        </code>
+        <button
+          type="button"
+          onClick={copy}
+          className={cn(
+            "shrink-0 rounded-lg border border-hairline bg-background p-1.5 text-muted-foreground hover:text-foreground",
+            copiedAt && "text-brand",
+          )}
+          aria-label="Copiar link"
+        >
+          {copiedAt ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Desconocidos que escribieron por primera vez (Fase 3) — capturados y auto-respondidos por el webhook, sin plantilla. */
+function LeadsSection({ clinicId }: { clinicId: string }) {
+  const queryClient = useQueryClient();
+  const fetchLeads = useServerFn(listWhatsAppLeads);
+  const updateStatus = useServerFn(updateWhatsAppLeadStatus);
+
+  const { data: leads = [], isLoading } = useQuery({
+    queryKey: ["whatsapp-leads", clinicId],
+    queryFn: () => fetchLeads({ data: { clinicId } }),
+  });
+
+  const mutation = useMutation({
+    mutationFn: (vars: { id: string; status: "converted" | "discarded" }) =>
+      updateStatus({ data: { clinicId, id: vars.id, status: vars.status } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["whatsapp-leads", clinicId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  if (isLoading || leads.length === 0) return null;
+
+  return (
+    <div className="space-y-3">
+      <h2 className="flex items-center gap-1.5 font-display text-lg font-semibold">
+        Leads nuevos
+        <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand">
+          {leads.length}
+        </span>
+      </h2>
+      <div className="card-clinical divide-y divide-hairline overflow-hidden">
+        {leads.map((lead: WhatsAppLead) => (
+          <div key={lead.id} className="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{lead.name || lead.phone}</p>
+              {lead.name && <p className="text-xs text-muted-foreground">{lead.phone}</p>}
+              <p className="mt-1 truncate text-xs text-muted-foreground">{lead.firstMessage}</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => mutation.mutate({ id: lead.id, status: "converted" })}
+                disabled={mutation.isPending}
+                title="Convertir en paciente"
+                className="inline-flex items-center gap-1 rounded-lg border border-hairline px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-brand hover:text-brand disabled:opacity-50"
+              >
+                <UserPlus className="size-3.5" /> Convertir
+              </button>
+              <button
+                type="button"
+                onClick={() => mutation.mutate({ id: lead.id, status: "discarded" })}
+                disabled={mutation.isPending}
+                title="Descartar"
+                aria-label="Descartar"
+                className="inline-flex size-7 items-center justify-center rounded-md border border-hairline text-muted-foreground transition-colors hover:border-destructive/40 hover:text-destructive disabled:opacity-50"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
