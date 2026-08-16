@@ -86,7 +86,7 @@ export const doThing = createServerFn({ method: "POST" })
 - **Simulación de rol** disponible para probar UI con otro rol sin cambiar user.
 - **Portal `/portal/*` EN VIVO** (Wave C, commit `2a229c5` — reconstruido después de que Wave 1 lo pausara, sin gate). Sin login, expone datos de paciente a quien tenga el link JWT firmado. Bandeja de solicitudes en `/agenda` operativa. Rate limit: 3 solicitudes/paciente/24h.
 
-## WhatsApp (Fase 4A + Fase 1 API)
+## WhatsApp (Fase 4A + Fase 1 API + Fase 2)
 
 **Fase 4A (base, wa.me manual):** `sendWhatsAppFromTemplate` renderiza template + guarda `messages` con `status='sent'` + devuelve URL. Cliente hace `window.open(url, '_blank')` **dentro del click handler original** (política popup del browser). Esto sigue siendo el fallback siempre disponible.
 
@@ -97,6 +97,13 @@ export const doThing = createServerFn({ method: "POST" })
 - **Cola de outreach (recall/reseña/saldo):** `listPendingOutreach` en `messaging.functions.ts`. Decisión de Walter: **NUNCA se manda solo desde un cron** — se calculan candidatos y el staff los despacha a mano en `/recordatorios`, igual que los recordatorios de 48h/3h. Filtrados por `patients.wa_opt_in` (outreach proactivo, no los recordatorios de cita que son transaccionales).
 - **Sin infraestructura de links de pago/reseña todavía** (Stripe para clínicas es solo skeleton; no hay campo de Google Reviews) — los templates de `payment_due`/`review_request` NO prometen un link, piden responder o buscar la clínica en Google (ver migración `20260816140000`, corrigió el seed inicial).
 - Env vars nuevas en `.env.example`: `WHATSAPP_APP_ID/_APP_SECRET/_SYSTEM_USER_TOKEN/_WEBHOOK_VERIFY_TOKEN/_API_VERSION` (server) + `VITE_WHATSAPP_APP_ID/_CONFIG_ID/_API_VERSION` (cliente, no son secretos). **Sin estas seteadas, todo sigue funcionando por wa.me manual** — no hay nada roto en producción hoy, solo no está habilitado el envío automático hasta que Walter se enrole como Tech Provider en Meta.
+
+**Fase 2 (conversión — lista de espera, seguimiento de presupuestos, portal):** deliberadamente NO usa WhatsApp Flows nativo de Meta (requiere su propio producto/aprobación aparte) — reusa el portal de auto-agendamiento que ya existe (Wave C).
+
+- **Lista de espera operativa** (`waitlist.functions.ts`): `createWaitlistEntry`/`removeWaitlistEntry` cierran el TODO "sin alta/baja todavía" que traía desde el 11-ago. Vincular a un paciente existente es lo normal — sin `patient_id` no hay teléfono y la fila no puede recibir el aviso. Botón "Avisar" en `/agenda` con kind `waitlist_opening`.
+- **Seguimiento de presupuestos** (`quote_follow_up`): mismo patrón que la cola de outreach de Fase 1 (staff-aprobado, dedupe por `quote_id` no por paciente — un paciente puede tener 2 presupuestos pendientes a la vez). `quotes.status='sent'` hace +7 días, cooldown 14 días.
+- **Helper compartido `tryMetaTemplateSend`** (`whatsapp.functions.ts`): extraído del bloque que antes vivía duplicado dentro de `sendWhatsAppFromTemplate`. Cualquier caller que ya resolvió un template (incluyendo `generatePortalLink`) lo llama para intentar la API real antes de wa.me.
+- **`generatePortalLink` ahora registra en `messages`** — antes el link del portal (Wave C) nunca tocaba el historial del paciente, ni siquiera en el flujo wa.me. Ahora intenta la API real igual que todo lo demás y siempre deja rastro.
 
 ## Herramientas críticas
 
