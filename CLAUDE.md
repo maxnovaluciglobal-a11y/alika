@@ -86,7 +86,7 @@ export const doThing = createServerFn({ method: "POST" })
 - **Simulación de rol** disponible para probar UI con otro rol sin cambiar user.
 - **Portal `/portal/*` EN VIVO** (Wave C, commit `2a229c5` — reconstruido después de que Wave 1 lo pausara, sin gate). Sin login, expone datos de paciente a quien tenga el link JWT firmado. Bandeja de solicitudes en `/agenda` operativa. Rate limit: 3 solicitudes/paciente/24h.
 
-## WhatsApp (Fase 4A + Fase 1 API + Fase 2 + Fase 3)
+## WhatsApp (Fase 4A + Fase 1 API + Fase 2 + Fase 3 + Fase 4)
 
 **Fase 4A (base, wa.me manual):** `sendWhatsAppFromTemplate` renderiza template + guarda `messages` con `status='sent'` + devuelve URL. Cliente hace `window.open(url, '_blank')` **dentro del click handler original** (política popup del browser). Esto sigue siendo el fallback siempre disponible.
 
@@ -111,6 +111,14 @@ export const doThing = createServerFn({ method: "POST" })
 - **`sendMetaTextMessage`** (texto libre, sin plantilla): válido porque el desconocido acaba de abrir la ventana de servicio de 24h al escribir primero — a diferencia de todo lo de Fase 1/2, esto NO necesita que Meta apruebe nada, solo que haya un WABA conectado.
 - **`isClinicOpenNow`** (`whatsapp.ts`): decide la auto-respuesta según `branches.opens_at/closes_at` — solo se manda una vez por lead, no en cada mensaje.
 - **Verificado E2E simulando el webhook** con firma HMAC válida contra un WABA de prueba insertado a mano (sin credenciales reales de Meta no hay forma de generar tráfico real) — confirmado: lead creado con los datos correctos, idempotencia (mismo remitente no duplica), y el intento de auto-respuesta contra Graph API falla limpiamente sin tumbar el request. Datos de prueba borrados después.
+
+**Fase 4 (comunidad — cumpleaños, seguimiento post-tratamiento, referidos):** deliberadamente NO se fabricó contenido clínico específico por tipo de procedimiento (blanqueamiento, ortodoncia, etc.) — eso es consejo de salud que debería redactar un dentista, no algo para inventar. `treatment_followup` es genérico y categoría `utility` (transaccional a una visita real), no marketing.
+
+- **`patients.referral_code`**: 6 hex uppercase, único por clínica, generado por trigger `generate_patient_referral_code()` (BEFORE INSERT, con reintento si hay colisión) — cualquier camino de alta de paciente lo recibe sin acordarse de generarlo a mano.
+- **`ReferralCodeCard`** (ficha del paciente): código copiable + link wa.me pre-armado que apunta al **WhatsApp de la clínica** (no del paciente) con el código ya en el texto. El paciente reenvía el link, un amigo lo abre y le escribe a la clínica con el código adentro.
+- **`findReferrerByCode`** (webhook): detecta un token de 6 hex como palabra suelta en el primer mensaje de un lead nuevo (Fase 3) y lo valida contra `patients.referral_code` de esa clínica — conecta el referido solo, sin acción extra del staff. `whatsapp_leads.referred_by_patient_id` guarda el vínculo.
+- **`birthday_greeting`**: match de mes/día contra `patients.birth_date`, cooldown 300 días (no repetir en el mismo año). **`treatment_followup`**: `treatment_items.status='completed'` hace 2-10 días, un candidato por paciente (el más reciente). **`referral_invite`**: solo a pacientes con al menos una cita `finalizada` (mismo gate que `hygiene_recall`), cooldown 90 días.
+- **Verificado E2E contra Supabase real**: cumpleaños vía `birth_date` temporal (revertido), referidos vía una cita temporalmente marcada `finalizada` (revertida) — ambos con datos reales de "clinica Patricia", no fabricados desde cero. Envío de `referral_invite` confirmado con `{codigo}` renderizado en el mensaje real. Webhook simulado con el código real de una paciente resolvió `referred_by_patient_id` correctamente en un lead nuevo. Todo dato sintético borrado después.
 
 ## Herramientas críticas
 
