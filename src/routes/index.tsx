@@ -8,6 +8,7 @@ import {
   MessageCircle,
   PlayCircle,
   Sparkles,
+  UserPlus,
   Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -134,6 +135,62 @@ function MiniOdontograma() {
         <p className="mt-3 text-[11px] text-muted-foreground">
           Timeline, tratamientos y saldos por paciente — siempre sincronizados.
         </p>
+      </div>
+    </div>
+  );
+}
+
+function MiniWhatsAppOps() {
+  const filas = [
+    {
+      icon: UserPlus,
+      n: "+56 9 5555 1234",
+      t: "Te escribió por primera vez",
+      chip: "Lead nuevo",
+      tone: "lead" as const,
+    },
+    {
+      icon: CalendarDays,
+      n: "Lista de espera",
+      t: "3 pacientes calzan con el hueco del jueves",
+      chip: "Para avisar",
+      tone: "wa" as const,
+    },
+    {
+      icon: Wallet,
+      n: "R. Fernández",
+      t: "Presupuesto enviado hace 7 días, sin respuesta",
+      chip: "Seguimiento",
+      tone: "wa" as const,
+    },
+  ];
+  const tones = {
+    wa: "bg-mint-soft text-mint-strong",
+    lead: "bg-ink/10 text-ink",
+  };
+  return (
+    <div className="overflow-hidden rounded-xl border border-hairline bg-card">
+      <CardChrome label="WhatsApp · para revisar" />
+      <div className="divide-y divide-hairline">
+        {filas.map((f) => (
+          <div key={f.n} className="flex items-center gap-3 px-4 py-2.5">
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-muted-foreground">
+              <f.icon className="size-3.5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium">{f.n}</p>
+              <p className="truncate text-[11px] text-muted-foreground">{f.t}</p>
+            </div>
+            <span
+              className={cn(
+                "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium",
+                tones[f.tone],
+              )}
+            >
+              {f.chip}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -437,6 +494,14 @@ function Landing() {
               icon={FileText}
               media={<MiniOdontograma />}
             />
+            <FeatureRow
+              tag="Tu WhatsApp no se duerme"
+              title="Nadie que te escribe se pierde. Nadie que quedó pendiente, se olvida."
+              text="Quien te escribe por primera vez queda guardado como contacto, no se pierde en el chat. La lista de espera y los presupuestos sin respuesta arman su propia cola — vos revisás y salen con un clic. Cada paciente tiene su código para invitar amigos."
+              icon={MessageCircle}
+              media={<MiniWhatsAppOps />}
+              flip
+            />
           </div>
         </section>
 
@@ -460,14 +525,16 @@ function Landing() {
               Menos trabajo administrativo. Más tiempo con el paciente.
             </h2>
             <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
-              Resúmenes clínicos automáticos y sugerencias para llenar los huecos de agenda. Alika
-              se ocupa de lo repetitivo para que vos te ocupes de atender.
+              Cada nota clínica se resume con un clic — hallazgos, procedimiento y próximo paso,
+              listos para la siguiente consulta. Alika se ocupa de lo repetitivo para que vos te
+              ocupes de atender.
             </p>
             <div className="mt-6 rounded-xl border border-mint/25 bg-mint-soft p-4">
               <p className="text-sm leading-relaxed text-ink">
-                “Tenés un hueco el jueves 15:00. 3 pacientes en lista de espera calzan — ¿les
-                aviso?”
+                “Control de ortodoncia. Ajuste de arco superior, sin molestias referidas. Próximo
+                control en 4 semanas.”
               </p>
+              <p className="mt-2 text-[11px] font-semibold text-mint-strong">Resumido con IA</p>
             </div>
           </div>
         </section>
