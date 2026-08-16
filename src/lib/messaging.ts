@@ -32,6 +32,11 @@ export const MESSAGE_TEMPLATE_KINDS = [
   "waitlist_opening",
   "quote_follow_up",
   "portal_invite",
+  // Fase 3 WhatsApp — migración 20260816160000 (whatsapp_leads, sin kind propio).
+  // Fase 4 WhatsApp — migración 20260816170000.
+  "birthday_greeting",
+  "treatment_followup",
+  "referral_invite",
 ] as const;
 export type MessageTemplateKind = (typeof MESSAGE_TEMPLATE_KINDS)[number];
 
@@ -49,6 +54,9 @@ export const MESSAGE_TEMPLATE_KIND_LABELS: Record<MessageTemplateKind, string> =
   waitlist_opening: "Aviso de lista de espera",
   quote_follow_up: "Seguimiento de presupuesto",
   portal_invite: "Invitación al portal",
+  birthday_greeting: "Saludo de cumpleaños",
+  treatment_followup: "Seguimiento post-tratamiento",
+  referral_invite: "Invitación a referir",
 };
 
 /**
@@ -69,6 +77,9 @@ export const OUTREACH_TEMPLATE_KINDS = [
   "review_request",
   "payment_due",
   "quote_follow_up",
+  "birthday_greeting",
+  "treatment_followup",
+  "referral_invite",
 ] as const;
 export type OutreachTemplateKind = (typeof OUTREACH_TEMPLATE_KINDS)[number];
 

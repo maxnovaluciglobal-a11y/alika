@@ -69,6 +69,8 @@ export interface Paciente {
   timeline: EventoClinico[];
   /** Consentimiento para outreach proactivo por WhatsApp (recall/reseña/saldo) — no gatea los recordatorios de cita. */
   waOptIn: boolean;
+  /** Código de referido (6 caracteres, único por clínica) — generado por trigger al crear el paciente. */
+  referralCode: string | null;
 }
 
 export interface Tratamiento {
@@ -296,6 +298,7 @@ export const pacientes: Paciente[] = [
       { fecha: "05 Ene 2026", titulo: "Consulta inicial", tipo: "consulta" },
     ],
     waOptIn: false,
+    referralCode: null,
   },
   {
     id: "pa2",
@@ -331,6 +334,7 @@ export const pacientes: Paciente[] = [
       { fecha: "28 Sep 2026", titulo: "Radiografía periapical", tipo: "imagen" },
     ],
     waOptIn: false,
+    referralCode: null,
   },
   {
     id: "pa3",
@@ -355,6 +359,7 @@ export const pacientes: Paciente[] = [
       { fecha: "02 Sep 2026", titulo: "Destartraje", tipo: "consulta" },
     ],
     waOptIn: false,
+    referralCode: null,
   },
   {
     id: "pa4",
@@ -390,6 +395,7 @@ export const pacientes: Paciente[] = [
       { fecha: "04 Sep 2026", titulo: "Limpieza general", tipo: "consulta" },
     ],
     waOptIn: false,
+    referralCode: null,
   },
   {
     id: "pa5",
@@ -414,6 +420,7 @@ export const pacientes: Paciente[] = [
       { fecha: "18 Ago 2026", titulo: "Prueba de estructura", tipo: "consulta" },
     ],
     waOptIn: false,
+    referralCode: null,
   },
   {
     id: "pa6",
@@ -438,6 +445,7 @@ export const pacientes: Paciente[] = [
       { fecha: "10 Jul 2026", titulo: "Control semestral", tipo: "control" },
     ],
     waOptIn: false,
+    referralCode: null,
   },
   {
     id: "pa7",
@@ -461,6 +469,7 @@ export const pacientes: Paciente[] = [
       { fecha: "Hoy · 12:30", titulo: "Primera consulta infantil", tipo: "consulta", actual: true },
     ],
     waOptIn: false,
+    referralCode: null,
   },
   {
     id: "pa8",
@@ -485,6 +494,7 @@ export const pacientes: Paciente[] = [
       { fecha: "01 Mar 2026", titulo: "Presupuesto emitido", tipo: "presupuesto" },
     ],
     waOptIn: false,
+    referralCode: null,
   },
 ];
 

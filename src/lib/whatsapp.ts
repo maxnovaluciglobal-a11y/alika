@@ -55,6 +55,10 @@ export const META_TEMPLATE_PARAM_ORDER: Record<
   // El link va último — mismo criterio que saldo/monto en Fase 1, el valor
   // más largo/dinámico al final de la lista de parámetros.
   portal_invite: ["paciente", "dias", "clinica", "link"],
+  // Fase 4
+  birthday_greeting: ["paciente", "clinica"],
+  treatment_followup: ["paciente", "clinica"],
+  referral_invite: ["paciente", "clinica", "codigo"],
 };
 
 /**

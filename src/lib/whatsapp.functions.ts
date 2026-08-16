@@ -335,6 +335,8 @@ export interface WhatsAppLead {
   firstMessage: string;
   status: "new" | "contacted" | "converted" | "discarded";
   createdAt: string;
+  /** Nombre del paciente que lo refirió (Fase 4), si el webhook detectó un código válido en el primer mensaje. */
+  referredByName: string | null;
 }
 
 type WhatsAppLeadRow = {
@@ -344,9 +346,10 @@ type WhatsAppLeadRow = {
   first_message: string;
   status: string;
   created_at: string;
+  referred_by_patient_id: string | null;
 };
 
-function mapLead(row: WhatsAppLeadRow): WhatsAppLead {
+function mapLead(row: WhatsAppLeadRow, referredByName: string | null): WhatsAppLead {
   return {
     id: row.id,
     phone: row.phone,
@@ -354,6 +357,7 @@ function mapLead(row: WhatsAppLeadRow): WhatsAppLead {
     firstMessage: row.first_message,
     status: row.status as WhatsAppLead["status"],
     createdAt: row.created_at,
+    referredByName,
   };
 }
 
@@ -364,13 +368,34 @@ export const listWhatsAppLeads = createServerFn({ method: "GET" })
   .handler(async ({ data, context }): Promise<WhatsAppLead[]> => {
     const { data: rows, error } = await context.supabase
       .from("whatsapp_leads")
-      .select("id, phone, name, first_message, status, created_at")
+      .select("id, phone, name, first_message, status, created_at, referred_by_patient_id")
       .eq("clinic_id", data.clinicId)
       .eq("status", "new")
       .order("created_at", { ascending: false })
       .limit(100);
     if (error) throw new Error(error.message);
-    return (rows ?? []).map((r) => mapLead(r as WhatsAppLeadRow));
+
+    const referrerIds = [
+      ...new Set(
+        (rows ?? []).map((r) => r.referred_by_patient_id).filter((id): id is string => !!id),
+      ),
+    ];
+    const { data: referrers } =
+      referrerIds.length === 0
+        ? { data: [] }
+        : await context.supabase
+            .from("patients")
+            .select("id, full_name")
+            .eq("clinic_id", data.clinicId)
+            .in("id", referrerIds);
+    const nameById = new Map((referrers ?? []).map((p) => [p.id, p.full_name]));
+
+    return (rows ?? []).map((r) =>
+      mapLead(
+        r as WhatsAppLeadRow,
+        r.referred_by_patient_id ? (nameById.get(r.referred_by_patient_id) ?? null) : null,
+      ),
+    );
   });
 
 /** Marca un lead como contactado/convertido/descartado — nunca se borra, queda como historial. */

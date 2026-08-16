@@ -274,6 +274,14 @@ async function handleUnknownSender(
     return;
   }
 
+  // Fase 4 — referidos: los códigos son 6 hex uppercase (mismo formato que
+  // genera el trigger generate_patient_referral_code). Si el primer mensaje
+  // trae uno como palabra suelta y coincide con un paciente real de esta
+  // clínica, queda linkeado — así el link wa.me pre-armado que el paciente
+  // reenvía (con el código ya en el texto) conecta solo, sin que el
+  // desconocido tenga que escribir nada especial.
+  const referredByPatientId = await findReferrerByCode(supabaseAdmin, clinicId, bodyText);
+
   const { data: inserted, error } = await supabaseAdmin
     .from("whatsapp_leads")
     .insert({
@@ -281,6 +289,7 @@ async function handleUnknownSender(
       phone: fromNormalized,
       name: contactName ?? null,
       first_message: bodyText || "[mensaje sin texto]",
+      referred_by_patient_id: referredByPatientId,
     })
     .select("id")
     .single();
@@ -329,4 +338,23 @@ async function handleUnknownSender(
     // igual en /whatsapp, solo no recibió el mensaje automático.
     console.error("[whatsapp-webhook] auto-respuesta a lead falló:", (err as Error).message);
   }
+}
+
+const REFERRAL_CODE_PATTERN = /\b[0-9A-F]{6}\b/g;
+
+/** Busca un código de referido (palabra suelta de 6 hex) en el texto y lo valida contra patients.referral_code de esta clínica. */
+async function findReferrerByCode(
+  supabaseAdmin: SupabaseAdminClient,
+  clinicId: string,
+  bodyText: string,
+): Promise<string | null> {
+  const candidates = [...bodyText.toUpperCase().matchAll(REFERRAL_CODE_PATTERN)].map((m) => m[0]);
+  if (candidates.length === 0) return null;
+
+  const { data: patients } = await supabaseAdmin
+    .from("patients")
+    .select("id, referral_code")
+    .eq("clinic_id", clinicId)
+    .in("referral_code", candidates);
+  return patients?.[0]?.id ?? null;
 }

@@ -913,6 +913,7 @@ export type Database = {
           phone: string | null;
           portal_revoked_at: string | null;
           primary_professional_id: string | null;
+          referral_code: string | null;
           status: Database["public"]["Enums"]["patient_status"];
           tags: string[];
           updated_at: string;
@@ -939,6 +940,7 @@ export type Database = {
           phone?: string | null;
           portal_revoked_at?: string | null;
           primary_professional_id?: string | null;
+          referral_code?: string | null;
           status?: Database["public"]["Enums"]["patient_status"];
           tags?: string[];
           updated_at?: string;
@@ -965,6 +967,7 @@ export type Database = {
           phone?: string | null;
           portal_revoked_at?: string | null;
           primary_professional_id?: string | null;
+          referral_code?: string | null;
           status?: Database["public"]["Enums"]["patient_status"];
           tags?: string[];
           updated_at?: string;
@@ -1694,6 +1697,7 @@ export type Database = {
           id: string;
           name: string | null;
           phone: string;
+          referred_by_patient_id: string | null;
           status: Database["public"]["Enums"]["whatsapp_lead_status"];
           updated_at: string;
         };
@@ -1705,6 +1709,7 @@ export type Database = {
           id?: string;
           name?: string | null;
           phone: string;
+          referred_by_patient_id?: string | null;
           status?: Database["public"]["Enums"]["whatsapp_lead_status"];
           updated_at?: string;
         };
@@ -1716,6 +1721,7 @@ export type Database = {
           id?: string;
           name?: string | null;
           phone?: string;
+          referred_by_patient_id?: string | null;
           status?: Database["public"]["Enums"]["whatsapp_lead_status"];
           updated_at?: string;
         };
@@ -1725,6 +1731,13 @@ export type Database = {
             columns: ["clinic_id"];
             isOneToOne: false;
             referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "whatsapp_leads_referred_by_patient_id_fkey";
+            columns: ["referred_by_patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
             referencedColumns: ["id"];
           },
         ];
@@ -1947,7 +1960,10 @@ export type Database = {
         | "payment_due"
         | "waitlist_opening"
         | "quote_follow_up"
-        | "portal_invite";
+        | "portal_invite"
+        | "birthday_greeting"
+        | "treatment_followup"
+        | "referral_invite";
       tooth_condition:
         | "sano"
         | "caries"

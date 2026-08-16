@@ -413,6 +413,10 @@ const REVIEW_REQUEST_MAX_WINDOW_MS = 14 * 24 * 60 * 60 * 1000; // no revivir vis
 const PAYMENT_DUE_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
 const QUOTE_FOLLOW_UP_AFTER_MS = 7 * 24 * 60 * 60 * 1000; // presupuesto enviado hace +7 días
 const QUOTE_FOLLOW_UP_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000; // no repetir el nudge antes de esto
+const BIRTHDAY_COOLDOWN_MS = 300 * 24 * 60 * 60 * 1000; // no repetir en el mismo año
+const TREATMENT_FOLLOWUP_MIN_DELAY_MS = 2 * 24 * 60 * 60 * 1000; // 2 días después de completado
+const TREATMENT_FOLLOWUP_MAX_WINDOW_MS = 10 * 24 * 60 * 60 * 1000; // no revivir tratamientos viejos
+const REFERRAL_INVITE_COOLDOWN_MS = 90 * 24 * 60 * 60 * 1000;
 
 export interface PendingOutreachItem {
   patientId: string;
@@ -431,6 +435,8 @@ export interface PendingOutreachItem {
   quoteId?: string;
   quoteNumber?: string;
   quoteTotalCents?: number;
+  // referral_invite
+  referralCode?: string;
 }
 
 /**
@@ -457,10 +463,11 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
       { data: paidRows, error: paidErr },
       { data: clinic, error: clinicErr },
       { data: sentQuotes, error: quoteErr },
+      { data: completedItems, error: completedErr },
     ] = await Promise.all([
       supabase
         .from("patients")
-        .select("id, full_name, phone")
+        .select("id, full_name, phone, birth_date, referral_code")
         .eq("clinic_id", clinicId)
         .eq("wa_opt_in", true)
         .is("wa_opt_out_at", null),
@@ -497,12 +504,21 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
         .eq("clinic_id", clinicId)
         .eq("status", "sent")
         .not("sent_at", "is", null),
+      supabase
+        .from("treatment_items")
+        .select("name_snapshot, completed_at, treatment_plans!inner(patient_id, clinic_id)")
+        .eq("clinic_id", clinicId)
+        .eq("status", "completed")
+        .not("completed_at", "is", null)
+        .order("completed_at", { ascending: false })
+        .limit(2000),
     ]);
     if (patErr) throw new Error(patErr.message);
     if (apptErr) throw new Error(apptErr.message);
     if (futErr) throw new Error(futErr.message);
     if (msgErr) throw new Error(msgErr.message);
     if (billErr) throw new Error(billErr.message);
+    if (completedErr) throw new Error(completedErr.message);
     if (paidErr) throw new Error(paidErr.message);
     if (clinicErr) throw new Error(clinicErr.message);
     if (quoteErr) throw new Error(quoteErr.message);
@@ -516,11 +532,15 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
       if (!lastVisitByPatient.has(a.patient_id)) lastVisitByPatient.set(a.patient_id, a.ends_at);
     }
 
-    // Cooldown: último hygiene_recall/payment_due por paciente, último
-    // quote_follow_up por presupuesto, review_request por cita.
+    // Cooldown: último hygiene_recall/payment_due/birthday_greeting/
+    // treatment_followup/referral_invite por paciente, último quote_follow_up
+    // por presupuesto, review_request por cita.
     const lastHygieneRecallByPatient = new Map<string, string>();
     const lastPaymentDueByPatient = new Map<string, string>();
     const lastQuoteFollowUpByQuote = new Map<string, string>();
+    const lastBirthdayByPatient = new Map<string, string>();
+    const lastTreatmentFollowupByPatient = new Map<string, string>();
+    const lastReferralInviteByPatient = new Map<string, string>();
     const reviewRequestedAppointments = new Set<string>();
     for (const m of recentOutreach ?? []) {
       if (m.template_kind === "hygiene_recall" && !lastHygieneRecallByPatient.has(m.patient_id)) {
@@ -535,6 +555,18 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
         !lastQuoteFollowUpByQuote.has(m.quote_id)
       ) {
         lastQuoteFollowUpByQuote.set(m.quote_id, m.created_at);
+      }
+      if (m.template_kind === "birthday_greeting" && !lastBirthdayByPatient.has(m.patient_id)) {
+        lastBirthdayByPatient.set(m.patient_id, m.created_at);
+      }
+      if (
+        m.template_kind === "treatment_followup" &&
+        !lastTreatmentFollowupByPatient.has(m.patient_id)
+      ) {
+        lastTreatmentFollowupByPatient.set(m.patient_id, m.created_at);
+      }
+      if (m.template_kind === "referral_invite" && !lastReferralInviteByPatient.has(m.patient_id)) {
+        lastReferralInviteByPatient.set(m.patient_id, m.created_at);
       }
       if (m.template_kind === "review_request" && m.appointment_id) {
         reviewRequestedAppointments.add(m.appointment_id);
@@ -627,6 +659,77 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
         quoteNumber: q.number,
         quoteTotalCents: q.total_cents,
         currency: q.currency,
+      });
+    }
+
+    // ── birthday_greeting ── (marketing: solo pacientes opt-in, comparación
+    // por mes/día en UTC — no hace falta precisión de huso horario para esto).
+    const hoy = new Date(ahora);
+    const mesHoy = hoy.getUTCMonth();
+    const diaHoy = hoy.getUTCDate();
+    for (const patient of optedInPatients ?? []) {
+      if (!patient.birth_date) continue;
+      const nacimiento = new Date(patient.birth_date);
+      if (nacimiento.getUTCMonth() !== mesHoy || nacimiento.getUTCDate() !== diaHoy) continue;
+      const lastSent = lastBirthdayByPatient.get(patient.id);
+      if (lastSent && ahora - new Date(lastSent).getTime() < BIRTHDAY_COOLDOWN_MS) continue;
+      items.push({
+        patientId: patient.id,
+        patientName: patient.full_name,
+        patientPhone: patient.phone,
+        kind: "birthday_greeting",
+      });
+    }
+
+    // ── treatment_followup ── (utility: seguimiento genérico de una visita
+    // real, no instrucciones clínicas por tipo de procedimiento — eso lo
+    // debería redactar un dentista, no fabricarlo acá). Un candidato por
+    // paciente, el tratamiento completado más reciente (ya viene ordenado
+    // desc, nos quedamos con la primera ocurrencia).
+    const lastCompletedByPatient = new Map<string, { completedAt: string; label: string }>();
+    for (const item of completedItems ?? []) {
+      const patientId = (item as unknown as { treatment_plans: { patient_id: string } })
+        .treatment_plans.patient_id;
+      if (!lastCompletedByPatient.has(patientId)) {
+        lastCompletedByPatient.set(patientId, {
+          completedAt: (item as { completed_at: string }).completed_at,
+          label: item.name_snapshot,
+        });
+      }
+    }
+    for (const [patientId, { completedAt, label }] of lastCompletedByPatient) {
+      const patient = patientById.get(patientId);
+      if (!patient) continue;
+      const sinceMs = ahora - new Date(completedAt).getTime();
+      if (sinceMs < TREATMENT_FOLLOWUP_MIN_DELAY_MS || sinceMs > TREATMENT_FOLLOWUP_MAX_WINDOW_MS) {
+        continue;
+      }
+      const lastSent = lastTreatmentFollowupByPatient.get(patientId);
+      if (lastSent && ahora - new Date(lastSent).getTime() < TREATMENT_FOLLOWUP_MAX_WINDOW_MS) {
+        continue;
+      }
+      items.push({
+        patientId,
+        patientName: patient.full_name,
+        patientPhone: patient.phone,
+        kind: "treatment_followup",
+        treatmentLabel: label,
+      });
+    }
+
+    // ── referral_invite ── (marketing: solo a quien ya vivió la clínica al
+    // menos una vez — lastVisitByPatient ya filtra exactamente eso).
+    for (const [patientId] of lastVisitByPatient) {
+      const patient = patientById.get(patientId);
+      if (!patient || !patient.referral_code) continue;
+      const lastSent = lastReferralInviteByPatient.get(patientId);
+      if (lastSent && ahora - new Date(lastSent).getTime() < REFERRAL_INVITE_COOLDOWN_MS) continue;
+      items.push({
+        patientId,
+        patientName: patient.full_name,
+        patientPhone: patient.phone,
+        kind: "referral_invite",
+        referralCode: patient.referral_code,
       });
     }
 
