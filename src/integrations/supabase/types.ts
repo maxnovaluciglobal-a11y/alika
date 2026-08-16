@@ -1685,6 +1685,50 @@ export type Database = {
           },
         ];
       };
+      whatsapp_leads: {
+        Row: {
+          auto_replied_at: string | null;
+          clinic_id: string;
+          created_at: string;
+          first_message: string;
+          id: string;
+          name: string | null;
+          phone: string;
+          status: Database["public"]["Enums"]["whatsapp_lead_status"];
+          updated_at: string;
+        };
+        Insert: {
+          auto_replied_at?: string | null;
+          clinic_id: string;
+          created_at?: string;
+          first_message: string;
+          id?: string;
+          name?: string | null;
+          phone: string;
+          status?: Database["public"]["Enums"]["whatsapp_lead_status"];
+          updated_at?: string;
+        };
+        Update: {
+          auto_replied_at?: string | null;
+          clinic_id?: string;
+          created_at?: string;
+          first_message?: string;
+          id?: string;
+          name?: string | null;
+          phone?: string;
+          status?: Database["public"]["Enums"]["whatsapp_lead_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_leads_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       payments: {
         Row: {
           amount_cents: number;
@@ -1888,6 +1932,7 @@ export type Database = {
       payment_method: "cash" | "debit_card" | "credit_card" | "transfer" | "other";
       message_channel: "whatsapp" | "sms" | "email";
       message_direction: "outbound" | "inbound";
+      whatsapp_lead_status: "new" | "contacted" | "converted" | "discarded";
       message_status: "draft" | "queued" | "sent" | "delivered" | "read" | "failed";
       message_template_kind:
         | "appointment_reminder"

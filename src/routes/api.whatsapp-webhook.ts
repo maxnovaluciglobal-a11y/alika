@@ -3,20 +3,26 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { normalizeToWaMe } from "@/lib/messaging";
+import { isClinicOpenNow } from "@/lib/whatsapp";
+import { sendMetaTextMessage } from "@/lib/whatsapp.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 type SupabaseAdminClient = SupabaseClient<Database>;
 
 /**
- * Webhook de la WhatsApp Cloud API (Fase 1). Meta llama esto sin auth de
- * Supabase — se valida con el handshake GET y la firma HMAC del POST, y se
- * escribe con supabaseAdmin (service_role) igual que api.demo-reset.ts.
+ * Webhook de la WhatsApp Cloud API (Fase 1 + Fase 3). Meta llama esto sin
+ * auth de Supabase — se valida con el handshake GET y la firma HMAC del
+ * POST, y se escribe con supabaseAdmin (service_role) igual que
+ * api.demo-reset.ts.
  *
  * GET  = verificación de suscripción (una vez, al configurar el webhook en
  *        Meta Business Manager).
  * POST = eventos reales: status callbacks (delivered/read/failed) y
- *        mensajes entrantes (SÍ / BAJA, o cualquier otra cosa que el
- *        paciente escriba).
+ *        mensajes entrantes. Si el número coincide con un paciente: SÍ
+ *        confirma la próxima cita, BAJA/STOP corta el opt-in (Fase 1). Si
+ *        es un desconocido: se captura como lead + auto-respuesta con texto
+ *        libre, sin plantilla — válido porque el desconocido acaba de abrir
+ *        la ventana de servicio de 24h al escribir primero (Fase 3).
  */
 export const Route = createFileRoute("/api/whatsapp-webhook")({
   server: {
@@ -79,8 +85,16 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
               for (const status of value.statuses ?? []) {
                 await applyStatusUpdate(supabaseAdmin, status);
               }
+              const nameByWaId = new Map(
+                (value.contacts ?? []).map((c) => [c.wa_id, c.profile?.name]),
+              );
               for (const message of value.messages ?? []) {
-                await applyInboundMessage(supabaseAdmin, account.clinic_id, message);
+                await applyInboundMessage(
+                  supabaseAdmin,
+                  account.clinic_id,
+                  message,
+                  nameByWaId.get(message.from),
+                );
               }
             } catch (err) {
               console.error("[whatsapp-webhook] error procesando entry:", (err as Error).message);
@@ -117,6 +131,10 @@ interface WhatsAppInboundMessage {
   type: string;
   text?: { body?: string };
 }
+interface WhatsAppContact {
+  wa_id: string;
+  profile?: { name?: string };
+}
 interface WhatsAppWebhookPayload {
   entry?: Array<{
     id?: string;
@@ -125,6 +143,7 @@ interface WhatsAppWebhookPayload {
         metadata?: { phone_number_id?: string };
         statuses?: WhatsAppStatusEvent[];
         messages?: WhatsAppInboundMessage[];
+        contacts?: WhatsAppContact[];
       };
       field?: string;
     }>;
@@ -160,9 +179,12 @@ async function applyInboundMessage(
   supabaseAdmin: SupabaseAdminClient,
   clinicId: string,
   message: WhatsAppInboundMessage,
+  contactName: string | undefined,
 ): Promise<void> {
   const fromNormalized = normalizeToWaMe(message.from);
   if (!fromNormalized) return;
+
+  const bodyText = message.type === "text" ? (message.text?.body ?? "") : "";
 
   const { data: patients } = await supabaseAdmin
     .from("patients")
@@ -172,9 +194,11 @@ async function applyInboundMessage(
   const patient = (patients ?? []).find(
     (p) => p.phone && normalizeToWaMe(p.phone) === fromNormalized,
   );
-  if (!patient) return; // número no atribuible a ningún paciente de la clínica
-
-  const bodyText = message.type === "text" ? (message.text?.body ?? "") : "";
+  if (!patient) {
+    // Fase 3: desconocido — no es un paciente con ficha, es un lead.
+    await handleUnknownSender(supabaseAdmin, clinicId, fromNormalized, bodyText, contactName);
+    return;
+  }
   await supabaseAdmin.from("messages").insert({
     clinic_id: clinicId,
     patient_id: patient.id,
@@ -211,5 +235,98 @@ async function applyInboundMessage(
         .update({ status: "confirmada" })
         .eq("id", nextAppt.id);
     }
+  }
+}
+
+/**
+ * Fase 3 — captación: un número que no coincide con ningún paciente escribe
+ * por primera vez (QR, bio de Instagram, Click-to-WhatsApp ad, o simplemente
+ * alguien que guardó el número). `UNIQUE(clinic_id, phone)` en whatsapp_leads
+ * hace que escribir varias veces sea UN lead, no varios — solo la primera
+ * vez dispara la auto-respuesta, para no ser pesados.
+ *
+ * La auto-respuesta es texto libre (sendMetaTextMessage, sin plantilla): es
+ * válida porque el desconocido acaba de abrir la ventana de servicio de 24h
+ * al escribir primero — Meta permite responder lo que sea mientras esa
+ * ventana esté abierta.
+ */
+async function handleUnknownSender(
+  supabaseAdmin: SupabaseAdminClient,
+  clinicId: string,
+  fromNormalized: string,
+  bodyText: string,
+  contactName: string | undefined,
+): Promise<void> {
+  const { data: existing } = await supabaseAdmin
+    .from("whatsapp_leads")
+    .select("id")
+    .eq("clinic_id", clinicId)
+    .eq("phone", fromNormalized)
+    .maybeSingle();
+
+  if (existing) {
+    // Ya lo conocíamos — no repetimos la auto-respuesta, no pisamos el
+    // primer mensaje (queda como contexto de cuándo arrancó la conversación).
+    await supabaseAdmin
+      .from("whatsapp_leads")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", existing.id);
+    return;
+  }
+
+  const { data: inserted, error } = await supabaseAdmin
+    .from("whatsapp_leads")
+    .insert({
+      clinic_id: clinicId,
+      phone: fromNormalized,
+      name: contactName ?? null,
+      first_message: bodyText || "[mensaje sin texto]",
+    })
+    .select("id")
+    .single();
+  if (error || !inserted) return;
+
+  try {
+    const [{ data: account }, { data: branches }, { data: clinic }] = await Promise.all([
+      supabaseAdmin
+        .from("whatsapp_accounts")
+        .select("phone_number_id")
+        .eq("clinic_id", clinicId)
+        .eq("status", "connected")
+        .maybeSingle(),
+      supabaseAdmin
+        .from("branches")
+        .select("timezone, opens_at, closes_at, is_active")
+        .eq("clinic_id", clinicId),
+      supabaseAdmin.from("clinics").select("name").eq("id", clinicId).maybeSingle(),
+    ]);
+    if (!account) return; // no debería pasar (el webhook ya resolvió a esta clínica), defensivo igual
+
+    const abierto = isClinicOpenNow(
+      (branches ?? []).map((b) => ({
+        timezone: b.timezone,
+        opensAt: b.opens_at,
+        closesAt: b.closes_at,
+        isActive: b.is_active,
+      })),
+    );
+    const clinicaNombre = clinic?.name ?? "la clínica";
+    const texto = abierto
+      ? `¡Hola! Gracias por escribirnos a ${clinicaNombre}. En breve te responde alguien del equipo — contanos qué necesitás mientras tanto.`
+      : `¡Hola! Gracias por escribirnos a ${clinicaNombre}. Ahora mismo estamos fuera de horario de atención — dejanos tu consulta y te contactamos a primera hora.`;
+
+    await sendMetaTextMessage({
+      phoneNumberId: account.phone_number_id,
+      to: fromNormalized,
+      body: texto,
+    });
+    await supabaseAdmin
+      .from("whatsapp_leads")
+      .update({ auto_replied_at: new Date().toISOString() })
+      .eq("id", inserted.id);
+  } catch (err) {
+    // El lead ya quedó guardado — si la auto-respuesta falla, el staff lo ve
+    // igual en /whatsapp, solo no recibió el mensaje automático.
+    console.error("[whatsapp-webhook] auto-respuesta a lead falló:", (err as Error).message);
   }
 }

@@ -283,3 +283,113 @@ export async function tryMetaTemplateSend(params: {
     return { viaApi: false, externalId: null };
   }
 }
+
+/**
+ * Texto libre (sin plantilla) — SOLO válido dentro de la ventana de servicio
+ * de 24h que abre el propio cliente al escribir primero (regla de Meta: la
+ * clínica puede responder lo que quiera mientras esa ventana esté abierta,
+ * sin necesidad de plantilla aprobada). Usado por el webhook (Fase 3) para
+ * la auto-respuesta a un desconocido que acaba de escribir — nunca para
+ * abrir una conversación de la nada, eso siempre necesita plantilla.
+ */
+export async function sendMetaTextMessage(params: {
+  phoneNumberId: string;
+  to: string;
+  body: string;
+}): Promise<MetaSendResult> {
+  const { systemUserToken } = requireMetaAppConfig();
+  const version = metaApiVersion();
+
+  const res = await fetch(
+    `https://graph.facebook.com/${version}/${params.phoneNumberId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${systemUserToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: params.to,
+        type: "text",
+        text: { body: params.body },
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Meta rechazó el envío: ${body}`);
+  }
+
+  const json = (await res.json()) as { messages?: Array<{ id: string }> };
+  const wamid = json.messages?.[0]?.id;
+  if (!wamid) throw new Error("Meta no devolvió un id de mensaje.");
+  return { wamid };
+}
+
+export interface WhatsAppLead {
+  id: string;
+  phone: string;
+  name: string | null;
+  firstMessage: string;
+  status: "new" | "contacted" | "converted" | "discarded";
+  createdAt: string;
+}
+
+type WhatsAppLeadRow = {
+  id: string;
+  phone: string;
+  name: string | null;
+  first_message: string;
+  status: string;
+  created_at: string;
+};
+
+function mapLead(row: WhatsAppLeadRow): WhatsAppLead {
+  return {
+    id: row.id,
+    phone: row.phone,
+    name: row.name,
+    firstMessage: row.first_message,
+    status: row.status as WhatsAppLead["status"],
+    createdAt: row.created_at,
+  };
+}
+
+/** Leads nuevos (desconocidos que escribieron y todavía nadie los gestionó). */
+export const listWhatsAppLeads = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<WhatsAppLead[]> => {
+    const { data: rows, error } = await context.supabase
+      .from("whatsapp_leads")
+      .select("id, phone, name, first_message, status, created_at")
+      .eq("clinic_id", data.clinicId)
+      .eq("status", "new")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw new Error(error.message);
+    return (rows ?? []).map((r) => mapLead(r as WhatsAppLeadRow));
+  });
+
+/** Marca un lead como contactado/convertido/descartado — nunca se borra, queda como historial. */
+export const updateWhatsAppLeadStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        id: z.string().uuid(),
+        status: z.enum(["contacted", "converted", "discarded"]),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<void> => {
+    const { error } = await context.supabase
+      .from("whatsapp_leads")
+      .update({ status: data.status })
+      .eq("clinic_id", data.clinicId)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+  });

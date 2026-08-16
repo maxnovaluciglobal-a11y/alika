@@ -84,3 +84,39 @@ export function hasMetaTemplateMapping(
 ): kind is keyof typeof META_TEMPLATE_PARAM_ORDER {
   return kind in META_TEMPLATE_PARAM_ORDER;
 }
+
+export interface BranchHours {
+  timezone: string | null;
+  /** "HH:MM" o "HH:MM:SS" — como vienen de Postgres `time`. */
+  opensAt: string;
+  closesAt: string;
+  isActive: boolean;
+}
+
+/**
+ * true si CUALQUIER sucursal activa de la clínica está en horario de
+ * atención ahora mismo — usado por el webhook (Fase 3) para elegir la
+ * auto-respuesta ("te contactamos en breve" vs "estamos fuera de horario").
+ * Mismo patrón que `hoyISO`/`fechaLocal` en el resto del repo:
+ * Intl.DateTimeFormat, nunca luxon.
+ */
+export function isClinicOpenNow(branches: BranchHours[], now: Date = new Date()): boolean {
+  const activas = branches.filter((b) => b.isActive);
+  if (activas.length === 0) return false;
+
+  return activas.some((b) => {
+    const tz = b.timezone || "America/Santiago";
+    const horaActual = new Intl.DateTimeFormat("en-GB", {
+      timeZone: tz,
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(now);
+    const abre = b.opensAt.slice(0, 5);
+    const cierra = b.closesAt.slice(0, 5);
+    // Comparación lexicográfica de "HH:MM" funciona porque están zero-padded.
+    if (abre <= cierra) return horaActual >= abre && horaActual < cierra;
+    // Horario que cruza medianoche (ej. 20:00–02:00).
+    return horaActual >= abre || horaActual < cierra;
+  });
+}
