@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Clock, MessageCircleMore, Sparkles, Star, Wallet } from "lucide-react";
+import { Clock, MessageCircleMore, Receipt, Sparkles, Star, Wallet } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { WhatsAppButton } from "@/components/whatsapp-button";
@@ -62,6 +62,11 @@ const OUTREACH_META: Record<
     icon: Wallet,
     badgeClass: "bg-destructive/10 text-destructive",
   },
+  quote_follow_up: {
+    label: "Seguimiento de presupuesto",
+    icon: Receipt,
+    badgeClass: "bg-ai-soft text-ai",
+  },
 };
 
 function RecordatoriosPage() {
@@ -98,6 +103,7 @@ function RecordatoriosPage() {
       hygiene_recall: [],
       review_request: [],
       payment_due: [],
+      quote_follow_up: [],
     };
     for (const item of outreach) groups[item.kind].push(item);
     return groups;
@@ -277,6 +283,10 @@ function outreachDetail(item: PendingOutreachItem): string {
       return item.balanceCents != null
         ? `Saldo: ${formatMoney(item.balanceCents, item.currency ?? "CLP")}`
         : "";
+    case "quote_follow_up":
+      return item.quoteTotalCents != null
+        ? `Presupuesto ${item.quoteNumber ?? ""} · ${formatMoney(item.quoteTotalCents, item.currency ?? "CLP")}`
+        : `Presupuesto ${item.quoteNumber ?? ""}`;
   }
 }
 
@@ -291,6 +301,14 @@ function outreachVariables(item: PendingOutreachItem): Record<string, string> {
       return {
         saldo:
           item.balanceCents != null ? formatMoney(item.balanceCents, item.currency ?? "CLP") : "",
+      };
+    case "quote_follow_up":
+      return {
+        numero_presupuesto: item.quoteNumber ?? "",
+        total:
+          item.quoteTotalCents != null
+            ? formatMoney(item.quoteTotalCents, item.currency ?? "CLP")
+            : "",
       };
   }
 }
@@ -310,7 +328,7 @@ function OutreachList({
     <div className="card-clinical divide-y divide-hairline overflow-hidden">
       {items.map((item) => (
         <div
-          key={`${item.kind}-${item.patientId}-${item.appointmentId ?? ""}`}
+          key={`${item.kind}-${item.patientId}-${item.appointmentId ?? item.quoteId ?? ""}`}
           className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
         >
           <div className="min-w-0">
@@ -326,6 +344,7 @@ function OutreachList({
             clinicId={clinicId}
             patientId={item.patientId}
             appointmentId={item.appointmentId}
+            quoteId={item.quoteId}
             templateKind={item.kind}
             variant="full"
             label="Enviar"

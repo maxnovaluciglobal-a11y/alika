@@ -37,7 +37,7 @@ const HOY = hoyISO();
 import { listBranches, listProfessionals } from "@/lib/clinic-catalog.functions";
 import { listPatients } from "@/lib/patients.functions";
 import { createAppointment, listAppointments } from "@/lib/appointments.functions";
-import { listWaitlist } from "@/lib/waitlist.functions";
+import { createWaitlistEntry, listWaitlist, removeWaitlistEntry } from "@/lib/waitlist.functions";
 import {
   declineAppointmentRequest,
   listPendingAppointmentRequests,
@@ -396,6 +396,92 @@ function AgendarSolicitudDialog({
   );
 }
 
+/**
+ * Agrega a la lista de espera. El paciente es opcional en el server (podés
+ * anotar a alguien sin ficha todavía), pero acá lo pedimos siempre — sin
+ * paciente vinculado no hay teléfono, y entonces la fila nunca va a poder
+ * recibir el aviso de "Avisar" por WhatsApp cuando se libera un turno.
+ */
+function AgregarListaEsperaDialog({
+  clinicId,
+  pacientes,
+}: {
+  clinicId: string;
+  pacientes: { id: string; nombre: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [pacienteId, setPacienteId] = useState("");
+  const [motivo, setMotivo] = useState("");
+
+  const queryClient = useQueryClient();
+  const createFn = useServerFn(createWaitlistEntry);
+
+  const crear = useMutation({
+    mutationFn: () =>
+      createFn({ data: { clinicId, patientId: pacienteId, reason: motivo.trim() || undefined } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["waitlist", clinicId] });
+      toast.success("Agregado a la lista de espera");
+      setOpen(false);
+      setPacienteId("");
+      setMotivo("");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <Plus className="size-3.5" /> Agregar
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Agregar a lista de espera</DialogTitle>
+          <DialogDescription>
+            Cuando se libere un turno, vas a poder avisarle por WhatsApp con un click.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="le-paciente">Paciente</Label>
+            <select
+              id="le-paciente"
+              value={pacienteId}
+              onChange={(e) => setPacienteId(e.target.value)}
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+            >
+              <option value="">Elegir paciente…</option>
+              {pacientes.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="le-motivo">Motivo (opcional)</Label>
+            <input
+              id="le-motivo"
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder="Ej: Control, limpieza…"
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => crear.mutate()} disabled={crear.isPending || !pacienteId}>
+            {crear.isPending && <Loader2 className="size-3.5 animate-spin" />}
+            Agregar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function AgendaPage() {
   const { access } = Route.useRouteContext();
   const search = Route.useSearch();
@@ -456,6 +542,16 @@ function AgendaPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointment-requests", clinicId] });
       toast.success("Solicitud rechazada");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removeWaitlistFn = useServerFn(removeWaitlistEntry);
+  const quitarDeEspera = useMutation({
+    mutationFn: (id: string) => removeWaitlistFn({ data: { clinicId: clinicId!, id } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["waitlist", clinicId] });
+      toast.success("Sacado de la lista de espera");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -710,9 +806,14 @@ function AgendaPage() {
               </>
             )}
 
-            <h2 className="font-display text-xl font-semibold text-muted-foreground">
-              Lista de espera
-            </h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-display text-xl font-semibold text-muted-foreground">
+                Lista de espera
+              </h2>
+              {clinicId && hasPermission(access.role, "agenda:manage") && (
+                <AgregarListaEsperaDialog clinicId={clinicId} pacientes={pacientes} />
+              )}
+            </div>
             <div className="card-clinical divide-y divide-hairline">
               {listaEspera.length === 0 && (
                 <p className="p-4 text-xs text-muted-foreground">
@@ -720,17 +821,47 @@ function AgendaPage() {
                 </p>
               )}
               {listaEspera.map((e) => (
-                <div key={e.id} className="flex items-start gap-3 p-4">
-                  <span className="mt-1.5 size-2 shrink-0 rounded-full bg-warning" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{e.nombre}</p>
-                    <p className="text-xs text-muted-foreground">{e.motivo}</p>
-                    {e.espera !== "—" && (
-                      <p className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
-                        <Clock className="size-3" /> {e.espera} de espera
-                      </p>
-                    )}
+                <div key={e.id} className="flex items-start justify-between gap-3 p-4">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="mt-1.5 size-2 shrink-0 rounded-full bg-warning" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{e.nombre}</p>
+                      <p className="text-xs text-muted-foreground">{e.motivo}</p>
+                      {e.espera !== "—" && (
+                        <p className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <Clock className="size-3" /> {e.espera} de espera
+                        </p>
+                      )}
+                      {!e.patientPhone && (
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          Sin paciente vinculado — no se le puede avisar por WhatsApp.
+                        </p>
+                      )}
+                    </div>
                   </div>
+                  {clinicId && hasPermission(access.role, "agenda:manage") && (
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      {e.patientId && access.clinic?.name && (
+                        <WhatsAppButton
+                          clinicId={clinicId}
+                          patientId={e.patientId}
+                          templateKind="waitlist_opening"
+                          label="Avisar"
+                          variables={{ motivo: e.motivo, clinica: access.clinic.name }}
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => quitarDeEspera.mutate(e.id)}
+                        disabled={quitarDeEspera.isPending}
+                        title="Quitar de la lista"
+                        aria-label="Quitar de la lista"
+                        className="inline-flex size-7 items-center justify-center rounded-md border border-hairline text-muted-foreground transition-colors hover:border-destructive/40 hover:text-destructive disabled:opacity-50"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

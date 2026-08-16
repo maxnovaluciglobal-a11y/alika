@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Copy, Link2, Loader2, MessageCircle, ShieldOff } from "lucide-react";
+import { Check, CheckCircle2, Copy, Link2, Loader2, MessageCircle, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 
 import { generatePortalLink, revokePortalAccess } from "@/lib/portal.functions";
@@ -85,7 +85,12 @@ export function PortalLinkButton({ clinicId, patientId }: Props) {
         >
           {copiedAt ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
         </button>
-        {mut.data.waUrl && (
+        {mut.data.viaApi && (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand-soft px-2 py-1.5 text-[11px] font-medium text-brand">
+            <CheckCircle2 className="size-3.5" /> Enviado
+          </span>
+        )}
+        {!mut.data.viaApi && mut.data.waUrl && (
           <button
             type="button"
             onClick={openWhatsApp}
