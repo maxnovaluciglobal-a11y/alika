@@ -21,6 +21,13 @@ export const MESSAGE_TEMPLATE_KINDS = [
   "payment_receipt",
   "nps_survey",
   "custom",
+  // Fase 1 WhatsApp API — agregados al enum de la DB en la migración
+  // 20260816120000 pero faltaban acá: sin esto, `kind as MessageTemplateKind`
+  // en el código de mapeo compila igual (es un cast) pero cualquier switch
+  // exhaustivo o Record<MessageTemplateKind, T> se queda corto en silencio.
+  "hygiene_recall",
+  "review_request",
+  "payment_due",
 ] as const;
 export type MessageTemplateKind = (typeof MESSAGE_TEMPLATE_KINDS)[number];
 
@@ -32,7 +39,21 @@ export const MESSAGE_TEMPLATE_KIND_LABELS: Record<MessageTemplateKind, string> =
   payment_receipt: "Recibo de pago",
   nps_survey: "Encuesta NPS",
   custom: "Personalizado",
+  hygiene_recall: "Recall de higiene (6 meses)",
+  review_request: "Pedido de reseña",
+  payment_due: "Aviso de saldo pendiente",
 };
+
+/**
+ * Los 3 kinds que dispara la cola de "outreach" (Fase 1): no son avisos
+ * ligados 1:1 a una cita futura como appointment_reminder/checkin, sino
+ * candidatos calculados sobre histórico (última visita, saldo). Todos pasan
+ * por aprobación del staff en /recordatorios — nunca se mandan solos desde
+ * un cron ciego (decisión de Walter: menos riesgo de mandarle algo raro a
+ * un paciente sin que nadie lo vea antes).
+ */
+export const OUTREACH_TEMPLATE_KINDS = ["hygiene_recall", "review_request", "payment_due"] as const;
+export type OutreachTemplateKind = (typeof OUTREACH_TEMPLATE_KINDS)[number];
 
 export interface MessageTemplate {
   id: string;

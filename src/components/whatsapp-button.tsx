@@ -55,6 +55,12 @@ export function WhatsAppButton({
       }),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["messages", clinicId, patientId] });
+      if (result.viaApi) {
+        // Se mandó de verdad por la Cloud API — no hay wa.me que abrir.
+        toast.success("Mensaje enviado por WhatsApp.");
+        onSent?.();
+        return;
+      }
       if (!result.waUrl) {
         toast.error("No pudimos construir el link (¿el paciente tiene teléfono válido?).");
         return;

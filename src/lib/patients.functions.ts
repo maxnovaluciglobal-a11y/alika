@@ -44,6 +44,7 @@ type PatientRow = {
   balance_cents: number | null;
   no_show_risk: number | null;
   ai_summary: string | null;
+  wa_opt_in: boolean;
 };
 
 type AppointmentSlim = { patient_id: string; starts_at: string; status: string };
@@ -87,11 +88,12 @@ function mapPatientRow(
     foto: row.avatar_url ?? undefined,
     resumenIA: row.ai_summary ?? "Aún no hay un resumen de IA para este paciente.",
     timeline: [],
+    waOptIn: row.wa_opt_in,
   };
 }
 
 const PATIENT_COLUMNS =
-  "id, full_name, document_id, birth_date, phone, email, branch_id, primary_professional_id, status, tags, avatar_url, balance_cents, no_show_risk, ai_summary";
+  "id, full_name, document_id, birth_date, phone, email, branch_id, primary_professional_id, status, tags, avatar_url, balance_cents, no_show_risk, ai_summary, wa_opt_in";
 
 /**
  * Tope de fila del listado — red de seguridad, no la estrategia de paginado

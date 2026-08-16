@@ -5,11 +5,16 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   MESSAGE_CHANNELS,
   MESSAGE_TEMPLATE_KINDS,
+  OUTREACH_TEMPLATE_KINDS,
   buildWaMeUrl,
+  normalizeToWaMe,
   renderTemplate,
   type Message,
   type MessageTemplate,
+  type OutreachTemplateKind,
 } from "@/lib/messaging";
+import { buildMetaTemplateParams, hasMetaTemplateMapping } from "@/lib/whatsapp";
+import { sendMetaTemplateMessage } from "@/lib/whatsapp.functions";
 
 const MESSAGE_COLUMNS =
   "id, appointment_id, quote_id, template_id, template_kind, channel, status, recipient, body, sent_at, created_at";
@@ -135,7 +140,14 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
     async ({
       data,
       context,
-    }): Promise<{ id: string; waUrl: string | null; body: string; recipient: string }> => {
+    }): Promise<{
+      id: string;
+      waUrl: string | null;
+      body: string;
+      recipient: string;
+      /** true si se mandó de verdad por la Cloud API (no hay wa.me que abrir). */
+      viaApi: boolean;
+    }> => {
       const { supabase, userId } = context;
 
       // Traer paciente para número y nombre
@@ -157,6 +169,11 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
       let templateId: string | null = data.templateId ?? null;
       let templateKind: (typeof MESSAGE_TEMPLATE_KINDS)[number] | null = data.templateKind ?? null;
       let body: string;
+      // Datos de la plantilla en Meta (nombre registrado + idioma), solo si
+      // se resolvió un template real (rawBody no puede ir por Cloud API:
+      // fuera de la ventana de 24h, Meta exige una plantilla pre-aprobada,
+      // nunca texto libre).
+      let metaTemplate: { name: string; language: string } | null = null;
       if (data.rawBody) {
         body = renderTemplate(data.rawBody, {
           ...data.variables,
@@ -165,7 +182,7 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
       } else {
         let templateQuery = supabase
           .from("message_templates")
-          .select("id, kind, body")
+          .select("id, kind, body, meta_template_name, meta_language, meta_status")
           .eq("clinic_id", data.clinicId)
           .eq("is_active", true)
           .limit(1);
@@ -183,6 +200,45 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
           ...data.variables,
           paciente: patient.full_name,
         });
+        if (template.meta_status === "approved" && template.meta_template_name) {
+          metaTemplate = { name: template.meta_template_name, language: template.meta_language };
+        }
+      }
+
+      // Intento de envío real por Cloud API. Requiere: la clínica conectó
+      // su número (whatsapp_accounts), la plantilla está aprobada por Meta,
+      // y el kind tiene mapeo de parámetros (whatsapp.ts). Si cualquiera de
+      // esas condiciones falta, o el POST a Meta falla por lo que sea, cae
+      // al flujo de siempre (wa.me) — nunca se bloquea el envío por esto.
+      let viaApi = false;
+      let externalId: string | null = null;
+      if (metaTemplate && templateKind && hasMetaTemplateMapping(templateKind)) {
+        try {
+          const { data: account } = await supabase
+            .from("whatsapp_accounts")
+            .select("phone_number_id, status")
+            .eq("clinic_id", data.clinicId)
+            .eq("status", "connected")
+            .maybeSingle();
+          const to = normalizeToWaMe(recipient);
+          if (account && to) {
+            const bodyParams = buildMetaTemplateParams(templateKind, {
+              ...data.variables,
+              paciente: patient.full_name,
+            });
+            const sent = await sendMetaTemplateMessage({
+              phoneNumberId: account.phone_number_id,
+              to,
+              templateName: metaTemplate.name,
+              templateLanguage: metaTemplate.language,
+              bodyParams,
+            });
+            viaApi = true;
+            externalId = sent.wamid;
+          }
+        } catch (apiErr) {
+          console.error("[whatsapp] envío por API falló, cae a wa.me:", (apiErr as Error).message);
+        }
       }
 
       const nowIso = new Date().toISOString();
@@ -200,6 +256,7 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
           status: "sent",
           recipient,
           body,
+          external_id: externalId,
           sent_at: nowIso,
           sent_by: userId,
         })
@@ -208,8 +265,8 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
 
       if (insertErr) throw new Error("No pudimos registrar el mensaje. " + insertErr.message);
 
-      const waUrl = buildWaMeUrl(recipient, body);
-      return { id: inserted.id, waUrl, body, recipient };
+      const waUrl = viaApi ? null : buildWaMeUrl(recipient, body);
+      return { id: inserted.id, waUrl, body, recipient, viaApi };
     },
   );
 
@@ -361,6 +418,220 @@ export const listPendingReminders = createServerFn({ method: "GET" })
         reminderKind: a.reminderKind,
       };
     });
+  });
+
+// ─────────────────────────────────────────────────────────────────────────
+// Fase 1: cola de outreach (recall de higiene / pedido de reseña / saldo
+// pendiente). A diferencia de listPendingReminders (ligada 1:1 a una cita
+// futura), estos candidatos se calculan sobre histórico. Por decisión de
+// Walter, NUNCA se mandan solos desde un cron — se arman acá y el staff los
+// despacha a mano en /recordatorios con el mismo WhatsAppButton de siempre
+// (que ahora intenta la API real y cae a wa.me si no hay número conectado).
+// ─────────────────────────────────────────────────────────────────────────
+
+const HYGIENE_RECALL_AFTER_MS = 182 * 24 * 60 * 60 * 1000; // ~6 meses
+const HYGIENE_RECALL_COOLDOWN_MS = 150 * 24 * 60 * 60 * 1000; // no re-sugerir antes de esto
+const REVIEW_REQUEST_MIN_DELAY_MS = 2 * 60 * 60 * 1000; // 2h después de la cita
+const REVIEW_REQUEST_MAX_WINDOW_MS = 14 * 24 * 60 * 60 * 1000; // no revivir visitas viejas
+const PAYMENT_DUE_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
+
+export interface PendingOutreachItem {
+  patientId: string;
+  patientName: string;
+  patientPhone: string | null;
+  kind: OutreachTemplateKind;
+  // hygiene_recall
+  monthsSinceLastVisit?: number;
+  // review_request (dedupe es por cita, no por paciente — cada visita puede pedir su propia reseña)
+  appointmentId?: string;
+  treatmentLabel?: string;
+  // payment_due
+  balanceCents?: number;
+  currency?: string;
+}
+
+/**
+ * Candidatos de recall/reseña/saldo, ya filtrados por opt-in y por cooldown
+ * (no repetir la misma sugerencia todos los días). Solo pacientes con
+ * wa_opt_in=true y sin wa_opt_out_at — a diferencia de los recordatorios de
+ * cita (transaccionales a una reserva que el paciente ya hizo), esto es
+ * outreach proactivo y necesita consentimiento explícito.
+ */
+export const listPendingOutreach = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<PendingOutreachItem[]> => {
+    const { supabase } = context;
+    const clinicId = data.clinicId;
+    const ahora = Date.now();
+
+    const [
+      { data: optedInPatients, error: patErr },
+      { data: finalizadas, error: apptErr },
+      { data: futuras, error: futErr },
+      { data: recentOutreach, error: msgErr },
+      { data: billedRows, error: billErr },
+      { data: paidRows, error: paidErr },
+      { data: clinic, error: clinicErr },
+    ] = await Promise.all([
+      supabase
+        .from("patients")
+        .select("id, full_name, phone")
+        .eq("clinic_id", clinicId)
+        .eq("wa_opt_in", true)
+        .is("wa_opt_out_at", null),
+      supabase
+        .from("appointments")
+        .select("id, patient_id, treatment_label, ends_at")
+        .eq("clinic_id", clinicId)
+        .eq("status", "finalizada")
+        .order("ends_at", { ascending: false })
+        .limit(2000),
+      supabase
+        .from("appointments")
+        .select("patient_id")
+        .eq("clinic_id", clinicId)
+        .neq("status", "cancelada")
+        .gt("starts_at", new Date(ahora).toISOString()),
+      supabase
+        .from("messages")
+        .select("patient_id, appointment_id, template_kind, created_at")
+        .eq("clinic_id", clinicId)
+        .in("template_kind", [...OUTREACH_TEMPLATE_KINDS])
+        .order("created_at", { ascending: false })
+        .limit(3000),
+      supabase
+        .from("treatment_items")
+        .select("price_cents, treatment_plans!inner(patient_id, clinic_id, status)")
+        .eq("clinic_id", clinicId)
+        .neq("treatment_plans.status", "cancelled"),
+      supabase.from("payments").select("patient_id, amount_cents").eq("clinic_id", clinicId),
+      supabase.from("clinics").select("currency").eq("id", clinicId).single(),
+    ]);
+    if (patErr) throw new Error(patErr.message);
+    if (apptErr) throw new Error(apptErr.message);
+    if (futErr) throw new Error(futErr.message);
+    if (msgErr) throw new Error(msgErr.message);
+    if (billErr) throw new Error(billErr.message);
+    if (paidErr) throw new Error(paidErr.message);
+    if (clinicErr) throw new Error(clinicErr.message);
+
+    const patientById = new Map((optedInPatients ?? []).map((p) => [p.id, p]));
+    const patientsWithFuture = new Set((futuras ?? []).map((f) => f.patient_id));
+
+    // Última visita finalizada por paciente (ya viene ordenado desc, nos quedamos con la primera ocurrencia).
+    const lastVisitByPatient = new Map<string, string>();
+    for (const a of finalizadas ?? []) {
+      if (!lastVisitByPatient.has(a.patient_id)) lastVisitByPatient.set(a.patient_id, a.ends_at);
+    }
+
+    // Cooldown: último hygiene_recall/payment_due por paciente, último review_request por cita.
+    const lastHygieneRecallByPatient = new Map<string, string>();
+    const lastPaymentDueByPatient = new Map<string, string>();
+    const reviewRequestedAppointments = new Set<string>();
+    for (const m of recentOutreach ?? []) {
+      if (m.template_kind === "hygiene_recall" && !lastHygieneRecallByPatient.has(m.patient_id)) {
+        lastHygieneRecallByPatient.set(m.patient_id, m.created_at);
+      }
+      if (m.template_kind === "payment_due" && !lastPaymentDueByPatient.has(m.patient_id)) {
+        lastPaymentDueByPatient.set(m.patient_id, m.created_at);
+      }
+      if (m.template_kind === "review_request" && m.appointment_id) {
+        reviewRequestedAppointments.add(m.appointment_id);
+      }
+    }
+
+    const items: PendingOutreachItem[] = [];
+
+    // ── hygiene_recall ──
+    for (const [patientId, lastVisitIso] of lastVisitByPatient) {
+      const patient = patientById.get(patientId);
+      if (!patient) continue; // sin opt-in, o no existe
+      if (patientsWithFuture.has(patientId)) continue; // ya viene de vuelta
+      const sinceMs = ahora - new Date(lastVisitIso).getTime();
+      if (sinceMs < HYGIENE_RECALL_AFTER_MS) continue;
+      const lastSent = lastHygieneRecallByPatient.get(patientId);
+      if (lastSent && ahora - new Date(lastSent).getTime() < HYGIENE_RECALL_COOLDOWN_MS) continue;
+      items.push({
+        patientId,
+        patientName: patient.full_name,
+        patientPhone: patient.phone,
+        kind: "hygiene_recall",
+        monthsSinceLastVisit: Math.floor(sinceMs / (30 * 24 * 60 * 60 * 1000)),
+      });
+    }
+
+    // ── review_request ──
+    for (const a of finalizadas ?? []) {
+      const patient = patientById.get(a.patient_id);
+      if (!patient) continue;
+      const sinceMs = ahora - new Date(a.ends_at).getTime();
+      if (sinceMs < REVIEW_REQUEST_MIN_DELAY_MS || sinceMs > REVIEW_REQUEST_MAX_WINDOW_MS) continue;
+      if (reviewRequestedAppointments.has(a.id)) continue;
+      items.push({
+        patientId: a.patient_id,
+        patientName: patient.full_name,
+        patientPhone: patient.phone,
+        kind: "review_request",
+        appointmentId: a.id,
+        treatmentLabel: a.treatment_label || "Consulta",
+      });
+    }
+
+    // ── payment_due ──
+    const balanceByPatient = new Map<string, number>();
+    for (const r of billedRows ?? []) {
+      const patientId = (r as unknown as { treatment_plans: { patient_id: string } })
+        .treatment_plans.patient_id;
+      const priceCents = (r as { price_cents: number }).price_cents ?? 0;
+      balanceByPatient.set(patientId, (balanceByPatient.get(patientId) ?? 0) + priceCents);
+    }
+    for (const r of paidRows ?? []) {
+      balanceByPatient.set(
+        r.patient_id,
+        (balanceByPatient.get(r.patient_id) ?? 0) - (r.amount_cents ?? 0),
+      );
+    }
+    const currency = clinic?.currency ?? "CLP";
+    for (const [patientId, balanceCents] of balanceByPatient) {
+      if (balanceCents <= 0) continue;
+      const patient = patientById.get(patientId);
+      if (!patient) continue;
+      const lastSent = lastPaymentDueByPatient.get(patientId);
+      if (lastSent && ahora - new Date(lastSent).getTime() < PAYMENT_DUE_COOLDOWN_MS) continue;
+      items.push({
+        patientId,
+        patientName: patient.full_name,
+        patientPhone: patient.phone,
+        kind: "payment_due",
+        balanceCents,
+        currency,
+      });
+    }
+
+    return items;
+  });
+
+/** Prende/apaga el opt-in de WhatsApp del paciente. Lo apaga siempre puede cualquier operador; prenderlo requiere haberlo hablado con el paciente. */
+export const setPatientWhatsAppOptIn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({ clinicId: z.string().uuid(), patientId: z.string().uuid(), optIn: z.boolean() })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<void> => {
+    const nowIso = new Date().toISOString();
+    const { error } = await context.supabase
+      .from("patients")
+      .update(
+        data.optIn
+          ? { wa_opt_in: true, wa_opt_in_at: nowIso, wa_opt_out_at: null }
+          : { wa_opt_in: false, wa_opt_out_at: nowIso },
+      )
+      .eq("clinic_id", data.clinicId)
+      .eq("id", data.patientId);
+    if (error) throw new Error(error.message);
   });
 
 // Re-export para consumidores que solo importan de este módulo

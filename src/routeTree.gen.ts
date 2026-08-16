@@ -19,6 +19,7 @@ import { Route as AuthenticatedClinicRouteRouteImport } from './routes/_authenti
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedSinAccesoRouteImport } from './routes/_authenticated/sin-acceso'
 import { Route as ApiDemoResetRouteImport } from './routes/api.demo-reset'
+import { Route as ApiWhatsappWebhookRouteImport } from './routes/api.whatsapp-webhook'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as PortalInicioRouteImport } from './routes/portal.inicio'
@@ -35,6 +36,7 @@ import { Route as AuthenticatedClinicRecordatoriosRouteImport } from './routes/_
 import { Route as AuthenticatedClinicSandboxEmailRouteImport } from './routes/_authenticated/_clinic/sandbox-email'
 import { Route as AuthenticatedClinicSuscripcionRouteImport } from './routes/_authenticated/_clinic/suscripcion'
 import { Route as AuthenticatedClinicTratamientosRouteImport } from './routes/_authenticated/_clinic/tratamientos'
+import { Route as AuthenticatedClinicWhatsappRouteImport } from './routes/_authenticated/_clinic/whatsapp'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
 import { Route as AuthenticatedClinicPacientesIndexRouteImport } from './routes/_authenticated/_clinic/pacientes.index'
 import { Route as AuthenticatedClinicPacientesPacienteIdRouteImport } from './routes/_authenticated/_clinic/pacientes.$pacienteId'
@@ -86,6 +88,11 @@ const AuthenticatedSinAccesoRoute = AuthenticatedSinAccesoRouteImport.update({
 const ApiDemoResetRoute = ApiDemoResetRouteImport.update({
   id: '/api/demo-reset',
   path: '/api/demo-reset',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
+  id: '/api/whatsapp-webhook',
+  path: '/api/whatsapp-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PortalIndexRoute = PortalIndexRouteImport.update({
@@ -181,6 +188,12 @@ const AuthenticatedClinicTratamientosRoute =
     path: '/tratamientos',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
+const AuthenticatedClinicWhatsappRoute =
+  AuthenticatedClinicWhatsappRouteImport.update({
+    id: '/whatsapp',
+    path: '/whatsapp',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   id: '/api/stripe/webhook',
   path: '/api/stripe/webhook',
@@ -208,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
+  '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
   '/portal/': typeof PortalIndexRoute
@@ -224,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/sandbox-email': typeof AuthenticatedClinicSandboxEmailRoute
   '/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/tratamientos': typeof AuthenticatedClinicTratamientosRoute
+  '/whatsapp': typeof AuthenticatedClinicWhatsappRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
   '/pacientes/': typeof AuthenticatedClinicPacientesIndexRoute
@@ -236,6 +251,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
+  '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
   '/portal': typeof PortalIndexRoute
@@ -252,6 +268,7 @@ export interface FileRoutesByTo {
   '/sandbox-email': typeof AuthenticatedClinicSandboxEmailRoute
   '/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/tratamientos': typeof AuthenticatedClinicTratamientosRoute
+  '/whatsapp': typeof AuthenticatedClinicWhatsappRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
   '/pacientes': typeof AuthenticatedClinicPacientesIndexRoute
@@ -268,6 +285,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
+  '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
   '/portal/': typeof PortalIndexRoute
@@ -284,6 +302,7 @@ export interface FileRoutesById {
   '/_authenticated/_clinic/sandbox-email': typeof AuthenticatedClinicSandboxEmailRoute
   '/_authenticated/_clinic/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/_authenticated/_clinic/tratamientos': typeof AuthenticatedClinicTratamientosRoute
+  '/_authenticated/_clinic/whatsapp': typeof AuthenticatedClinicWhatsappRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/_authenticated/_clinic/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
   '/_authenticated/_clinic/pacientes/': typeof AuthenticatedClinicPacientesIndexRoute
@@ -299,6 +318,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/sin-acceso'
     | '/api/demo-reset'
+    | '/api/whatsapp-webhook'
     | '/portal/$token'
     | '/portal/inicio'
     | '/portal/'
@@ -315,6 +335,7 @@ export interface FileRouteTypes {
     | '/sandbox-email'
     | '/suscripcion'
     | '/tratamientos'
+    | '/whatsapp'
     | '/api/stripe/webhook'
     | '/pacientes/$pacienteId'
     | '/pacientes/'
@@ -327,6 +348,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/sin-acceso'
     | '/api/demo-reset'
+    | '/api/whatsapp-webhook'
     | '/portal/$token'
     | '/portal/inicio'
     | '/portal'
@@ -343,6 +365,7 @@ export interface FileRouteTypes {
     | '/sandbox-email'
     | '/suscripcion'
     | '/tratamientos'
+    | '/whatsapp'
     | '/api/stripe/webhook'
     | '/pacientes/$pacienteId'
     | '/pacientes'
@@ -358,6 +381,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/sin-acceso'
     | '/api/demo-reset'
+    | '/api/whatsapp-webhook'
     | '/portal/$token'
     | '/portal/inicio'
     | '/portal/'
@@ -374,6 +398,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_clinic/sandbox-email'
     | '/_authenticated/_clinic/suscripcion'
     | '/_authenticated/_clinic/tratamientos'
+    | '/_authenticated/_clinic/whatsapp'
     | '/api/stripe/webhook'
     | '/_authenticated/_clinic/pacientes/$pacienteId'
     | '/_authenticated/_clinic/pacientes/'
@@ -387,6 +412,7 @@ export interface RootRouteChildren {
   PortalRoute: typeof PortalRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiDemoResetRoute: typeof ApiDemoResetRoute
+  ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
 
@@ -460,6 +486,13 @@ declare module '@tanstack/react-router' {
       path: '/api/demo-reset'
       fullPath: '/api/demo-reset'
       preLoaderRoute: typeof ApiDemoResetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/whatsapp-webhook': {
+      id: '/api/whatsapp-webhook'
+      path: '/api/whatsapp-webhook'
+      fullPath: '/api/whatsapp-webhook'
+      preLoaderRoute: typeof ApiWhatsappWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/portal/': {
@@ -574,6 +607,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicTratamientosRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
+    '/_authenticated/_clinic/whatsapp': {
+      id: '/_authenticated/_clinic/whatsapp'
+      path: '/whatsapp'
+      fullPath: '/whatsapp'
+      preLoaderRoute: typeof AuthenticatedClinicWhatsappRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
     '/api/stripe/webhook': {
       id: '/api/stripe/webhook'
       path: '/api/stripe/webhook'
@@ -612,6 +652,7 @@ interface AuthenticatedClinicRouteRouteChildren {
   AuthenticatedClinicSandboxEmailRoute: typeof AuthenticatedClinicSandboxEmailRoute
   AuthenticatedClinicSuscripcionRoute: typeof AuthenticatedClinicSuscripcionRoute
   AuthenticatedClinicTratamientosRoute: typeof AuthenticatedClinicTratamientosRoute
+  AuthenticatedClinicWhatsappRoute: typeof AuthenticatedClinicWhatsappRoute
   AuthenticatedClinicPacientesPacienteIdRoute: typeof AuthenticatedClinicPacientesPacienteIdRoute
   AuthenticatedClinicPacientesIndexRoute: typeof AuthenticatedClinicPacientesIndexRoute
 }
@@ -632,6 +673,7 @@ const AuthenticatedClinicRouteRouteChildren: AuthenticatedClinicRouteRouteChildr
     AuthenticatedClinicSandboxEmailRoute: AuthenticatedClinicSandboxEmailRoute,
     AuthenticatedClinicSuscripcionRoute: AuthenticatedClinicSuscripcionRoute,
     AuthenticatedClinicTratamientosRoute: AuthenticatedClinicTratamientosRoute,
+    AuthenticatedClinicWhatsappRoute: AuthenticatedClinicWhatsappRoute,
     AuthenticatedClinicPacientesPacienteIdRoute:
       AuthenticatedClinicPacientesPacienteIdRoute,
     AuthenticatedClinicPacientesIndexRoute:
@@ -681,6 +723,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortalRoute: PortalRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiDemoResetRoute: ApiDemoResetRoute,
+  ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport

@@ -67,6 +67,8 @@ export interface Paciente {
   foto?: string;
   resumenIA: string;
   timeline: EventoClinico[];
+  /** Consentimiento para outreach proactivo por WhatsApp (recall/reseña/saldo) — no gatea los recordatorios de cita. */
+  waOptIn: boolean;
 }
 
 export interface Tratamiento {
@@ -293,6 +295,7 @@ export const pacientes: Paciente[] = [
       { fecha: "12 Ago 2026", titulo: "Radiografía panorámica", tipo: "imagen" },
       { fecha: "05 Ene 2026", titulo: "Consulta inicial", tipo: "consulta" },
     ],
+    waOptIn: false,
   },
   {
     id: "pa2",
@@ -327,6 +330,7 @@ export const pacientes: Paciente[] = [
       },
       { fecha: "28 Sep 2026", titulo: "Radiografía periapical", tipo: "imagen" },
     ],
+    waOptIn: false,
   },
   {
     id: "pa3",
@@ -350,6 +354,7 @@ export const pacientes: Paciente[] = [
       { fecha: "Hoy · 11:00", titulo: "Revisión general", tipo: "control", actual: true },
       { fecha: "02 Sep 2026", titulo: "Destartraje", tipo: "consulta" },
     ],
+    waOptIn: false,
   },
   {
     id: "pa4",
@@ -384,6 +389,7 @@ export const pacientes: Paciente[] = [
       },
       { fecha: "04 Sep 2026", titulo: "Limpieza general", tipo: "consulta" },
     ],
+    waOptIn: false,
   },
   {
     id: "pa5",
@@ -407,6 +413,7 @@ export const pacientes: Paciente[] = [
       { fecha: "Hoy · 12:00", titulo: "Cementado de corona", tipo: "consulta", actual: true },
       { fecha: "18 Ago 2026", titulo: "Prueba de estructura", tipo: "consulta" },
     ],
+    waOptIn: false,
   },
   {
     id: "pa6",
@@ -430,6 +437,7 @@ export const pacientes: Paciente[] = [
       { fecha: "Hoy · 10:00", titulo: "Sellantes preventivos", tipo: "consulta", actual: true },
       { fecha: "10 Jul 2026", titulo: "Control semestral", tipo: "control" },
     ],
+    waOptIn: false,
   },
   {
     id: "pa7",
@@ -452,6 +460,7 @@ export const pacientes: Paciente[] = [
     timeline: [
       { fecha: "Hoy · 12:30", titulo: "Primera consulta infantil", tipo: "consulta", actual: true },
     ],
+    waOptIn: false,
   },
   {
     id: "pa8",
@@ -475,6 +484,7 @@ export const pacientes: Paciente[] = [
       { fecha: "14 Mar 2026", titulo: "Toma de impresión", tipo: "consulta", actual: true },
       { fecha: "01 Mar 2026", titulo: "Presupuesto emitido", tipo: "presupuesto" },
     ],
+    waOptIn: false,
   },
 ];
 

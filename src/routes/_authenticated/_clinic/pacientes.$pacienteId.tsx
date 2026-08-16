@@ -8,6 +8,7 @@ import { NotasClinicas } from "@/components/notas-clinicas";
 import { Odontogram } from "@/components/odontogram";
 import { FinanceSection } from "@/components/finance-section";
 import { MessagesHistory } from "@/components/messages-history";
+import { WhatsAppOptInToggle } from "@/components/whatsapp-opt-in-toggle";
 import { PortalLinkButton, RevokePortalAccessButton } from "@/components/portal-link-button";
 import { hasPermission } from "@/lib/access";
 import { formatoMoneda, type Paciente } from "@/lib/clinic-data";
@@ -244,7 +245,14 @@ function PacienteDetalle() {
             )}
 
             {access.clinic?.id && (
-              <MessagesHistory clinicId={access.clinic.id} patientId={paciente.id} />
+              <div className="space-y-2">
+                <WhatsAppOptInToggle
+                  clinicId={access.clinic.id}
+                  patientId={paciente.id}
+                  initialOptIn={paciente.waOptIn}
+                />
+                <MessagesHistory clinicId={access.clinic.id} patientId={paciente.id} />
+              </div>
             )}
 
             {access.clinic?.id && hasPermission(access.role, "patients:manage") && (

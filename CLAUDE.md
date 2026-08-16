@@ -86,9 +86,17 @@ export const doThing = createServerFn({ method: "POST" })
 - **Simulación de rol** disponible para probar UI con otro rol sin cambiar user.
 - **Portal `/portal/*` EN VIVO** (Wave C, commit `2a229c5` — reconstruido después de que Wave 1 lo pausara, sin gate). Sin login, expone datos de paciente a quien tenga el link JWT firmado. Bandeja de solicitudes en `/agenda` operativa. Rate limit: 3 solicitudes/paciente/24h.
 
-## WhatsApp (Fase 4A)
+## WhatsApp (Fase 4A + Fase 1 API)
 
-Enfoque **wa.me sin proveedor** — cero costo. `sendWhatsAppFromTemplate` renderiza template + guarda `messages` con `status='sent'` + devuelve URL. Cliente hace `window.open(url, '_blank')` **dentro del click handler original** (política popup del browser). Fase 4B (Twilio API real) diferida hasta que una clínica lo pida.
+**Fase 4A (base, wa.me manual):** `sendWhatsAppFromTemplate` renderiza template + guarda `messages` con `status='sent'` + devuelve URL. Cliente hace `window.open(url, '_blank')` **dentro del click handler original** (política popup del browser). Esto sigue siendo el fallback siempre disponible.
+
+**Fase 1 (envío real por Cloud API):** arquitectura elegida es **Meta Cloud API directo** (Alika como Tech Provider, NO un BSP como Twilio/360dialog). `sendWhatsAppFromTemplate` intenta primero la API real (`sendMetaTemplateMessage` en `whatsapp.functions.ts`) si la clínica tiene `whatsapp_accounts.status='connected'` y la plantilla tiene `meta_status='approved'` — si cualquiera de esas dos condiciones falta, o el POST a Meta falla, cae automáticamente a wa.me. Nunca se bloquea el envío.
+
+- **Conexión por clínica:** Embedded Signup en `/whatsapp` (`completeWhatsAppEmbeddedSignup`) — cada clínica trae su propio número, ningún token por clínica en la DB (un solo `WHATSAPP_SYSTEM_USER_TOKEN` a nivel app).
+- **Webhook:** `src/routes/api.whatsapp-webhook.ts` — status callbacks (delivered/read/failed) + mensajes entrantes (SÍ confirma la próxima cita, BAJA/STOP corta `wa_opt_in`).
+- **Cola de outreach (recall/reseña/saldo):** `listPendingOutreach` en `messaging.functions.ts`. Decisión de Walter: **NUNCA se manda solo desde un cron** — se calculan candidatos y el staff los despacha a mano en `/recordatorios`, igual que los recordatorios de 48h/3h. Filtrados por `patients.wa_opt_in` (outreach proactivo, no los recordatorios de cita que son transaccionales).
+- **Sin infraestructura de links de pago/reseña todavía** (Stripe para clínicas es solo skeleton; no hay campo de Google Reviews) — los templates de `payment_due`/`review_request` NO prometen un link, piden responder o buscar la clínica en Google (ver migración `20260816140000`, corrigió el seed inicial).
+- Env vars nuevas en `.env.example`: `WHATSAPP_APP_ID/_APP_SECRET/_SYSTEM_USER_TOKEN/_WEBHOOK_VERIFY_TOKEN/_API_VERSION` (server) + `VITE_WHATSAPP_APP_ID/_CONFIG_ID/_API_VERSION` (cliente, no son secretos). **Sin estas seteadas, todo sigue funcionando por wa.me manual** — no hay nada roto en producción hoy, solo no está habilitado el envío automático hasta que Walter se enrole como Tech Provider en Meta.
 
 ## Herramientas críticas
 

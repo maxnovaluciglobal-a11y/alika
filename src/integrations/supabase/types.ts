@@ -917,6 +917,9 @@ export type Database = {
           tags: string[];
           updated_at: string;
           updated_by: string | null;
+          wa_opt_in: boolean;
+          wa_opt_in_at: string | null;
+          wa_opt_out_at: string | null;
         };
         Insert: {
           ai_summary?: string | null;
@@ -940,6 +943,9 @@ export type Database = {
           tags?: string[];
           updated_at?: string;
           updated_by?: string | null;
+          wa_opt_in?: boolean;
+          wa_opt_in_at?: string | null;
+          wa_opt_out_at?: string | null;
         };
         Update: {
           ai_summary?: string | null;
@@ -963,6 +969,9 @@ export type Database = {
           tags?: string[];
           updated_at?: string;
           updated_by?: string | null;
+          wa_opt_in?: boolean;
+          wa_opt_in_at?: string | null;
+          wa_opt_out_at?: string | null;
         };
         Relationships: [
           {
@@ -1580,6 +1589,10 @@ export type Database = {
           id: string;
           is_active: boolean;
           kind: Database["public"]["Enums"]["message_template_kind"];
+          meta_category: string;
+          meta_language: string;
+          meta_status: string;
+          meta_template_name: string | null;
           name: string;
           updated_at: string;
         };
@@ -1592,6 +1605,10 @@ export type Database = {
           id?: string;
           is_active?: boolean;
           kind?: Database["public"]["Enums"]["message_template_kind"];
+          meta_category?: string;
+          meta_language?: string;
+          meta_status?: string;
+          meta_template_name?: string | null;
           name: string;
           updated_at?: string;
         };
@@ -1604,6 +1621,10 @@ export type Database = {
           id?: string;
           is_active?: boolean;
           kind?: Database["public"]["Enums"]["message_template_kind"];
+          meta_category?: string;
+          meta_language?: string;
+          meta_status?: string;
+          meta_template_name?: string | null;
           name?: string;
           updated_at?: string;
         };
@@ -1612,6 +1633,53 @@ export type Database = {
             foreignKeyName: "message_templates_clinic_id_fkey";
             columns: ["clinic_id"];
             isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      whatsapp_accounts: {
+        Row: {
+          clinic_id: string;
+          connected_at: string;
+          connected_by: string;
+          display_phone: string | null;
+          id: string;
+          phone_number_id: string;
+          quality_rating: string | null;
+          status: string;
+          updated_at: string;
+          waba_id: string;
+        };
+        Insert: {
+          clinic_id: string;
+          connected_at?: string;
+          connected_by?: string;
+          display_phone?: string | null;
+          id?: string;
+          phone_number_id: string;
+          quality_rating?: string | null;
+          status?: string;
+          updated_at?: string;
+          waba_id: string;
+        };
+        Update: {
+          clinic_id?: string;
+          connected_at?: string;
+          connected_by?: string;
+          display_phone?: string | null;
+          id?: string;
+          phone_number_id?: string;
+          quality_rating?: string | null;
+          status?: string;
+          updated_at?: string;
+          waba_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_accounts_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: true;
             referencedRelation: "clinics";
             referencedColumns: ["id"];
           },
@@ -1828,7 +1896,10 @@ export type Database = {
         | "quote_sent"
         | "payment_receipt"
         | "nps_survey"
-        | "custom";
+        | "custom"
+        | "hygiene_recall"
+        | "review_request"
+        | "payment_due";
       tooth_condition:
         | "sano"
         | "caries"
