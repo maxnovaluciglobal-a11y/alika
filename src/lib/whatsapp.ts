@@ -32,7 +32,11 @@ export interface WhatsAppAccount {
  * no forman parte del alcance de Fase 1.
  */
 export const META_TEMPLATE_PARAM_ORDER: Record<
-  "appointment_reminder" | "appointment_checkin" | OutreachTemplateKind,
+  | "appointment_reminder"
+  | "appointment_checkin"
+  | "waitlist_opening"
+  | "portal_invite"
+  | OutreachTemplateKind,
   readonly string[]
 > = {
   appointment_reminder: ["paciente", "tratamiento", "fecha_larga", "hora", "clinica"],
@@ -45,6 +49,12 @@ export const META_TEMPLATE_PARAM_ORDER: Record<
   // {{n}} vacío o un placeholder falso a un paciente real.
   review_request: ["paciente", "clinica"],
   payment_due: ["paciente", "saldo", "clinica"],
+  // Fase 2
+  waitlist_opening: ["paciente", "motivo", "clinica"],
+  quote_follow_up: ["paciente", "numero_presupuesto", "total", "clinica"],
+  // El link va último — mismo criterio que saldo/monto en Fase 1, el valor
+  // más largo/dinámico al final de la lista de parámetros.
+  portal_invite: ["paciente", "dias", "clinica", "link"],
 };
 
 /**

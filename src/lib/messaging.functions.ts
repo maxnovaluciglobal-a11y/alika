@@ -7,14 +7,12 @@ import {
   MESSAGE_TEMPLATE_KINDS,
   OUTREACH_TEMPLATE_KINDS,
   buildWaMeUrl,
-  normalizeToWaMe,
   renderTemplate,
   type Message,
   type MessageTemplate,
   type OutreachTemplateKind,
 } from "@/lib/messaging";
-import { buildMetaTemplateParams, hasMetaTemplateMapping } from "@/lib/whatsapp";
-import { sendMetaTemplateMessage } from "@/lib/whatsapp.functions";
+import { tryMetaTemplateSend } from "@/lib/whatsapp.functions";
 
 const MESSAGE_COLUMNS =
   "id, appointment_id, quote_id, template_id, template_kind, channel, status, recipient, body, sent_at, created_at";
@@ -205,41 +203,20 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
         }
       }
 
-      // Intento de envío real por Cloud API. Requiere: la clínica conectó
-      // su número (whatsapp_accounts), la plantilla está aprobada por Meta,
-      // y el kind tiene mapeo de parámetros (whatsapp.ts). Si cualquiera de
-      // esas condiciones falta, o el POST a Meta falla por lo que sea, cae
-      // al flujo de siempre (wa.me) — nunca se bloquea el envío por esto.
-      let viaApi = false;
-      let externalId: string | null = null;
-      if (metaTemplate && templateKind && hasMetaTemplateMapping(templateKind)) {
-        try {
-          const { data: account } = await supabase
-            .from("whatsapp_accounts")
-            .select("phone_number_id, status")
-            .eq("clinic_id", data.clinicId)
-            .eq("status", "connected")
-            .maybeSingle();
-          const to = normalizeToWaMe(recipient);
-          if (account && to) {
-            const bodyParams = buildMetaTemplateParams(templateKind, {
-              ...data.variables,
-              paciente: patient.full_name,
-            });
-            const sent = await sendMetaTemplateMessage({
-              phoneNumberId: account.phone_number_id,
-              to,
-              templateName: metaTemplate.name,
-              templateLanguage: metaTemplate.language,
-              bodyParams,
-            });
-            viaApi = true;
-            externalId = sent.wamid;
-          }
-        } catch (apiErr) {
-          console.error("[whatsapp] envío por API falló, cae a wa.me:", (apiErr as Error).message);
-        }
-      }
+      // Intento de envío real por Cloud API — helper compartido con
+      // generatePortalLink (portal.functions.ts). Si falta WABA conectado,
+      // plantilla aprobada, o el POST a Meta falla, cae a wa.me solo.
+      const attempt = templateKind
+        ? await tryMetaTemplateSend({
+            supabase,
+            clinicId: data.clinicId,
+            templateKind,
+            metaTemplate,
+            recipientRaw: recipient,
+            variables: { ...data.variables, paciente: patient.full_name },
+          })
+        : { viaApi: false, externalId: null };
+      const { viaApi, externalId } = attempt;
 
       const nowIso = new Date().toISOString();
       const { data: inserted, error: insertErr } = await supabase
@@ -434,6 +411,8 @@ const HYGIENE_RECALL_COOLDOWN_MS = 150 * 24 * 60 * 60 * 1000; // no re-sugerir a
 const REVIEW_REQUEST_MIN_DELAY_MS = 2 * 60 * 60 * 1000; // 2h después de la cita
 const REVIEW_REQUEST_MAX_WINDOW_MS = 14 * 24 * 60 * 60 * 1000; // no revivir visitas viejas
 const PAYMENT_DUE_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
+const QUOTE_FOLLOW_UP_AFTER_MS = 7 * 24 * 60 * 60 * 1000; // presupuesto enviado hace +7 días
+const QUOTE_FOLLOW_UP_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000; // no repetir el nudge antes de esto
 
 export interface PendingOutreachItem {
   patientId: string;
@@ -448,6 +427,10 @@ export interface PendingOutreachItem {
   // payment_due
   balanceCents?: number;
   currency?: string;
+  // quote_follow_up (dedupe es por presupuesto, no por paciente)
+  quoteId?: string;
+  quoteNumber?: string;
+  quoteTotalCents?: number;
 }
 
 /**
@@ -473,6 +456,7 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
       { data: billedRows, error: billErr },
       { data: paidRows, error: paidErr },
       { data: clinic, error: clinicErr },
+      { data: sentQuotes, error: quoteErr },
     ] = await Promise.all([
       supabase
         .from("patients")
@@ -495,7 +479,7 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
         .gt("starts_at", new Date(ahora).toISOString()),
       supabase
         .from("messages")
-        .select("patient_id, appointment_id, template_kind, created_at")
+        .select("patient_id, appointment_id, quote_id, template_kind, created_at")
         .eq("clinic_id", clinicId)
         .in("template_kind", [...OUTREACH_TEMPLATE_KINDS])
         .order("created_at", { ascending: false })
@@ -507,6 +491,12 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
         .neq("treatment_plans.status", "cancelled"),
       supabase.from("payments").select("patient_id, amount_cents").eq("clinic_id", clinicId),
       supabase.from("clinics").select("currency").eq("id", clinicId).single(),
+      supabase
+        .from("quotes")
+        .select("id, patient_id, number, total_cents, currency, sent_at")
+        .eq("clinic_id", clinicId)
+        .eq("status", "sent")
+        .not("sent_at", "is", null),
     ]);
     if (patErr) throw new Error(patErr.message);
     if (apptErr) throw new Error(apptErr.message);
@@ -515,6 +505,7 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
     if (billErr) throw new Error(billErr.message);
     if (paidErr) throw new Error(paidErr.message);
     if (clinicErr) throw new Error(clinicErr.message);
+    if (quoteErr) throw new Error(quoteErr.message);
 
     const patientById = new Map((optedInPatients ?? []).map((p) => [p.id, p]));
     const patientsWithFuture = new Set((futuras ?? []).map((f) => f.patient_id));
@@ -525,9 +516,11 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
       if (!lastVisitByPatient.has(a.patient_id)) lastVisitByPatient.set(a.patient_id, a.ends_at);
     }
 
-    // Cooldown: último hygiene_recall/payment_due por paciente, último review_request por cita.
+    // Cooldown: último hygiene_recall/payment_due por paciente, último
+    // quote_follow_up por presupuesto, review_request por cita.
     const lastHygieneRecallByPatient = new Map<string, string>();
     const lastPaymentDueByPatient = new Map<string, string>();
+    const lastQuoteFollowUpByQuote = new Map<string, string>();
     const reviewRequestedAppointments = new Set<string>();
     for (const m of recentOutreach ?? []) {
       if (m.template_kind === "hygiene_recall" && !lastHygieneRecallByPatient.has(m.patient_id)) {
@@ -535,6 +528,13 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
       }
       if (m.template_kind === "payment_due" && !lastPaymentDueByPatient.has(m.patient_id)) {
         lastPaymentDueByPatient.set(m.patient_id, m.created_at);
+      }
+      if (
+        m.template_kind === "quote_follow_up" &&
+        m.quote_id &&
+        !lastQuoteFollowUpByQuote.has(m.quote_id)
+      ) {
+        lastQuoteFollowUpByQuote.set(m.quote_id, m.created_at);
       }
       if (m.template_kind === "review_request" && m.appointment_id) {
         reviewRequestedAppointments.add(m.appointment_id);
@@ -606,6 +606,27 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
         kind: "payment_due",
         balanceCents,
         currency,
+      });
+    }
+
+    // ── quote_follow_up ──
+    for (const q of sentQuotes ?? []) {
+      if (!q.sent_at) continue; // ya filtrado por la query, pero TS no lo sabe
+      const patient = patientById.get(q.patient_id);
+      if (!patient) continue;
+      const sinceMs = ahora - new Date(q.sent_at).getTime();
+      if (sinceMs < QUOTE_FOLLOW_UP_AFTER_MS) continue;
+      const lastSent = lastQuoteFollowUpByQuote.get(q.id);
+      if (lastSent && ahora - new Date(lastSent).getTime() < QUOTE_FOLLOW_UP_COOLDOWN_MS) continue;
+      items.push({
+        patientId: q.patient_id,
+        patientName: patient.full_name,
+        patientPhone: patient.phone,
+        kind: "quote_follow_up",
+        quoteId: q.id,
+        quoteNumber: q.number,
+        quoteTotalCents: q.total_cents,
+        currency: q.currency,
       });
     }
 

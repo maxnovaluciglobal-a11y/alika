@@ -11,6 +11,7 @@ import {
   verifyPortalToken,
   type PortalTokenPayload,
 } from "@/lib/portal-token.server";
+import { tryMetaTemplateSend } from "@/lib/whatsapp.functions";
 
 // ────────────────────────────────────────────────────────────
 // Cara clínica: generar link firmado + mandar por WhatsApp
@@ -36,9 +37,16 @@ export const generatePortalLink = createServerFn({ method: "POST" })
     async ({
       data,
       context,
-    }): Promise<{ url: string; expiresInDays: number; waUrl: string | null }> => {
+    }): Promise<{
+      url: string;
+      expiresInDays: number;
+      waUrl: string | null;
+      /** true si se mandó de verdad por la Cloud API (no hay wa.me que abrir). */
+      viaApi: boolean;
+    }> => {
+      const { supabase, userId } = context;
       // RLS ya cubre: el select fallará si el user no es miembro de la clínica.
-      const { data: patient, error } = await context.supabase
+      const { data: patient, error } = await supabase
         .from("patients")
         .select("id, full_name, phone")
         .eq("clinic_id", data.clinicId)
@@ -58,8 +66,60 @@ export const generatePortalLink = createServerFn({ method: "POST" })
         `Podés ver tus próximas citas y pedir hora acá: ${url}\n\n` +
         `El link vence en ${data.ttlDays} día${data.ttlDays === 1 ? "" : "s"}.`;
 
-      const waUrl = patient.phone ? buildWaMeUrl(patient.phone, message) : null;
-      return { url, expiresInDays: data.ttlDays, waUrl };
+      if (!patient.phone) {
+        return { url, expiresInDays: data.ttlDays, waUrl: null, viaApi: false };
+      }
+
+      // Intento de envío real por Cloud API (mismo helper que
+      // sendWhatsAppFromTemplate en messaging.functions.ts) + registro en
+      // `messages` — antes este link jamás tocaba el historial del
+      // paciente, ni siquiera en el flujo wa.me.
+      const [{ data: template }, { data: clinic }] = await Promise.all([
+        supabase
+          .from("message_templates")
+          .select("meta_template_name, meta_language, meta_status")
+          .eq("clinic_id", data.clinicId)
+          .eq("kind", "portal_invite")
+          .eq("is_active", true)
+          .maybeSingle(),
+        supabase.from("clinics").select("name").eq("id", data.clinicId).maybeSingle(),
+      ]);
+      const metaTemplate =
+        template?.meta_status === "approved" && template.meta_template_name
+          ? { name: template.meta_template_name, language: template.meta_language }
+          : null;
+
+      const attempt = await tryMetaTemplateSend({
+        supabase,
+        clinicId: data.clinicId,
+        templateKind: "portal_invite",
+        metaTemplate,
+        recipientRaw: patient.phone,
+        variables: {
+          paciente: patient.full_name,
+          dias: String(data.ttlDays),
+          clinica: clinic?.name ?? "",
+          link: url,
+        },
+      });
+
+      const { error: insertErr } = await supabase.from("messages").insert({
+        clinic_id: data.clinicId,
+        patient_id: data.patientId,
+        channel: "whatsapp",
+        direction: "outbound",
+        status: "sent",
+        template_kind: "portal_invite",
+        recipient: patient.phone,
+        body: message,
+        external_id: attempt.externalId,
+        sent_at: new Date().toISOString(),
+        sent_by: userId,
+      });
+      if (insertErr) throw new Error("No pudimos registrar el envío. " + insertErr.message);
+
+      const waUrl = attempt.viaApi ? null : buildWaMeUrl(patient.phone, message);
+      return { url, expiresInDays: data.ttlDays, waUrl, viaApi: attempt.viaApi };
     },
   );
 

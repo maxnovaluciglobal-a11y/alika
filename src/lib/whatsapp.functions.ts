@@ -1,8 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { WhatsAppAccount, WhatsAppAccountStatus } from "@/lib/whatsapp";
+import type { Database } from "@/integrations/supabase/types";
+import { normalizeToWaMe } from "@/lib/messaging";
+import {
+  buildMetaTemplateParams,
+  hasMetaTemplateMapping,
+  type WhatsAppAccount,
+  type WhatsAppAccountStatus,
+} from "@/lib/whatsapp";
 
 type WhatsAppAccountRow = {
   id: string;
@@ -225,4 +233,53 @@ export async function sendMetaTemplateMessage(params: {
   const wamid = json.messages?.[0]?.id;
   if (!wamid) throw new Error("Meta no devolvió un id de mensaje.");
   return { wamid };
+}
+
+export interface MetaTemplateSendAttempt {
+  /** true si se mandó de verdad por la Cloud API. false = hay que caer a wa.me. */
+  viaApi: boolean;
+  externalId: string | null;
+}
+
+/**
+ * Intento de envío real, compartido por todo caller que ya resolvió un
+ * template (sendWhatsAppFromTemplate en messaging.functions.ts,
+ * generatePortalLink en portal.functions.ts — Fase 2). Nunca tira: si algo
+ * falla o falta (sin WABA conectado, plantilla no aprobada, kind sin mapeo
+ * de parámetros), devuelve `viaApi: false` para que el caller caiga a wa.me.
+ */
+export async function tryMetaTemplateSend(params: {
+  supabase: SupabaseClient<Database>;
+  clinicId: string;
+  templateKind: string;
+  metaTemplate: { name: string; language: string } | null;
+  recipientRaw: string;
+  variables: Record<string, string>;
+}): Promise<MetaTemplateSendAttempt> {
+  if (!params.metaTemplate || !hasMetaTemplateMapping(params.templateKind)) {
+    return { viaApi: false, externalId: null };
+  }
+  try {
+    const { data: account } = await params.supabase
+      .from("whatsapp_accounts")
+      .select("phone_number_id, status")
+      .eq("clinic_id", params.clinicId)
+      .eq("status", "connected")
+      .maybeSingle();
+    const to = normalizeToWaMe(params.recipientRaw);
+    if (!account || !to) return { viaApi: false, externalId: null };
+
+    const bodyParams = buildMetaTemplateParams(params.templateKind, params.variables);
+    const sent = await sendMetaTemplateMessage({
+      phoneNumberId: account.phone_number_id,
+      to,
+      templateName: params.metaTemplate.name,
+      templateLanguage: params.metaTemplate.language,
+      bodyParams,
+    });
+    return { viaApi: true, externalId: sent.wamid };
+  } catch (apiErr) {
+    console.error("[whatsapp] envío por API falló, cae a wa.me:", (apiErr as Error).message);
+    return { viaApi: false, externalId: null };
+  }
 }

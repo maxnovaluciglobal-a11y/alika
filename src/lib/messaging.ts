@@ -28,6 +28,10 @@ export const MESSAGE_TEMPLATE_KINDS = [
   "hygiene_recall",
   "review_request",
   "payment_due",
+  // Fase 2 WhatsApp — migración 20260816150000.
+  "waitlist_opening",
+  "quote_follow_up",
+  "portal_invite",
 ] as const;
 export type MessageTemplateKind = (typeof MESSAGE_TEMPLATE_KINDS)[number];
 
@@ -42,17 +46,30 @@ export const MESSAGE_TEMPLATE_KIND_LABELS: Record<MessageTemplateKind, string> =
   hygiene_recall: "Recall de higiene (6 meses)",
   review_request: "Pedido de reseña",
   payment_due: "Aviso de saldo pendiente",
+  waitlist_opening: "Aviso de lista de espera",
+  quote_follow_up: "Seguimiento de presupuesto",
+  portal_invite: "Invitación al portal",
 };
 
 /**
- * Los 3 kinds que dispara la cola de "outreach" (Fase 1): no son avisos
+ * Los kinds que dispara la cola de "outreach" (Fase 1+2): no son avisos
  * ligados 1:1 a una cita futura como appointment_reminder/checkin, sino
- * candidatos calculados sobre histórico (última visita, saldo). Todos pasan
- * por aprobación del staff en /recordatorios — nunca se mandan solos desde
- * un cron ciego (decisión de Walter: menos riesgo de mandarle algo raro a
- * un paciente sin que nadie lo vea antes).
+ * candidatos calculados sobre histórico (última visita, saldo, presupuesto
+ * sin responder). Todos pasan por aprobación del staff en /recordatorios —
+ * nunca se mandan solos desde un cron ciego (decisión de Walter: menos
+ * riesgo de mandarle algo raro a un paciente sin que nadie lo vea antes).
+ *
+ * `waitlist_opening` y `portal_invite` NO están acá a propósito: no son
+ * candidatos que se calculan solos, son acciones puntuales que el staff
+ * dispara desde una fila concreta (la lista de espera, la ficha del
+ * paciente) — mismo template kind, pero un flujo de UI distinto.
  */
-export const OUTREACH_TEMPLATE_KINDS = ["hygiene_recall", "review_request", "payment_due"] as const;
+export const OUTREACH_TEMPLATE_KINDS = [
+  "hygiene_recall",
+  "review_request",
+  "payment_due",
+  "quote_follow_up",
+] as const;
 export type OutreachTemplateKind = (typeof OUTREACH_TEMPLATE_KINDS)[number];
 
 export interface MessageTemplate {

@@ -1899,7 +1899,10 @@ export type Database = {
         | "custom"
         | "hygiene_recall"
         | "review_request"
-        | "payment_due";
+        | "payment_due"
+        | "waitlist_opening"
+        | "quote_follow_up"
+        | "portal_invite";
       tooth_condition:
         | "sano"
         | "caries"
