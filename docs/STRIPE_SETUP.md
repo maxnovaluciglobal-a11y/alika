@@ -12,16 +12,17 @@ Pasos que necesita hacer Walter para activar el billing skeleton ya wireado en e
 
 ## 1. Cuenta Stripe
 
-- Registrar en https://dashboard.stripe.com/register con la **LLC USA** (Maxnova & Luci).
-- Completar KYC y activar la cuenta para cobros reales.
-- Configurar payout a la cuenta de Pacific National Bank.
+**Ya existe** — es la misma cuenta de Maxnova & Luci LLC que ya procesa otros productos (GastroCore360). Alika es un producto nuevo dentro de esa cuenta, no una cuenta separada. No hay que registrar nada nuevo ni repetir KYC.
 
-## 2. Crear producto y precio
+## 2. Crear producto y precio (dentro de la cuenta existente)
 
-En el dashboard de Stripe:
-1. Products → Add product → nombre "Alika Clínica" (description opcional: "Gestión de clínica dental — plan mensual").
+En el dashboard de Stripe, **empezar en modo Test** (toggle arriba a la derecha) para probar el flujo completo antes de tocar Live:
+
+1. Products → Add product → nombre "Alika Clínica" (description opcional: "Gestión de clínica dental — plan mensual"). Es un producto nuevo, no reutilizar ni editar los de GastroCore.
 2. Add price → **Recurring / Monthly / USD / $49.00**.
 3. Copiar el **Price ID** (empieza con `price_...`) — va a `STRIPE_PRICE_ID_CLINIC_MONTHLY`.
+4. Opcional pero recomendado: en el producto, setear un **statement descriptor suffix** (ej. "ALIKA") para que el cargo en el resumen de tarjeta de la clínica diga algo distinguible de GastroCore, ya que comparten la misma cuenta/entidad.
+5. Repetir los pasos 1-4 en **modo Live** recién cuando el flujo de test ya esté verificado end-to-end (paso 5 de este doc) y quieras empezar a cobrar de verdad.
 
 ## 3. Configurar env vars
 
@@ -38,9 +39,11 @@ STRIPE_PRICE_ID_CLINIC_MONTHLY=price_...
 
 ## 4. Configurar webhook
 
-En el dashboard de Stripe → Developers → Webhooks:
+⚠️ **Cuenta compartida con GastroCore360**: este webhook tiene que ser un endpoint **nuevo y separado** del que ya existe para GastroCore — cada uno con su propio signing secret. No reutilizar el `STRIPE_WEBHOOK_SECRET` de otro proyecto acá.
 
-1. Add endpoint → URL: `https://alika.com/api/stripe/webhook`.
+En el dashboard de Stripe → Developers → Webhooks (en el mismo modo, Test o Live, en el que creaste el producto):
+
+1. Add endpoint → URL: la del deploy de Vercel de Alika (ej. `https://aurora-dental-os.vercel.app/api/stripe/webhook`) — no hace falta esperar al dominio `alika.com`, se puede migrar el endpoint el día que exista.
 2. Eventos a escuchar:
    - `checkout.session.completed`
    - `customer.subscription.created`
@@ -49,26 +52,19 @@ En el dashboard de Stripe → Developers → Webhooks:
    - `invoice.payment_failed`
 3. Copiar el **Signing secret** (`whsec_...`) a `STRIPE_WEBHOOK_SECRET`.
 
-Para dev local: usar `stripe listen --forward-to localhost:8080/api/stripe/webhook` (Stripe CLI).
+Para dev local: usar `stripe listen --forward-to localhost:8080/api/stripe/webhook` (Stripe CLI) — esto genera su propio `whsec_...` de test, distinto al del endpoint de producción.
 
 ## 5. Verificar
 
-- Onboarding de una clínica de prueba → botón "Suscribirse" (por implementar en UI) llama `createCheckoutSession` → redirige a Stripe.
+- En `/suscripcion` (ya existe): botón "Activar suscripción · US$49/mes" llama `createCheckoutSession` → redirige a Stripe.
 - Completar el checkout con tarjeta de test `4242 4242 4242 4242`.
 - Verificar en la DB: `SELECT * FROM subscriptions WHERE clinic_id = ...` — debe aparecer con `status = trialing` y `trial_end` a 14 días.
 - Verificar en la DB: `SELECT * FROM stripe_events ORDER BY received_at DESC` — el evento debe estar registrado.
+- Botón "Gestionar facturación" en la misma página → debe abrir el portal de Stripe.
 
-## Qué queda por hacer en código después del setup
+## Estado del código
 
-Con las env vars listas, faltan tres piezas de UI/UX (una tarde de trabajo):
-
-1. **Botón "Suscribirse"** en `/preferencias` o durante onboarding que llame `createCheckoutSession` con la URL de vuelta.
-2. **Banner de trial** en `AppShell` que muestre "Trial vence en X días" usando `trialDaysLeft(sub)`.
-3. **Gate por sub activa** en `_authenticated/_clinic/route.tsx`:
-   - Si `!isSubscriptionActive(sub)` y la ruta no es `/preferencias/billing`, redirect ahí con banner "Reactivá tu suscripción para seguir usando Alika".
-4. **Botón "Gestionar facturación"** en `/preferencias` que llame `createBillingPortalSession`.
-
-Todo está pre-wireado en `src/lib/billing.functions.ts`. Solo faltan los components y los guards.
+Ya no falta nada de código — esto quedó completo en Wave B y sesiones posteriores: `/suscripcion` (UI completa: estado, días de trial, activar/reactivar, portal de facturación), el gate de suscripción en `_authenticated/_clinic/route.tsx`, y el webhook con los 5 eventos. Lo único pendiente es esta configuración de cuenta.
 
 ## Schema aplicado
 
