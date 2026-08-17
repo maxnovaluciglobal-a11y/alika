@@ -13,11 +13,14 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { captureException, initSentry } from "@/lib/sentry";
-import { attachOfflineCache, purgeOfflineCache, setCacheOwner } from "@/lib/offline-cache";
+import { attachOfflineCache, resetOfflineCache } from "@/lib/offline-cache";
+import { registerServiceWorker } from "@/lib/register-sw";
 import { Toaster } from "@/components/ui/sonner";
 
 // Se ejecuta una sola vez al importar el módulo raíz. No-op si no hay DSN.
 initSentry();
+// Idem: no-op en dev y si el navegador no soporta service workers.
+registerServiceWorker();
 
 function NotFoundComponent() {
   return (
@@ -99,8 +102,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      // Pinta la barra del navegador con el navy de marca cuando la app corre
+      // instalada (display: standalone).
+      { name: "theme-color", content: "#22304a" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "Alika" },
     ],
     links: [
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
       {
         rel: "stylesheet",
         href: appCss,
@@ -149,12 +159,13 @@ function RootComponent() {
     async function bindCacheTo(userId: string | undefined) {
       detachCache?.();
       detachCache = undefined;
-      setCacheOwner(userId);
       if (!userId) {
         // Sin sesión no dejamos nada del usuario anterior en el equipo.
-        await purgeOfflineCache();
+        await resetOfflineCache();
         return;
       }
+      // La restauración ya corrió en el guard de `_clinic`; acá solo queda
+      // enganchar el guardado continuo.
       if (!cancelled) detachCache = attachOfflineCache(queryClient, userId);
     }
 

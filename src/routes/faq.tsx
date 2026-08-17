@@ -35,11 +35,11 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
       },
       {
         q: "¿Necesito instalar algo?",
-        a: "No. Alika se usa desde el navegador en computadora o celular, sin instalar nada.",
+        a: 'No hace falta: Alika funciona desde el navegador en computadora o celular. Si quieres, puedes instalarla desde el mismo navegador ("Instalar aplicación") y queda con su ícono como una app más, sin pasar por ninguna tienda.',
       },
       {
         q: "¿Qué pasa si se corta internet en la clínica?",
-        a: "La información que ya estabas viendo (agenda del día, fichas de tus pacientes) se sigue mostrando, así que puedes consultarla durante el corte. Por ahora los cambios sí necesitan conexión: la app te avisa con un aviso visible cuando no puede guardar, para que nada quede a medias sin que te enteres.",
+        a: "La app sigue abriendo y puedes consultar la agenda del día y las fichas de tus pacientes, incluso si recargas la página o cierras y vuelves a abrir. Los cambios sí necesitan conexión por ahora: cuando no hay internet aparece un aviso visible y los botones de guardar quedan desactivados, para que nada quede a medias sin que te enteres.",
       },
     ],
   },

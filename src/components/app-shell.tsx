@@ -29,7 +29,7 @@ import { TrialBanner } from "@/components/trial-banner";
 import { DemoBanner } from "@/components/demo-banner";
 import { OfflineBanner } from "@/components/offline-banner";
 import { supabase } from "@/integrations/supabase/client";
-import { purgeOfflineCache } from "@/lib/offline-cache";
+import { resetOfflineCache } from "@/lib/offline-cache";
 import { hasPermission, ROLE_LABELS, type ClinicAccess, type Permission } from "@/lib/access";
 import { cn } from "@/lib/utils";
 
@@ -109,7 +109,7 @@ export function AppShell({
     queryClient.clear();
     // No alcanza con limpiar memoria: en una PC compartida los datos de
     // pacientes quedarían en IndexedDB para el próximo que entre.
-    await purgeOfflineCache();
+    await resetOfflineCache();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }

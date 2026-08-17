@@ -5,13 +5,21 @@ import type { ClinicAccess } from "@/lib/access";
 import { getMySubscription } from "@/lib/billing.functions";
 import { isSubscriptionActive } from "@/lib/billing";
 import { leerRolSimulado, puedeSimular } from "@/lib/role-simulation";
+import { ensureOfflineCacheHydrated } from "@/lib/offline-cache";
 
 /** Quién soy y en qué clínica: cambia poquísimo, y sin esto no se abre ninguna pantalla. */
 const ACCESS_KEY = ["my-access"] as const;
 
 export const Route = createFileRoute("/_authenticated/_clinic")({
   beforeLoad: async ({ location, context }): Promise<{ access: ClinicAccess }> => {
-    const { queryClient } = context;
+    const { queryClient, user } = context;
+
+    // Trae del disco lo que se guardó en visitas anteriores. Tiene que pasar
+    // ACÁ y no en un efecto de React: al abrir la app en frío sin conexión
+    // (el service worker sirve el shell), `beforeLoad` corre antes del primer
+    // render, y si el cache todavía no está cargado el guard no encuentra al
+    // usuario y manda al login.
+    await ensureOfflineCacheHydrated(queryClient, user.id);
 
     // Va por el cache de React Query en vez de llamar directo: durante un
     // corte, este `await` era lo que tumbaba toda la app de clínica de una,

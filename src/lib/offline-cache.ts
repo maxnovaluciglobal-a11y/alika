@@ -1,5 +1,8 @@
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import { persistQueryClient } from "@tanstack/react-query-persist-client";
+import {
+  persistQueryClientRestore,
+  persistQueryClientSubscribe,
+} from "@tanstack/react-query-persist-client";
 import type { Query, QueryClient } from "@tanstack/react-query";
 import { clear, createStore, get, set } from "idb-keyval";
 
@@ -45,17 +48,6 @@ function idbStore() {
   return createStore(DB_NAME, STORE_NAME);
 }
 
-/**
- * userId dueño del cache actual. Lo setea el listener de auth en __root.
- * Vive en un módulo (y no en React) porque el persister lo necesita fuera
- * del árbol de componentes, en cada escritura.
- */
-let currentUserId: string | undefined;
-
-export function setCacheOwner(userId: string | undefined) {
-  currentUserId = userId;
-}
-
 export async function purgeOfflineCache() {
   try {
     await clear(idbStore());
@@ -71,41 +63,26 @@ function shouldPersistQuery(query: Query) {
 }
 
 /**
- * Conecta la persistencia del cache de React Query a IndexedDB.
- *
- * Solo corre en el browser — el caller es responsable de no invocarlo
- * durante SSR (ahí no existe IndexedDB y `getRouter()` crea un QueryClient
- * distinto por request).
+ * Persister sobre IndexedDB con guardia de dueño.
  *
  * En una PC compartida el cache queda del usuario que lo escribió: si al
- * restaurar el dueño no coincide con la sesión actual, se descarta entero
- * en vez de mostrarle datos de un colega al siguiente que entra.
- *
- * Devuelve una función para desconectar.
- *
- * NOTA (Tanda 1): la restauración no bloquea el primer render, así que una
- * query puede dispararse antes de que el cache esté cargado. No importa
- * mientras el escenario sea "la app ya está abierta y se cae la red" (ahí
- * alcanza el cache en memoria). Cuando entre el service worker y se pueda
- * abrir la app sin conexión, hay que pasar a `PersistQueryClientProvider`
- * para que espere la restauración antes de pintar.
+ * restaurar el dueño no coincide con la sesión actual, se descarta entero en
+ * vez de mostrarle datos de un colega al siguiente que entra.
  */
-export function attachOfflineCache(queryClient: QueryClient, userId: string) {
+function createPersister(userId: string) {
   const store = idbStore();
-  const storage = {
-    getItem: (key: string) => get<string>(key, store).then((v) => v ?? null),
-    setItem: (key: string, value: string) => set(key, value, store),
-    removeItem: () => purgeOfflineCache(),
-  };
-
   const base = createAsyncStoragePersister({
-    storage,
+    storage: {
+      getItem: (key: string) => get<string>(key, store).then((v) => v ?? null),
+      setItem: (key: string, value: string) => set(key, value, store),
+      removeItem: () => purgeOfflineCache(),
+    },
     key: CACHE_KEY,
     throttleTime: 2_000,
   });
 
-  const persister: typeof base = {
-    persistClient: async (client) => {
+  return {
+    persistClient: async (client: Parameters<typeof base.persistClient>[0]) => {
       await set(OWNER_KEY, userId, store);
       await base.persistClient(client);
     },
@@ -118,14 +95,52 @@ export function attachOfflineCache(queryClient: QueryClient, userId: string) {
       return base.restoreClient();
     },
     removeClient: purgeOfflineCache,
-  };
+  } satisfies typeof base;
+}
 
-  const [unsubscribe] = persistQueryClient({
+/**
+ * Restauración: idempotente y cacheada por usuario.
+ *
+ * Se llama desde el guard de ruta (no desde un efecto de React) porque en un
+ * arranque en frío sin conexión, `beforeLoad` corre ANTES del primer render:
+ * si el cache no está cargado para entonces, el guard no encuentra al usuario
+ * y la app se cae al login. Con el service worker eso dejó de ser hipotético.
+ */
+let hydration: { userId: string; promise: Promise<void> } | undefined;
+
+export function ensureOfflineCacheHydrated(queryClient: QueryClient, userId: string) {
+  if (typeof window === "undefined") return Promise.resolve();
+  if (hydration?.userId === userId) return hydration.promise;
+
+  const promise = persistQueryClientRestore({
     queryClient,
-    persister,
+    persister: createPersister(userId),
     maxAge: MAX_AGE_MS,
-    dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery },
+  }).catch(() => {
+    // Cache corrupto o IndexedDB bloqueado: se arranca sin nada guardado,
+    // que es exactamente el comportamiento previo a esto.
   });
 
-  return unsubscribe;
+  hydration = { userId, promise };
+  return promise;
+}
+
+/**
+ * Guardado continuo. Devuelve una función para desconectar.
+ * La restauración ya la hizo `ensureOfflineCacheHydrated` en el guard.
+ */
+export function attachOfflineCache(queryClient: QueryClient, userId: string) {
+  // Sin `maxAge` acá a propósito: la caducidad se evalúa al restaurar
+  // (`persistQueryClientRestore`), no al guardar.
+  return persistQueryClientSubscribe({
+    queryClient,
+    persister: createPersister(userId),
+    dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery },
+  });
+}
+
+/** Se llama al cerrar sesión: el próximo usuario no hereda nada. */
+export function resetOfflineCache() {
+  hydration = undefined;
+  return purgeOfflineCache();
 }
