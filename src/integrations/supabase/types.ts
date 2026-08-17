@@ -911,6 +911,7 @@ export type Database = {
           id: string;
           no_show_risk: number | null;
           phone: string | null;
+          phone_valid: boolean | null;
           portal_revoked_at: string | null;
           primary_professional_id: string | null;
           referral_code: string | null;
@@ -938,6 +939,7 @@ export type Database = {
           id?: string;
           no_show_risk?: number | null;
           phone?: string | null;
+          phone_valid?: boolean | null;
           portal_revoked_at?: string | null;
           primary_professional_id?: string | null;
           referral_code?: string | null;
@@ -965,6 +967,7 @@ export type Database = {
           id?: string;
           no_show_risk?: number | null;
           phone?: string | null;
+          phone_valid?: boolean | null;
           portal_revoked_at?: string | null;
           primary_professional_id?: string | null;
           referral_code?: string | null;

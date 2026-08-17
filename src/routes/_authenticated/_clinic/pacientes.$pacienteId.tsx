@@ -165,7 +165,18 @@ function PacienteDetalle() {
                   </div>
                 </div>
                 <div className="space-y-1 text-xs text-muted-foreground">
-                  <p className="flex items-center gap-2">
+                  <p
+                    className={
+                      paciente.telefono && paciente.telefonoValido === false
+                        ? "flex items-center gap-2 text-warning"
+                        : "flex items-center gap-2"
+                    }
+                    title={
+                      paciente.telefono && paciente.telefonoValido === false
+                        ? "Numverify no pudo confirmar que este número tenga un formato válido"
+                        : undefined
+                    }
+                  >
                     <Phone className="size-3.5" /> {paciente.telefono || "Sin teléfono"}
                   </p>
                   <p className="flex items-center gap-2">

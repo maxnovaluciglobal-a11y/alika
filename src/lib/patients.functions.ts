@@ -8,6 +8,7 @@ import {
   type EventoClinico,
   type Paciente,
 } from "@/lib/clinic-data";
+import { validatePhoneNumber } from "@/lib/phoneValidation";
 
 const DB_STATUS_TO_UI: Record<string, EstadoPaciente> = {
   active: "activo",
@@ -35,6 +36,7 @@ type PatientRow = {
   document_id: string | null;
   birth_date: string | null;
   phone: string | null;
+  phone_valid: boolean | null;
   email: string | null;
   branch_id: string | null;
   primary_professional_id: string | null;
@@ -76,6 +78,7 @@ function mapPatientRow(
     documento: row.document_id ?? "",
     edad: row.birth_date ? calcularEdad(row.birth_date) : 0,
     telefono: row.phone ?? "",
+    telefonoValido: row.phone_valid,
     email: row.email ?? "",
     sucursalId: row.branch_id ?? "",
     profesionalId: row.primary_professional_id ?? "",
@@ -95,7 +98,7 @@ function mapPatientRow(
 }
 
 const PATIENT_COLUMNS =
-  "id, full_name, document_id, birth_date, phone, email, branch_id, primary_professional_id, status, tags, avatar_url, balance_cents, no_show_risk, ai_summary, wa_opt_in, referral_code";
+  "id, full_name, document_id, birth_date, phone, phone_valid, email, branch_id, primary_professional_id, status, tags, avatar_url, balance_cents, no_show_risk, ai_summary, wa_opt_in, referral_code";
 
 /**
  * Tope de fila del listado — red de seguridad, no la estrategia de paginado
@@ -280,6 +283,8 @@ export const createPatient = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<{ id: string }> => {
     const { supabase } = context;
 
+    const phoneValid = await validatePhoneNumber(data.telefono);
+
     const { data: inserted, error } = await supabase
       .from("patients")
       .insert({
@@ -288,6 +293,7 @@ export const createPatient = createServerFn({ method: "POST" })
         document_id: data.documento || null,
         birth_date: data.fechaNacimiento,
         phone: data.telefono || null,
+        phone_valid: phoneValid,
         email: data.email || null,
         branch_id: data.sucursalId ?? null,
         primary_professional_id: data.profesionalId ?? null,
@@ -443,10 +449,26 @@ export const updatePatient = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { patientId, ...rest } = data;
 
+    // Solo re-valida contra Numverify si el teléfono realmente cambió — no
+    // gastar cuota de nuevo en cada edición que no toca ese campo.
+    let phoneValid: boolean | null | undefined;
+    if (rest.telefono !== undefined) {
+      const { data: current } = await supabase
+        .from("patients")
+        .select("phone, phone_valid")
+        .eq("id", patientId)
+        .single();
+      const nextPhone = rest.telefono || null;
+      phoneValid =
+        current && nextPhone === current.phone
+          ? current.phone_valid
+          : await validatePhoneNumber(rest.telefono);
+    }
+
     const patch = {
       ...(rest.nombre !== undefined && { full_name: rest.nombre }),
       ...(rest.documento !== undefined && { document_id: rest.documento || null }),
-      ...(rest.telefono !== undefined && { phone: rest.telefono || null }),
+      ...(rest.telefono !== undefined && { phone: rest.telefono || null, phone_valid: phoneValid }),
       ...(rest.email !== undefined && { email: rest.email || null }),
       ...(rest.sucursalId !== undefined && { branch_id: rest.sucursalId }),
       ...(rest.profesionalId !== undefined && { primary_professional_id: rest.profesionalId }),

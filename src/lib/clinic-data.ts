@@ -51,6 +51,8 @@ export interface Paciente {
   documento: string;
   edad: number;
   telefono: string;
+  /** true/false si Numverify confirmó (o no) la forma del número; null/undefined = nunca se validó (datos de demo no lo traen). */
+  telefonoValido?: boolean | null;
   email: string;
   sucursalId: string;
   profesionalId: string;
