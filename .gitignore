@@ -38,3 +38,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Supabase CLI: guarda a qué proyecto está linkeado el checkout local
+supabase/.temp
