@@ -4,7 +4,6 @@ import {
   CalendarDays,
   Check,
   FileText,
-  Lock,
   MessageCircle,
   PlayCircle,
   Sparkles,
@@ -12,6 +11,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -275,37 +275,7 @@ const faqs = [
 function Landing() {
   return (
     <div className="min-h-screen bg-background text-ink">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-          <span className="flex items-center gap-2">
-            <span className="grid size-8 place-items-center rounded-lg bg-ink">
-              <span className="size-3.5 rounded-full border-2 border-mint" />
-            </span>
-            <span className="font-precise text-xl font-bold tracking-tight text-ink">Alika</span>
-          </span>
-          <div className="flex items-center gap-1.5">
-            <a
-              href="/demo"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-ink"
-            >
-              Ver demo
-            </a>
-            <Link
-              to="/auth"
-              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-ink sm:block"
-            >
-              Entrar
-            </Link>
-            <Link
-              to="/auth"
-              className="rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-ink-foreground transition-opacity hover:opacity-90"
-            >
-              Empezá gratis
-            </Link>
-          </div>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main>
         {/* Hero */}
@@ -641,20 +611,7 @@ function Landing() {
         </section>
       </main>
 
-      <footer className="mx-auto max-w-6xl px-6 py-10">
-        <div className="flex flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
-          <span className="flex items-center gap-2">
-            <span className="grid size-6 place-items-center rounded-md bg-ink">
-              <span className="size-3 rounded-full border-2 border-mint" />
-            </span>
-            <span className="font-precise font-bold text-ink">Alika</span>
-          </span>
-          <span className="flex items-center gap-1.5 text-xs">
-            Software de gestión dental · Hecho para Latinoamérica
-            <Lock className="size-3" /> tus datos son tuyos
-          </span>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

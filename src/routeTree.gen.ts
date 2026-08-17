@@ -13,13 +13,23 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemoRouteImport } from './routes/demo'
+import { Route as DocsRouteImport } from './routes/docs'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as NosotrosRouteImport } from './routes/nosotros'
 import { Route as PortalRouteImport } from './routes/portal'
+import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TerminosRouteImport } from './routes/terminos'
 import { Route as AuthenticatedClinicRouteRouteImport } from './routes/_authenticated/_clinic/route'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedSinAccesoRouteImport } from './routes/_authenticated/sin-acceso'
 import { Route as ApiDemoResetRouteImport } from './routes/api.demo-reset'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api.whatsapp-webhook'
+import { Route as DocsIndexRouteImport } from './routes/docs.index'
+import { Route as DocsDatosYSeguridadRouteImport } from './routes/docs.datos-y-seguridad'
+import { Route as DocsPortalPacientesRouteImport } from './routes/docs.portal-pacientes'
+import { Route as DocsPrimerosPasosRouteImport } from './routes/docs.primeros-pasos'
+import { Route as DocsWhatsappRouteImport } from './routes/docs.whatsapp'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as PortalInicioRouteImport } from './routes/portal.inicio'
@@ -60,14 +70,39 @@ const DemoRoute = DemoRouteImport.update({
   path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NosotrosRoute = NosotrosRouteImport.update({
+  id: '/nosotros',
+  path: '/nosotros',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PortalRoute = PortalRouteImport.update({
   id: '/portal',
   path: '/portal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacidadRoute = PrivacidadRouteImport.update({
+  id: '/privacidad',
+  path: '/privacidad',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TerminosRoute = TerminosRouteImport.update({
+  id: '/terminos',
+  path: '/terminos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedClinicRouteRoute =
@@ -94,6 +129,31 @@ const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
   id: '/api/whatsapp-webhook',
   path: '/api/whatsapp-webhook',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DocsIndexRoute = DocsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsDatosYSeguridadRoute = DocsDatosYSeguridadRouteImport.update({
+  id: '/datos-y-seguridad',
+  path: '/datos-y-seguridad',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsPortalPacientesRoute = DocsPortalPacientesRouteImport.update({
+  id: '/portal-pacientes',
+  path: '/portal-pacientes',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsPrimerosPasosRoute = DocsPrimerosPasosRouteImport.update({
+  id: '/primeros-pasos',
+  path: '/primeros-pasos',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsWhatsappRoute = DocsWhatsappRouteImport.update({
+  id: '/whatsapp',
+  path: '/whatsapp',
+  getParentRoute: () => DocsRoute,
 } as any)
 const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/',
@@ -216,14 +276,24 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/docs': typeof DocsRouteWithChildren
+  '/faq': typeof FaqRoute
+  '/nosotros': typeof NosotrosRoute
   '/portal': typeof PortalRouteWithChildren
+  '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terminos': typeof TerminosRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
+  '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
+  '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
+  '/docs/whatsapp': typeof DocsWhatsappRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
+  '/docs/': typeof DocsIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
   '/compliance': typeof AuthenticatedClinicComplianceRoute
@@ -247,13 +317,22 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/faq': typeof FaqRoute
+  '/nosotros': typeof NosotrosRoute
+  '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terminos': typeof TerminosRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
+  '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
+  '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
+  '/docs/whatsapp': typeof DocsWhatsappRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
+  '/docs': typeof DocsIndexRoute
   '/portal': typeof PortalIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
   '/compliance': typeof AuthenticatedClinicComplianceRoute
@@ -279,15 +358,25 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/docs': typeof DocsRouteWithChildren
+  '/faq': typeof FaqRoute
+  '/nosotros': typeof NosotrosRoute
   '/portal': typeof PortalRouteWithChildren
+  '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terminos': typeof TerminosRoute
   '/_authenticated/_clinic': typeof AuthenticatedClinicRouteRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
+  '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
+  '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
+  '/docs/whatsapp': typeof DocsWhatsappRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
+  '/docs/': typeof DocsIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/_authenticated/_clinic/agenda': typeof AuthenticatedClinicAgendaRoute
   '/_authenticated/_clinic/compliance': typeof AuthenticatedClinicComplianceRoute
@@ -313,14 +402,24 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/demo'
+    | '/docs'
+    | '/faq'
+    | '/nosotros'
     | '/portal'
+    | '/privacidad'
     | '/sitemap.xml'
+    | '/terminos'
     | '/onboarding'
     | '/sin-acceso'
     | '/api/demo-reset'
     | '/api/whatsapp-webhook'
+    | '/docs/datos-y-seguridad'
+    | '/docs/portal-pacientes'
+    | '/docs/primeros-pasos'
+    | '/docs/whatsapp'
     | '/portal/$token'
     | '/portal/inicio'
+    | '/docs/'
     | '/portal/'
     | '/agenda'
     | '/compliance'
@@ -344,13 +443,22 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/demo'
+    | '/faq'
+    | '/nosotros'
+    | '/privacidad'
     | '/sitemap.xml'
+    | '/terminos'
     | '/onboarding'
     | '/sin-acceso'
     | '/api/demo-reset'
     | '/api/whatsapp-webhook'
+    | '/docs/datos-y-seguridad'
+    | '/docs/portal-pacientes'
+    | '/docs/primeros-pasos'
+    | '/docs/whatsapp'
     | '/portal/$token'
     | '/portal/inicio'
+    | '/docs'
     | '/portal'
     | '/agenda'
     | '/compliance'
@@ -375,15 +483,25 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/demo'
+    | '/docs'
+    | '/faq'
+    | '/nosotros'
     | '/portal'
+    | '/privacidad'
     | '/sitemap.xml'
+    | '/terminos'
     | '/_authenticated/_clinic'
     | '/_authenticated/onboarding'
     | '/_authenticated/sin-acceso'
     | '/api/demo-reset'
     | '/api/whatsapp-webhook'
+    | '/docs/datos-y-seguridad'
+    | '/docs/portal-pacientes'
+    | '/docs/primeros-pasos'
+    | '/docs/whatsapp'
     | '/portal/$token'
     | '/portal/inicio'
+    | '/docs/'
     | '/portal/'
     | '/_authenticated/_clinic/agenda'
     | '/_authenticated/_clinic/compliance'
@@ -409,8 +527,13 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   DemoRoute: typeof DemoRoute
+  DocsRoute: typeof DocsRouteWithChildren
+  FaqRoute: typeof FaqRoute
+  NosotrosRoute: typeof NosotrosRoute
   PortalRoute: typeof PortalRouteWithChildren
+  PrivacidadRoute: typeof PrivacidadRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TerminosRoute: typeof TerminosRoute
   ApiDemoResetRoute: typeof ApiDemoResetRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
@@ -446,6 +569,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nosotros': {
+      id: '/nosotros'
+      path: '/nosotros'
+      fullPath: '/nosotros'
+      preLoaderRoute: typeof NosotrosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/portal': {
       id: '/portal'
       path: '/portal'
@@ -453,11 +597,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacidad': {
+      id: '/privacidad'
+      path: '/privacidad'
+      fullPath: '/privacidad'
+      preLoaderRoute: typeof PrivacidadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terminos': {
+      id: '/terminos'
+      path: '/terminos'
+      fullPath: '/terminos'
+      preLoaderRoute: typeof TerminosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_clinic': {
@@ -494,6 +652,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/whatsapp-webhook'
       preLoaderRoute: typeof ApiWhatsappWebhookRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/docs/': {
+      id: '/docs/'
+      path: '/'
+      fullPath: '/docs/'
+      preLoaderRoute: typeof DocsIndexRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/datos-y-seguridad': {
+      id: '/docs/datos-y-seguridad'
+      path: '/datos-y-seguridad'
+      fullPath: '/docs/datos-y-seguridad'
+      preLoaderRoute: typeof DocsDatosYSeguridadRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/portal-pacientes': {
+      id: '/docs/portal-pacientes'
+      path: '/portal-pacientes'
+      fullPath: '/docs/portal-pacientes'
+      preLoaderRoute: typeof DocsPortalPacientesRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/primeros-pasos': {
+      id: '/docs/primeros-pasos'
+      path: '/primeros-pasos'
+      fullPath: '/docs/primeros-pasos'
+      preLoaderRoute: typeof DocsPrimerosPasosRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/whatsapp': {
+      id: '/docs/whatsapp'
+      path: '/whatsapp'
+      fullPath: '/docs/whatsapp'
+      preLoaderRoute: typeof DocsWhatsappRouteImport
+      parentRoute: typeof DocsRoute
     }
     '/portal/': {
       id: '/portal/'
@@ -700,6 +893,24 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface DocsRouteChildren {
+  DocsDatosYSeguridadRoute: typeof DocsDatosYSeguridadRoute
+  DocsPortalPacientesRoute: typeof DocsPortalPacientesRoute
+  DocsPrimerosPasosRoute: typeof DocsPrimerosPasosRoute
+  DocsWhatsappRoute: typeof DocsWhatsappRoute
+  DocsIndexRoute: typeof DocsIndexRoute
+}
+
+const DocsRouteChildren: DocsRouteChildren = {
+  DocsDatosYSeguridadRoute: DocsDatosYSeguridadRoute,
+  DocsPortalPacientesRoute: DocsPortalPacientesRoute,
+  DocsPrimerosPasosRoute: DocsPrimerosPasosRoute,
+  DocsWhatsappRoute: DocsWhatsappRoute,
+  DocsIndexRoute: DocsIndexRoute,
+}
+
+const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
+
 interface PortalRouteChildren {
   PortalTokenRoute: typeof PortalTokenRoute
   PortalInicioRoute: typeof PortalInicioRoute
@@ -720,8 +931,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   DemoRoute: DemoRoute,
+  DocsRoute: DocsRouteWithChildren,
+  FaqRoute: FaqRoute,
+  NosotrosRoute: NosotrosRoute,
   PortalRoute: PortalRouteWithChildren,
+  PrivacidadRoute: PrivacidadRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TerminosRoute: TerminosRoute,
   ApiDemoResetRoute: ApiDemoResetRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
