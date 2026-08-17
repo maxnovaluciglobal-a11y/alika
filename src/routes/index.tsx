@@ -562,27 +562,6 @@ function Landing() {
           </div>
         </section>
 
-        {/* Fundador */}
-        <section className="mx-auto max-w-3xl px-6 pb-20">
-          <div className="rounded-3xl border border-hairline bg-card p-8 sm:p-10">
-            <div className="flex items-start gap-4">
-              <span className="grid size-12 shrink-0 place-items-center rounded-full bg-ink font-precise text-lg font-bold text-mint">
-                W
-              </span>
-              <div>
-                <p className="text-base leading-relaxed text-ink">
-                  “Soy Walter. Hice Alika porque vi clínicas ahogadas en planillas y recordatorios a
-                  mano. Está pensado para cómo se trabaja acá, en LatAm. Si lo probás y algo te
-                  traba, escribime — te respondo yo.”
-                </p>
-                <p className="mt-3 text-sm font-medium text-muted-foreground">
-                  Walter · fundador de Alika
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* CTA final */}
         <section>
           <div className="mx-auto max-w-3xl px-6 py-20 text-center">
