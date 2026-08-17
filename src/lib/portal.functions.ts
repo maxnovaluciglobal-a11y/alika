@@ -243,6 +243,7 @@ export const getMyPortalOverview = createServerFn({ method: "GET" }).handler(asy
     { data: patient, error: pErr },
     { data: appts, error: aErr },
     { data: plans, error: plErr },
+    { data: clinic, error: cErr },
   ] = await Promise.all([
     supabaseAdmin
       .from("patients")
@@ -267,16 +268,20 @@ export const getMyPortalOverview = createServerFn({ method: "GET" }).handler(asy
       .neq("status", "cancelled")
       .order("created_at", { ascending: false })
       .limit(10),
+    // Solo para marcar feriados (Nager.Date) en "Pedir una hora" — no es PHI.
+    supabaseAdmin.from("clinics").select("country").eq("id", clinicId).maybeSingle(),
   ]);
   if (pErr) throw new Error(pErr.message);
   if (aErr) throw new Error(aErr.message);
   if (plErr) throw new Error(plErr.message);
+  if (cErr) throw new Error(cErr.message);
   if (!patient) throw new Error("Paciente no encontrado.");
 
   return {
     patient: { id: patient.id, name: patient.full_name },
     appointments: appts ?? [],
     plans: plans ?? [],
+    clinic: { country: clinic?.country || "CL" },
   };
 });
 

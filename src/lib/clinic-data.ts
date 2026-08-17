@@ -639,12 +639,21 @@ export function hoyISO(timeZone = "America/Santiago"): string {
 }
 
 /** Guard común: acepta null/undefined/"" y strings mal formados sin explotar. */
-function parseIsoDate(iso: string | null | undefined): Date | null {
+export function parseIsoDate(iso: string | null | undefined): Date | null {
   if (!iso) return null;
   if (!/^\d{4}-\d{2}-\d{2}/.test(iso)) return null;
   const [y, m, d] = iso.split("-").map(Number);
   const date = new Date(y!, (m ?? 1) - 1, d!);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/** Inversa de parseIsoDate: Date (hora local) → "YYYY-MM-DD". */
+export function fechaAISO(date: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
 }
 
 export function formatoFecha(iso: string | null | undefined) {

@@ -9,7 +9,9 @@ import { AppShell } from "@/components/app-shell";
 import { DateField, FilterBar, Paginacion, SearchField, SelectField } from "@/components/filters";
 import { AgendaGrid } from "@/components/agenda-grid";
 import { Button } from "@/components/ui/button";
+import { HolidayNotice } from "@/components/holiday-notice";
 import { WhatsAppButton } from "@/components/whatsapp-button";
+import { usePublicHolidays } from "@/hooks/use-public-holidays";
 import {
   Dialog,
   DialogContent,
@@ -96,11 +98,13 @@ function horaDeCita(minutos: number) {
 
 function NuevaCitaDialog({
   clinicId,
+  country,
   sucursales,
   profesionales,
   pacientes,
 }: {
   clinicId: string;
+  country: string | undefined;
   sucursales: { id: string; nombre: string }[];
   profesionales: { id: string; nombre: string; sucursalId: string | null }[];
   pacientes: { id: string; nombre: string }[];
@@ -115,6 +119,12 @@ function NuevaCitaDialog({
 
   const queryClient = useQueryClient();
   const createFn = useServerFn(createAppointment);
+
+  // Feriados (Nager.Date) del país de la clínica, para avisarle al staff si
+  // agendó sobre un feriado (no bloquea: la clínica puede igual atender).
+  const startsYear = startsAt ? Number(startsAt.slice(0, 4)) : new Date().getFullYear();
+  const { holidaysByDate } = usePublicHolidays(country, [startsYear]);
+  const feriadoSeleccionado = startsAt ? (holidaysByDate.get(startsAt.slice(0, 10)) ?? null) : null;
 
   const disponibles = profesionales.filter((p) => !sucursalId || p.sucursalId === sucursalId);
 
@@ -250,6 +260,7 @@ function NuevaCitaDialog({
               />
             </div>
           </div>
+          {feriadoSeleccionado && <HolidayNotice name={feriadoSeleccionado} />}
         </div>
         <DialogFooter>
           <Button onClick={() => crear.mutate()} disabled={crear.isPending || !puedeCrear}>
@@ -264,6 +275,7 @@ function NuevaCitaDialog({
 
 function AgendarSolicitudDialog({
   clinicId,
+  country,
   sucursales,
   profesionales,
   request,
@@ -271,6 +283,7 @@ function AgendarSolicitudDialog({
   onOpenChange,
 }: {
   clinicId: string;
+  country: string | undefined;
   sucursales: { id: string; nombre: string }[];
   profesionales: { id: string; nombre: string; sucursalId: string | null }[];
   request: PendingAppointmentRequest;
@@ -285,6 +298,13 @@ function AgendarSolicitudDialog({
   const queryClient = useQueryClient();
   const createFn = useServerFn(createAppointment);
   const markScheduledFn = useServerFn(markAppointmentRequestScheduled);
+
+  // Feriados (Nager.Date) del país de la clínica — el paciente pidió esta
+  // fecha desde el portal sin saber si es feriado; se lo marcamos al staff
+  // acá, en el momento de confirmar la hora real.
+  const startsYear = startsAt ? Number(startsAt.slice(0, 4)) : new Date().getFullYear();
+  const { holidaysByDate } = usePublicHolidays(country, [startsYear]);
+  const feriadoSeleccionado = startsAt ? (holidaysByDate.get(startsAt.slice(0, 10)) ?? null) : null;
 
   const disponibles = profesionales.filter((p) => !sucursalId || p.sucursalId === sucursalId);
 
@@ -384,6 +404,7 @@ function AgendarSolicitudDialog({
               />
             </div>
           </div>
+          {feriadoSeleccionado && <HolidayNotice name={feriadoSeleccionado} />}
         </div>
         <DialogFooter>
           <Button onClick={() => agendar.mutate()} disabled={agendar.isPending || !puedeAgendar}>
@@ -599,6 +620,7 @@ function AgendaPage() {
           {clinicId && hasPermission(access.role, "agenda:manage") && (
             <NuevaCitaDialog
               clinicId={clinicId}
+              country={access.clinic?.country}
               sucursales={sucursales}
               profesionales={profesionales}
               pacientes={pacientes}
@@ -882,6 +904,7 @@ function AgendaPage() {
       {clinicId && solicitudEnAgenda && (
         <AgendarSolicitudDialog
           clinicId={clinicId}
+          country={access.clinic?.country}
           sucursales={sucursales}
           profesionales={profesionales}
           request={solicitudEnAgenda}

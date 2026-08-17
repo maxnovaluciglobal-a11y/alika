@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarClock, CheckCircle2, Clock, Loader2, Send } from "lucide-react";
+import { CalendarClock, CalendarDays, CheckCircle2, Clock, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 
-import { formatoFechaLarga, hoyISO } from "@/lib/clinic-data";
+import { Calendar } from "@/components/ui/calendar";
+import { HolidayNotice } from "@/components/holiday-notice";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { usePublicHolidays } from "@/hooks/use-public-holidays";
+import { fechaAISO, formatoFechaLarga, hoyISO, parseIsoDate } from "@/lib/clinic-data";
 import { formatMoney } from "@/lib/finance";
 import { getMyPortalOverview, requestPortalAppointment } from "@/lib/portal.functions";
 
@@ -31,6 +35,20 @@ function PortalInicio() {
   const [reason, setReason] = useState("");
   const [priority, setPriority] = useState<"baja" | "media" | "alta">("media");
   const [enviado, setEnviado] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  // Feriados (Nager.Date) del país de la clínica, para marcar el calendario
+  // de "Pedir una hora". Cubre el año de la fecha elegida + el siguiente,
+  // por si el paciente navega el calendario cerca de un cambio de año.
+  const preferredYear = Number(preferredDate.slice(0, 4)) || new Date().getFullYear();
+  const holidayYears = useMemo(() => [preferredYear, preferredYear + 1], [preferredYear]);
+  const { holidaysByDate } = usePublicHolidays(overview.data?.clinic.country, holidayYears);
+  const holidayDates = useMemo(
+    () =>
+      [...holidaysByDate.keys()].map((d) => parseIsoDate(d)).filter((d): d is Date => d !== null),
+    [holidaysByDate],
+  );
+  const feriadoSeleccionado = holidaysByDate.get(preferredDate) ?? null;
 
   const requestMut = useMutation({
     mutationFn: () => requestFn({ data: { preferredDate, reason, priority } }),
@@ -129,13 +147,35 @@ function PortalInicio() {
           <>
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground">Día preferido</label>
-              <input
-                type="date"
-                value={preferredDate}
-                min={hoyISO()}
-                onChange={(e) => setPreferredDate(e.target.value)}
-                className="w-full rounded-lg border border-border/60 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
-              />
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between rounded-lg border border-border/60 bg-transparent px-3 py-2 text-left text-sm outline-none focus:border-brand/50"
+                  >
+                    <span className="capitalize">{formatoFechaLarga(preferredDate)}</span>
+                    <CalendarDays className="size-4 shrink-0 text-muted-foreground" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={parseIsoDate(preferredDate) ?? undefined}
+                    defaultMonth={parseIsoDate(preferredDate) ?? undefined}
+                    onSelect={(date) => {
+                      if (!date) return;
+                      setPreferredDate(fechaAISO(date));
+                      setCalendarOpen(false);
+                    }}
+                    disabled={{ before: parseIsoDate(hoyISO()) ?? new Date() }}
+                    modifiers={{ feriado: holidayDates }}
+                    modifiersClassNames={{
+                      feriado: "bg-warning-soft text-warning font-semibold",
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
+              {feriadoSeleccionado && <HolidayNotice name={feriadoSeleccionado} />}
             </div>
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground">Motivo</label>

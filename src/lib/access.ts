@@ -95,6 +95,8 @@ export type ClinicAccess = {
     onboardingCompleted: boolean;
     /** IANA timezone (ej. "America/Santiago"). Fallback a Santiago si la clínica no lo tiene seteado. */
     timezone: string;
+    /** Código de país ISO-3166 alpha-2 (ej. "CL"). Usado para feriados públicos (Nager.Date). */
+    country: string;
     /** Clínica demo pública: solo lectura a nivel de trigger, ver migración 20260815180000. */
     isDemo: boolean;
   } | null;
