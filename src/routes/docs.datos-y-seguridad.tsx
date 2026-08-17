@@ -50,6 +50,20 @@ function DocsSeguridad() {
         anotó qué y cuándo, sin posibilidad de reescribir el historial clínico de un paciente.
       </LegalP>
 
+      <LegalH2>Copia local para trabajar sin conexión</LegalH2>
+      <LegalP>
+        Para que un corte de internet no deje a la clínica sin poder ver nada, el navegador guarda
+        una copia de lo indispensable para atender: agenda, listado y ficha básica de pacientes, y
+        los catálogos de la clínica. Es una lista blanca explícita — lo que no está en ella no se
+        guarda en el equipo. Quedan afuera a propósito las notas clínicas, el odontograma y el
+        detalle de pagos: son los datos más sensibles y no hacen falta en el mostrador.
+      </LegalP>
+      <LegalP>
+        Esa copia queda asociada al usuario que inició sesión. Si en un equipo compartido entra otra
+        persona, la copia anterior se descarta en vez de mostrársela. Además se borra al cerrar
+        sesión y caduca sola a los 7 días.
+      </LegalP>
+
       <LegalH2>Dónde vive la infraestructura</LegalH2>
       <LegalP>
         Base de datos, autenticación y almacenamiento corren sobre Supabase, región sa-east-1 (São

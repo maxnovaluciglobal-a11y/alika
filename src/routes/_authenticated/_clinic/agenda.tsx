@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { HolidayNotice } from "@/components/holiday-notice";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import { usePublicHolidays } from "@/hooks/use-public-holidays";
+import { SIN_CONEXION, useConnectivity } from "@/hooks/use-connectivity";
 import {
   Dialog,
   DialogContent,
@@ -119,6 +120,7 @@ function NuevaCitaDialog({
 
   const queryClient = useQueryClient();
   const createFn = useServerFn(createAppointment);
+  const { online } = useConnectivity();
 
   // Feriados (Nager.Date) del país de la clínica, para avisarle al staff si
   // agendó sobre un feriado (no bloquea: la clínica puede igual atender).
@@ -160,7 +162,7 @@ function NuevaCitaDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" disabled={!online} title={online ? undefined : SIN_CONEXION}>
           <Plus className="size-4" /> Nueva cita
         </Button>
       </DialogTrigger>

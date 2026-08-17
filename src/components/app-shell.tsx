@@ -27,7 +27,9 @@ import { NotificationsBell } from "@/components/notifications-bell";
 import { RoleSimulationBar } from "@/components/role-simulation-bar";
 import { TrialBanner } from "@/components/trial-banner";
 import { DemoBanner } from "@/components/demo-banner";
+import { OfflineBanner } from "@/components/offline-banner";
 import { supabase } from "@/integrations/supabase/client";
+import { purgeOfflineCache } from "@/lib/offline-cache";
 import { hasPermission, ROLE_LABELS, type ClinicAccess, type Permission } from "@/lib/access";
 import { cn } from "@/lib/utils";
 
@@ -105,6 +107,9 @@ export function AppShell({
     setSigningOut(true);
     await queryClient.cancelQueries();
     queryClient.clear();
+    // No alcanza con limpiar memoria: en una PC compartida los datos de
+    // pacientes quedarían en IndexedDB para el próximo que entre.
+    await purgeOfflineCache();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
@@ -201,6 +206,7 @@ export function AppShell({
         </header>
 
         <RoleSimulationBar access={access} />
+        <OfflineBanner />
         {access.clinic?.isDemo ? (
           <DemoBanner />
         ) : (

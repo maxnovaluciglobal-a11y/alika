@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { captureException, initSentry } from "@/lib/sentry";
+import { attachOfflineCache, purgeOfflineCache, setCacheOwner } from "@/lib/offline-cache";
 import { Toaster } from "@/components/ui/sonner";
 
 // Se ejecuta una sola vez al importar el módulo raíz. No-op si no hay DSN.
@@ -138,13 +139,39 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
 
+  // Persistencia del cache en disco. Vive en un efecto (y no en un provider)
+  // porque solo puede correr en el browser: en SSR no hay IndexedDB, y
+  // `getRouter()` arma un QueryClient distinto por request.
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event) => {
+    let detachCache: (() => void) | undefined;
+    let cancelled = false;
+
+    async function bindCacheTo(userId: string | undefined) {
+      detachCache?.();
+      detachCache = undefined;
+      setCacheOwner(userId);
+      if (!userId) {
+        // Sin sesión no dejamos nada del usuario anterior en el equipo.
+        await purgeOfflineCache();
+        return;
+      }
+      if (!cancelled) detachCache = attachOfflineCache(queryClient, userId);
+    }
+
+    void supabase.auth.getSession().then(({ data }) => bindCacheTo(data.session?.user.id));
+
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      void bindCacheTo(session?.user.id);
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
-    return () => data.subscription.unsubscribe();
+
+    return () => {
+      cancelled = true;
+      detachCache?.();
+      data.subscription.unsubscribe();
+    };
   }, [router, queryClient]);
 
   return (

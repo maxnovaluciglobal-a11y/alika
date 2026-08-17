@@ -52,6 +52,7 @@ import {
   setTreatmentItemStatus,
 } from "@/lib/finance.functions";
 import { cn } from "@/lib/utils";
+import { SIN_CONEXION, useConnectivity } from "@/hooks/use-connectivity";
 
 interface Props {
   clinicId: string;
@@ -478,6 +479,7 @@ function NuevoPagoDialog({
   const [notes, setNotes] = useState("");
   const queryClient = useQueryClient();
   const payFn = useServerFn(registerPayment);
+  const { online } = useConnectivity();
 
   const create = useMutation({
     mutationFn: () =>
@@ -516,7 +518,12 @@ function NuevoPagoDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!online}
+          title={online ? undefined : SIN_CONEXION}
+        >
           <CircleDollarSign className="size-4" /> Registrar pago
         </Button>
       </DialogTrigger>

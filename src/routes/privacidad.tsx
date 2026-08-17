@@ -73,6 +73,18 @@ function Privacidad() {
         personal de una clínica no puede ver datos de otra clínica, ni siquiera con un error de
         código de por medio.
       </LegalP>
+      <LegalP>
+        <strong>Copia local en el equipo del personal.</strong> Para que la clínica pueda seguir
+        consultando información durante un corte de internet, el navegador del equipo guarda una
+        copia de parte de los datos. Esa copia se limita a lo necesario para atender: agenda,
+        listado y ficha básica de pacientes, y catálogos de la clínica (sucursales, profesionales,
+        procedimientos).{" "}
+        <strong>
+          Las notas clínicas, el odontograma y el detalle de pagos no se guardan en el equipo
+        </strong>{" "}
+        — solo se ven mientras hay conexión. La copia local queda asociada al usuario que inició
+        sesión, se borra al cerrar sesión y caduca a los 7 días.
+      </LegalP>
 
       <LegalH2>4. Con quién compartimos datos</LegalH2>
       <LegalP>

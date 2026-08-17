@@ -35,7 +35,11 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
       },
       {
         q: "¿Necesito instalar algo?",
-        a: "No. Alika es una aplicación web (PWA); se usa desde el navegador en computadora o celular, sin instalación.",
+        a: "No. Alika se usa desde el navegador en computadora o celular, sin instalar nada.",
+      },
+      {
+        q: "¿Qué pasa si se corta internet en la clínica?",
+        a: "La información que ya estabas viendo (agenda del día, fichas de tus pacientes) se sigue mostrando, así que puedes consultarla durante el corte. Por ahora los cambios sí necesitan conexión: la app te avisa con un aviso visible cuando no puede guardar, para que nada quede a medias sin que te enteres.",
       },
     ],
   },

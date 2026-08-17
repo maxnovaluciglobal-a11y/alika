@@ -6,9 +6,31 @@ import { getMySubscription } from "@/lib/billing.functions";
 import { isSubscriptionActive } from "@/lib/billing";
 import { leerRolSimulado, puedeSimular } from "@/lib/role-simulation";
 
+/** Quién soy y en qué clínica: cambia poquísimo, y sin esto no se abre ninguna pantalla. */
+const ACCESS_KEY = ["my-access"] as const;
+
 export const Route = createFileRoute("/_authenticated/_clinic")({
-  beforeLoad: async ({ location }): Promise<{ access: ClinicAccess }> => {
-    const access = await getMyAccess({});
+  beforeLoad: async ({ location, context }): Promise<{ access: ClinicAccess }> => {
+    const { queryClient } = context;
+
+    // Va por el cache de React Query en vez de llamar directo: durante un
+    // corte, este `await` era lo que tumbaba toda la app de clínica de una,
+    // porque cada navegación lo vuelve a ejecutar.
+    let access: ClinicAccess;
+    try {
+      access = await queryClient.ensureQueryData({
+        queryKey: ACCESS_KEY,
+        queryFn: () => getMyAccess({}),
+        staleTime: 5 * 60 * 1000,
+      });
+    } catch (err) {
+      // Si ya sabíamos quién es, seguimos con eso: perder internet no debería
+      // sacar a la clínica de la aplicación. La primera carga sí necesita red.
+      const conocido = queryClient.getQueryData<ClinicAccess>(ACCESS_KEY);
+      if (!conocido) throw err;
+      access = conocido;
+    }
+
     if (!access.clinic || !access.role) {
       throw redirect({ to: "/onboarding" });
     }
