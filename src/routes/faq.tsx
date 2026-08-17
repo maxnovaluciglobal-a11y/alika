@@ -117,10 +117,10 @@ function Faq() {
         <p className="mt-4 text-base leading-relaxed text-muted-foreground">
           ¿No encontrás lo que buscás? Escribinos a{" "}
           <a
-            href="mailto:walterlamadriz@gmail.com"
+            href="mailto:maxnovaluciglobal@gmail.com"
             className="text-mint-strong underline underline-offset-2"
           >
-            walterlamadriz@gmail.com
+            maxnovaluciglobal@gmail.com
           </a>
           .
         </p>

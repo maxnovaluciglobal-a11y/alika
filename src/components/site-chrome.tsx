@@ -64,7 +64,7 @@ const footerColumns: { t: string; links: FooterLink[] }[] = [
     t: "Empresa",
     links: [
       { label: "Quiénes somos", kind: "route", to: "/nosotros" },
-      { label: "Contacto", kind: "external", href: "mailto:walterlamadriz@gmail.com" },
+      { label: "Contacto", kind: "external", href: "mailto:maxnovaluciglobal@gmail.com" },
     ],
   },
   {

@@ -67,10 +67,10 @@ function DocsSeguridad() {
       <LegalP>
         Si detectás algo que te parece un problema de seguridad, escribinos directamente a{" "}
         <a
-          href="mailto:walterlamadriz@gmail.com"
+          href="mailto:maxnovaluciglobal@gmail.com"
           className="text-mint-strong underline underline-offset-2"
         >
-          walterlamadriz@gmail.com
+          maxnovaluciglobal@gmail.com
         </a>{" "}
         — lo tratamos como prioridad.
       </LegalP>

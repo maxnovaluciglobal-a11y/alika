@@ -36,10 +36,10 @@ function Privacidad() {
         Alika lo opera MAXNOVA &amp; LUCI Global LLC, una LLC constituida en Estados Unidos. Para
         cualquier consulta de privacidad, escribinos a{" "}
         <a
-          href="mailto:walterlamadriz@gmail.com"
+          href="mailto:maxnovaluciglobal@gmail.com"
           className="text-mint-strong underline underline-offset-2"
         >
-          walterlamadriz@gmail.com
+          maxnovaluciglobal@gmail.com
         </a>
         .
       </LegalP>
@@ -138,10 +138,10 @@ function Privacidad() {
       <LegalP>
         Para consultas sobre privacidad:{" "}
         <a
-          href="mailto:walterlamadriz@gmail.com"
+          href="mailto:maxnovaluciglobal@gmail.com"
           className="text-mint-strong underline underline-offset-2"
         >
-          walterlamadriz@gmail.com
+          maxnovaluciglobal@gmail.com
         </a>
         .
       </LegalP>

@@ -134,10 +134,10 @@ function Terminos() {
       <LegalP>
         Para consultas sobre estos términos:{" "}
         <a
-          href="mailto:walterlamadriz@gmail.com"
+          href="mailto:maxnovaluciglobal@gmail.com"
           className="text-mint-strong underline underline-offset-2"
         >
-          walterlamadriz@gmail.com
+          maxnovaluciglobal@gmail.com
         </a>
         .
       </LegalP>
