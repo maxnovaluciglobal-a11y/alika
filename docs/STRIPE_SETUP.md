@@ -1,6 +1,6 @@
 # Setup de Stripe — Alika
 
-Pasos que necesita hacer Walter para activar el billing skeleton ya wireado en el código (`13c2d27` → Wave B). Una vez completado, la app cobra a las clínicas automáticamente.
+✅ **Live conectado y verificado (2026-08-16).** Test y Live configurados, las 4 env vars están en Vercel producción (`alika-omega.vercel.app`), webhook confirmado sirviendo (probado con firma inválida, responde con el error específico de Stripe en vez de crashear). Este doc queda como referencia de cómo se hizo y para cuando haga falta rotar algo.
 
 ## Pricing decidido (ago-2026)
 
@@ -43,7 +43,7 @@ STRIPE_PRICE_ID_CLINIC_MONTHLY=price_...
 
 En el dashboard de Stripe → Developers → Webhooks (en el mismo modo, Test o Live, en el que creaste el producto):
 
-1. Add endpoint → URL: la del deploy de Vercel de Alika (ej. `https://aurora-dental-os.vercel.app/api/stripe/webhook`) — no hace falta esperar al dominio `alika.com`, se puede migrar el endpoint el día que exista.
+1. Add endpoint → URL: `https://alika-omega.vercel.app/api/stripe/webhook` (proyecto Vercel real, `prj_2qH7NKthOoML1ZsCKLbKDV8rzan2`) — no hace falta esperar al dominio `alika.com`, se puede migrar el endpoint el día que exista.
 2. Eventos a escuchar:
    - `checkout.session.completed`
    - `customer.subscription.created`
@@ -61,6 +61,15 @@ Para dev local: usar `stripe listen --forward-to localhost:8080/api/stripe/webho
 - Verificar en la DB: `SELECT * FROM subscriptions WHERE clinic_id = ...` — debe aparecer con `status = trialing` y `trial_end` a 14 días.
 - Verificar en la DB: `SELECT * FROM stripe_events ORDER BY received_at DESC` — el evento debe estar registrado.
 - Botón "Gestionar facturación" en la misma página → debe abrir el portal de Stripe.
+
+## Rotación de keys (cuenta compartida con GastroCore)
+
+`STRIPE_SECRET_KEY` en Live es una **restricted key** (`rk_live_...`), no la key por defecto de la cuenta — se creó así a propósito para no tocar la key que ya usa GastroCore para cobrar. Permisos: Checkout Sessions (Write), Subscriptions (Write), Customers (Write), Billing Portal (Write), Invoices (Read). Si hay que rotarla, crear una restricted key nueva con los mismos permisos — nunca usar "Roll key" sobre la key default de la cuenta.
+
+## Dónde vive cada cosa
+
+- **`.env` local**: valores de **Test mode** — para desarrollar sin tocar Live.
+- **Vercel env vars (producción)**: valores de **Live mode** — cargadas 2026-08-16, confirmadas con `vercel env ls`.
 
 ## Estado del código
 
