@@ -63,7 +63,7 @@ export const generatePortalLink = createServerFn({ method: "POST" })
 
       const message =
         `Hola ${patient.full_name.split(" ")[0]}, este es tu acceso al portal de tu clínica. ` +
-        `Podés ver tus próximas citas y pedir hora acá: ${url}\n\n` +
+        `Puedes ver tus próximas citas y pedir hora aquí: ${url}\n\n` +
         `El link vence en ${data.ttlDays} día${data.ttlDays === 1 ? "" : "s"}.`;
 
       if (!patient.phone) {
@@ -177,7 +177,7 @@ async function requirePortalSession(): Promise<PortalTokenPayload> {
     throw new Error("Sesión del portal vencida.");
   }
   if (await isPortalTokenRevoked(payload)) {
-    throw new Error("Este link ya no es válido. Pedile a tu clínica uno nuevo.");
+    throw new Error("Este link ya no es válido. Pídele a tu clínica uno nuevo.");
   }
   return payload;
 }
@@ -215,7 +215,7 @@ export const openPortalSession = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const payload = await verifyPortalToken(data.token);
     if (await isPortalTokenRevoked(payload)) {
-      throw new Error("Este link ya no es válido. Pedile a tu clínica uno nuevo.");
+      throw new Error("Este link ya no es válido. Pídele a tu clínica uno nuevo.");
     }
     // Secure solo en producción — localhost sirve por http y el flag lo
     // bloquearía. Path=/ porque los server functions viven en /_serverFn/*
@@ -289,7 +289,7 @@ export const requestPortalAppointment = createServerFn({ method: "POST" })
     z
       .object({
         preferredDate: z.string().min(1),
-        reason: z.string().trim().min(1, "Contanos el motivo.").max(500),
+        reason: z.string().trim().min(1, "Cuéntanos el motivo.").max(500),
         priority: z.enum(["baja", "media", "alta"]).default("media"),
       })
       .parse(input),

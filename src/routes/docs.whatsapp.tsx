@@ -25,13 +25,13 @@ function DocsWhatsapp() {
       <LegalP>
         Sin configurar nada, cuando hay un recordatorio, un aviso de lista de espera o un
         seguimiento de presupuesto pendiente, Alika arma el mensaje y te abre WhatsApp Web o la app
-        con el texto ya escrito. Vos revisás y apretás enviar. Es el modo por defecto y siempre
-        queda disponible como respaldo, incluso si conectás tu número.
+        con el texto ya escrito. Tú revisas y presionas enviar. Es el modo por defecto y siempre
+        queda disponible como respaldo, incluso si conectas tu número.
       </LegalP>
 
       <LegalH2>Modo conectado (número real de tu clínica)</LegalH2>
       <LegalP>
-        Desde "Conectar número" en la sección de WhatsApp podés vincular el WhatsApp Business de tu
+        Desde "Conectar número" en la sección de WhatsApp puedes vincular el WhatsApp Business de tu
         clínica. Con el número conectado, los mensajes salen desde tu propio número (no desde uno
         genérico) y se puede automatizar más el despacho de plantillas ya aprobadas. Los mensajes
         entrantes de números que no son pacientes tuyos quedan guardados como "lead nuevo" para que

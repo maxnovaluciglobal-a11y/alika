@@ -127,7 +127,7 @@ function BillingPage() {
             </dl>
           ) : (
             <p className="mt-6 text-sm text-muted-foreground">
-              Aún no tenés una suscripción activa. Empezá tu trial de 14 días abajo — no cobramos
+              Aún no tienes una suscripción activa. Empieza tu trial de 14 días abajo — no cobramos
               hasta que termine.
             </p>
           )}
@@ -137,8 +137,8 @@ function BillingPage() {
           <h2 className="font-heading text-base font-semibold">Acciones</h2>
           <p className="text-sm text-muted-foreground">
             {hasCustomer
-              ? "Gestioná método de pago, descargá facturas o cancelá desde el portal seguro de Stripe."
-              : "Al activar la suscripción vas a Stripe para dejar el método de pago. Podés cancelar durante el trial y no te cobramos."}
+              ? "Gestiona método de pago, descarga facturas o cancela desde el portal seguro de Stripe."
+              : "Al activar la suscripción vas a Stripe para dejar el método de pago. Puedes cancelar durante el trial y no te cobramos."}
           </p>
 
           <div className="mt-4 flex flex-wrap gap-3">

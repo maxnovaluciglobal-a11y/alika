@@ -24,7 +24,7 @@ function DocsPortal() {
 
       <LegalH2>Cómo se comparte</LegalH2>
       <LegalP>
-        Desde la ficha del paciente o desde la agenda, generás el link del portal y se lo mandás por
+        Desde la ficha del paciente o desde la agenda, generas el link del portal y se lo mandas por
         WhatsApp (manual o conectado, según el modo que uses). El link es una URL firmada con
         vencimiento — por defecto entre 7 y 14 días — así que si se filtra deja de servir por sí
         solo.

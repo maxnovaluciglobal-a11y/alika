@@ -46,7 +46,7 @@ function PortalInicio() {
     return (
       <div className="mx-auto max-w-md p-6 text-center">
         <p className="text-sm text-muted-foreground">
-          Tu enlace del portal venció o no es válido. Contactá a tu clínica para que te envíe uno
+          Tu enlace del portal venció o no es válido. Contacta a tu clínica para que te envíe uno
           nuevo.
         </p>
       </div>
@@ -70,7 +70,7 @@ function PortalInicio() {
           Hola, {patient.name.split(" ")[0]}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Este es tu portal. Podés ver tus próximas citas y pedir hora.
+          Este es tu portal. Puedes ver tus próximas citas y pedir hora.
         </p>
       </section>
 
@@ -78,7 +78,7 @@ function PortalInicio() {
         <h2 className="text-sm font-semibold">Próximas citas</h2>
         {appointments.length === 0 && (
           <p className="rounded-xl border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
-            No tenés citas agendadas.
+            No tienes citas agendadas.
           </p>
         )}
         {appointments.map((a) => (

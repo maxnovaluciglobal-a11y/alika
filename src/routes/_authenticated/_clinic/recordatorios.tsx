@@ -153,7 +153,7 @@ function RecordatoriosPage() {
         <p className="max-w-2xl text-sm text-muted-foreground">
           Citas que están entrando a la ventana de 48h (recordatorio) o 3h (aviso previo), y
           pacientes candidatos a un recall, un pedido de reseña o un aviso de saldo. Se manda por
-          WhatsApp con un click — vos revisás antes de que salga nada.
+          WhatsApp con un click — tú revisas antes de que salga nada.
         </p>
 
         {(isLoading || isLoadingOutreach) && (

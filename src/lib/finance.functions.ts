@@ -476,7 +476,7 @@ export const listTreatmentPlans = createServerFn({ method: "GET" })
 /** Listado a nivel clínica para la vista /tratamientos. No trae los items
  * enteros — solo el conteo + completados para computar avance. Esto lo hace
  * viable con volumen alto (evita traer miles de items para pintar barras de
- * progreso). Si necesitás el detalle de un plan, el usuario abre la ficha
+ * progreso). Si necesitas el detalle de un plan, el usuario abre la ficha
  * del paciente y ahí sí se hidrata con listTreatmentPlans(patientId).
  *
  * treatment_plans no tiene professional_id ni branch_id en el schema —

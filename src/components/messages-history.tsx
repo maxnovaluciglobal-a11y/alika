@@ -34,7 +34,7 @@ export function MessagesHistory({ clinicId, patientId }: Props) {
 
       {!isLoading && messages.length === 0 && (
         <p className="text-xs text-muted-foreground">
-          Todavía no se enviaron mensajes al paciente. Desde la agenda o los presupuestos podés
+          Todavía no se enviaron mensajes al paciente. Desde la agenda o los presupuestos puedes
           disparar recordatorios y envíos por WhatsApp.
         </p>
       )}

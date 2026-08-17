@@ -31,7 +31,7 @@ export function TrialBanner({ clinicId }: { clinicId: string }) {
         <div className="flex items-center gap-2">
           <Sparkles className="size-4 text-mint-strong" />
           <span>
-            Tenés acceso completo. Activá tu plan cuando quieras — primeros 14 días sin cargo.
+            Tienes acceso completo. Activa tu plan cuando quieras — primeros 14 días sin cargo.
           </span>
         </div>
         <Link
@@ -86,7 +86,7 @@ export function TrialBanner({ clinicId }: { clinicId: string }) {
         <AlertCircle className="size-4 text-destructive" />
         <span className="font-medium">
           {sub.status === "past_due"
-            ? "Tu último cobro falló. Actualizá el método de pago para no perder acceso."
+            ? "Tu último cobro falló. Actualiza el método de pago para no perder acceso."
             : "Tu suscripción está inactiva."}
         </span>
       </div>

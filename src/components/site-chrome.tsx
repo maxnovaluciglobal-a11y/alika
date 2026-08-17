@@ -29,7 +29,7 @@ export function SiteHeader() {
             to="/auth"
             className="rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-ink-foreground transition-opacity hover:opacity-90"
           >
-            Empezá gratis
+            Empieza gratis
           </Link>
         </div>
       </div>
@@ -50,7 +50,7 @@ const footerColumns: { t: string; links: FooterLink[] }[] = [
     t: "Producto",
     links: [
       { label: "Ver demo", kind: "external", href: "/demo" },
-      { label: "Empezá gratis", kind: "route", to: "/auth" },
+      { label: "Empieza gratis", kind: "route", to: "/auth" },
     ],
   },
   {

@@ -80,7 +80,7 @@ export const createWaitlistEntry = createServerFn({ method: "POST" })
         branchId: z.string().uuid().optional(),
       })
       .refine((v) => v.patientId || v.fullName, {
-        message: "Elegí un paciente existente o escribí un nombre.",
+        message: "Elige un paciente existente o escribe un nombre.",
       })
       .parse(input),
   )

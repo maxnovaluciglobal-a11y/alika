@@ -20,13 +20,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Menos ausencias, cobrás mejor, sin planillas. Agenda, ficha clínica, odontograma y cobranza con recordatorios por WhatsApp. Probá la demo sin registrarte.",
+          "Menos ausencias, cobras mejor, sin planillas. Agenda, ficha clínica, odontograma y cobranza con recordatorios por WhatsApp. Prueba la demo sin registrarte.",
       },
       { property: "og:title", content: "Alika · La clínica dental entera, bajo control" },
       {
         property: "og:description",
         content:
-          "Agenda, historia clínica, presupuestos y cobranza en un solo lugar. Hecho para clínicas de Latinoamérica. Probá la demo sin registrarte.",
+          "Agenda, historia clínica, presupuestos y cobranza en un solo lugar. Hecho para clínicas de Latinoamérica. Prueba la demo sin registrarte.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -203,7 +203,7 @@ const trust = [
   "Datos cifrados",
   "Hecho para LatAm",
   "WhatsApp integrado",
-  "Exportás tus datos",
+  "Exportas tus datos",
 ];
 
 const dolores = [
@@ -214,7 +214,7 @@ const dolores = [
   },
   {
     icon: Wallet,
-    t: "No sabés cuánto te deben",
+    t: "No sabes cuánto te deben",
     d: "Presupuestos en papelitos, pagos sueltos. La cobranza vive en tu cabeza.",
   },
   {
@@ -232,17 +232,17 @@ const dolores = [
 const pasos = [
   {
     n: 1,
-    t: "Creá tu clínica",
+    t: "Crea tu clínica",
     d: "Nombre, sucursal y equipo. Menos de 5 minutos, sin instalar nada.",
   },
   {
     n: 2,
-    t: "Cargá o importá",
+    t: "Carga o importa",
     d: "Pacientes y agenda a mano, o subiendo tu planilla actual de un golpe.",
   },
   {
     n: 3,
-    t: "Atendé y cobrá",
+    t: "Atiende y cobra",
     d: "Ficha, presupuestos, pagos y recordatorios por WhatsApp, conectados.",
   },
 ];
@@ -250,11 +250,11 @@ const pasos = [
 const faqs = [
   {
     q: "¿Es caro?",
-    a: "US$49/mes, flat por clínica. Empezás gratis 14 días sin tarjeta, y un solo paciente que no se te escapa al mes ya lo paga.",
+    a: "US$49/mes, flat por clínica. Empiezas gratis 14 días sin tarjeta, y un solo paciente que no se te escapa al mes ya lo paga.",
   },
   {
     q: "¿Es complicado? No soy técnico.",
-    a: "Si sabés usar WhatsApp, sabés usar Alika. Configurás tu clínica en una tarde, y podés probar la demo ahora mismo sin registrarte.",
+    a: "Si sabes usar WhatsApp, sabes usar Alika. Configuras tu clínica en una tarde, y puedes probar la demo ahora mismo sin registrarte.",
   },
   {
     q: "¿Mi equipo lo va a usar?",
@@ -262,11 +262,11 @@ const faqs = [
   },
   {
     q: "¿Y mis datos, mis pacientes?",
-    a: "Son tuyos. Cifrados, con acceso por rol, y los exportás cuando quieras. Sin secuestro de datos.",
+    a: "Son tuyos. Cifrados, con acceso por rol, y los exportas cuando quieras. Sin secuestro de datos.",
   },
   {
     q: "¿Y si no me sirve?",
-    a: "Probás gratis, sin tarjeta. Si no te sirve, no pagás nada y te llevás tus datos. Sin letra chica.",
+    a: "Pruebas gratis, sin tarjeta. Si no te sirve, no pagas nada y te llevas tus datos. Sin letra chica.",
   },
 ];
 
@@ -288,7 +288,7 @@ function Landing() {
             <h1 className="font-precise text-[2.9rem] font-extrabold leading-[0.95] text-balance sm:text-6xl lg:text-[4.25rem]">
               Menos ausencias.
               <br />
-              <span className="text-mint-strong">Cobrás mejor.</span>
+              <span className="text-mint-strong">Cobras mejor.</span>
               <br />
               Sin planillas.
             </h1>
@@ -301,14 +301,14 @@ function Landing() {
                 href="/demo"
                 className="group flex items-center gap-2 rounded-xl bg-ink px-5 py-3.5 text-sm font-semibold text-ink-foreground shadow-lg shadow-ink/20 transition-all hover:-translate-y-0.5 hover:shadow-xl"
               >
-                Probá la demo ahora
+                Prueba la demo ahora
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
               </a>
               <Link
                 to="/auth"
                 className="rounded-xl border border-border bg-card px-5 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
               >
-                Empezá gratis
+                Empieza gratis
               </Link>
             </div>
             <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -360,7 +360,7 @@ function Landing() {
               El problema
             </p>
             <h2 className="font-precise text-3xl font-bold leading-tight sm:text-4xl">
-              Si tu clínica todavía corre en Excel, WhatsApp y cuadernos, ya sabés lo que se pierde.
+              Si tu clínica todavía corre en Excel, WhatsApp y cuadernos, ya sabes lo que se pierde.
             </h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -383,14 +383,14 @@ function Landing() {
           <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-20 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-mint-strong">
-                Probala vos
+                Pruébala tú mismo
               </p>
               <h2 className="font-precise text-3xl font-bold leading-tight sm:text-[2.75rem]">
-                No te pedimos que nos creas. Entrá y comprobalo.
+                No te pedimos que nos creas. Entra y compruébalo.
               </h2>
               <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
-                Una clínica de ejemplo, cargada y lista. Agendá un paciente, mandá un recordatorio,
-                cargá un presupuesto. Sin formulario, sin llamada de ventas, sin dar tu mail.
+                Una clínica de ejemplo, cargada y lista. Agenda un paciente, manda un recordatorio,
+                carga un presupuesto. Sin formulario, sin llamada de ventas, sin dar tu mail.
               </p>
               <a
                 href="/demo"
@@ -435,7 +435,7 @@ function Landing() {
           <div className="mx-auto max-w-6xl space-y-16 px-6 py-20">
             <div className="max-w-xl">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-mint-strong">
-                Lo que ganás
+                Lo que ganas
               </p>
               <h2 className="font-precise text-3xl font-bold sm:text-4xl">
                 No son features. Son resultados.
@@ -444,15 +444,15 @@ function Landing() {
 
             <FeatureRow
               tag="Menos ausencias"
-              title="El recordatorio que hoy hacés a mano, automático."
+              title="El recordatorio que hoy haces a mano, automático."
               text="Cada cita dispara confirmación y recordatorio por WhatsApp. Menos sillas vacías, sin que nadie pierda la mañana mandando mensajes uno por uno."
               icon={CalendarDays}
               media={<MiniAgenda />}
             />
             <FeatureRow
-              tag="Cobrás mejor"
+              tag="Cobras mejor"
               title="Presupuestos, pagos y saldos, siempre a la vista."
-              text="Sabés cuánto entró hoy y cuánto te deben, al instante. Presupuestos que se convierten en plan de tratamiento con un clic."
+              text="Sabes cuánto entró hoy y cuánto te deben, al instante. Presupuestos que se convierten en plan de tratamiento con un clic."
               icon={Wallet}
               media={<MiniCaja />}
               flip
@@ -467,7 +467,7 @@ function Landing() {
             <FeatureRow
               tag="Tu WhatsApp no se duerme"
               title="Nadie que te escribe se pierde. Nadie que quedó pendiente, se olvida."
-              text="Quien te escribe por primera vez queda guardado como contacto, no se pierde en el chat. La lista de espera y los presupuestos sin respuesta arman su propia cola — vos revisás y salen con un clic. Cada paciente tiene su código para invitar amigos."
+              text="Quien te escribe por primera vez queda guardado como contacto, no se pierde en el chat. La lista de espera y los presupuestos sin respuesta arman su propia cola — tú revisas y salen con un clic. Cada paciente tiene su código para invitar amigos."
               icon={MessageCircle}
               media={<MiniWhatsAppOps />}
               flip
@@ -496,7 +496,7 @@ function Landing() {
             </h2>
             <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
               Cada nota clínica se resume con un clic — hallazgos, procedimiento y próximo paso,
-              listos para la siguiente consulta. Alika se ocupa de lo repetitivo para que vos te
+              listos para la siguiente consulta. Alika se ocupa de lo repetitivo para que tú te
               ocupes de atender.
             </p>
             <div className="mt-6 rounded-xl border border-mint/25 bg-mint-soft p-4">
@@ -516,7 +516,7 @@ function Landing() {
               Precio fundador
             </p>
             <h2 className="font-precise text-3xl font-bold sm:text-4xl">
-              US$49/mes. Probá 14 días gratis, sin tarjeta.
+              US$49/mes. Prueba 14 días gratis, sin tarjeta.
             </h2>
             <p className="mx-auto mt-5 max-w-lg text-base text-muted-foreground">
               Un solo precio, sin cobro por profesional ni por sucursal. Las primeras clínicas
@@ -527,7 +527,7 @@ function Landing() {
                 to="/auth"
                 className="rounded-xl bg-ink px-6 py-3.5 text-sm font-semibold text-ink-foreground transition-opacity hover:opacity-90"
               >
-                Empezá gratis
+                Empieza gratis
               </Link>
               <a
                 href="/demo"
@@ -566,24 +566,24 @@ function Landing() {
         <section>
           <div className="mx-auto max-w-3xl px-6 py-20 text-center">
             <h2 className="font-precise text-3xl font-bold leading-tight sm:text-5xl">
-              Ordená tu clínica de una vez.
+              Ordena tu clínica de una vez.
             </h2>
             <p className="mx-auto mt-5 max-w-md text-base text-muted-foreground">
-              Entrá a la demo ahora, sin dar tu mail. O creá tu clínica gratis en 5 minutos.
+              Entra a la demo ahora, sin dar tu mail. O crea tu clínica gratis en 5 minutos.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <a
                 href="/demo"
                 className="group flex items-center gap-2 rounded-xl bg-ink px-6 py-3.5 text-sm font-semibold text-ink-foreground shadow-lg shadow-ink/20 transition-all hover:-translate-y-0.5"
               >
-                Probá la demo ahora
+                Prueba la demo ahora
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
               </a>
               <Link
                 to="/auth"
                 className="rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
               >
-                Empezá gratis
+                Empieza gratis
               </Link>
             </div>
           </div>

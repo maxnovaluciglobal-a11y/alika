@@ -16,7 +16,7 @@ export const Route = createFileRoute("/portal")({
       { title: "Portal del paciente · Alika" },
       {
         name: "description",
-        content: "Reservá horas y revisá tus tratamientos desde el portal de tu clínica dental.",
+        content: "Reserva horas y revisa tus tratamientos desde el portal de tu clínica dental.",
       },
       { name: "robots", content: "noindex" },
     ],

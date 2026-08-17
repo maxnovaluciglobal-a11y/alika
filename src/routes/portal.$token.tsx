@@ -47,7 +47,7 @@ function PortalTokenExchange() {
       <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
         <p className="text-sm font-medium">Tu enlace no es válido o ya venció.</p>
         <p className="text-xs text-muted-foreground">
-          Pedile a tu clínica un enlace nuevo por WhatsApp.
+          Pídele a tu clínica un enlace nuevo por WhatsApp.
         </p>
       </div>
     );

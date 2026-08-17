@@ -65,7 +65,7 @@ function DocsSeguridad() {
 
       <LegalH2>Algo no cuadra o encontraste un problema</LegalH2>
       <LegalP>
-        Si detectás algo que te parece un problema de seguridad, escribinos directamente a{" "}
+        Si detectas algo que te parece un problema de seguridad, escríbenos directamente a{" "}
         <a
           href="mailto:maxnovaluciglobal@gmail.com"
           className="text-mint-strong underline underline-offset-2"

@@ -174,7 +174,7 @@ export const setOdontogramMark = createServerFn({ method: "POST" })
       // marcan la misma superficie casi simultáneamente.
       if ((error as { code?: string }).code === "23505") {
         throw new Error(
-          "Otro usuario acaba de marcar esta superficie. Refrescá el odontograma y volvé a intentar.",
+          "Otro usuario acaba de marcar esta superficie. Refresca el odontograma y vuelve a intentar.",
         );
       }
       throw new Error("No tienes permisos para modificar el odontograma.");

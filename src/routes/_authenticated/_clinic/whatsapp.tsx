@@ -172,7 +172,7 @@ function WhatsAppPage() {
         },
       }),
     onSuccess: () => {
-      toast.success("WhatsApp conectado. Ya podés mandar mensajes automáticos.");
+      toast.success("WhatsApp conectado. Ya puedes mandar mensajes automáticos.");
       invalidar();
     },
     onError: (e: Error) => toast.error(e.message),

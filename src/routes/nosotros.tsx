@@ -25,8 +25,8 @@ function Nosotros() {
         <div>
           <p className="text-base leading-relaxed text-ink">
             "Soy Walter. Hice Alika porque vi clínicas ahogadas en planillas y recordatorios a mano.
-            Está pensado para cómo se trabaja acá, en LatAm. Si lo probás y algo te traba, escribime
-            — te respondo yo."
+            Está pensado para cómo se trabaja en LatAm. Si lo pruebas y algo te traba, escríbeme —
+            te respondo yo."
           </p>
           <p className="mt-3 text-sm font-medium text-muted-foreground">
             Walter · fundador de Alika
@@ -58,7 +58,7 @@ function Nosotros() {
       <LegalP>
         Alika está en etapa de piloto: se está terminando de construir y probando con clínicas
         seleccionadas antes de abrirse al público en general. Si tu clínica quiere ser parte de esa
-        etapa temprana, escribinos.
+        etapa temprana, escríbenos.
       </LegalP>
 
       <LegalH2>La empresa detrás</LegalH2>

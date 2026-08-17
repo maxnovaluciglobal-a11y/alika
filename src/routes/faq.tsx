@@ -44,7 +44,7 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
     items: [
       {
         q: "¿Cómo empiezo?",
-        a: 'Podés probar la demo sin registrarte desde el botón "Ver demo", o crear tu clínica gratis en unos minutos con "Empezá gratis".',
+        a: 'Puedes probar la demo sin registrarte desde el botón "Ver demo", o crear tu clínica gratis en unos minutos con "Empieza gratis".',
       },
       {
         q: "¿Puedo importar los pacientes que ya tengo?",
@@ -52,7 +52,7 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
       },
       {
         q: "¿Cuánto tarda el onboarding?",
-        a: "El alta de una clínica nueva es un flujo guiado de 3 pasos. Después de eso ya podés cargar pacientes y agendar.",
+        a: "El alta de una clínica nueva es un flujo guiado de 3 pasos. Después de eso ya puedes cargar pacientes y agendar.",
       },
     ],
   },
@@ -65,7 +65,7 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
       },
       {
         q: "¿Tengo que conectar mi número de WhatsApp?",
-        a: "No es obligatorio. Sin conectar nada, Alika arma el link de wa.me y vos lo abrís manualmente. Si conectás tu número (Meta Cloud API), el envío se puede automatizar más — igual siempre queda a criterio de tu equipo cuándo despachar.",
+        a: "No es obligatorio. Sin conectar nada, Alika arma el link de wa.me y tú lo abres manualmente. Si conectas tu número (Meta Cloud API), el envío se puede automatizar más — igual siempre queda a criterio de tu equipo cuándo despachar.",
       },
       {
         q: "¿Qué pasa si alguien que no es mi paciente me escribe por WhatsApp?",
@@ -115,7 +115,7 @@ function Faq() {
           Preguntas frecuentes
         </h1>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-          ¿No encontrás lo que buscás? Escribinos a{" "}
+          ¿No encuentras lo que buscas? Escríbenos a{" "}
           <a
             href="mailto:maxnovaluciglobal@gmail.com"
             className="text-mint-strong underline underline-offset-2"
@@ -146,7 +146,7 @@ function Faq() {
         </div>
 
         <p className="mt-12 text-sm text-muted-foreground">
-          ¿Querés más detalle técnico? Mirá la{" "}
+          ¿Quieres más detalle técnico? Mira la{" "}
           <Link to="/docs" className="text-mint-strong underline underline-offset-2">
             documentación
           </Link>

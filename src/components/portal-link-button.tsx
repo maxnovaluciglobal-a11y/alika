@@ -120,7 +120,7 @@ export function RevokePortalAccessButton({ clinicId, patientId }: Props) {
 
   function handleClick() {
     const ok = window.confirm(
-      "¿Revocar el acceso al portal de este paciente? Todos los links que se hayan enviado antes van a dejar de funcionar. Podés generar uno nuevo después sin problema.",
+      "¿Revocar el acceso al portal de este paciente? Todos los links que se hayan enviado antes van a dejar de funcionar. Puedes generar uno nuevo después sin problema.",
     );
     if (ok) mut.mutate();
   }

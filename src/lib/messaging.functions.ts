@@ -130,7 +130,7 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
         recipientOverride: z.string().trim().optional(),
       })
       .refine((v) => v.templateId || v.templateKind || v.rawBody, {
-        message: "Necesitás pasar template o rawBody.",
+        message: "Necesitas pasar template o rawBody.",
       })
       .parse(input),
   )

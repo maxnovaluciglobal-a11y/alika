@@ -33,12 +33,12 @@ function Terminos() {
         Alika es un software como servicio (SaaS) para la gestión de clínicas dentales: agenda,
         fichas clínicas, odontograma, presupuestos, cobranza y mensajería por WhatsApp. Lo opera
         MAXNOVA &amp; LUCI Global LLC ("Alika", "nosotros"). Al crear una cuenta o usar la
-        aplicación aceptás estos términos.
+        aplicación aceptas estos términos.
       </LegalP>
 
       <LegalH2>2. Tu cuenta</LegalH2>
       <LegalP>
-        Sos responsable de mantener la confidencialidad de tus credenciales y de la actividad que
+        Eres responsable de mantener la confidencialidad de tus credenciales y de la actividad que
         ocurre bajo tu cuenta. Cada clínica administra sus propios usuarios y roles (dueño,
         administrador, dentista, asistente, recepción); es responsabilidad de la clínica asignar el
         rol correcto a cada persona, especialmente para el acceso a fichas clínicas.
@@ -46,7 +46,7 @@ function Terminos() {
 
       <LegalH2>3. Datos de tus pacientes</LegalH2>
       <LegalP>
-        Los datos que cargás sobre tus pacientes (identidad, contacto, historia clínica,
+        Los datos que cargas sobre tus pacientes (identidad, contacto, historia clínica,
         odontograma, presupuestos, pagos) son tuyos. Tu clínica es la responsable/titular de esos
         datos frente a tus pacientes; Alika actúa como encargado del tratamiento, es decir,
         procesamos esos datos para que la aplicación funcione, pero no los usamos para otro fin ni
@@ -57,13 +57,13 @@ function Terminos() {
         .
       </LegalP>
       <LegalP>
-        Sos responsable de contar con la base legal correspondiente (consentimiento del paciente, u
+        Eres responsable de contar con la base legal correspondiente (consentimiento del paciente, u
         otra que aplique en tu jurisdicción) para cargar y procesar los datos de tus pacientes en
         Alika.
       </LegalP>
 
       <LegalH2>4. Uso aceptable</LegalH2>
-      <LegalP>No podés usar Alika para:</LegalP>
+      <LegalP>No puedes usar Alika para:</LegalP>
       <LegalUl>
         <LegalLi>Cargar datos de personas que no son pacientes reales de tu clínica.</LegalLi>
         <LegalLi>
@@ -76,7 +76,7 @@ function Terminos() {
 
       <LegalH2>5. WhatsApp y mensajería</LegalH2>
       <LegalP>
-        Si conectás el número de WhatsApp de tu clínica, los mensajes salientes (recordatorios,
+        Si conectas el número de WhatsApp de tu clínica, los mensajes salientes (recordatorios,
         avisos de lista de espera, seguimiento de presupuestos, etc.) se despachan siempre desde tu
         clínica, con revisión del personal antes de cada envío — Alika no manda mensajes de forma
         automática sin que alguien de tu equipo lo dispare. El cumplimiento de las políticas de
@@ -88,7 +88,7 @@ function Terminos() {
       <LegalP>
         El software de Alika, su diseño y su marca son propiedad de MAXNOVA &amp; LUCI Global LLC.
         Te damos una licencia para usarlo mientras tengas una cuenta activa; no se te transfiere
-        ninguna propiedad sobre el software. Los datos que cargás siguen siendo tuyos como se
+        ninguna propiedad sobre el software. Los datos que cargas siguen siendo tuyos como se
         describe en la sección 3.
       </LegalP>
 
@@ -102,10 +102,10 @@ function Terminos() {
 
       <LegalH2>8. Terminación</LegalH2>
       <LegalP>
-        Podés dejar de usar Alika y pedir el cierre de tu cuenta cuando quieras. Al cerrar tu cuenta
-        te damos la posibilidad de exportar los datos de tu clínica antes de que se eliminen de
-        nuestros sistemas. Podemos suspender una cuenta que incumpla la sección 4 (uso aceptable),
-        avisando el motivo salvo que la ley nos impida hacerlo.
+        Puedes dejar de usar Alika y pedir el cierre de tu cuenta cuando quieras. Al cerrar tu
+        cuenta te damos la posibilidad de exportar los datos de tu clínica antes de que se eliminen
+        de nuestros sistemas. Podemos suspender una cuenta que incumpla la sección 4 (uso
+        aceptable), avisando el motivo salvo que la ley nos impida hacerlo.
       </LegalP>
 
       <LegalH2>9. Límite de responsabilidad</LegalH2>

@@ -25,8 +25,8 @@ function Privacidad() {
     >
       <LegalNotice>
         Tu clínica es la responsable de los datos de sus pacientes; Alika los procesa como encargado
-        del tratamiento, para que la aplicación funcione. Si sos paciente de una clínica que usa
-        Alika y querés ejercer un derecho sobre tus datos (acceso, corrección, borrado), el camino
+        del tratamiento, para que la aplicación funcione. Si eres paciente de una clínica que usa
+        Alika y quieres ejercer un derecho sobre tus datos (acceso, corrección, borrado), el camino
         es contactar directamente a tu clínica — nosotros ejecutamos el pedido técnico que tu
         clínica nos indique.
       </LegalNotice>
@@ -34,7 +34,7 @@ function Privacidad() {
       <LegalH2>1. Quién es responsable</LegalH2>
       <LegalP>
         Alika lo opera MAXNOVA &amp; LUCI Global LLC, una LLC constituida en Estados Unidos. Para
-        cualquier consulta de privacidad, escribinos a{" "}
+        cualquier consulta de privacidad, escríbenos a{" "}
         <a
           href="mailto:maxnovaluciglobal@gmail.com"
           className="text-mint-strong underline underline-offset-2"
@@ -122,10 +122,10 @@ function Privacidad() {
 
       <LegalH2>8. Tus derechos</LegalH2>
       <LegalP>
-        Si sos parte del staff de una clínica, podés pedirle a tu clínica que corrija o elimine tu
-        cuenta de usuario. Si sos paciente, tu clínica es quien administra tus datos — pedile a ella
-        el acceso, corrección o eliminación; nosotros ejecutamos el pedido a nivel técnico cuando la
-        clínica nos lo solicita.
+        Si eres parte del staff de una clínica, puedes pedirle a tu clínica que corrija o elimine tu
+        cuenta de usuario. Si eres paciente, tu clínica es quien administra tus datos — pídele a
+        ella el acceso, corrección o eliminación; nosotros ejecutamos el pedido a nivel técnico
+        cuando la clínica nos lo solicita.
       </LegalP>
 
       <LegalH2>9. Cambios a esta política</LegalH2>

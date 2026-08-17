@@ -26,15 +26,15 @@ function PortalIndex() {
         <Clock className="size-7 text-brand" />
       </div>
       <div className="space-y-2">
-        <h1 className="font-display text-2xl font-bold tracking-tight">Necesitás un link</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight">Necesitas un link</h1>
         <p className="text-sm text-muted-foreground">
           El acceso al portal es por el enlace personal que te envía tu clínica por WhatsApp. Si no
-          lo tenés, pedilo directamente a tu clínica.
+          lo tienes, pídelo directamente a tu clínica.
         </p>
       </div>
       <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-card px-4 py-3 text-sm text-muted-foreground">
         <Phone className="size-4 shrink-0 text-brand" />
-        <span>Contactá a tu clínica por WhatsApp o teléfono.</span>
+        <span>Contacta a tu clínica por WhatsApp o teléfono.</span>
       </div>
     </div>
   );

@@ -397,7 +397,7 @@ function AgendarSolicitudDialog({
 }
 
 /**
- * Agrega a la lista de espera. El paciente es opcional en el server (podés
+ * Agrega a la lista de espera. El paciente es opcional en el server (puedes
  * anotar a alguien sin ficha todavía), pero acá lo pedimos siempre — sin
  * paciente vinculado no hay teléfono, y entonces la fila nunca va a poder
  * recibir el aviso de "Avisar" por WhatsApp cuando se libera un turno.
@@ -608,7 +608,7 @@ function AgendaPage() {
 
         {appointmentsRes?.truncated && (
           <p className="rounded-lg border border-warning/30 bg-warning-soft px-4 py-2.5 text-xs text-warning">
-            Mostrando las primeras {citas.length.toLocaleString("es")} citas. Si buscás una cita muy
+            Mostrando las primeras {citas.length.toLocaleString("es")} citas. Si buscas una cita muy
             antigua o muy futura, puede que no aparezca acá.
           </p>
         )}

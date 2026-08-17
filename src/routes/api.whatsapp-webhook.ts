@@ -321,8 +321,8 @@ async function handleUnknownSender(
     );
     const clinicaNombre = clinic?.name ?? "la clínica";
     const texto = abierto
-      ? `¡Hola! Gracias por escribirnos a ${clinicaNombre}. En breve te responde alguien del equipo — contanos qué necesitás mientras tanto.`
-      : `¡Hola! Gracias por escribirnos a ${clinicaNombre}. Ahora mismo estamos fuera de horario de atención — dejanos tu consulta y te contactamos a primera hora.`;
+      ? `¡Hola! Gracias por escribirnos a ${clinicaNombre}. En breve te responde alguien del equipo — cuéntanos qué necesitas mientras tanto.`
+      : `¡Hola! Gracias por escribirnos a ${clinicaNombre}. Ahora mismo estamos fuera de horario de atención — déjanos tu consulta y te contactamos a primera hora.`;
 
     await sendMetaTextMessage({
       phoneNumberId: account.phone_number_id,
