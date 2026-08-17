@@ -2,9 +2,12 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { createAppointment, setAppointmentStatus } from "@/lib/appointments.functions";
 import { registerPayment } from "@/lib/finance.functions";
+import { saveClinicalNote, restoreNoteVersion } from "@/lib/clinical-notes.functions";
+import { setOdontogramMark } from "@/lib/odontogram.functions";
 import {
   contarIntento,
   leerCola,
+  marcarConflicto,
   marcarFallido,
   pendientes,
   quitarDeCola,
@@ -23,7 +26,25 @@ const despachadores: Record<OperacionKind, (payload: never) => Promise<unknown>>
   "crear-cita": (payload) => createAppointment({ data: payload }),
   "registrar-pago": (payload) => registerPayment({ data: payload }),
   "cambiar-estado-cita": (payload) => setAppointmentStatus({ data: payload }),
+  "guardar-nota": (payload) => saveClinicalNote({ data: payload }),
+  "marcar-odontograma": (payload) => setOdontogramMark({ data: payload }),
 };
+
+/**
+ * `guardar-nota` y `marcar-odontograma` pueden resolver con `{conflict:true}`
+ * sin lanzar error: el servidor guardó la captura pero no la aplicó porque
+ * alguien más cambió lo mismo mientras el equipo estaba offline. Distinguirlo
+ * de un éxito común importa para no marcarlo "sincronizado" cuando en
+ * realidad necesita que una persona decida.
+ */
+function esConflicto(kind: OperacionKind, resultado: unknown): boolean {
+  return (
+    (kind === "guardar-nota" || kind === "marcar-odontograma") &&
+    Boolean(resultado) &&
+    typeof resultado === "object" &&
+    (resultado as { conflict?: boolean }).conflict === true
+  );
+}
 
 /**
  * Un fallo de red se reintenta; uno de validación o permisos, no.
@@ -48,6 +69,8 @@ const invalidaciones: Record<OperacionKind, string[]> = {
   "crear-cita": ["appointments"],
   "registrar-pago": ["payments", "patient", "patients", "finance-summary"],
   "cambiar-estado-cita": ["appointments"],
+  "guardar-nota": ["clinical-notes"],
+  "marcar-odontograma": ["odontogram-marks", "odontogram-history"],
 };
 
 let sincronizando = false;
@@ -61,10 +84,11 @@ let sincronizando = false;
  * fallar; seguir intentando solo suma ruido.
  */
 export async function sincronizarCola(queryClient: QueryClient, userId: string) {
-  if (sincronizando) return { sincronizados: 0, corte: true };
+  if (sincronizando) return { sincronizados: 0, conflictos: 0, corte: true };
   sincronizando = true;
 
   let sincronizados = 0;
+  let conflictosNuevos = 0;
   let corte = false;
   const kindsTocados = new Set<OperacionKind>();
 
@@ -74,10 +98,17 @@ export async function sincronizarCola(queryClient: QueryClient, userId: string) 
     for (const item of cola) {
       try {
         await contarIntento(item.localId);
-        await (despachadores[item.kind] as (p: unknown) => Promise<unknown>)(item.payload);
-        await quitarDeCola(item.localId);
+        const resultado = await (despachadores[item.kind] as (p: unknown) => Promise<unknown>)(
+          item.payload,
+        );
         kindsTocados.add(item.kind);
-        sincronizados += 1;
+        if (esConflicto(item.kind, resultado)) {
+          await marcarConflicto(item.localId, resultado as Record<string, unknown>);
+          conflictosNuevos += 1;
+        } else {
+          await quitarDeCola(item.localId);
+          sincronizados += 1;
+        }
       } catch (error) {
         if (esFalloDeRed(error)) {
           corte = true;
@@ -101,7 +132,33 @@ export async function sincronizarCola(queryClient: QueryClient, userId: string) 
     }
   }
 
-  return { sincronizados, corte };
+  return { sincronizados, conflictos: conflictosNuevos, corte };
+}
+
+/**
+ * Resuelve un ítem en conflicto. "usar-mio" aplica la captura offline como
+ * vigente (para notas, reusa `restoreNoteVersion` sobre la versión que ya se
+ * guardó en conflicto; para odontograma, reenvía la marca con `force`).
+ * "descartar" se queda con lo que ya está vigente en el servidor — no hace
+ * ninguna llamada, la captura offline simplemente se abandona.
+ */
+export async function resolverConflicto(
+  queryClient: QueryClient,
+  item: ItemCola,
+  decision: "usar-mio" | "descartar",
+) {
+  if (decision === "usar-mio") {
+    if (item.kind === "guardar-nota") {
+      const versionId = (item.detalleConflicto as { versionId?: string } | undefined)?.versionId;
+      if (versionId) await restoreNoteVersion({ data: { versionId } });
+      queryClient.invalidateQueries({ queryKey: ["clinical-notes"] });
+    } else if (item.kind === "marcar-odontograma") {
+      await setOdontogramMark({ data: { ...item.payload, force: true } as never });
+      queryClient.invalidateQueries({ queryKey: ["odontogram-marks"] });
+      queryClient.invalidateQueries({ queryKey: ["odontogram-history"] });
+    }
+  }
+  await quitarDeCola(item.localId);
 }
 
 /** Texto corto para la lista de pendientes. */
@@ -113,5 +170,9 @@ export function describirItem(item: ItemCola) {
       return "Cobro registrado";
     case "cambiar-estado-cita":
       return "Cambio de estado de una cita";
+    case "guardar-nota":
+      return "Nota clínica";
+    case "marcar-odontograma":
+      return "Marca de odontograma";
   }
 }

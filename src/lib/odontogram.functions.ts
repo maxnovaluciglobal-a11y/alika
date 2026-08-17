@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { filaYaCreada } from "@/lib/idempotency";
 import {
   TOOTH_CONDITIONS,
   TOOTH_SURFACES,
@@ -125,10 +126,21 @@ export const listOdontogramHistory = createServerFn({ method: "GET" })
     return marks.map((row) => mapRow(row, nameByUser));
   });
 
+export type OdontogramConflict = { conflict: true; current: OdontogramMark | null };
+export type OdontogramSaveResult = { id: string; conflict?: false } | OdontogramConflict;
+
 /**
  * Registra una marca nueva. El trigger de la base cierra automáticamente la
  * marca vigente anterior para la misma (paciente, pieza, superficie) — nunca
  * se hace UPDATE de una marca ya guardada.
+ *
+ * `baseMarkId` es la marca que el equipo vio como vigente al capturar (o
+ * `null` si la superficie estaba sana/sin marcar). El índice sobre
+ * `(clinic_id, patient_id, tooth_number, surface) WHERE superseded_at IS NULL`
+ * NO es único — dos marcas para la misma superficie pueden insertarse ambas
+ * sin que Postgres se queje, y la segunda gana en silencio. Por eso el chequeo
+ * de conflicto se hace acá, comparando contra lo que el cliente vio, antes de
+ * insertar — no como reacción a un error de la base.
  */
 export const setOdontogramMark = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -142,6 +154,12 @@ export const setOdontogramMark = createServerFn({ method: "POST" })
         condition: TOOTH_CONDITION_ENUM,
         material: z.string().trim().max(120).optional(),
         notes: z.string().trim().max(500).optional(),
+        /** Id generado por el cliente al capturar — permite reintentos idempotentes. */
+        id: z.string().uuid().optional(),
+        /** Marca vigente vista al capturar, o null si no había ninguna. `undefined` = no verificar (llamadas legacy). */
+        baseMarkId: z.string().uuid().nullable().optional(),
+        /** Salta el chequeo de conflicto: "aplicar de todos modos" desde la bandeja de conflictos. */
+        force: z.boolean().default(false),
       })
       .refine((v) => v.surface === "whole" || !WHOLE_TOOTH_CONDITIONS.includes(v.condition), {
         message:
@@ -150,12 +168,50 @@ export const setOdontogramMark = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .handler(async ({ data, context }): Promise<{ id: string }> => {
+  .handler(async ({ data, context }): Promise<OdontogramSaveResult> => {
     const { supabase } = context;
+
+    // Reintento idempotente: esta misma captura ya se guardó en un intento anterior.
+    if (data.id) {
+      const { data: propia } = await supabase
+        .from("odontogram_marks")
+        .select("id")
+        .eq("id", data.id)
+        .eq("clinic_id", data.clinicId)
+        .maybeSingle();
+      if (propia) return { id: propia.id };
+    }
+
+    if (!data.force && data.baseMarkId !== undefined) {
+      const { data: vigenteRow } = await supabase
+        .from("odontogram_marks")
+        .select(MARK_COLUMNS)
+        .eq("clinic_id", data.clinicId)
+        .eq("patient_id", data.patientId)
+        .eq("tooth_number", data.toothNumber)
+        .eq("surface", data.surface)
+        .is("superseded_at", null)
+        .maybeSingle();
+
+      const vigenteId = vigenteRow?.id ?? null;
+      if (vigenteId !== (data.baseMarkId ?? null)) {
+        let current: OdontogramMark | null = null;
+        if (vigenteRow) {
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, full_name")
+            .eq("id", vigenteRow.recorded_by);
+          const nameByUser = new Map((profiles ?? []).map((p) => [p.id, p.full_name]));
+          current = mapRow(vigenteRow as MarkRow, nameByUser);
+        }
+        return { conflict: true, current };
+      }
+    }
 
     const { data: inserted, error } = await supabase
       .from("odontogram_marks")
       .insert({
+        id: data.id,
         clinic_id: data.clinicId,
         patient_id: data.patientId,
         tooth_number: data.toothNumber,
@@ -168,10 +224,14 @@ export const setOdontogramMark = createServerFn({ method: "POST" })
       .single();
 
     if (error) {
-      // Diferenciar collision de superficie ya marcada vs falta de permisos.
-      // El índice único parcial `(clinic_id, patient_id, tooth_number, surface)
-      // WHERE superseded_at IS NULL` puede dispararse cuando dos usuarios
-      // marcan la misma superficie casi simultáneamente.
+      const yaCreada = await filaYaCreada(
+        supabase,
+        "odontogram_marks",
+        data.id,
+        data.clinicId,
+        error,
+      );
+      if (yaCreada) return { id: yaCreada };
       if ((error as { code?: string }).code === "23505") {
         throw new Error(
           "Otro usuario acaba de marcar esta superficie. Refresca el odontograma y vuelve a intentar.",

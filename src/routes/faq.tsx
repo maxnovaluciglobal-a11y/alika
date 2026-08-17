@@ -39,11 +39,15 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
       },
       {
         q: "¿Qué pasa si se corta internet en la clínica?",
-        a: "Sigues atendiendo. Puedes consultar la agenda y las fichas, cobrar y agendar citas: lo que registres queda guardado en el equipo y se sincroniza solo cuando vuelve internet, sin que nadie tenga que apretar nada. La app te muestra cuántas operaciones faltan subir. Lo que sí necesita conexión es mandar mensajes de WhatsApp y crear presupuestos, y la app lo avisa en el momento en vez de fallar en silencio.",
+        a: "Sigues atendiendo. Puedes consultar la agenda y las fichas, cobrar, agendar citas, editar notas clínicas y marcar el odontograma: lo que registres queda guardado en el equipo y se sincroniza solo cuando vuelve internet, sin que nadie tenga que apretar nada. La app te muestra cuántas operaciones faltan subir. Lo que sí necesita conexión es mandar mensajes de WhatsApp y crear presupuestos, y la app lo avisa en el momento en vez de fallar en silencio.",
       },
       {
         q: "Si cobro sin internet, ¿puede duplicarse el pago al sincronizar?",
         a: "No. Cada operación lleva un identificador propio generado en el equipo, así que si la sincronización se reintenta el servidor reconoce que ya la había guardado y no la registra de nuevo. Además el cobro queda con la hora en que lo hiciste, no con la hora en que se sincronizó, para que el cierre de caja del día cuadre.",
+      },
+      {
+        q: "¿Y si dos personas editan la misma nota o marcan la misma pieza dental mientras una está sin internet?",
+        a: "No se pierde nada, pero tampoco se pisan en silencio. Si al sincronizar el sistema ve que alguien más ya cambió lo mismo, deja ambas versiones a la vista en una bandeja de conflictos para que el profesional elija cuál vale.",
       },
     ],
   },

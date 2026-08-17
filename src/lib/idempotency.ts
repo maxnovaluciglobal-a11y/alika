@@ -6,7 +6,7 @@ import type { Database } from "@/integrations/supabase/types";
 const UNIQUE_VIOLATION = "23505";
 
 /** Tablas donde el cliente puede proponer el `id` (altas encolables offline). */
-type TablaIdempotente = "appointments" | "payments";
+type TablaIdempotente = "appointments" | "payments" | "odontogram_marks" | "clinical_notes";
 
 /**
  * Decide si un INSERT que falló es en realidad un reintento de algo que ya se

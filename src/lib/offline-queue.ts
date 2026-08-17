@@ -13,13 +13,20 @@ const STORE_NAME = "queue";
 const QUEUE_KEY = "items";
 
 /** Qué operaciones sabe reproducir la cola. */
-export type OperacionKind = "crear-cita" | "registrar-pago" | "cambiar-estado-cita";
+export type OperacionKind =
+  "crear-cita" | "registrar-pago" | "cambiar-estado-cita" | "guardar-nota" | "marcar-odontograma";
 
 export type EstadoItem =
   /** Esperando conexión. */
   | "pendiente"
   /** Falló por algo que reintentar no va a arreglar (validación, permisos). */
-  | "fallido";
+  | "fallido"
+  /**
+   * El servidor guardó la captura pero no la aplicó: otra edición la pisaba.
+   * A diferencia de "fallido", acá no hubo error — hace falta que una persona
+   * elija entre las dos versiones.
+   */
+  | "conflicto";
 
 export type ItemCola = {
   /** Identidad de la fila en la cola, no del registro que va a crear. */
@@ -47,6 +54,19 @@ export type ItemCola = {
   estado: EstadoItem;
   /** Motivo del último fallo definitivo, para poder mostrarlo. */
   error?: string;
+  /** Lo que devolvió el servidor cuando estado es "conflicto" (versionId, marca vigente, etc). */
+  detalleConflicto?: Record<string, unknown>;
+  /**
+   * Identifica LO MISMO que esta captura edita (ej. el noteId, o
+   * `pacienteId:pieza:superficie`). Una edición offline repetida de lo mismo
+   * REEMPLAZA la pendiente anterior en vez de acumularse: si no, la segunda
+   * llegaría a sincronizar comparando contra la primera (todavía sin
+   * confirmar) en lugar de contra lo que el servidor tenía antes de que el
+   * equipo se quedara sin conexión, y se marcaría conflicto contra su propio
+   * trabajo. Solo aplica a kinds que editan una entidad puntual — crear-cita
+   * y registrar-pago no lo usan, cada captura es un hecho distinto.
+   */
+  identidad?: string;
 };
 
 function store() {
@@ -78,6 +98,10 @@ export function fallidos(items: ItemCola[]) {
   return items.filter((i) => i.estado === "fallido");
 }
 
+export function conflictos(items: ItemCola[]) {
+  return items.filter((i) => i.estado === "conflicto");
+}
+
 const suscriptores = new Set<(items: ItemCola[]) => void>();
 
 export function suscribirCola(fn: (items: ItemCola[]) => void) {
@@ -91,9 +115,37 @@ async function notificar() {
   for (const fn of suscriptores) fn(items);
 }
 
+/**
+ * Si `item.identidad` coincide con una pendiente propia del mismo tipo, la
+ * reemplaza en vez de acumular — ver el comentario de `identidad` en el tipo
+ * `ItemCola`.
+ */
 export async function encolar(item: Omit<ItemCola, "intentos" | "estado">) {
   const items = await leerCola();
-  items.push({ ...item, intentos: 0, estado: "pendiente" });
+  const idx = item.identidad
+    ? items.findIndex(
+        (i) =>
+          i.userId === item.userId &&
+          i.kind === item.kind &&
+          i.estado === "pendiente" &&
+          i.identidad === item.identidad,
+      )
+    : -1;
+  if (idx >= 0) {
+    items[idx] = { ...items[idx], ...item, intentos: 0, estado: "pendiente" };
+  } else {
+    items.push({ ...item, intentos: 0, estado: "pendiente" });
+  }
+  await escribirCola(items);
+  await notificar();
+}
+
+/** Registra directamente en conflicto — camino online-inmediato (dos pestañas, otro dispositivo). */
+export async function registrarConflicto(
+  item: Omit<ItemCola, "intentos" | "estado"> & { detalleConflicto: Record<string, unknown> },
+) {
+  const items = await leerCola();
+  items.push({ ...item, intentos: 0, estado: "conflicto" });
   await escribirCola(items);
   await notificar();
 }
@@ -115,6 +167,19 @@ export async function marcarFallido(localId: string, error: string) {
   }
 }
 
+/** Sincronizó, pero el servidor no aplicó la captura porque alguien más cambió lo mismo mientras tanto. */
+export async function marcarConflicto(localId: string, detalle: Record<string, unknown>) {
+  const items = await leerCola();
+  const item = items.find((i) => i.localId === localId);
+  if (item) {
+    item.estado = "conflicto";
+    item.detalleConflicto = detalle;
+    item.intentos += 1;
+    await escribirCola(items);
+    await notificar();
+  }
+}
+
 export async function contarIntento(localId: string) {
   const items = await leerCola();
   const item = items.find((i) => i.localId === localId);
@@ -126,6 +191,11 @@ export async function contarIntento(localId: string) {
 
 /** Descarta un fallo definitivo que el usuario ya revisó. */
 export async function descartarFallido(localId: string) {
+  await quitarDeCola(localId);
+}
+
+/** Descarta la captura offline en conflicto: se queda con lo que ya está vigente en el servidor. */
+export async function descartarConflicto(localId: string) {
   await quitarDeCola(localId);
 }
 

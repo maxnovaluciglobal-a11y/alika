@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { filaYaCreada } from "@/lib/idempotency";
 import type { Database } from "@/integrations/supabase/types";
 
 type SupabaseCtx = SupabaseClient<Database>;
@@ -220,18 +221,104 @@ const saveInput = clinicPatient.extend({
   summary: z.string().max(4000).nullable().optional(),
   aiAssisted: z.boolean().default(false),
   aiAction: z.enum(["draft", "summary", "polish"]).nullable().optional(),
+  /** Versión vigente vista al empezar a editar. `undefined` = no verificar (llamadas legacy/IA). */
+  baseVersion: z.number().int().positive().nullable().optional(),
+  /** Salta el chequeo de conflicto: nunca se usa desde la UI de edición normal. */
+  force: z.boolean().default(false),
 });
 
-/** Guarda la nota creando una nueva versión inmutable y registrando auditoría. */
+export type SaveNoteConflict = {
+  noteId: string;
+  conflict: true;
+  versionId: string;
+  version: number;
+  currentTitle: string;
+  currentContent: string;
+};
+export type SaveNoteResult =
+  { noteId: string; version: number; conflict?: false } | SaveNoteConflict;
+
+/**
+ * Guarda la nota creando una nueva versión inmutable y registrando auditoría.
+ *
+ * Si `noteId` viene de una captura offline, puede no existir todavía en la
+ * base — en ese caso es un alta, no una edición (`esCreacion` lo decide con
+ * una lectura, nunca confiando en la sola verdad de que el parámetro venga
+ * seteado).
+ *
+ * `baseVersion` es la versión que el equipo tenía cargada al empezar a editar
+ * offline. Si al sincronizar la vigente ya avanzó, no pisamos el contenido en
+ * silencio: igual guardamos la edición como una versión nueva (nada se
+ * pierde, regla #9 del repo) pero NO la hacemos vigente — se devuelve como
+ * conflicto para que una persona decida entre las dos.
+ */
 export const saveClinicalNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => saveInput.parse(input))
-  .handler(async ({ data, context }): Promise<{ noteId: string; version: number }> => {
+  .handler(async ({ data, context }): Promise<SaveNoteResult> => {
     const { supabase, userId } = context;
     let noteId = data.noteId ?? null;
     let accion = "update";
+    let esCreacion = !noteId;
 
-    if (noteId) {
+    if (noteId && !esCreacion) {
+      const { data: existente } = await supabase
+        .from("clinical_notes")
+        .select("id")
+        .eq("id", noteId)
+        .maybeSingle();
+      if (!existente) esCreacion = true;
+    }
+
+    if (!esCreacion) {
+      if (!data.force && data.baseVersion != null) {
+        const vigente = await versionActual(supabase, noteId!);
+        if (vigente != null && vigente !== data.baseVersion) {
+          const { data: actual } = await supabase
+            .from("clinical_notes")
+            .select("title, content")
+            .eq("id", noteId!)
+            .maybeSingle();
+
+          const nuevaVersion = vigente + 1;
+          const { data: versionInsertada, error: versionError } = await supabase
+            .from("clinical_note_versions")
+            .insert({
+              note_id: noteId!,
+              clinic_id: data.clinicId,
+              version: nuevaVersion,
+              title: data.title,
+              content: data.content,
+              summary: data.summary ?? null,
+              ai_assisted: data.aiAssisted,
+              ai_action: data.aiAction ?? null,
+              author_id: userId,
+            })
+            .select("id")
+            .single();
+          if (versionError || !versionInsertada)
+            throw new Error(mensajeDb(versionError, "No pudimos guardar tu versión en conflicto."));
+
+          await supabase.from("clinical_note_audit").insert({
+            note_id: noteId!,
+            clinic_id: data.clinicId,
+            patient_ref: data.patientRef,
+            action: "conflict",
+            detail: `v${nuevaVersion} sin conexión chocó con v${vigente} ya guardada`,
+            actor_id: userId,
+          });
+
+          return {
+            noteId: noteId!,
+            conflict: true,
+            versionId: versionInsertada.id,
+            version: nuevaVersion,
+            currentTitle: actual?.title ?? data.title,
+            currentContent: actual?.content ?? data.content,
+          };
+        }
+      }
+
       const { error } = await supabase
         .from("clinical_notes")
         .update({
@@ -240,7 +327,7 @@ export const saveClinicalNote = createServerFn({ method: "POST" })
           summary: data.summary ?? null,
           updated_by: userId,
         })
-        .eq("id", noteId)
+        .eq("id", noteId!)
         .eq("clinic_id", data.clinicId);
       if (error)
         throw new Error(
@@ -251,6 +338,7 @@ export const saveClinicalNote = createServerFn({ method: "POST" })
       const { data: created, error } = await supabase
         .from("clinical_notes")
         .insert({
+          id: data.noteId ?? undefined,
           clinic_id: data.clinicId,
           patient_ref: data.patientRef,
           patient_name: data.patientName ?? null,
@@ -262,11 +350,26 @@ export const saveClinicalNote = createServerFn({ method: "POST" })
         })
         .select("id")
         .single();
-      if (error || !created)
-        throw new Error(
-          mensajeDb(error, "No tienes permisos para crear notas clínicas en esta clínica."),
+      if (error) {
+        const yaCreada = await filaYaCreada(
+          supabase,
+          "clinical_notes",
+          data.noteId ?? undefined,
+          data.clinicId,
+          error,
         );
-      noteId = created.id;
+        if (!yaCreada)
+          throw new Error(
+            mensajeDb(error, "No tienes permisos para crear notas clínicas en esta clínica."),
+          );
+        noteId = yaCreada;
+        const versionExistente = await versionActual(supabase, noteId);
+        // Reintento de un alta offline que ya había quedado completa (con su versión).
+        if (versionExistente != null) return { noteId, version: versionExistente };
+        // La nota se creó pero la versión no llegó a guardarse — se completa abajo.
+      } else {
+        noteId = created!.id;
+      }
     }
 
     const { data: last } = await supabase

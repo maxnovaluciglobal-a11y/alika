@@ -4,9 +4,11 @@ import { toast } from "sonner";
 
 import { useConnectivity } from "@/hooks/use-connectivity";
 import {
+  conflictos,
   encolar,
   leerCola,
   pendientes,
+  registrarConflicto,
   suscribirCola,
   fallidos,
   type ItemCola,
@@ -23,6 +25,20 @@ type Opciones<P> = {
   invalidar?: unknown[][];
   resumen: (payload: P) => string;
   onDone?: () => void;
+  /**
+   * Identidad de la entidad que edita este payload (ej. noteId), para
+   * coalescer varias ediciones offline seguidas — ver `identidad` en
+   * `ItemCola`. Kinds que no editan una entidad puntual la omiten.
+   */
+  identidad?: (payload: P) => string | undefined;
+  /**
+   * Server functions con resolución de conflictos (notas, odontograma)
+   * devuelven `{conflict:true}` sin lanzar error en vez de aplicar la
+   * escritura. Sin esto, cualquier resultado online se trata como éxito.
+   */
+  esConflicto?: (resultado: unknown) => boolean;
+  /** Éxito online real (no conflicto): acá el caller lee noteId/version/etc del resultado. */
+  onExito?: (resultado: unknown) => void;
 };
 
 /**
@@ -43,6 +59,9 @@ export function useOfflineMutation<P extends Record<string, unknown>>({
   invalidar = [],
   resumen,
   onDone,
+  identidad,
+  esConflicto,
+  onExito,
 }: Opciones<P>) {
   const queryClient = useQueryClient();
   const { online } = useConnectivity();
@@ -57,8 +76,28 @@ export function useOfflineMutation<P extends Record<string, unknown>>({
           return;
         }
         try {
-          await ejecutar(payload);
+          const resultado = await ejecutar(payload);
           for (const clave of invalidar) queryClient.invalidateQueries({ queryKey: clave });
+          if (esConflicto?.(resultado)) {
+            // Rarísimo estando online (dos pestañas, otro dispositivo), pero
+            // el resultado es el mismo que un conflicto detectado al
+            // sincronizar: va a la misma bandeja, no se pierde.
+            await registrarConflicto({
+              localId: crypto.randomUUID(),
+              userId,
+              kind,
+              payload,
+              capturedAt: new Date().toISOString(),
+              resumen: resumen(payload),
+              detalleConflicto: resultado as Record<string, unknown>,
+              identidad: identidad?.(payload),
+            });
+            toast.error(
+              "Alguien más cambió esto mientras tanto. Quedó en Conflictos para decidir.",
+            );
+          } else {
+            onExito?.(resultado);
+          }
           onDone?.();
         } catch (error) {
           // Creíamos tener conexión pero el envío falló. Si es de red, va a
@@ -83,12 +122,25 @@ export function useOfflineMutation<P extends Record<string, unknown>>({
           payload: p,
           capturedAt: new Date().toISOString(),
           resumen: resumen(p),
+          identidad: identidad?.(p),
         });
         toast.success("Guardado sin conexión. Se sincroniza solo cuando vuelva internet.");
         onDone?.();
       }
     },
-    [online, ejecutar, invalidar, queryClient, onDone, kind, userId, resumen],
+    [
+      online,
+      ejecutar,
+      invalidar,
+      queryClient,
+      onDone,
+      kind,
+      userId,
+      resumen,
+      identidad,
+      esConflicto,
+      onExito,
+    ],
   );
 
   return { mutar, enCurso };
@@ -110,7 +162,7 @@ export function useColaOffline(userId: string | undefined) {
   );
 
   const mios = userId ? items.filter((i) => i.userId === userId) : snapshotVacio;
-  return { pendientes: pendientes(mios), fallidos: fallidos(mios) };
+  return { pendientes: pendientes(mios), fallidos: fallidos(mios), conflictos: conflictos(mios) };
 }
 
 /**
@@ -131,12 +183,23 @@ export function useSincronizacionAutomatica(userId: string | undefined) {
       const hay = pendientes(await leerCola()).some((i) => i.userId === userId);
       if (!hay || cancelado) return;
 
-      const { sincronizados } = await sincronizarCola(queryClient, userId);
-      if (sincronizados > 0 && !cancelado) {
+      const { sincronizados, conflictos: nuevosConflictos } = await sincronizarCola(
+        queryClient,
+        userId,
+      );
+      if (cancelado) return;
+      if (sincronizados > 0) {
         toast.success(
           sincronizados === 1
             ? "Se sincronizó 1 operación pendiente."
             : `Se sincronizaron ${sincronizados} operaciones pendientes.`,
+        );
+      }
+      if (nuevosConflictos > 0) {
+        toast.error(
+          nuevosConflictos === 1
+            ? "1 cambio necesita que decidas cuál versión vale — revisa Conflictos."
+            : `${nuevosConflictos} cambios necesitan que decidas cuál versión vale — revisa Conflictos.`,
         );
       }
     })();

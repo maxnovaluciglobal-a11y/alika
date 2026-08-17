@@ -74,16 +74,25 @@ function Privacidad() {
         código de por medio.
       </LegalP>
       <LegalP>
-        <strong>Copia local en el equipo del personal.</strong> Para que la clínica pueda seguir
-        consultando información durante un corte de internet, el navegador del equipo guarda una
-        copia de parte de los datos. Esa copia se limita a lo necesario para atender: agenda,
-        listado y ficha básica de pacientes, y catálogos de la clínica (sucursales, profesionales,
-        procedimientos).{" "}
+        <strong>Copia local para consultar.</strong> Para que la clínica pueda seguir consultando
+        información durante un corte de internet, el navegador del equipo guarda una copia de parte
+        de los datos. Esa copia se limita a lo necesario para atender: agenda, listado y ficha
+        básica de pacientes, y catálogos de la clínica (sucursales, profesionales, procedimientos).{" "}
         <strong>
-          Las notas clínicas, el odontograma y el detalle de pagos no se guardan en el equipo
+          Las notas clínicas, el odontograma y el detalle de pagos no se guardan en esta copia
         </strong>{" "}
-        — solo se ven mientras hay conexión. La copia local queda asociada al usuario que inició
+        — para consultarlos hace falta conexión. Esta copia queda asociada al usuario que inició
         sesión, se borra al cerrar sesión y caduca a los 7 días.
+      </LegalP>
+      <LegalP>
+        <strong>Cola temporal para lo que se registra sin conexión.</strong> Es un espacio aparte
+        del anterior: cuando el equipo cobra, agenda, edita una nota clínica o marca el odontograma
+        sin internet, esa captura queda guardada en el navegador hasta que pueda subirse — sí,
+        incluyendo el contenido clínico en ese caso puntual. No es una copia adicional de toda la
+        historia del paciente: solo lo que efectivamente se registró estando offline, y desaparece
+        del equipo en cuanto sincroniza. Si el servidor detecta que otra persona cambió lo mismo
+        mientras tanto, ninguna de las dos versiones se pierde: ambas quedan visibles para que el
+        profesional decida cuál vale.
       </LegalP>
 
       <LegalH2>4. Con quién compartimos datos</LegalH2>

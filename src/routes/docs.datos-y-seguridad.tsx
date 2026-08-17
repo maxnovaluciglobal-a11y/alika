@@ -52,11 +52,12 @@ function DocsSeguridad() {
 
       <LegalH2>Trabajar durante un corte de internet</LegalH2>
       <LegalP>
-        Cobrar y agendar funcionan sin conexión: la operación queda guardada en el equipo y se
-        sincroniza sola al volver internet. Cada una lleva un identificador generado en el momento
-        de la captura, así que si la sincronización se reintenta el servidor reconoce que ya la
-        había guardado y no la duplica. Los cobros conservan la hora en que se hicieron, no la hora
-        en que se subieron — de otro modo el cierre de caja del día no cuadraría.
+        Cobrar, agendar, editar una nota clínica y marcar el odontograma funcionan sin conexión: la
+        operación queda guardada en el equipo y se sincroniza sola al volver internet. Cada una
+        lleva un identificador generado en el momento de la captura, así que si la sincronización se
+        reintenta el servidor reconoce que ya la había guardado y no la duplica. Los cobros
+        conservan la hora en que se hicieron, no la hora en que se subieron — de otro modo el cierre
+        de caja del día no cuadraría.
       </LegalP>
       <LegalP>
         Si el servidor rechaza una operación por una razón real (permisos, validación), no se
@@ -64,14 +65,23 @@ function DocsSeguridad() {
         funciona sin conexión —mandar WhatsApp, crear presupuestos con numeración correlativa— se
         avisa en el momento en vez de fallar en silencio.
       </LegalP>
+      <LegalP>
+        Notas clínicas y odontograma tienen un caso extra: si dos personas cambian lo mismo casi al
+        mismo tiempo —una offline, otra desde otro equipo— el sistema no deja que la segunda pise a
+        la primera en silencio. La captura offline se guarda igual (nunca se pierde) pero no se
+        aplica automáticamente: queda en una bandeja de conflictos con ambas versiones a la vista,
+        para que el profesional elija cuál vale.
+      </LegalP>
 
-      <LegalH2>Copia local para trabajar sin conexión</LegalH2>
+      <LegalH2>Copia local para consultar (distinta de la cola de arriba)</LegalH2>
       <LegalP>
         Para que un corte de internet no deje a la clínica sin poder ver nada, el navegador guarda
         una copia de lo indispensable para atender: agenda, listado y ficha básica de pacientes, y
         los catálogos de la clínica. Es una lista blanca explícita — lo que no está en ella no se
-        guarda en el equipo. Quedan afuera a propósito las notas clínicas, el odontograma y el
-        detalle de pagos: son los datos más sensibles y no hacen falta en el mostrador.
+        guarda en esta copia. Quedan afuera a propósito las notas clínicas, el odontograma y el
+        detalle de pagos: son los datos más sensibles y no hacen falta para consultar en el
+        mostrador (si se cargan sin conexión, sí pasan brevemente por la cola de sincronización de
+        arriba hasta subir — ver sección anterior).
       </LegalP>
       <LegalP>
         Esa copia queda asociada al usuario que inició sesión. Si en un equipo compartido entra otra

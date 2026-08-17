@@ -34,7 +34,9 @@ import {
   restoreNoteVersion,
   saveClinicalNote,
   setNoteStatus,
+  type SaveNoteResult,
 } from "@/lib/clinical-notes.functions";
+import { useOfflineMutation } from "@/hooks/use-offline-mutation";
 import {
   AI_ACTION_LABELS,
   AUDIT_LABELS,
@@ -95,6 +97,9 @@ export function NotasClinicas({
   const resolveReviewFn = useServerFn(resolveNoteReview);
 
   const [noteId, setNoteId] = useState<string | null>(null);
+  // Versión vigente vista al empezar a editar. Viaja en cada guardado offline
+  // para que el servidor detecte si alguien más cambió la nota mientras tanto.
+  const [baseVersion, setBaseVersion] = useState<number | null>(null);
   const [titulo, setTitulo] = useState("Nota clínica");
   const [contenido, setContenido] = useState("");
   const [resumen, setResumen] = useState<string | null>(null);
@@ -194,6 +199,7 @@ export function NotasClinicas({
 
   function nuevaNota() {
     setNoteId(null);
+    setBaseVersion(null);
     setTitulo("Nota clínica");
     setContenido("");
     setResumen(null);
@@ -222,35 +228,50 @@ export function NotasClinicas({
     const nota = notas.find((n) => n.id === id);
     if (!nota) return;
     setNoteId(nota.id);
+    setBaseVersion(nota.version);
     setTitulo(nota.title);
     setContenido(nota.content);
     setResumen(nota.summary);
     setAiUsada(false);
   }
 
-  const guardar = useMutation({
-    mutationFn: (args: { aiAction: "draft" | "summary" | "polish" | null }) =>
-      saveFn({
-        data: {
-          clinicId: clinicId!,
-          patientRef: paciente.id,
-          patientName: paciente.nombre,
-          noteId,
-          title: titulo.trim() || "Nota clínica",
-          content: contenido,
-          summary: resumen,
-          aiAssisted: aiUsada,
-          aiAction: args.aiAction,
-        },
-      }),
-    onSuccess: (res) => {
-      setNoteId(res.noteId);
+  const guardarOffline = useOfflineMutation<Record<string, unknown>>({
+    kind: "guardar-nota",
+    userId: userId ?? "",
+    ejecutar: (payload) => saveFn({ data: payload as never }),
+    invalidar: [queryKey],
+    resumen: (payload) => `Nota: ${(payload as { title: string }).title}`,
+    identidad: (payload) => (payload as { noteId?: string }).noteId,
+    esConflicto: (r) =>
+      Boolean(r && typeof r === "object" && (r as { conflict?: boolean }).conflict),
+    onExito: (r) => {
+      const res = r as SaveNoteResult;
+      if (res.conflict) return; // esConflicto ya lo filtra, esto es solo por tipos
+      setBaseVersion(res.version);
       setAiUsada(false);
-      queryClient.invalidateQueries({ queryKey });
       toast.success(`Nota guardada como v${res.version}`);
     },
-    onError: diagError("edit"),
   });
+
+  // Sella noteId (generado en el equipo si es alta nueva, para que retomar la
+  // edición offline no cree una segunda nota) y baseVersion ANTES de mandar,
+  // igual que agendar()/pagar() en la cola de Tanda 3.
+  function guardar(aiAction: "draft" | "summary" | "polish" | null) {
+    const id = noteId ?? crypto.randomUUID();
+    if (!noteId) setNoteId(id);
+    guardarOffline.mutar({
+      clinicId: clinicId!,
+      patientRef: paciente.id,
+      patientName: paciente.nombre,
+      noteId: id,
+      title: titulo.trim() || "Nota clínica",
+      content: contenido,
+      summary: resumen,
+      aiAssisted: aiUsada,
+      aiAction,
+      baseVersion,
+    });
+  }
 
   const ia = useMutation({
     mutationFn: (action: "draft" | "summary" | "polish") =>
@@ -281,6 +302,7 @@ export function NotasClinicas({
       setTitulo(res.title);
       setContenido(res.content);
       setResumen(res.summary ?? "");
+      setBaseVersion(res.version);
       await queryClient.invalidateQueries({ queryKey });
       toast.success(`Revertida como borrador v${res.version}`);
     },
@@ -392,7 +414,8 @@ export function NotasClinicas({
     onError: diagError("resolve_review"),
   });
 
-  const ocupado = ia.isPending || guardar.isPending || restaurar.isPending || estructurar.isPending;
+  const ocupado =
+    ia.isPending || guardarOffline.enCurso || restaurar.isPending || estructurar.isPending;
   // Bloqueada para edición: firmada o en revisión pendiente (también validado por la base de datos).
   const firmada = notaActual?.status === "signed";
   const bloqueada = firmada || revisionPendiente;
@@ -569,11 +592,11 @@ export function NotasClinicas({
                 Estructurar campos
               </button>
               <button
-                onClick={() => guardar.mutate({ aiAction: aiUsada ? "draft" : null })}
+                onClick={() => guardar(aiUsada ? "draft" : null)}
                 disabled={ocupado || bloqueada || !contenido.trim()}
                 className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-brand-foreground disabled:opacity-50"
               >
-                {guardar.isPending ? (
+                {guardarOffline.enCurso ? (
                   <Loader2 className="size-3 animate-spin" />
                 ) : (
                   <Save className="size-3" />

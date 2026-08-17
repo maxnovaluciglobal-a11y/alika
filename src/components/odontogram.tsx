@@ -1,9 +1,10 @@
 import { Fragment, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { History, Info, Loader2, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { useOfflineMutation } from "@/hooks/use-offline-mutation";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   CONDITION_COLORS,
@@ -180,9 +181,10 @@ interface Props {
   clinicId: string;
   patientId: string;
   puedeEditar: boolean;
+  userId: string;
 }
 
-export function Odontogram({ clinicId, patientId, puedeEditar }: Props) {
+export function Odontogram({ clinicId, patientId, puedeEditar, userId }: Props) {
   const queryClient = useQueryClient();
   const fetchMarks = useServerFn(listOdontogramMarks);
   const fetchHistory = useServerFn(listOdontogramHistory);
@@ -207,20 +209,44 @@ export function Odontogram({ clinicId, patientId, puedeEditar }: Props) {
 
   const byTooth = useMemo(() => marksByTooth(marks), [marks]);
 
-  const save = useMutation({
-    mutationFn: (input: {
-      toothNumber: number;
-      surface: ToothSurface;
-      condition: ToothCondition;
-    }) => saveFn({ data: { clinicId, patientId, ...input } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: marksKey });
-      queryClient.invalidateQueries({ queryKey: historyKey });
+  const save = useOfflineMutation<Record<string, unknown>>({
+    kind: "marcar-odontograma",
+    userId,
+    ejecutar: (payload) => saveFn({ data: payload as never }),
+    invalidar: [marksKey, historyKey],
+    resumen: (payload) => {
+      const p = payload as {
+        toothNumber: number;
+        surface: ToothSurface;
+        condition: ToothCondition;
+      };
+      return `Pieza ${p.toothNumber} · ${SURFACE_LABELS[p.surface]} · ${CONDITION_LABELS[p.condition]}`;
+    },
+    identidad: (payload) => {
+      const p = payload as { toothNumber: number; surface: ToothSurface };
+      return `${patientId}:${p.toothNumber}:${p.surface}`;
+    },
+    esConflicto: (r) =>
+      Boolean(r && typeof r === "object" && (r as { conflict?: boolean }).conflict),
+    onExito: () => {
       setSelection(null);
       toast.success("Marca guardada");
     },
-    onError: (e: Error) => toast.error(e.message),
   });
+
+  function marcar(condition: ToothCondition) {
+    if (!selection) return;
+    const vigente = byTooth.get(selection.tooth)?.[selection.surface];
+    save.mutar({
+      id: crypto.randomUUID(),
+      clinicId,
+      patientId,
+      toothNumber: selection.tooth,
+      surface: selection.surface,
+      condition,
+      baseMarkId: vigente?.id ?? null,
+    });
+  }
 
   const availableConditions =
     selection?.surface === "whole"
@@ -311,14 +337,8 @@ export function Odontogram({ clinicId, patientId, puedeEditar }: Props) {
                 {availableConditions.map((cond) => (
                   <button
                     key={cond}
-                    onClick={() =>
-                      save.mutate({
-                        toothNumber: selection.tooth,
-                        surface: selection.surface,
-                        condition: cond,
-                      })
-                    }
-                    disabled={save.isPending}
+                    onClick={() => marcar(cond)}
+                    disabled={save.enCurso}
                     className={cn(
                       "flex items-center gap-1.5 rounded-md border border-hairline px-2 py-1.5 text-[11px] font-medium transition-colors hover:bg-secondary/60 disabled:opacity-50",
                     )}
@@ -331,7 +351,7 @@ export function Odontogram({ clinicId, patientId, puedeEditar }: Props) {
                     {CONDITION_LABELS[cond]}
                   </button>
                 ))}
-                {save.isPending && (
+                {save.enCurso && (
                   <span className="col-span-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
                     <Loader2 className="size-3 animate-spin" /> Guardando…
                   </span>
