@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { HORA_INICIO, type Cita, type EstadoCita } from "@/lib/clinic-data";
+import { filaYaCreada } from "@/lib/idempotency";
 
 const DEFAULT_TIMEZONE = "America/Santiago";
 
@@ -163,6 +164,10 @@ export const createAppointment = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
+        // Lo genera el cliente cuando la cita se capturó sin conexión, para
+        // que reintentar la cola no cree la misma cita dos veces (ver el
+        // manejo de 23505 más abajo). Online no se manda y lo pone la DB.
+        id: z.string().uuid().optional(),
         clinicId: z.string().uuid(),
         branchId: z.string().uuid(),
         patientId: z.string().uuid(),
@@ -196,6 +201,7 @@ export const createAppointment = createServerFn({ method: "POST" })
     const { data: inserted, error } = await context.supabase
       .from("appointments")
       .insert({
+        ...(data.id ? { id: data.id } : {}),
         clinic_id: data.clinicId,
         branch_id: data.branchId,
         patient_id: data.patientId,
@@ -208,7 +214,17 @@ export const createAppointment = createServerFn({ method: "POST" })
       .select("id")
       .single();
 
-    if (error) throw new Error("No pudimos crear la cita. " + error.message);
+    if (error) {
+      const yaEstaba = await filaYaCreada(
+        context.supabase,
+        "appointments",
+        data.id,
+        data.clinicId,
+        error,
+      );
+      if (yaEstaba) return { id: yaEstaba };
+      throw new Error("No pudimos crear la cita. " + error.message);
+    }
     return { id: inserted.id };
   });
 

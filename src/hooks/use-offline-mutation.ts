@@ -1,0 +1,148 @@
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { useConnectivity } from "@/hooks/use-connectivity";
+import {
+  encolar,
+  leerCola,
+  pendientes,
+  suscribirCola,
+  fallidos,
+  type ItemCola,
+  type OperacionKind,
+} from "@/lib/offline-queue";
+import { sincronizarCola } from "@/lib/offline-sync";
+
+type Opciones<P> = {
+  kind: OperacionKind;
+  userId: string;
+  /** Server function del camino online. */
+  ejecutar: (payload: P) => Promise<unknown>;
+  /** Claves de React Query a refrescar cuando sí hubo red. */
+  invalidar?: unknown[][];
+  resumen: (payload: P) => string;
+  onDone?: () => void;
+};
+
+/**
+ * Envuelve una escritura para que funcione con y sin conexión.
+ *
+ * Mantiene la forma que ya usan todos los diálogos del repo (mutar → refrescar
+ * → toast → cerrar), así que conectarlo es cambiar la llamada, no reescribir
+ * el componente.
+ *
+ * Sin red no falla: guarda la operación en la cola y le dice al usuario que
+ * quedó pendiente. Es la diferencia entre "no se pudo cobrar" y "cobrado, se
+ * sincroniza cuando vuelva internet".
+ */
+export function useOfflineMutation<P extends Record<string, unknown>>({
+  kind,
+  userId,
+  ejecutar,
+  invalidar = [],
+  resumen,
+  onDone,
+}: Opciones<P>) {
+  const queryClient = useQueryClient();
+  const { online } = useConnectivity();
+  const [enCurso, setEnCurso] = useState(false);
+
+  const mutar = useCallback(
+    async (payload: P) => {
+      setEnCurso(true);
+      try {
+        if (!online) {
+          await encolarOperacion(payload);
+          return;
+        }
+        try {
+          await ejecutar(payload);
+          for (const clave of invalidar) queryClient.invalidateQueries({ queryKey: clave });
+          onDone?.();
+        } catch (error) {
+          // Creíamos tener conexión pero el envío falló. Si es de red, va a
+          // la cola igual — el usuario no tiene por qué perder lo que cargó
+          // solo porque el corte empezó justo ahora.
+          if (error instanceof TypeError || /failed to fetch/i.test(String(error))) {
+            await encolarOperacion(payload);
+            return;
+          }
+          toast.error(error instanceof Error ? error.message : "No se pudo guardar.");
+        }
+      } finally {
+        setEnCurso(false);
+      }
+
+      async function encolarOperacion(p: P) {
+        await encolar({
+          localId: crypto.randomUUID(),
+          userId,
+          kind,
+          // Verbatim: exactamente lo que recibiría la server function online.
+          payload: p,
+          capturedAt: new Date().toISOString(),
+          resumen: resumen(p),
+        });
+        toast.success("Guardado sin conexión. Se sincroniza solo cuando vuelva internet.");
+        onDone?.();
+      }
+    },
+    [online, ejecutar, invalidar, queryClient, onDone, kind, userId, resumen],
+  );
+
+  return { mutar, enCurso };
+}
+
+const snapshotVacio: ItemCola[] = [];
+let cache: ItemCola[] = snapshotVacio;
+
+/** Estado de la cola, compartido por la UI de pendientes y el sincronizador. */
+export function useColaOffline(userId: string | undefined) {
+  const items = useSyncExternalStore(
+    (cb) =>
+      suscribirCola((nuevos) => {
+        cache = nuevos;
+        cb();
+      }),
+    () => cache,
+    () => snapshotVacio,
+  );
+
+  const mios = userId ? items.filter((i) => i.userId === userId) : snapshotVacio;
+  return { pendientes: pendientes(mios), fallidos: fallidos(mios) };
+}
+
+/**
+ * Dispara la sincronización cuando vuelve la conexión.
+ *
+ * Se monta una sola vez (en el AppShell): si cada pantalla lo hiciera, varias
+ * sincronizaciones competirían por la misma cola.
+ */
+export function useSincronizacionAutomatica(userId: string | undefined) {
+  const { online } = useConnectivity();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!online || !userId) return;
+    let cancelado = false;
+
+    (async () => {
+      const hay = pendientes(await leerCola()).some((i) => i.userId === userId);
+      if (!hay || cancelado) return;
+
+      const { sincronizados } = await sincronizarCola(queryClient, userId);
+      if (sincronizados > 0 && !cancelado) {
+        toast.success(
+          sincronizados === 1
+            ? "Se sincronizó 1 operación pendiente."
+            : `Se sincronizaron ${sincronizados} operaciones pendientes.`,
+        );
+      }
+    })();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [online, userId, queryClient]);
+}

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { HolidayNotice } from "@/components/holiday-notice";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import { usePublicHolidays } from "@/hooks/use-public-holidays";
-import { SIN_CONEXION, useConnectivity } from "@/hooks/use-connectivity";
+import { useOfflineMutation } from "@/hooks/use-offline-mutation";
 import {
   Dialog,
   DialogContent,
@@ -99,12 +99,14 @@ function horaDeCita(minutos: number) {
 
 function NuevaCitaDialog({
   clinicId,
+  userId,
   country,
   sucursales,
   profesionales,
   pacientes,
 }: {
   clinicId: string;
+  userId: string;
   country: string | undefined;
   sucursales: { id: string; nombre: string }[];
   profesionales: { id: string; nombre: string; sucursalId: string | null }[];
@@ -118,9 +120,7 @@ function NuevaCitaDialog({
   const [startsAt, setStartsAt] = useState("");
   const [duracion, setDuracion] = useState(30);
 
-  const queryClient = useQueryClient();
   const createFn = useServerFn(createAppointment);
-  const { online } = useConnectivity();
 
   // Feriados (Nager.Date) del país de la clínica, para avisarle al staff si
   // agendó sobre un feriado (no bloquea: la clínica puede igual atender).
@@ -130,22 +130,13 @@ function NuevaCitaDialog({
 
   const disponibles = profesionales.filter((p) => !sucursalId || p.sucursalId === sucursalId);
 
-  const crear = useMutation({
-    mutationFn: () =>
-      createFn({
-        data: {
-          clinicId,
-          branchId: sucursalId,
-          patientId: pacienteId,
-          professionalId: profesionalId,
-          tratamiento: tratamiento.trim(),
-          startsAt,
-          duracionMin: duracion,
-        },
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["appointments", clinicId] });
-      toast.success("Cita agendada");
+  const crear = useOfflineMutation({
+    kind: "crear-cita",
+    userId,
+    ejecutar: (payload) => createFn({ data: payload }),
+    invalidar: [["appointments", clinicId]],
+    resumen: (p) => `Cita: ${String(p.tratamiento)}`,
+    onDone: () => {
       setOpen(false);
       setPacienteId("");
       setSucursalId("");
@@ -154,15 +145,32 @@ function NuevaCitaDialog({
       setStartsAt("");
       setDuracion(30);
     },
-    onError: (e: Error) => toast.error(e.message),
   });
+
+  function agendar() {
+    void crear.mutar({
+      // Igual que en los cobros: el id sale del equipo para que reintentar
+      // la cola no agende la misma cita dos veces.
+      id: crypto.randomUUID(),
+      clinicId,
+      branchId: sucursalId,
+      patientId: pacienteId,
+      professionalId: profesionalId,
+      tratamiento: tratamiento.trim(),
+      // `startsAt` viaja como wall-clock crudo y el servidor lo interpreta en
+      // la timezone de la sucursal. Es determinista: da igual si esto se
+      // sincroniza dentro de tres días, la hora agendada no se corre.
+      startsAt,
+      duracionMin: duracion,
+    });
+  }
 
   const puedeCrear = pacienteId && sucursalId && profesionalId && tratamiento.trim() && startsAt;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" disabled={!online} title={online ? undefined : SIN_CONEXION}>
+        <Button size="sm">
           <Plus className="size-4" /> Nueva cita
         </Button>
       </DialogTrigger>
@@ -265,8 +273,8 @@ function NuevaCitaDialog({
           {feriadoSeleccionado && <HolidayNotice name={feriadoSeleccionado} />}
         </div>
         <DialogFooter>
-          <Button onClick={() => crear.mutate()} disabled={crear.isPending || !puedeCrear}>
-            {crear.isPending && <Loader2 className="size-3.5 animate-spin" />}
+          <Button onClick={agendar} disabled={crear.enCurso || !puedeCrear}>
+            {crear.enCurso && <Loader2 className="size-3.5 animate-spin" />}
             Agendar cita
           </Button>
         </DialogFooter>
@@ -622,6 +630,7 @@ function AgendaPage() {
           {clinicId && hasPermission(access.role, "agenda:manage") && (
             <NuevaCitaDialog
               clinicId={clinicId}
+              userId={access.userId}
               country={access.clinic?.country}
               sucursales={sucursales}
               profesionales={profesionales}

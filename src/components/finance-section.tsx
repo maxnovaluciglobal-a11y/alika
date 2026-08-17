@@ -52,13 +52,15 @@ import {
   setTreatmentItemStatus,
 } from "@/lib/finance.functions";
 import { cn } from "@/lib/utils";
-import { SIN_CONEXION, useConnectivity } from "@/hooks/use-connectivity";
+import { useOfflineMutation } from "@/hooks/use-offline-mutation";
 
 interface Props {
   clinicId: string;
   clinicaNombre: string;
   patientId: string;
   puedeEditar: boolean;
+  /** Dueño de lo que quede en la cola offline (ver `offline-queue.ts`). */
+  userId: string;
 }
 
 interface DraftItem {
@@ -463,11 +465,13 @@ function NuevoPresupuestoDialog({
 function NuevoPagoDialog({
   clinicId,
   patientId,
+  userId,
   plans,
   suggestedAmountCents,
 }: {
   clinicId: string;
   patientId: string;
+  userId: string;
   plans: TreatmentPlan[];
   suggestedAmountCents: number;
 }) {
@@ -477,28 +481,19 @@ function NuevoPagoDialog({
   const [planId, setPlanId] = useState<string>("");
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
-  const queryClient = useQueryClient();
   const payFn = useServerFn(registerPayment);
-  const { online } = useConnectivity();
 
-  const create = useMutation({
-    mutationFn: () =>
-      payFn({
-        data: {
-          clinicId,
-          patientId,
-          amountCents: amount,
-          method,
-          treatmentPlanId: planId || undefined,
-          reference: reference.trim() || undefined,
-          notes: notes.trim() || undefined,
-        },
-      }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["payments", clinicId, patientId] });
-      await queryClient.invalidateQueries({ queryKey: ["patient", clinicId, patientId] });
-      queryClient.invalidateQueries({ queryKey: ["patients", clinicId] });
-      toast.success("Pago registrado");
+  const create = useOfflineMutation({
+    kind: "registrar-pago",
+    userId,
+    ejecutar: (payload) => payFn({ data: payload }),
+    invalidar: [
+      ["payments", clinicId, patientId],
+      ["patient", clinicId, patientId],
+      ["patients", clinicId],
+    ],
+    resumen: (p) => `Cobro de ${formatMoney(p.amountCents as number, "CLP")}`,
+    onDone: () => {
       setOpen(false);
       setAmount(0);
       setMethod("cash");
@@ -506,8 +501,27 @@ function NuevoPagoDialog({
       setReference("");
       setNotes("");
     },
-    onError: (e: Error) => toast.error(e.message),
   });
+
+  function guardar() {
+    void create.mutar({
+      // El id lo genera el equipo, no la base: si esto se captura sin
+      // conexión y el reintento llega dos veces, el segundo choca contra la
+      // PK y el servidor lo reconoce como el mismo cobro (no cobra doble).
+      id: crypto.randomUUID(),
+      clinicId,
+      patientId,
+      amountCents: amount,
+      method,
+      // ⚠️ Sellado en la CAPTURA. Sin esto, un cobro tomado a las 10:00 que
+      // sincroniza a las 15:00 entraría con la hora del servidor y el cierre
+      // de caja del día quedaría mal.
+      paidAt: new Date().toISOString(),
+      treatmentPlanId: planId || undefined,
+      reference: reference.trim() || undefined,
+      notes: notes.trim() || undefined,
+    });
+  }
 
   return (
     <Dialog
@@ -518,12 +532,7 @@ function NuevoPagoDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={!online}
-          title={online ? undefined : SIN_CONEXION}
-        >
+        <Button variant="outline" size="sm">
           <CircleDollarSign className="size-4" /> Registrar pago
         </Button>
       </DialogTrigger>
@@ -601,8 +610,8 @@ function NuevoPagoDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={() => create.mutate()} disabled={create.isPending || amount <= 0}>
-            {create.isPending && <Loader2 className="size-3.5 animate-spin" />}
+          <Button onClick={guardar} disabled={create.enCurso || amount <= 0}>
+            {create.enCurso && <Loader2 className="size-3.5 animate-spin" />}
             Guardar pago
           </Button>
         </DialogFooter>
@@ -611,7 +620,7 @@ function NuevoPagoDialog({
   );
 }
 
-export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar }: Props) {
+export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar, userId }: Props) {
   const queryClient = useQueryClient();
   const [expandedQuote, setExpandedQuote] = useState<string | null>(null);
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
@@ -692,6 +701,7 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
             <NuevoPagoDialog
               clinicId={clinicId}
               patientId={patientId}
+              userId={userId}
               plans={plans}
               suggestedAmountCents={Math.max(0, balance)}
             />

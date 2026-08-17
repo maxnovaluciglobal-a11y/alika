@@ -50,6 +50,21 @@ function DocsSeguridad() {
         anotó qué y cuándo, sin posibilidad de reescribir el historial clínico de un paciente.
       </LegalP>
 
+      <LegalH2>Trabajar durante un corte de internet</LegalH2>
+      <LegalP>
+        Cobrar y agendar funcionan sin conexión: la operación queda guardada en el equipo y se
+        sincroniza sola al volver internet. Cada una lleva un identificador generado en el momento
+        de la captura, así que si la sincronización se reintenta el servidor reconoce que ya la
+        había guardado y no la duplica. Los cobros conservan la hora en que se hicieron, no la hora
+        en que se subieron — de otro modo el cierre de caja del día no cuadraría.
+      </LegalP>
+      <LegalP>
+        Si el servidor rechaza una operación por una razón real (permisos, validación), no se
+        reintenta para siempre ni desaparece: queda marcada para que alguien la revise. Lo que no
+        funciona sin conexión —mandar WhatsApp, crear presupuestos con numeración correlativa— se
+        avisa en el momento en vez de fallar en silencio.
+      </LegalP>
+
       <LegalH2>Copia local para trabajar sin conexión</LegalH2>
       <LegalP>
         Para que un corte de internet no deje a la clínica sin poder ver nada, el navegador guarda

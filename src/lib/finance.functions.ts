@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { TOOTH_SURFACES } from "@/lib/odontogram";
+import { filaYaCreada } from "@/lib/idempotency";
 import {
   PAYMENT_METHODS,
   QUOTE_STATUSES,
@@ -663,6 +664,9 @@ export const registerPayment = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
+        // Igual que en `createAppointment`: lo genera el equipo al capturar
+        // sin conexión, para que reintentar la cola no cobre dos veces.
+        id: z.string().uuid().optional(),
         clinicId: z.string().uuid(),
         patientId: z.string().uuid(),
         amountCents: z.number().int().positive("El monto debe ser mayor a cero."),
@@ -686,12 +690,18 @@ export const registerPayment = createServerFn({ method: "POST" })
     const { data: inserted, error } = await context.supabase
       .from("payments")
       .insert({
+        ...(data.id ? { id: data.id } : {}),
         clinic_id: data.clinicId,
         patient_id: data.patientId,
         amount_cents: data.amountCents,
         currency: data.currency,
         method: data.method,
         reference: data.reference || null,
+        // ⚠️ Este `new Date()` es la hora del SERVIDOR al procesar. Un cobro
+        // capturado sin conexión a las 10:00 que sincroniza a las 15:00
+        // quedaría con la hora equivocada y rompería el cierre de caja del
+        // día. Por eso la cola offline SIEMPRE manda `paidAt` sellado en la
+        // captura; este default es solo para el camino online.
         paid_at: data.paidAt ?? new Date().toISOString(),
         notes: data.notes || null,
         treatment_plan_id: data.treatmentPlanId ?? null,
@@ -699,7 +709,17 @@ export const registerPayment = createServerFn({ method: "POST" })
       .select("id")
       .single();
 
-    if (error) throw new Error("No tienes permisos para registrar pagos. " + error.message);
+    if (error) {
+      const yaEstaba = await filaYaCreada(
+        context.supabase,
+        "payments",
+        data.id,
+        data.clinicId,
+        error,
+      );
+      if (yaEstaba) return { id: yaEstaba };
+      throw new Error("No tienes permisos para registrar pagos. " + error.message);
+    }
     return { id: inserted.id };
   });
 

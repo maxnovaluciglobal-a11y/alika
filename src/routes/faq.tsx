@@ -39,7 +39,11 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
       },
       {
         q: "¿Qué pasa si se corta internet en la clínica?",
-        a: "La app sigue abriendo y puedes consultar la agenda del día y las fichas de tus pacientes, incluso si recargas la página o cierras y vuelves a abrir. Los cambios sí necesitan conexión por ahora: cuando no hay internet aparece un aviso visible y los botones de guardar quedan desactivados, para que nada quede a medias sin que te enteres.",
+        a: "Sigues atendiendo. Puedes consultar la agenda y las fichas, cobrar y agendar citas: lo que registres queda guardado en el equipo y se sincroniza solo cuando vuelve internet, sin que nadie tenga que apretar nada. La app te muestra cuántas operaciones faltan subir. Lo que sí necesita conexión es mandar mensajes de WhatsApp y crear presupuestos, y la app lo avisa en el momento en vez de fallar en silencio.",
+      },
+      {
+        q: "Si cobro sin internet, ¿puede duplicarse el pago al sincronizar?",
+        a: "No. Cada operación lleva un identificador propio generado en el equipo, así que si la sincronización se reintenta el servidor reconoce que ya la había guardado y no la registra de nuevo. Además el cobro queda con la hora en que lo hiciste, no con la hora en que se sincronizó, para que el cierre de caja del día cuadre.",
       },
     ],
   },

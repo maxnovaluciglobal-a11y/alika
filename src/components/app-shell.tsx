@@ -28,8 +28,11 @@ import { RoleSimulationBar } from "@/components/role-simulation-bar";
 import { TrialBanner } from "@/components/trial-banner";
 import { DemoBanner } from "@/components/demo-banner";
 import { OfflineBanner } from "@/components/offline-banner";
+import { PendingSyncBanner } from "@/components/pending-sync-banner";
 import { supabase } from "@/integrations/supabase/client";
 import { resetOfflineCache } from "@/lib/offline-cache";
+import { useSincronizacionAutomatica } from "@/hooks/use-offline-mutation";
+import { leerCola, pendientes } from "@/lib/offline-queue";
 import { hasPermission, ROLE_LABELS, type ClinicAccess, type Permission } from "@/lib/access";
 import { cn } from "@/lib/utils";
 
@@ -101,9 +104,25 @@ export function AppShell({
   const queryClient = useQueryClient();
   const [signingOut, setSigningOut] = useState(false);
 
+  // Una sola vez para toda la app: si cada pantalla lo montara, varias
+  // sincronizaciones competirían por la misma cola.
+  useSincronizacionAutomatica(access.userId);
+
   const visibleNav = nav.filter((item) => hasPermission(access.role, item.permission));
 
   async function handleSignOut() {
+    // La cola NO se borra al salir (son cobros ya hechos), pero quien se va
+    // tiene que enterarse de que quedó algo sin subir.
+    const sinSincronizar = pendientes(await leerCola()).filter(
+      (i) => i.userId === access.userId,
+    ).length;
+    if (sinSincronizar > 0) {
+      const seguir = window.confirm(
+        `Quedan ${sinSincronizar} operación(es) guardadas en este equipo sin sincronizar. ` +
+          `No se pierden: se van a subir cuando vuelvas a entrar con internet. ¿Cerrar sesión igual?`,
+      );
+      if (!seguir) return;
+    }
     setSigningOut(true);
     await queryClient.cancelQueries();
     queryClient.clear();
@@ -207,6 +226,7 @@ export function AppShell({
 
         <RoleSimulationBar access={access} />
         <OfflineBanner />
+        <PendingSyncBanner userId={access.userId} />
         {access.clinic?.isDemo ? (
           <DemoBanner />
         ) : (

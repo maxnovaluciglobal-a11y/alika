@@ -242,6 +242,7 @@ function PacienteDetalle() {
                 clinicaNombre={access.clinic.name}
                 patientId={paciente.id}
                 puedeEditar={hasPermission(access.role, "patients:manage")}
+                userId={access.userId}
               />
             )}
 
