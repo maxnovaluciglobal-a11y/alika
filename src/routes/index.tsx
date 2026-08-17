@@ -250,7 +250,7 @@ const pasos = [
 const faqs = [
   {
     q: "¿Es caro?",
-    a: "Empezás gratis, sin tarjeta. Y un solo paciente que no se te escapa al mes ya paga Alika. Estamos con precio fundador para las primeras clínicas.",
+    a: "US$49/mes, flat por clínica. Empezás gratis 14 días sin tarjeta, y un solo paciente que no se te escapa al mes ya lo paga.",
   },
   {
     q: "¿Es complicado? No soy técnico.",
@@ -516,11 +516,11 @@ function Landing() {
               Precio fundador
             </p>
             <h2 className="font-precise text-3xl font-bold sm:text-4xl">
-              Probá 14 días gratis. Sin tarjeta.
+              US$49/mes. Probá 14 días gratis, sin tarjeta.
             </h2>
             <p className="mx-auto mt-5 max-w-lg text-base text-muted-foreground">
-              Estamos tomando las primeras clínicas con precio fundador y soporte directo. Empezás
-              gratis hoy y, si te sirve, fijamos el precio juntos.
+              Un solo precio, sin cobro por profesional ni por sucursal. Las primeras clínicas
+              quedan con este precio fundador de por vida — después de esta etapa, sube.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link

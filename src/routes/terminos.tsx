@@ -23,9 +23,9 @@ function Terminos() {
       updated="Última actualización: agosto 2026 · MAXNOVA & LUCI Global LLC"
     >
       <LegalNotice>
-        Alika está en etapa de piloto: se ofrece por invitación a clínicas seleccionadas, sin un
-        plan público con precio todavía definido. Estos términos van a evolucionar cuando el
-        producto salga de piloto — te vamos a avisar antes de cualquier cambio importante.
+        Alika está en etapa de piloto: US$49/mes flat por clínica, precio fundador bloqueado para
+        las primeras clínicas. Trial de 14 días sin tarjeta. Estos términos van a evolucionar cuando
+        el producto salga de piloto — te vamos a avisar antes de cualquier cambio importante.
       </LegalNotice>
 
       <LegalH2>1. Qué es Alika</LegalH2>
