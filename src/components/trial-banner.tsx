@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertCircle, Clock } from "lucide-react";
+import { AlertCircle, Clock, Sparkles } from "lucide-react";
 
 import { getMySubscription } from "@/lib/billing.functions";
 import { isSubscriptionActive, trialDaysLeft } from "@/lib/billing";
@@ -9,8 +9,10 @@ import { isSubscriptionActive, trialDaysLeft } from "@/lib/billing";
 /**
  * Banner top-of-app con estado de suscripción.
  *
+ * - Sin suscripción (clínica nueva) → aviso suave, sin bloquear: hoy el
+ *   acceso es libre hasta que el owner active el plan por su cuenta.
  * - Trialing → días restantes + CTA a activar tarjeta.
- * - Vencida (past_due / canceled / no sub) → bloqueo suave con CTA fuerte.
+ * - Vencida (past_due / canceled) → bloqueo suave con CTA fuerte.
  * - Active → no renderiza nada.
  */
 export function TrialBanner({ clinicId }: { clinicId: string }) {
@@ -21,7 +23,26 @@ export function TrialBanner({ clinicId }: { clinicId: string }) {
     staleTime: 60 * 1000,
   });
 
-  if (!sub) return null;
+  if (sub === undefined) return null;
+
+  if (sub === null) {
+    return (
+      <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-5 py-2 text-sm sm:px-8">
+        <div className="flex items-center gap-2">
+          <Sparkles className="size-4 text-mint-strong" />
+          <span>
+            Tenés acceso completo. Activá tu plan cuando quieras — primeros 14 días sin cargo.
+          </span>
+        </div>
+        <Link
+          to="/suscripcion"
+          className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
+        >
+          Ver plan · US$49/mes
+        </Link>
+      </div>
+    );
+  }
 
   const active = isSubscriptionActive(sub);
   const daysLeft = trialDaysLeft(sub);
