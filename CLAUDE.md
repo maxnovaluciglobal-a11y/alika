@@ -21,6 +21,7 @@ Importado de Lovable en ago-2026. Se sigue desarrollando desde este repo local; 
 | Plan por fases                    | `docs/PLAN_ACCION.md`                                                                                                                                                                                                                                                                    |
 | Runbook DR                        | `docs/DISASTER_RECOVERY.md`                                                                                                                                                                                                                                                              |
 | Checklist launch                  | `docs/DEPLOY_PRODUCTION.md`                                                                                                                                                                                                                                                              |
+| Backups                           | `docs/BACKUPS_ALIKA.md` — automático diario (`.github/workflows/backup.yml`) pendiente de que Walter cargue 4 secrets; clave privada de cifrado en iCloud, no en el repo.                                                                                                                |
 
 ## Correr en local
 

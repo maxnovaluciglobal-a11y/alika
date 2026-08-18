@@ -1,0 +1,46 @@
+name: Backup diario
+
+on:
+  schedule:
+    # 07:15 UTC ≈ 03:15 America/Santiago (o 04:15 en horario de verano)
+    - cron: "15 7 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Instalar age + rclone
+        run: sudo apt-get update && sudo apt-get install -y age rclone
+
+      - name: Exportar datos + comprimir
+        run: node scripts/backup-data.mjs > backup.json.gz
+
+      - name: Cifrar con age
+        # Clave pública de Alika — la privada vive fuera del repo, ver
+        # docs/BACKUPS_ALIKA.md. Cifrar acá y no en backup-data.mjs separa
+        # "exportar datos" (testeable sin age instalado) de "cifrar para
+        # guardar" (solo importa en este job).
+        run: |
+          age -r age1xrwep8wxudjt6zy0ygnqf5xzr5tmpeakmn55yt8q37lg23ewqu2q2tzvqv \
+            -o "backup.json.gz.age" backup.json.gz
+          rm backup.json.gz
+
+      - name: Subir a Backblaze B2
+        env:
+          RCLONE_CONFIG_B2_TYPE: b2
+          RCLONE_CONFIG_B2_ACCOUNT: ${{ secrets.B2_ACCOUNT_ID }}
+          RCLONE_CONFIG_B2_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+        run: |
+          STAMP=$(date -u +%Y%m%d_%H%M%S)
+          rclone copyto backup.json.gz.age "b2:alika-backups/db/alika_${STAMP}.json.gz.age"
