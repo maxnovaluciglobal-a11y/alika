@@ -1,5 +1,26 @@
 export type NoteStatus = "draft" | "signed";
 
+/**
+ * Número de versión vigente de una nota a partir de su historial. NO es
+ * siempre la de número más alto: un guardado offline en conflicto inserta
+ * una versión nueva (regla #9 del repo, nada se pierde) sin actualizar el
+ * contenido vigente de la nota — esa fila queda "huérfana" hasta que alguien
+ * resuelve el conflicto (o para siempre si lo descarta). La vigente real es
+ * la versión cuyo contenido coincide con el de la nota; si ninguna calza
+ * (no debería pasar en datos sanos), se cae al número más alto como red de
+ * seguridad.
+ */
+export function versionVigente(
+  nota: { title: string; content: string },
+  versionesDeLaNota: { version: number; title: string; content: string }[],
+): number {
+  const vigentes = versionesDeLaNota.filter(
+    (v) => v.content === nota.content && v.title === nota.title,
+  );
+  const candidatas = vigentes.length ? vigentes : versionesDeLaNota;
+  return candidatas.reduce((max, v) => Math.max(max, v.version), 0) || 1;
+}
+
 export type NoteAiAction = "draft" | "summary" | "polish";
 
 export type NoteReviewStatus = "none" | "pending" | "approved" | "changes_requested";

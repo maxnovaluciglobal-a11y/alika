@@ -1008,12 +1008,10 @@ export function NotasClinicas({
                         </li>
                       );
                     })}
-                  {versiones.length > 0 && (
+                  {versiones.length > 0 && notaActual && (
                     <li className="relative rounded-lg border border-brand/30 bg-brand-soft p-3">
                       <span className="absolute -left-[21px] top-4 size-2.5 rounded-full bg-brand ring-2 ring-background" />
-                      <p className="text-xs font-medium">
-                        Versión final · v{Math.max(...versiones.map((v) => v.version))}
-                      </p>
+                      <p className="text-xs font-medium">Versión final · v{notaActual.version}</p>
                       <p className="mt-0.5 text-[11px] text-muted-foreground">
                         Contenido vigente de la nota
                       </p>

@@ -7,6 +7,7 @@ import { filaYaCreada } from "@/lib/idempotency";
 import type { Database } from "@/integrations/supabase/types";
 
 type SupabaseCtx = SupabaseClient<Database>;
+import { versionVigente } from "@/lib/clinical-notes";
 import type {
   ClinicalEntityKind,
   ClinicalNote,
@@ -119,8 +120,9 @@ export const getPatientNotes = createServerFn({ method: "GET" })
       );
 
       const versionesPorNota = new Map<string, number>();
-      for (const v of versions) {
-        versionesPorNota.set(v.note_id, Math.max(versionesPorNota.get(v.note_id) ?? 0, v.version));
+      for (const n of notes) {
+        const propias = versions.filter((v) => v.note_id === n.id);
+        versionesPorNota.set(n.id, versionVigente(n, propias));
       }
 
       return {
