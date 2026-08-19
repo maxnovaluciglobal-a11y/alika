@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
+import { AlikaLogo } from "@/components/alika-logo";
 
 /** Header compartido por la landing y las páginas de contenido (legal/FAQ/docs). */
 export function SiteHeader() {
@@ -7,9 +8,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
         <Link to="/" className="flex items-center gap-2">
-          <span className="grid size-8 place-items-center rounded-lg bg-ink">
-            <span className="size-3.5 rounded-full border-2 border-mint" />
-          </span>
+          <AlikaLogo tone="ink" size={32} />
           <span className="font-precise text-xl font-bold tracking-tight text-ink">Alika</span>
         </Link>
         <div className="flex items-center gap-1.5">
@@ -113,9 +112,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-6 py-6">
         <div className="flex flex-col items-center justify-between gap-4 border-t border-hairline pt-6 text-sm text-muted-foreground sm:flex-row">
           <span className="flex items-center gap-2">
-            <span className="grid size-6 place-items-center rounded-md bg-ink">
-              <span className="size-3 rounded-full border-2 border-mint" />
-            </span>
+            <AlikaLogo tone="ink" size={24} className="rounded-md" />
             <span className="font-precise font-bold text-ink">Alika</span>
           </span>
           <span className="flex items-center gap-1.5 text-xs">
