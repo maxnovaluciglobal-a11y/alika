@@ -102,9 +102,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      // Pinta la barra del navegador con el navy de marca cuando la app corre
+      // Pinta la barra del navegador con el teal de marca cuando la app corre
       // instalada (display: standalone).
-      { name: "theme-color", content: "#22304a" },
+      { name: "theme-color", content: "#0d9488" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "Alika" },
     ],

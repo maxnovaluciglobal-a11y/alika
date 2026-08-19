@@ -8,7 +8,7 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "theme_color": "#22304a",
+  "theme_color": "#0d9488",
   "background_color": "#ffffff",
   "categories": ["medical", "productivity", "business"],
   "icons": [
