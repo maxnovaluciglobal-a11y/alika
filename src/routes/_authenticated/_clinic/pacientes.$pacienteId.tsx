@@ -6,6 +6,7 @@ import { requirePermission } from "@/lib/route-guards";
 import { PacienteTimeline } from "@/components/paciente-timeline";
 import { NotasClinicas } from "@/components/notas-clinicas";
 import { Odontogram } from "@/components/odontogram";
+import { PeriodontalChart } from "@/components/periodontal-chart";
 import { FinanceSection } from "@/components/finance-section";
 import { MessagesHistory } from "@/components/messages-history";
 import { WhatsAppOptInToggle } from "@/components/whatsapp-opt-in-toggle";
@@ -234,6 +235,15 @@ function PacienteDetalle() {
 
                 {access.clinic?.id && (
                   <Odontogram
+                    clinicId={access.clinic.id}
+                    patientId={paciente.id}
+                    puedeEditar={hasPermission(access.role, "clinical:write")}
+                    userId={access.userId}
+                  />
+                )}
+
+                {access.clinic?.id && (
+                  <PeriodontalChart
                     clinicId={access.clinic.id}
                     patientId={paciente.id}
                     puedeEditar={hasPermission(access.role, "clinical:write")}
