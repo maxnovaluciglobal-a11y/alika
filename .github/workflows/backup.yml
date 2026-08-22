@@ -9,6 +9,9 @@ on:
 jobs:
   backup:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -44,3 +47,39 @@ jobs:
         run: |
           STAMP=$(date -u +%Y%m%d_%H%M%S)
           rclone copyto backup.json.gz.age "b2:alika-backups/db/alika_${STAMP}.json.gz.age"
+
+      # ops-5 (auditoría 360, 2026-08-21): las 4 corridas anteriores fallaron
+      # sin que nadie se enterara — GitHub solo manda email al actor que
+      # editó el workflow por última vez, no es confiable. Esto abre (o
+      # reusa) un Issue visible en el repo con cada falla, sin depender de
+      # ningún secret nuevo (GITHUB_TOKEN ya está disponible siempre).
+      - name: Avisar si el backup falló
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "🔴 Backup diario de Alika falló";
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `El workflow de backup diario falló el ${new Date().toISOString()}.\n\nVer el run: ${runUrl}\n\nRevisar \`docs/BACKUPS_ALIKA.md\` — la causa más probable es que falten los secrets de B2 (\`B2_ACCOUNT_ID\`/\`B2_APPLICATION_KEY\`) o de Supabase.`;
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              labels: "backup-fallido",
+            });
+            if (existing.data.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.data[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ["backup-fallido"],
+              });
+            }
