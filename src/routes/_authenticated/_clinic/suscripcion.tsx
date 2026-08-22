@@ -11,6 +11,7 @@ import {
   getMySubscription,
 } from "@/lib/billing.functions";
 import { SUBSCRIPTION_STATUS_LABELS, isSubscriptionActive, trialDaysLeft } from "@/lib/billing";
+import { approxLocalPricesLabel } from "@/lib/pricing-display";
 
 export const Route = createFileRoute("/_authenticated/_clinic/suscripcion")({
   head: () => ({
@@ -84,6 +85,10 @@ function BillingPage() {
               <h2 className="font-heading text-base font-semibold">Plan actual</h2>
               <p className="text-sm text-muted-foreground">
                 Alika Clínica — <span className="font-medium">US$49 / mes</span> · trial de 14 días.
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground/80">
+                {approxLocalPricesLabel(49)}{" "}
+                <span className="italic">(referencial, el cobro es en USD)</span>
               </p>
             </div>
           </div>

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
+import { approxLocalPricesLabel } from "@/lib/pricing-display";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -518,6 +519,10 @@ function Landing() {
             <h2 className="font-precise text-3xl font-bold sm:text-4xl">
               US$49/mes. Prueba 14 días gratis, sin tarjeta.
             </h2>
+            <p className="mt-2 text-xs text-muted-foreground/80">
+              {approxLocalPricesLabel(49)}{" "}
+              <span className="italic">(referencial, el cobro es en USD)</span>
+            </p>
             <p className="mx-auto mt-5 max-w-lg text-base text-muted-foreground">
               Un solo precio, sin cobro por profesional ni por sucursal. Las primeras clínicas
               quedan con este precio fundador de por vida — después de esta etapa, sube.
