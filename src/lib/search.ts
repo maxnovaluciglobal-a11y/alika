@@ -1,14 +1,3 @@
-import {
-  citas,
-  etiquetaEstado,
-  etiquetaEstadoTratamiento,
-  formatoFecha,
-  getPaciente,
-  getProfesional,
-  pacientes,
-  tratamientos,
-} from "@/lib/clinic-data";
-
 export const PER_PAGE = 5;
 
 export function normaliza(valor: string) {
@@ -60,56 +49,10 @@ export interface ResultadoGlobal {
   destino: "pacientes" | "agenda" | "tratamientos";
 }
 
-/** Búsqueda global transversal sobre pacientes, citas y tratamientos. */
-export function busquedaGlobal(termino: string, limitePorGrupo = 5): ResultadoGlobal[] {
-  const t = termino.trim();
-  if (!t) return [];
-
-  const resPacientes: ResultadoGlobal[] = pacientes
-    .filter((p) => coincide(t, p.nombre, p.documento, p.email, p.telefono, ...p.etiquetas))
-    .slice(0, limitePorGrupo)
-    .map((p) => ({
-      id: `pac-${p.id}`,
-      grupo: "Pacientes",
-      titulo: p.nombre,
-      detalle: `${p.documento} · ${p.etiquetas[0] ?? "Sin etiquetas"}`,
-      pacienteId: p.id,
-      destino: "pacientes",
-    }));
-
-  const resCitas: ResultadoGlobal[] = citas
-    .filter((c) => coincide(t, c.paciente, c.tratamiento, getProfesional(c.profesionalId)?.nombre))
-    .slice(0, limitePorGrupo)
-    .map((c) => ({
-      id: `cit-${c.id}`,
-      grupo: "Citas",
-      titulo: `${c.tratamiento} — ${c.paciente}`,
-      detalle: `${formatoFecha(c.fecha)} · ${getProfesional(c.profesionalId)?.nombre ?? ""} · ${etiquetaEstado[c.estado]}`,
-      pacienteId: c.pacienteId,
-      destino: "agenda",
-    }));
-
-  const resTratamientos: ResultadoGlobal[] = tratamientos
-    .filter((tr) =>
-      coincide(
-        t,
-        tr.plan,
-        getPaciente(tr.pacienteId)?.nombre,
-        getProfesional(tr.profesionalId)?.nombre,
-      ),
-    )
-    .slice(0, limitePorGrupo)
-    .map((tr) => ({
-      id: `tra-${tr.id}`,
-      grupo: "Tratamientos",
-      titulo: tr.plan,
-      detalle: `${getPaciente(tr.pacienteId)?.nombre ?? ""} · ${etiquetaEstadoTratamiento[tr.estado]} · ${tr.avance}%`,
-      pacienteId: tr.pacienteId,
-      destino: "tratamientos",
-    }));
-
-  return [...resPacientes, ...resCitas, ...resTratamientos];
-}
+// `busquedaGlobal` se sacó de acá (auditoría architecture-3, 2026-08-21):
+// leía de los arrays MOCK de `clinic-data.ts` en vez de datos reales.
+// `GlobalSearch` (src/components/global-search.tsx) quedó deshabilitado
+// hasta que haya una fuente de datos real que reemplace esta función.
 
 /** Helpers de validación de search params (sin dependencias externas). */
 export function str(v: unknown, fallback = ""): string {

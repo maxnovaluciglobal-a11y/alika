@@ -73,12 +73,16 @@ function store() {
   return createStore(DB_NAME, STORE_NAME);
 }
 
-export async function leerCola(): Promise<ItemCola[]> {
+async function leerColaInterna(): Promise<ItemCola[]> {
   try {
     return (await get<ItemCola[]>(QUEUE_KEY, store())) ?? [];
   } catch {
     return [];
   }
+}
+
+export async function leerCola(): Promise<ItemCola[]> {
+  return leerColaInterna();
 }
 
 async function escribirCola(items: ItemCola[]) {
@@ -87,6 +91,31 @@ async function escribirCola(items: ItemCola[]) {
     return;
   }
   await set(QUEUE_KEY, items, store());
+}
+
+/**
+ * Mutex en memoria para las operaciones "leer cola completa → mutarla →
+ * escribirla entera". `idb-keyval` no da ninguna primitiva atómica tipo
+ * compare-and-swap, así que sin esto dos llamadas casi simultáneas (ej. un
+ * autosave de nota clínica y un registro de pago) pueden pisarse: las dos
+ * leen el mismo estado viejo, la segunda en escribir gana y el ítem que
+ * agregó la primera se pierde en silencio.
+ *
+ * Encadenar una promesa detrás de la anterior alcanza acá — todo el
+ * read-modify-write de esta cola vive en este único módulo y corre en un
+ * solo hilo de JS, no hace falta un lock cross-tab. Un `.catch` a la cola
+ * evita que un rechazo en una operación deje el mutex trabado para las
+ * siguientes.
+ */
+let colaLock: Promise<unknown> = Promise.resolve();
+
+function conLockDeCola<T>(fn: () => Promise<T>): Promise<T> {
+  const resultado = colaLock.then(fn, fn);
+  colaLock = resultado.then(
+    () => undefined,
+    () => undefined,
+  );
+  return resultado;
 }
 
 /** Los que avisan al usuario que sigue habiendo trabajo sin sincronizar. */
@@ -121,22 +150,24 @@ async function notificar() {
  * `ItemCola`.
  */
 export async function encolar(item: Omit<ItemCola, "intentos" | "estado">) {
-  const items = await leerCola();
-  const idx = item.identidad
-    ? items.findIndex(
-        (i) =>
-          i.userId === item.userId &&
-          i.kind === item.kind &&
-          i.estado === "pendiente" &&
-          i.identidad === item.identidad,
-      )
-    : -1;
-  if (idx >= 0) {
-    items[idx] = { ...items[idx], ...item, intentos: 0, estado: "pendiente" };
-  } else {
-    items.push({ ...item, intentos: 0, estado: "pendiente" });
-  }
-  await escribirCola(items);
+  await conLockDeCola(async () => {
+    const items = await leerColaInterna();
+    const idx = item.identidad
+      ? items.findIndex(
+          (i) =>
+            i.userId === item.userId &&
+            i.kind === item.kind &&
+            i.estado === "pendiente" &&
+            i.identidad === item.identidad,
+        )
+      : -1;
+    if (idx >= 0) {
+      items[idx] = { ...items[idx], ...item, intentos: 0, estado: "pendiente" };
+    } else {
+      items.push({ ...item, intentos: 0, estado: "pendiente" });
+    }
+    await escribirCola(items);
+  });
   await notificar();
 }
 
@@ -144,49 +175,60 @@ export async function encolar(item: Omit<ItemCola, "intentos" | "estado">) {
 export async function registrarConflicto(
   item: Omit<ItemCola, "intentos" | "estado"> & { detalleConflicto: Record<string, unknown> },
 ) {
-  const items = await leerCola();
-  items.push({ ...item, intentos: 0, estado: "conflicto" });
-  await escribirCola(items);
+  await conLockDeCola(async () => {
+    const items = await leerColaInterna();
+    items.push({ ...item, intentos: 0, estado: "conflicto" });
+    await escribirCola(items);
+  });
   await notificar();
 }
 
 export async function quitarDeCola(localId: string) {
-  await escribirCola((await leerCola()).filter((i) => i.localId !== localId));
+  await conLockDeCola(async () => {
+    const items = await leerColaInterna();
+    await escribirCola(items.filter((i) => i.localId !== localId));
+  });
   await notificar();
 }
 
 export async function marcarFallido(localId: string, error: string) {
-  const items = await leerCola();
-  const item = items.find((i) => i.localId === localId);
-  if (item) {
-    item.estado = "fallido";
-    item.error = error;
-    item.intentos += 1;
-    await escribirCola(items);
-    await notificar();
-  }
+  await conLockDeCola(async () => {
+    const items = await leerColaInterna();
+    const item = items.find((i) => i.localId === localId);
+    if (item) {
+      item.estado = "fallido";
+      item.error = error;
+      item.intentos += 1;
+      await escribirCola(items);
+    }
+  });
+  await notificar();
 }
 
 /** Sincronizó, pero el servidor no aplicó la captura porque alguien más cambió lo mismo mientras tanto. */
 export async function marcarConflicto(localId: string, detalle: Record<string, unknown>) {
-  const items = await leerCola();
-  const item = items.find((i) => i.localId === localId);
-  if (item) {
-    item.estado = "conflicto";
-    item.detalleConflicto = detalle;
-    item.intentos += 1;
-    await escribirCola(items);
-    await notificar();
-  }
+  await conLockDeCola(async () => {
+    const items = await leerColaInterna();
+    const item = items.find((i) => i.localId === localId);
+    if (item) {
+      item.estado = "conflicto";
+      item.detalleConflicto = detalle;
+      item.intentos += 1;
+      await escribirCola(items);
+    }
+  });
+  await notificar();
 }
 
 export async function contarIntento(localId: string) {
-  const items = await leerCola();
-  const item = items.find((i) => i.localId === localId);
-  if (item) {
-    item.intentos += 1;
-    await escribirCola(items);
-  }
+  await conLockDeCola(async () => {
+    const items = await leerColaInterna();
+    const item = items.find((i) => i.localId === localId);
+    if (item) {
+      item.intentos += 1;
+      await escribirCola(items);
+    }
+  });
 }
 
 /** Descarta un fallo definitivo que el usuario ya revisó. */
@@ -209,6 +251,9 @@ export async function descartarConflicto(localId: string) {
  * pendientes, nunca como limpieza automática.
  */
 export async function descartarTodoDe(userId: string) {
-  await escribirCola((await leerCola()).filter((i) => i.userId !== userId));
+  await conLockDeCola(async () => {
+    const items = await leerColaInterna();
+    await escribirCola(items.filter((i) => i.userId !== userId));
+  });
   await notificar();
 }

@@ -183,10 +183,11 @@ export function useSincronizacionAutomatica(userId: string | undefined) {
       const hay = pendientes(await leerCola()).some((i) => i.userId === userId);
       if (!hay || cancelado) return;
 
-      const { sincronizados, conflictos: nuevosConflictos } = await sincronizarCola(
-        queryClient,
-        userId,
-      );
+      const {
+        sincronizados,
+        conflictos: nuevosConflictos,
+        avisos,
+      } = await sincronizarCola(queryClient, userId);
       if (cancelado) return;
       if (sincronizados > 0) {
         toast.success(
@@ -202,6 +203,9 @@ export function useSincronizacionAutomatica(userId: string | undefined) {
             : `${nuevosConflictos} cambios necesitan que decidas cuál versión vale — revisa Conflictos.`,
         );
       }
+      // Citas creadas offline que se solapan con otra del mismo profesional
+      // (ver appointments.functions.ts) — se crearon igual, esto solo avisa.
+      for (const aviso of avisos) toast.warning(aviso);
     })();
 
     return () => {

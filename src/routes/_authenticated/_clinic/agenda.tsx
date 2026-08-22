@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Clock, Inbox, Loader2, Plus, Sparkles, X } from "lucide-react";
+import { ChevronDown, Clock, Inbox, Loader2, Plus, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -22,6 +22,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { requirePermission } from "@/lib/route-guards";
 import { hasPermission } from "@/lib/access";
@@ -39,7 +45,12 @@ import {
 const HOY = hoyISO();
 import { listBranches, listProfessionals } from "@/lib/clinic-catalog.functions";
 import { listPatients } from "@/lib/patients.functions";
-import { createAppointment, listAppointments } from "@/lib/appointments.functions";
+import {
+  createAppointment,
+  listAppointments,
+  setAppointmentStatus,
+  type Solapamiento,
+} from "@/lib/appointments.functions";
 import { createWaitlistEntry, listWaitlist, removeWaitlistEntry } from "@/lib/waitlist.functions";
 import {
   declineAppointmentRequest,
@@ -75,7 +86,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/agenda")({
       {
         name: "description",
         content:
-          "Agenda por fecha, profesional, sucursal y estado, con lista de espera inteligente y predicción de ausencias.",
+          "Agenda por fecha, profesional, sucursal y estado, con lista de espera inteligente.",
       },
       { property: "og:title", content: "Agenda inteligente | Alika" },
       {
@@ -95,6 +106,126 @@ const estados: { value: EstadoCita; label: string }[] = (
 function horaDeCita(minutos: number) {
   const total = HORA_INICIO * 60 + minutos;
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+/**
+ * `createAppointment` avisa (no bloquea) cuando la cita recién creada se
+ * solapa con otra del mismo profesional — ver el comentario en
+ * appointments.functions.ts. La hora se muestra en la zona horaria del
+ * navegador (aproximada): es un aviso para que el staff decida, no un dato
+ * que otra parte del sistema use.
+ */
+function avisarSiSolapa(resultado: unknown) {
+  const solapamiento = (resultado as { solapamiento?: Solapamiento } | undefined)?.solapamiento;
+  if (!solapamiento) return;
+  const hora = new Intl.DateTimeFormat("es", { hour: "2-digit", minute: "2-digit" }).format(
+    new Date(solapamiento.startsAt),
+  );
+  toast.warning(
+    `Ojo: ${solapamiento.treatmentLabel} ya está agendado a las ${hora} con este profesional. La cita se creó igual — revisa si hace falta reagendar.`,
+  );
+}
+
+/**
+ * Mismos 6 valores que el enum de `setAppointmentStatus`
+ * (appointments.functions.ts). "cancelada" no está en `EstadoCita`
+ * (clinic-data.ts) porque `listAppointments` excluye las citas canceladas de
+ * la agenda — pero sigue siendo un destino válido desde este menú, así que
+ * se agrega acá nomás.
+ */
+const opcionesEstadoCita: { value: EstadoCita | "cancelada"; label: string }[] = [
+  ...estados,
+  { value: "cancelada", label: "Cancelada" },
+];
+
+function claseEstadoBadge(estado: EstadoCita) {
+  return cn(
+    "w-fit rounded px-1.5 py-0.5 text-[10px] font-medium",
+    estado === "ausente"
+      ? "bg-destructive/10 text-destructive"
+      : estado === "en-sala"
+        ? "bg-warning-soft text-warning"
+        : estado === "tentativa"
+          ? "bg-ai-soft text-ai"
+          : estado === "finalizada"
+            ? "bg-secondary text-muted-foreground"
+            : "bg-brand-soft text-brand",
+  );
+}
+
+/**
+ * Cambia el estado de una cita sin salir de la agenda — hoy es la acción más
+ * repetida del día de una recepcionista (confirmar, marcar en sala,
+ * finalizar, ausente, cancelar) y hasta esta pantalla no había ningún camino
+ * de UI hasta `setAppointmentStatus`, solo el flujo offline lo llamaba.
+ *
+ * Vive dentro de un `<Link>` que navega a la ficha del paciente (mismo
+ * patrón resuelto para `WhatsAppButton` más abajo): el wrapper con
+ * `onClick={preventDefault}` + `onMouseDown={stopPropagation}` intercepta el
+ * click antes de que llegue al `<a>` del Link, incluyendo los clicks que
+ * originan en el contenido del dropdown (portal de Radix) — React hace
+ * bubbling de eventos de portales por el árbol de componentes, no por el
+ * DOM físico, así que el wrapper los agarra igual.
+ */
+function CambiarEstadoMenu({
+  clinicId,
+  userId,
+  appointmentId,
+  estadoActual,
+}: {
+  clinicId: string;
+  userId: string;
+  appointmentId: string;
+  estadoActual: EstadoCita;
+}) {
+  const setEstadoFn = useServerFn(setAppointmentStatus);
+
+  const cambiar = useOfflineMutation({
+    kind: "cambiar-estado-cita",
+    userId,
+    ejecutar: (payload) => setEstadoFn({ data: payload }),
+    invalidar: [["appointments", clinicId]],
+    resumen: (p) => `Cita → ${String(p.estado)}`,
+    // Coalesce: si cambian el estado de la misma cita varias veces sin
+    // conexión, solo importa el último valor, no acumular una entrada por click.
+    identidad: (p) => String(p.appointmentId),
+  });
+
+  return (
+    <span onClick={(e) => e.preventDefault()} onMouseDown={(e) => e.stopPropagation()}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            disabled={cambiar.enCurso}
+            className={cn(
+              "inline-flex items-center gap-0.5 transition-opacity hover:opacity-80 disabled:opacity-50",
+              claseEstadoBadge(estadoActual),
+            )}
+          >
+            {cambiar.enCurso ? (
+              <Loader2 className="size-2.5 animate-spin" />
+            ) : (
+              etiquetaEstado[estadoActual]
+            )}
+            <ChevronDown className="size-2.5" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {opcionesEstadoCita
+            .filter((o) => o.value !== estadoActual)
+            .map((o) => (
+              <DropdownMenuItem
+                key={o.value}
+                onSelect={() => cambiar.mutar({ appointmentId, estado: o.value })}
+              >
+                {o.label}
+              </DropdownMenuItem>
+            ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </span>
+  );
 }
 
 function NuevaCitaDialog({
@@ -136,6 +267,11 @@ function NuevaCitaDialog({
     ejecutar: (payload) => createFn({ data: payload }),
     invalidar: [["appointments", clinicId]],
     resumen: (p) => `Cita: ${String(p.tratamiento)}`,
+    // Aviso SOLAPADO, no bloqueo (ver appointments.functions.ts): el server
+    // igual creó la cita, esto solo le avisa a quien agenda que otra cita
+    // del mismo profesional ya ocupa (parte de) ese horario, por si fue un
+    // error y prefiere reagendar a mano.
+    onExito: (resultado) => avisarSiSolapa(resultado),
     onDone: () => {
       setOpen(false);
       setPacienteId("");
@@ -320,7 +456,7 @@ function AgendarSolicitudDialog({
 
   const agendar = useMutation({
     mutationFn: async () => {
-      const { id } = await createFn({
+      const { id, solapamiento } = await createFn({
         data: {
           clinicId,
           branchId: sucursalId,
@@ -332,11 +468,14 @@ function AgendarSolicitudDialog({
         },
       });
       await markScheduledFn({ data: { clinicId, requestId: request.id, appointmentId: id } });
+      return { solapamiento };
     },
-    onSuccess: () => {
+    onSuccess: ({ solapamiento }) => {
       queryClient.invalidateQueries({ queryKey: ["appointments", clinicId] });
       queryClient.invalidateQueries({ queryKey: ["appointment-requests", clinicId] });
       toast.success("Cita agendada y solicitud cerrada");
+      // Aviso SOLAPADO, no bloqueo — ver appointments.functions.ts.
+      avisarSiSolapa({ solapamiento });
       onOpenChange(false);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -729,22 +868,18 @@ function AgendaPage() {
                         {profesionalNombre} · {sucursalNombre}
                       </span>
                       <span className="text-xs text-muted-foreground">{c.duracion} min</span>
-                      <span
-                        className={cn(
-                          "w-fit rounded px-1.5 py-0.5 text-[10px] font-medium",
-                          c.estado === "ausente"
-                            ? "bg-destructive/10 text-destructive"
-                            : c.estado === "en-sala"
-                              ? "bg-warning-soft text-warning"
-                              : c.estado === "tentativa"
-                                ? "bg-ai-soft text-ai"
-                                : c.estado === "finalizada"
-                                  ? "bg-secondary text-muted-foreground"
-                                  : "bg-brand-soft text-brand",
-                        )}
-                      >
-                        {etiquetaEstado[c.estado]}
-                      </span>
+                      {clinicId && hasPermission(access.role, "agenda:manage") ? (
+                        <CambiarEstadoMenu
+                          clinicId={clinicId}
+                          userId={access.userId}
+                          appointmentId={c.id}
+                          estadoActual={c.estado}
+                        />
+                      ) : (
+                        <span className={claseEstadoBadge(c.estado)}>
+                          {etiquetaEstado[c.estado]}
+                        </span>
+                      )}
                       {clinicId && access.clinic?.name && (
                         <span
                           onClick={(e) => e.preventDefault()}

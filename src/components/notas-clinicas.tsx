@@ -198,6 +198,14 @@ export function NotasClinicas({
     .join("; ")}`;
 
   function nuevaNota() {
+    if (
+      contenido.trim() &&
+      !confirm(
+        "¿Descartar el contenido actual y empezar una nota nueva? Se perderán los apuntes no guardados.",
+      )
+    ) {
+      return;
+    }
     setNoteId(null);
     setBaseVersion(null);
     setTitulo("Nota clínica");
@@ -227,6 +235,15 @@ export function NotasClinicas({
   function abrirNota(id: string) {
     const nota = notas.find((n) => n.id === id);
     if (!nota) return;
+    if (
+      id !== noteId &&
+      contenido.trim() &&
+      !confirm(
+        "¿Abrir esta nota y descartar el contenido actual? Se perderán los apuntes no guardados.",
+      )
+    ) {
+      return;
+    }
     setNoteId(nota.id);
     setBaseVersion(nota.version);
     setTitulo(nota.title);

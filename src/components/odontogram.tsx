@@ -30,6 +30,10 @@ import { cn } from "@/lib/utils";
 
 const TOOTH_SIZE = 40;
 const TOOTH_GAP = 4;
+// Target táctil mínimo WCAG 2.5.8 (24x24px) para la zona oclusal. El dibujo
+// visual del cuadrado central sigue siendo `inner` (~11.2px) para no romper
+// el layout del diagrama FDI; solo el área que capta el click/tap se agranda.
+const OCLUSAL_HIT_MIN = 24;
 
 type ToothClick = { tooth: number; surface: ToothSurface };
 
@@ -88,6 +92,8 @@ function ToothCell({
   const oclusalColor = surfaces.oclusal
     ? CONDITION_COLORS[surfaces.oclusal.condition]
     : CONDITION_COLORS.sano;
+  // Clampeado a `s` (40px) para no salirse del viewBox del diente.
+  const oclusalHitSize = Math.min(OCLUSAL_HIT_MIN, s);
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -134,6 +140,18 @@ function ToothCell({
             fill={oclusalColor}
             stroke="rgba(0,0,0,0.12)"
             strokeWidth={0.5}
+            pointerEvents="none"
+          />
+        )}
+        {/* Hit-area invisible de la zona oclusal, agrandada a 24x24px mínimo
+            (WCAG 2.5.8) por encima del cuadrado visual sin modificarlo. */}
+        {!wholeColor && (
+          <rect
+            x={c - oclusalHitSize / 2}
+            y={c - oclusalHitSize / 2}
+            width={oclusalHitSize}
+            height={oclusalHitSize}
+            fill="transparent"
             onClick={(e) => {
               e.stopPropagation();
               onClick({ tooth, surface: "oclusal" });

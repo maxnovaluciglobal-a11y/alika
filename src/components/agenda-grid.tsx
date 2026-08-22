@@ -2,12 +2,10 @@ import { Link } from "@tanstack/react-router";
 import { Sparkles } from "lucide-react";
 
 import {
-  citas as todasLasCitas,
   etiquetaEstado,
   HORAS_VISIBLES,
   HORA_INICIO,
   PIXELES_POR_MINUTO,
-  profesionales as todosLosProfesionales,
   type Cita,
   type Profesional,
 } from "@/lib/clinic-data";
@@ -27,12 +25,12 @@ function horaLabel(i: number) {
 
 export function AgendaGrid({
   compacta = false,
-  citas = todasLasCitas,
-  profesionales = todosLosProfesionales,
+  citas,
+  profesionales,
 }: {
   compacta?: boolean;
-  citas?: Cita[];
-  profesionales?: Profesional[];
+  citas: Cita[];
+  profesionales: Profesional[];
 }) {
   const alto = HORAS_VISIBLES * 60 * PIXELES_POR_MINUTO;
 

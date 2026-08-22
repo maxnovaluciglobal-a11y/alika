@@ -468,12 +468,14 @@ function NuevoPagoDialog({
   userId,
   plans,
   suggestedAmountCents,
+  currency,
 }: {
   clinicId: string;
   patientId: string;
   userId: string;
   plans: TreatmentPlan[];
   suggestedAmountCents: number;
+  currency: string;
 }) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(suggestedAmountCents);
@@ -492,7 +494,7 @@ function NuevoPagoDialog({
       ["patient", clinicId, patientId],
       ["patients", clinicId],
     ],
-    resumen: (p) => `Cobro de ${formatMoney(p.amountCents as number, "CLP")}`,
+    resumen: (p) => `Cobro de ${formatMoney(p.amountCents as number, currency)}`,
     onDone: () => {
       setOpen(false);
       setAmount(0);
@@ -704,6 +706,7 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
               userId={userId}
               plans={plans}
               suggestedAmountCents={Math.max(0, balance)}
+              currency={currency}
             />
             <NuevoPresupuestoDialog
               clinicId={clinicId}

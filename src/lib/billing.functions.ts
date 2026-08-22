@@ -103,6 +103,11 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       customer: existing?.stripe_customer_id ?? undefined,
       customer_email: existing?.stripe_customer_id ? undefined : (profile?.email ?? undefined),
       client_reference_id: data.clinicId,
+      // No exigir tarjeta de entrada durante el trial (coherente con el copy
+      // de suscripcion.tsx: "no cobramos hasta que termine" el trial). Con
+      // trial_period_days > 0 el total del checkout es 0, así que Stripe
+      // omite la recolección de método de pago con este flag.
+      payment_method_collection: "if_required",
       metadata: {
         clinic_id: data.clinicId,
         clinic_name: clinic.name ?? "",

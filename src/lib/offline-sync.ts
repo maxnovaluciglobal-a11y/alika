@@ -84,13 +84,19 @@ let sincronizando = false;
  * fallar; seguir intentando solo suma ruido.
  */
 export async function sincronizarCola(queryClient: QueryClient, userId: string) {
-  if (sincronizando) return { sincronizados: 0, conflictos: 0, corte: true };
+  if (sincronizando)
+    return { sincronizados: 0, conflictos: 0, corte: true, avisos: [] as string[] };
   sincronizando = true;
 
   let sincronizados = 0;
   let conflictosNuevos = 0;
   let corte = false;
   const kindsTocados = new Set<OperacionKind>();
+  // Avisos SOLAPADO de `crear-cita` (ver appointments.functions.ts): la cita
+  // se sincronizó igual, esto solo junta el mensaje para mostrarlo al final —
+  // durante la sincronización en segundo plano no hay ningún diálogo abierto
+  // donde avisar en el momento.
+  const avisos: string[] = [];
 
   try {
     const cola = pendientes(await leerCola()).filter((i) => i.userId === userId);
@@ -102,6 +108,16 @@ export async function sincronizarCola(queryClient: QueryClient, userId: string) 
           item.payload,
         );
         kindsTocados.add(item.kind);
+        if (item.kind === "crear-cita") {
+          const solapamiento = (
+            resultado as { solapamiento?: { treatmentLabel: string } } | undefined
+          )?.solapamiento;
+          if (solapamiento) {
+            avisos.push(
+              `${item.resumen}: se solapa con "${solapamiento.treatmentLabel}" del mismo profesional.`,
+            );
+          }
+        }
         if (esConflicto(item.kind, resultado)) {
           await marcarConflicto(item.localId, resultado as Record<string, unknown>);
           conflictosNuevos += 1;
@@ -132,7 +148,7 @@ export async function sincronizarCola(queryClient: QueryClient, userId: string) 
     }
   }
 
-  return { sincronizados, conflictos: conflictosNuevos, corte };
+  return { sincronizados, conflictos: conflictosNuevos, corte, avisos };
 }
 
 /**

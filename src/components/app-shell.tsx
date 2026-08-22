@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -35,6 +36,7 @@ import { resetOfflineCache } from "@/lib/offline-cache";
 import { useSincronizacionAutomatica } from "@/hooks/use-offline-mutation";
 import { leerCola, pendientes } from "@/lib/offline-queue";
 import { hasPermission, ROLE_LABELS, type ClinicAccess, type Permission } from "@/lib/access";
+import { listPendingOutreach, listPendingReminders } from "@/lib/messaging.functions";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -111,6 +113,27 @@ export function AppShell({
 
   const visibleNav = nav.filter((item) => hasPermission(access.role, item.permission));
 
+  // Badge de "Recordatorios": sin recepción, un dentista solo puede olvidarse
+  // de entrar a despachar la cola a mano. Solo se calcula si el rol puede
+  // ver esa sección — mismo queryKey que /recordatorios para compartir cache.
+  const clinicId = access.clinic?.id;
+  const puedeVerRecordatorios = hasPermission(access.role, "agenda:manage") && Boolean(clinicId);
+  const fetchReminders = useServerFn(listPendingReminders);
+  const { data: recordatoriosPendientes = [] } = useQuery({
+    queryKey: ["pending-reminders", clinicId],
+    enabled: puedeVerRecordatorios,
+    queryFn: () => fetchReminders({ data: { clinicId: clinicId! } }),
+    refetchInterval: 60_000,
+  });
+  const fetchOutreach = useServerFn(listPendingOutreach);
+  const { data: outreachPendiente = [] } = useQuery({
+    queryKey: ["pending-outreach", clinicId],
+    enabled: puedeVerRecordatorios,
+    queryFn: () => fetchOutreach({ data: { clinicId: clinicId! } }),
+    refetchInterval: 60_000,
+  });
+  const recordatoriosBadge = recordatoriosPendientes.length + outreachPendiente.length;
+
   async function handleSignOut() {
     // La cola NO se borra al salir (son cobros ya hechos), pero quien se va
     // tiene que enterarse de que quedó algo sin subir.
@@ -155,7 +178,7 @@ export function AppShell({
                 key={to}
                 to={to}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                   active
                     ? "bg-accent font-medium text-accent-foreground"
                     : "text-muted-foreground hover:bg-secondary",
@@ -163,6 +186,11 @@ export function AppShell({
               >
                 <Icon className="size-4" />
                 <span>{label}</span>
+                {to === "/recordatorios" && recordatoriosBadge > 0 && (
+                  <span className="ml-auto min-w-4 rounded-full bg-brand px-1 text-[10px] font-semibold leading-4 text-brand-foreground">
+                    {recordatoriosBadge > 9 ? "9+" : recordatoriosBadge}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -240,11 +268,16 @@ export function AppShell({
                 key={to}
                 to={to}
                 className={cn(
-                  "whitespace-nowrap rounded-md px-3 py-1.5 text-xs",
+                  "flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                   active ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground",
                 )}
               >
                 {label}
+                {to === "/recordatorios" && recordatoriosBadge > 0 && (
+                  <span className="min-w-4 rounded-full bg-brand px-1 text-[10px] font-semibold leading-4 text-brand-foreground">
+                    {recordatoriosBadge > 9 ? "9+" : recordatoriosBadge}
+                  </span>
+                )}
               </Link>
             );
           })}
