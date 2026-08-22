@@ -304,6 +304,25 @@ export const createPatient = createServerFn({ method: "POST" })
       .single();
 
     if (error) throw new Error("No pudimos crear el paciente. " + error.message);
+
+    // security-6 Fase 1: escritura en paralelo del documento cifrado, sin
+    // depender de ella todavía (document_id en claro sigue siendo la fuente
+    // de verdad hasta la Fase 1b). Si la migración de Vault/pgcrypto todavía
+    // no está aplicada en este entorno, esto falla silenciosamente — nunca
+    // debe romper el alta del paciente. Ver docs/SECURITY6_CIFRADO_PLAN.md.
+    if (data.documento) {
+      const { error: encError } = await supabase.rpc("set_patient_document_id", {
+        p_patient_id: inserted.id,
+        p_document_id: data.documento,
+      });
+      if (encError) {
+        console.error(
+          "[security-6 fase1] set_patient_document_id falló (no bloqueante):",
+          encError.message,
+        );
+      }
+    }
+
     return { id: inserted.id };
   });
 
@@ -478,5 +497,21 @@ export const updatePatient = createServerFn({ method: "POST" })
 
     const { error } = await supabase.from("patients").update(patch).eq("id", patientId);
     if (error) throw new Error("No tienes permisos para editar este paciente.");
+
+    // security-6 Fase 1: mismo criterio que createPatient — doble escritura
+    // no bloqueante, ver comentario ahí.
+    if (rest.documento !== undefined) {
+      const { error: encError } = await supabase.rpc("set_patient_document_id", {
+        p_patient_id: patientId,
+        p_document_id: rest.documento || null,
+      });
+      if (encError) {
+        console.error(
+          "[security-6 fase1] set_patient_document_id falló (no bloqueante):",
+          encError.message,
+        );
+      }
+    }
+
     return { ok: true };
   });
