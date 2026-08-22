@@ -66,6 +66,20 @@ export const generatePortalLink = createServerFn({ method: "POST" })
         `Puedes ver tus próximas citas y pedir hora aquí: ${url}\n\n` +
         `El link vence en ${data.ttlDays} día${data.ttlDays === 1 ? "" : "s"}.`;
 
+      // Texto que queda en `messages` (historial de comunicaciones): a
+      // propósito NO incluye el link completo (trae el JWT firmado adentro).
+      // El link real se manda al paciente por wa.me/API en el momento —
+      // acá solo queda una referencia de que se mandó, no el token en sí.
+      // Higiene de secretos: recepción tiene acceso de escritura/lectura a
+      // `messages` por diseño, y no hace falta que un token de acceso
+      // completo quede persistido en un historial que puede tener más
+      // lectores con el tiempo. Nadie lee el link de vuelta desde acá —
+      // `PortalLinkButton` copia/reenvía desde la respuesta del server fn,
+      // no desde este historial.
+      const historyBody =
+        `Link del portal enviado a ${patient.full_name.split(" ")[0]} ` +
+        `(vence en ${data.ttlDays} día${data.ttlDays === 1 ? "" : "s"}).`;
+
       if (!patient.phone) {
         return { url, expiresInDays: data.ttlDays, waUrl: null, viaApi: false };
       }
@@ -111,7 +125,7 @@ export const generatePortalLink = createServerFn({ method: "POST" })
         status: "sent",
         template_kind: "portal_invite",
         recipient: patient.phone,
-        body: message,
+        body: historyBody,
         external_id: attempt.externalId,
         sent_at: new Date().toISOString(),
         sent_by: userId,

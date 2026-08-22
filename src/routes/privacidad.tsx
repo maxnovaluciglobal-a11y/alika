@@ -126,6 +126,39 @@ function Privacidad() {
         odontograma quedan versionados — nunca se sobrescriben, así que siempre hay un historial de
         quién cambió qué.
       </LegalP>
+      <LegalP>
+        Algunas cosas concretas que construimos para que esto no quede solo en un párrafo:
+      </LegalP>
+      <LegalUl>
+        <LegalLi>
+          <strong>
+            Los datos de cada clínica están separados a nivel de base de datos, no solo de pantalla.
+          </strong>{" "}
+          No es que la app "oculte" los pacientes de otra clínica en la interfaz: es la base de
+          datos misma la que impide la consulta, así que ni un bug de programación en Alika podría
+          hacer que el personal de una clínica termine viendo pacientes de otra.
+        </LegalLi>
+        <LegalLi>
+          <strong>
+            Los mensajes de WhatsApp que llegan por la API se verifican criptográficamente
+          </strong>{" "}
+          antes de procesarse: cada mensaje entrante trae una firma que Alika valida contra un
+          secreto compartido con Meta, así que un mensaje no puede hacerse pasar por tráfico
+          legítimo de WhatsApp si no viene realmente de ahí.
+        </LegalLi>
+        <LegalLi>
+          <strong>La historia clínica y el odontograma no se pueden "editar por encima".</strong>{" "}
+          Cada cambio queda como una entrada nueva con quién y cuándo, no como una edición que borra
+          lo anterior — si alguna vez hace falta reconstruir qué pasó con un paciente, la
+          información está.
+        </LegalLi>
+      </LegalUl>
+      <LegalP>
+        Alika es una empresa chica y todavía no tiene certificaciones formales de seguridad de la
+        información (por ejemplo SOC 2 o ISO 27001) — son procesos costosos que están fuera de
+        alcance en esta etapa. Lo de arriba son controles que sí están construidos y en uso hoy, no
+        una promesa de certificación futura.
+      </LegalP>
 
       <LegalH2>6. Retención y eliminación</LegalH2>
       <LegalP>

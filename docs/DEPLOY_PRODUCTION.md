@@ -61,6 +61,7 @@ Estas cosas requieren decisión y firma de Walter antes de tocar código product
 ### 2.4 Monitoreo
 
 - [ ] **Sentry** — cuenta gratis (5k events/mes), crear proyecto React, copiar el DSN a `SENTRY_DSN`. El código ya está preparado para leerlo (ver Wave 1).
+- [ ] **Antes de setear `VITE_SENTRY_DSN`**: revisar el `beforeSend` en `src/lib/sentry.ts` — hoy trunca cookies, redacta `user` a solo `id`, y redacta el patrón `(columna)=(valor)` de mensajes tipo Postgres (`Key (email)=(x) already exists`). Confirmar contra errores reales del proyecto que ese redactado alcanza antes de habilitar el DSN en prod (checklist detallado en el comentario del `beforeSend`).
 - [ ] **PostHog** — cuenta gratis (1M events/mes), crear proyecto, copiar el key a `POSTHOG_KEY`.
 - [ ] **Healthcheck externo** — UptimeRobot (gratis, 5 min interval) apuntando a `https://alika.com/api/health` (endpoint pendiente de crear).
 - [ ] **Alertas Slack/Email** — desde Sentry cuando hay errores nuevos, y desde UptimeRobot cuando el sitio cae.
