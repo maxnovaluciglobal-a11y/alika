@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BellRing, Mail, MailX } from "lucide-react";
+import { BellRing, Mail, MailX, Star } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { toast } from "sonner";
@@ -15,6 +16,11 @@ import {
   type EmailEventKey,
   type NotificationPreferences,
 } from "@/lib/notification-preferences";
+import {
+  listBranchesForReviewLinks,
+  updateBranchGoogleReviewUrl,
+} from "@/lib/clinic-catalog.functions";
+import { hasPermission } from "@/lib/access";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/preferencias")({
@@ -74,6 +80,104 @@ function Switch({
   );
 }
 
+/** Fila editable de una sucursal: link de reseña de Google. Campo opcional
+ * (columna nullable) — muchas sucursales todavía no lo van a tener cargado,
+ * y eso es un estado válido, no un error. */
+function BranchReviewLinkRow({
+  branch,
+  clinicId,
+  onSaved,
+}: {
+  branch: { id: string; name: string; googleReviewUrl: string | null };
+  clinicId: string;
+  onSaved: () => void;
+}) {
+  const [value, setValue] = useState(branch.googleReviewUrl ?? "");
+  const guardarLink = useServerFn(updateBranchGoogleReviewUrl);
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      guardarLink({ data: { clinicId, branchId: branch.id, googleReviewUrl: value.trim() } }),
+    onSuccess: () => {
+      toast.success(`Link de reseña de ${branch.name} guardado`);
+      onSaved();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const dirty = value.trim() !== (branch.googleReviewUrl ?? "");
+
+  return (
+    <li className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 sm:w-40 sm:shrink-0">
+        <p className="text-sm font-medium">{branch.name}</p>
+        {!branch.googleReviewUrl && (
+          <p className="text-xs text-muted-foreground">Sin link cargado</p>
+        )}
+      </div>
+      <div className="flex flex-1 gap-2">
+        <input
+          type="url"
+          inputMode="url"
+          placeholder="https://g.page/r/…/review"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          disabled={mutation.isPending}
+          className="w-full min-w-0 rounded-lg border border-border bg-background px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+        />
+        <button
+          type="button"
+          disabled={mutation.isPending || !dirty}
+          onClick={() => mutation.mutate()}
+          className="shrink-0 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-50"
+        >
+          Guardar
+        </button>
+      </div>
+    </li>
+  );
+}
+
+function BranchReviewLinksSection({ clinicId }: { clinicId: string }) {
+  const queryClient = useQueryClient();
+  const cargarBranches = useServerFn(listBranchesForReviewLinks);
+
+  const { data: branches = [], isLoading } = useQuery({
+    queryKey: ["branches-review-links", clinicId],
+    queryFn: () => cargarBranches({ data: { clinicId } }),
+  });
+
+  const invalidar = () =>
+    queryClient.invalidateQueries({ queryKey: ["branches-review-links", clinicId] });
+
+  return (
+    <section className="rounded-xl border border-border bg-card">
+      <header className="flex gap-3 border-b border-border p-5">
+        <Star className="mt-0.5 size-5 shrink-0 text-primary" />
+        <div>
+          <h2 className="font-heading text-base font-semibold">Link de reseña de Google</h2>
+          <p className="text-sm text-muted-foreground">
+            Se usa en el mensaje de pedido de reseña por WhatsApp para que el paciente pueda dejarla
+            con un solo click. Sin link cargado, el mensaje sigue funcionando — solo pide buscar la
+            clínica en Google.
+          </p>
+        </div>
+      </header>
+      {isLoading ? (
+        <p className="p-5 text-sm text-muted-foreground">Cargando sucursales…</p>
+      ) : branches.length === 0 ? (
+        <p className="p-5 text-sm text-muted-foreground">No hay sucursales activas.</p>
+      ) : (
+        <ul className="divide-y divide-border">
+          {branches.map((b) => (
+            <BranchReviewLinkRow key={b.id} branch={b} clinicId={clinicId} onSaved={invalidar} />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 function PreferenciasPage() {
   const { access } = Route.useRouteContext();
   const queryClient = useQueryClient();
@@ -106,9 +210,15 @@ function PreferenciasPage() {
   const bloqueado = isLoading || mutation.isPending;
   const emailsActivos = prefs.emailEnabled && !desuscrito;
 
+  const puedeGestionarConfig = hasPermission(access.role, "settings:manage");
+
   return (
     <AppShell title="Preferencias de aviso" access={access}>
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+        {puedeGestionarConfig && access.clinic && (
+          <BranchReviewLinksSection clinicId={access.clinic.id} />
+        )}
+
         <section className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-start justify-between gap-4">
             <div className="flex gap-3">

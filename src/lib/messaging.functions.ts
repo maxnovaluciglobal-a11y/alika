@@ -428,6 +428,8 @@ export interface PendingOutreachItem {
   // review_request (dedupe es por cita, no por paciente — cada visita puede pedir su propia reseña)
   appointmentId?: string;
   treatmentLabel?: string;
+  /** Link directo de reseña de Google de la sucursal donde fue la cita, si está cargado (branches.google_review_url). Null cuando la sucursal no lo tiene. */
+  googleReviewUrl?: string | null;
   // payment_due
   balanceCents?: number;
   currency?: string;
@@ -464,6 +466,7 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
       { data: clinic, error: clinicErr },
       { data: sentQuotes, error: quoteErr },
       { data: completedItems, error: completedErr },
+      { data: branchRows, error: branchErr },
     ] = await Promise.all([
       supabase
         .from("patients")
@@ -473,7 +476,7 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
         .is("wa_opt_out_at", null),
       supabase
         .from("appointments")
-        .select("id, patient_id, treatment_label, ends_at")
+        .select("id, patient_id, branch_id, treatment_label, ends_at")
         .eq("clinic_id", clinicId)
         .eq("status", "finalizada")
         .order("ends_at", { ascending: false })
@@ -512,6 +515,7 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
         .not("completed_at", "is", null)
         .order("completed_at", { ascending: false })
         .limit(2000),
+      supabase.from("branches").select("id, google_review_url").eq("clinic_id", clinicId),
     ]);
     if (patErr) throw new Error(patErr.message);
     if (apptErr) throw new Error(apptErr.message);
@@ -522,9 +526,13 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
     if (paidErr) throw new Error(paidErr.message);
     if (clinicErr) throw new Error(clinicErr.message);
     if (quoteErr) throw new Error(quoteErr.message);
+    if (branchErr) throw new Error(branchErr.message);
 
     const patientById = new Map((optedInPatients ?? []).map((p) => [p.id, p]));
     const patientsWithFuture = new Set((futuras ?? []).map((f) => f.patient_id));
+    const reviewUrlByBranch = new Map(
+      (branchRows ?? []).map((b) => [b.id, b.google_review_url as string | null]),
+    );
 
     // Última visita finalizada por paciente (ya viene ordenado desc, nos quedamos con la primera ocurrencia).
     const lastVisitByPatient = new Map<string, string>();
@@ -607,6 +615,7 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
         kind: "review_request",
         appointmentId: a.id,
         treatmentLabel: a.treatment_label || "Consulta",
+        googleReviewUrl: (a.branch_id && reviewUrlByBranch.get(a.branch_id)) || null,
       });
     }
 

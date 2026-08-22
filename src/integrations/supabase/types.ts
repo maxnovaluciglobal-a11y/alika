@@ -16,6 +16,7 @@ export type Database = {
           closes_at: string;
           created_at: string;
           email: string | null;
+          google_review_url: string | null;
           id: string;
           is_active: boolean;
           name: string;
@@ -31,6 +32,7 @@ export type Database = {
           closes_at?: string;
           created_at?: string;
           email?: string | null;
+          google_review_url?: string | null;
           id?: string;
           is_active?: boolean;
           name: string;
@@ -46,6 +48,7 @@ export type Database = {
           closes_at?: string;
           created_at?: string;
           email?: string | null;
+          google_review_url?: string | null;
           id?: string;
           is_active?: boolean;
           name?: string;
@@ -1284,6 +1287,8 @@ export type Database = {
         Row: {
           accepted_at: string | null;
           accepted_by_name: string | null;
+          accepted_ip: string | null;
+          accepted_user_agent: string | null;
           clinic_id: string;
           created_at: string;
           created_by: string;
@@ -1304,6 +1309,8 @@ export type Database = {
         Insert: {
           accepted_at?: string | null;
           accepted_by_name?: string | null;
+          accepted_ip?: string | null;
+          accepted_user_agent?: string | null;
           clinic_id: string;
           created_at?: string;
           created_by?: string;
@@ -1324,6 +1331,8 @@ export type Database = {
         Update: {
           accepted_at?: string | null;
           accepted_by_name?: string | null;
+          accepted_ip?: string | null;
+          accepted_user_agent?: string | null;
           clinic_id?: string;
           created_at?: string;
           created_by?: string;

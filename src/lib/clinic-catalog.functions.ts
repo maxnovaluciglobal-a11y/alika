@@ -21,6 +21,60 @@ export const listBranches = createServerFn({ method: "GET" })
     return (rows ?? []).map((r) => ({ id: r.id, nombre: r.name, ciudad: r.city ?? "Sin ciudad" }));
   });
 
+/** Sucursales de la clínica con su link de reseña de Google, para la sección
+ * de configuración donde el staff lo carga (audit finding product-2:
+ * review_request pedía la reseña sin dar un link directo). */
+export const listBranchesForReviewLinks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{ id: string; name: string; googleReviewUrl: string | null }[]> => {
+      const { data: rows, error } = await context.supabase
+        .from("branches")
+        .select("id, name, google_review_url")
+        .eq("clinic_id", data.clinicId)
+        .eq("is_active", true)
+        .order("name", { ascending: true });
+
+      if (error) throw new Error(error.message);
+
+      return (rows ?? []).map((r) => ({
+        id: r.id,
+        name: r.name,
+        googleReviewUrl: r.google_review_url,
+      }));
+    },
+  );
+
+/** Actualiza el link de reseña de Google de una sucursal. RLS
+ * (`branches_write`) ya exige `can_manage_clinic`; `clinicId` en el `.eq()`
+ * es cinturón de defensa en profundidad, no la fuente de la autorización. */
+export const updateBranchGoogleReviewUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        branchId: z.string().uuid(),
+        // Vacío = borrar el link (columna nullable, "sin link" es válido).
+        googleReviewUrl: z.string().trim().url().max(2048).or(z.literal("")),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { error } = await context.supabase
+      .from("branches")
+      .update({ google_review_url: data.googleReviewUrl || null })
+      .eq("id", data.branchId)
+      .eq("clinic_id", data.clinicId);
+
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 /** Profesionales de la clínica, con especialidad y box por defecto resueltos. */
 export const listProfessionals = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

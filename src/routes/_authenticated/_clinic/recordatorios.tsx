@@ -330,7 +330,14 @@ function outreachVariables(item: PendingOutreachItem): Record<string, string> {
     case "hygiene_recall":
       return { meses: String(item.monthsSinceLastVisit ?? 6) };
     case "review_request":
-      return {};
+      // El motor de templates (renderTemplate) hace reemplazo simple de
+      // {variable}, sin condicionales — por eso el "si hay link" se resuelve
+      // acá: {link_resena} lleva la frase completa cuando la sucursal tiene
+      // google_review_url cargado, o queda vacío (el placeholder desaparece
+      // sin dejar undefined ni un hueco feo) cuando no lo tiene.
+      return {
+        link_resena: item.googleReviewUrl ? ` Directo acá: ${item.googleReviewUrl}` : "",
+      };
     case "payment_due":
       return {
         saldo:

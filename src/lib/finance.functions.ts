@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -351,12 +352,27 @@ export const setQuoteStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const now = new Date().toISOString();
+    // Evidencia técnica del consentimiento (útil ante disputa de cobro):
+    // IP + user-agent del request real en el momento del "accepted", además
+    // del nombre que tipeó el staff. `getRequest()` expone la Request HTTP
+    // real dentro del handler de un createServerFn (mismo patrón que
+    // `logPortalAccess` en portal.functions.ts).
+    let acceptedIp: string | null = null;
+    let acceptedUserAgent: string | null = null;
+    if (data.status === "accepted") {
+      const req = getRequest();
+      acceptedIp = req?.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+      acceptedUserAgent = req?.headers.get("user-agent") ?? null;
+    }
+
     const patch = {
       status: data.status,
       ...(data.status === "sent" && { sent_at: now }),
       ...(data.status === "accepted" && { accepted_at: now }),
       ...(data.status === "accepted" &&
         data.acceptedByName && { accepted_by_name: data.acceptedByName }),
+      ...(data.status === "accepted" && { accepted_ip: acceptedIp }),
+      ...(data.status === "accepted" && { accepted_user_agent: acceptedUserAgent }),
       ...(data.status === "rejected" && { rejected_at: now }),
     };
 
