@@ -21,6 +21,7 @@ import {
   MessageCircleMore,
   MessageCircle,
   Landmark,
+  Boxes,
 } from "lucide-react";
 
 import { AlikaLogo } from "@/components/alika-logo";
@@ -51,6 +52,7 @@ const nav = [
   { to: "/pacientes", label: "Pacientes", icon: Users, permission: "patients:view" },
   { to: "/tratamientos", label: "Tratamientos", icon: Stethoscope, permission: "treatments:view" },
   { to: "/finanzas", label: "Finanzas", icon: Landmark, permission: "finance:view" },
+  { to: "/inventario", label: "Inventario", icon: Boxes, permission: "inventory:view" },
   { to: "/equipo", label: "Equipo", icon: UsersRound, permission: "team:view" },
   { to: "/whatsapp", label: "WhatsApp", icon: MessageCircle, permission: "team:manage" },
   { to: "/permisos", label: "Permisos", icon: ShieldCheck, permission: "team:manage" },
