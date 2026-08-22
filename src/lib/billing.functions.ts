@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { SUBSCRIPTION_STATUSES, type Subscription } from "@/lib/billing";
-import { clinicMonthlyPriceId, getStripe } from "@/lib/stripe.server";
+import { planPriceId, getStripe, type BillingPlan } from "@/lib/stripe.server";
 
 type SubscriptionRow = {
   clinic_id: string;
@@ -65,6 +65,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     z
       .object({
         clinicId: z.string().uuid(),
+        plan: z.enum(["solo", "clinica"]).default("clinica"),
         // URLs a las que Stripe redirige tras completar/cancelar.
         successUrl: z.string().url(),
         cancelUrl: z.string().url(),
@@ -73,7 +74,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<{ url: string }> => {
     const stripe = getStripe();
-    const priceId = clinicMonthlyPriceId();
+    const priceId = planPriceId(data.plan as BillingPlan);
     const { supabase, userId } = context;
 
     // Traer datos de la clínica + email del owner para pre-poblar Stripe.

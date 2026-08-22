@@ -34,9 +34,18 @@ export function stripeWebhookSecret(): string {
   return s;
 }
 
-/** Price ID del plan mensual de la clínica. Se crea en el dashboard de Stripe. */
-export function clinicMonthlyPriceId(): string {
-  const p = process.env.STRIPE_PRICE_ID_CLINIC_MONTHLY;
-  if (!p) throw new Error("STRIPE_PRICE_ID_CLINIC_MONTHLY no configurada.");
+/**
+ * Precios de fundador (2026-08-22): dos tiers en vez de un flat único.
+ * "solo" = 1 profesional/sillón, "clinica" = hasta 3. Ambos con trial de
+ * 14 días. Se crean en el dashboard de Stripe (o vía API), el ID va por
+ * env var para poder rotarlos sin redeploy.
+ */
+export type BillingPlan = "solo" | "clinica";
+
+export function planPriceId(plan: BillingPlan): string {
+  const envVar =
+    plan === "solo" ? "STRIPE_PRICE_ID_SOLO_MONTHLY" : "STRIPE_PRICE_ID_CLINIC_MONTHLY";
+  const p = process.env[envVar];
+  if (!p) throw new Error(`${envVar} no configurada.`);
   return p;
 }

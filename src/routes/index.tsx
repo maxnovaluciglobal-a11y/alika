@@ -251,7 +251,7 @@ const pasos = [
 const faqs = [
   {
     q: "¿Es caro?",
-    a: "US$49/mes, flat por clínica. Empiezas gratis 14 días sin tarjeta, y un solo paciente que no se te escapa al mes ya lo paga.",
+    a: "Desde US$29/mes (Solo, 1 profesional) o US$69/mes (Clínica, hasta 3). Empiezas gratis 14 días sin tarjeta, y un solo paciente que no se te escapa al mes ya lo paga.",
   },
   {
     q: "¿Es complicado? No soy técnico.",
@@ -517,16 +517,40 @@ function Landing() {
               Precio fundador
             </p>
             <h2 className="font-precise text-3xl font-bold sm:text-4xl">
-              US$49/mes. Prueba 14 días gratis, sin tarjeta.
+              Prueba 14 días gratis, sin tarjeta.
             </h2>
-            <p className="mt-2 text-xs text-muted-foreground/80">
-              {approxLocalPricesLabel(49)}{" "}
-              <span className="italic">(referencial, el cobro es en USD)</span>
-            </p>
             <p className="mx-auto mt-5 max-w-lg text-base text-muted-foreground">
-              Un solo precio, sin cobro por profesional ni por sucursal. Las primeras clínicas
-              quedan con este precio fundador de por vida — después de esta etapa, sube.
+              Sin cobro por sucursal. Las primeras clínicas quedan con este precio fundador de por
+              vida — después de esta etapa, sube.
             </p>
+
+            <div className="mx-auto mt-10 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-border bg-card p-6 text-left">
+                <p className="text-sm font-semibold">Alika Solo</p>
+                <p className="text-xs text-muted-foreground">1 profesional / 1 sillón</p>
+                <p className="mt-3 text-3xl font-bold">
+                  US$29<span className="text-sm font-normal text-muted-foreground">/mes</span>
+                </p>
+                <p className="text-sm text-muted-foreground/70 line-through">US$49/mes</p>
+                <p className="mt-1 text-xs text-muted-foreground/80">
+                  {approxLocalPricesLabel(29)}{" "}
+                  <span className="italic">(referencial, el cobro es en USD)</span>
+                </p>
+              </div>
+              <div className="rounded-2xl border-2 border-mint-strong bg-mint-soft p-6 text-left">
+                <p className="text-sm font-semibold">Alika Clínica</p>
+                <p className="text-xs text-muted-foreground">Hasta 3 profesionales / sillones</p>
+                <p className="mt-3 text-3xl font-bold">
+                  US$69<span className="text-sm font-normal text-muted-foreground">/mes</span>
+                </p>
+                <p className="text-sm text-muted-foreground/70 line-through">US$99/mes</p>
+                <p className="mt-1 text-xs text-muted-foreground/80">
+                  {approxLocalPricesLabel(69)}{" "}
+                  <span className="italic">(referencial, el cobro es en USD)</span>
+                </p>
+              </div>
+            </div>
+
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
                 to="/auth"

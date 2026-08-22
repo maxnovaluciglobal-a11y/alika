@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CreditCard, ExternalLink, Loader2 } from "lucide-react";
+import { Check, CreditCard, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -19,6 +20,45 @@ export const Route = createFileRoute("/_authenticated/_clinic/suscripcion")({
   }),
   component: BillingPage,
 });
+
+type PlanKey = "solo" | "clinica";
+
+const PLANS: Record<
+  PlanKey,
+  {
+    label: string;
+    blurb: string;
+    promoCents: number;
+    regularCents: number;
+    priceEnvId: string | undefined;
+  }
+> = {
+  solo: {
+    label: "Solo",
+    blurb: "1 profesional / 1 sillón",
+    promoCents: 2900,
+    regularCents: 4900,
+    priceEnvId: import.meta.env.VITE_STRIPE_PRICE_ID_SOLO_MONTHLY,
+  },
+  clinica: {
+    label: "Clínica",
+    blurb: "Hasta 3 profesionales / sillones",
+    promoCents: 6900,
+    regularCents: 9900,
+    priceEnvId: import.meta.env.VITE_STRIPE_PRICE_ID_CLINIC_MONTHLY,
+  },
+};
+
+function usd(cents: number) {
+  return `US$${(cents / 100).toFixed(0)}`;
+}
+
+function planFromPriceId(priceId: string | null): PlanKey | null {
+  if (!priceId) return null;
+  if (priceId === PLANS.solo.priceEnvId) return "solo";
+  if (priceId === PLANS.clinica.priceEnvId) return "clinica";
+  return null;
+}
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
@@ -48,6 +88,7 @@ function BillingPage() {
       const { url } = await checkout({
         data: {
           clinicId,
+          plan,
           successUrl: `${origin}/suscripcion?checkout=success`,
           cancelUrl: `${origin}/suscripcion?checkout=cancel`,
         },
@@ -71,9 +112,12 @@ function BillingPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const [plan, setPlan] = useState<PlanKey>("clinica");
   const daysLeft = trialDaysLeft(sub ?? null);
   const active = isSubscriptionActive(sub ?? null);
   const hasCustomer = Boolean(sub?.stripeCustomerId);
+  const activePlan = planFromPriceId(sub?.stripePriceId ?? null);
+  const activePlanInfo = activePlan ? PLANS[activePlan] : null;
 
   return (
     <AppShell title="Suscripción" access={access}>
@@ -84,10 +128,16 @@ function BillingPage() {
             <div className="flex-1">
               <h2 className="font-heading text-base font-semibold">Plan actual</h2>
               <p className="text-sm text-muted-foreground">
-                Alika Clínica — <span className="font-medium">US$49 / mes</span> · trial de 14 días.
+                Alika {activePlanInfo?.label ?? "Clínica"} —{" "}
+                <span className="font-medium">
+                  {usd(activePlanInfo?.promoCents ?? PLANS.clinica.promoCents)} / mes
+                </span>{" "}
+                · trial de 14 días.
               </p>
               <p className="mt-1 text-xs text-muted-foreground/80">
-                {approxLocalPricesLabel(49)}{" "}
+                {approxLocalPricesLabel(
+                  (activePlanInfo?.promoCents ?? PLANS.clinica.promoCents) / 100,
+                )}{" "}
                 <span className="italic">(referencial, el cobro es en USD)</span>
               </p>
             </div>
@@ -146,6 +196,41 @@ function BillingPage() {
               : "Al activar la suscripción vas a Stripe para dejar el método de pago. Puedes cancelar durante el trial y no te cobramos."}
           </p>
 
+          {!active && (
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {(Object.entries(PLANS) as [PlanKey, (typeof PLANS)[PlanKey]][]).map(
+                ([key, info]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setPlan(key)}
+                    className={`rounded-xl border p-4 text-left transition-colors ${
+                      plan === key
+                        ? "border-primary bg-primary/5 ring-1 ring-primary"
+                        : "border-border hover:bg-accent/50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold">Alika {info.label}</span>
+                      {plan === key && <Check className="size-4 text-primary" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{info.blurb}</p>
+                    <p className="mt-2 text-lg font-semibold">
+                      {usd(info.promoCents)}
+                      <span className="text-xs font-normal text-muted-foreground"> /mes</span>{" "}
+                      <span className="text-sm font-normal text-muted-foreground/70 line-through">
+                        {usd(info.regularCents)}
+                      </span>
+                    </p>
+                    <p className="text-[11px] font-medium text-brand">
+                      Precio de fundador — por tiempo limitado
+                    </p>
+                  </button>
+                ),
+              )}
+            </div>
+          )}
+
           <div className="mt-4 flex flex-wrap gap-3">
             {!active ? (
               <button
@@ -159,9 +244,9 @@ function BillingPage() {
                     <Loader2 className="size-4 animate-spin" /> Redirigiendo…
                   </>
                 ) : hasCustomer ? (
-                  "Reactivar suscripción"
+                  `Reactivar suscripción · Alika ${PLANS[plan].label}`
                 ) : (
-                  "Activar suscripción · US$49/mes"
+                  `Activar suscripción · ${usd(PLANS[plan].promoCents)}/mes`
                 )}
               </button>
             ) : null}
