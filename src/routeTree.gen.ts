@@ -24,6 +24,7 @@ import { Route as AuthenticatedClinicRouteRouteImport } from './routes/_authenti
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedSinAccesoRouteImport } from './routes/_authenticated/sin-acceso'
 import { Route as ApiDemoResetRouteImport } from './routes/api.demo-reset'
+import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api.whatsapp-webhook'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as DocsDatosYSeguridadRouteImport } from './routes/docs.datos-y-seguridad'
@@ -123,6 +124,11 @@ const AuthenticatedSinAccesoRoute = AuthenticatedSinAccesoRouteImport.update({
 const ApiDemoResetRoute = ApiDemoResetRouteImport.update({
   id: '/api/demo-reset',
   path: '/api/demo-reset',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
@@ -286,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
@@ -325,6 +332,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
@@ -369,6 +377,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
@@ -412,6 +421,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/sin-acceso'
     | '/api/demo-reset'
+    | '/api/health'
     | '/api/whatsapp-webhook'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
@@ -451,6 +461,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/sin-acceso'
     | '/api/demo-reset'
+    | '/api/health'
     | '/api/whatsapp-webhook'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
@@ -494,6 +505,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/sin-acceso'
     | '/api/demo-reset'
+    | '/api/health'
     | '/api/whatsapp-webhook'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
@@ -535,6 +547,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TerminosRoute: typeof TerminosRoute
   ApiDemoResetRoute: typeof ApiDemoResetRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
@@ -644,6 +657,13 @@ declare module '@tanstack/react-router' {
       path: '/api/demo-reset'
       fullPath: '/api/demo-reset'
       preLoaderRoute: typeof ApiDemoResetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/whatsapp-webhook': {
@@ -939,6 +959,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TerminosRoute: TerminosRoute,
   ApiDemoResetRoute: ApiDemoResetRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }
