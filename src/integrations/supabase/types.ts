@@ -909,6 +909,8 @@ export type Database = {
           created_at: string;
           created_by: string;
           document_id: string | null;
+          document_id_enc: string | null;
+          document_id_hash: string | null;
           email: string | null;
           full_name: string;
           id: string;
@@ -937,6 +939,8 @@ export type Database = {
           created_at?: string;
           created_by?: string;
           document_id?: string | null;
+          document_id_enc?: string | null;
+          document_id_hash?: string | null;
           email?: string | null;
           full_name: string;
           id?: string;
@@ -965,6 +969,8 @@ export type Database = {
           created_at?: string;
           created_by?: string;
           document_id?: string | null;
+          document_id_enc?: string | null;
+          document_id_hash?: string | null;
           email?: string | null;
           full_name?: string;
           id?: string;
@@ -1226,6 +1232,105 @@ export type Database = {
             columns: ["superseded_by"];
             isOneToOne: false;
             referencedRelation: "odontogram_marks";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      periodontal_charts: {
+        Row: {
+          clinic_id: string;
+          id: string;
+          notes: string | null;
+          patient_id: string;
+          recorded_at: string;
+          recorded_by: string;
+        };
+        Insert: {
+          clinic_id: string;
+          id?: string;
+          notes?: string | null;
+          patient_id: string;
+          recorded_at?: string;
+          recorded_by?: string;
+        };
+        Update: {
+          clinic_id?: string;
+          id?: string;
+          notes?: string | null;
+          patient_id?: string;
+          recorded_at?: string;
+          recorded_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "periodontal_charts_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "periodontal_charts_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      periodontal_measurements: {
+        Row: {
+          bleeding: boolean | null;
+          chart_id: string;
+          clinic_id: string;
+          created_at: string;
+          furcation: number | null;
+          id: string;
+          mobility: number | null;
+          pocket_depth_mm: number | null;
+          point: Database["public"]["Enums"]["periodontal_point"];
+          recession_mm: number | null;
+          tooth_number: number;
+        };
+        Insert: {
+          bleeding?: boolean | null;
+          chart_id: string;
+          clinic_id: string;
+          created_at?: string;
+          furcation?: number | null;
+          id?: string;
+          mobility?: number | null;
+          pocket_depth_mm?: number | null;
+          point: Database["public"]["Enums"]["periodontal_point"];
+          recession_mm?: number | null;
+          tooth_number: number;
+        };
+        Update: {
+          bleeding?: boolean | null;
+          chart_id?: string;
+          clinic_id?: string;
+          created_at?: string;
+          furcation?: number | null;
+          id?: string;
+          mobility?: number | null;
+          pocket_depth_mm?: number | null;
+          point?: Database["public"]["Enums"]["periodontal_point"];
+          recession_mm?: number | null;
+          tooth_number?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "periodontal_measurements_chart_id_fkey";
+            columns: ["chart_id"];
+            isOneToOne: false;
+            referencedRelation: "periodontal_charts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "periodontal_measurements_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
             referencedColumns: ["id"];
           },
         ];
@@ -1834,6 +1939,104 @@ export type Database = {
           },
         ];
       };
+      inventory_items: {
+        Row: {
+          clinic_id: string;
+          cost_cents: number | null;
+          created_at: string;
+          created_by: string;
+          current_stock: number;
+          id: string;
+          is_active: boolean;
+          min_stock: number | null;
+          name: string;
+          notes: string | null;
+          unit: string;
+        };
+        Insert: {
+          clinic_id: string;
+          cost_cents?: number | null;
+          created_at?: string;
+          created_by?: string;
+          current_stock?: number;
+          id?: string;
+          is_active?: boolean;
+          min_stock?: number | null;
+          name: string;
+          notes?: string | null;
+          unit: string;
+        };
+        Update: {
+          clinic_id?: string;
+          cost_cents?: number | null;
+          created_at?: string;
+          created_by?: string;
+          current_stock?: number;
+          id?: string;
+          is_active?: boolean;
+          min_stock?: number | null;
+          name?: string;
+          notes?: string | null;
+          unit?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      inventory_movements: {
+        Row: {
+          clinic_id: string;
+          id: string;
+          item_id: string;
+          kind: Database["public"]["Enums"]["inventory_movement_kind"];
+          quantity: number;
+          reason: string | null;
+          recorded_at: string;
+          recorded_by: string;
+        };
+        Insert: {
+          clinic_id: string;
+          id?: string;
+          item_id: string;
+          kind: Database["public"]["Enums"]["inventory_movement_kind"];
+          quantity: number;
+          reason?: string | null;
+          recorded_at?: string;
+          recorded_by?: string;
+        };
+        Update: {
+          clinic_id?: string;
+          id?: string;
+          item_id?: string;
+          kind?: Database["public"]["Enums"]["inventory_movement_kind"];
+          quantity?: number;
+          reason?: string | null;
+          recorded_at?: string;
+          recorded_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inventory_movements_item_id_fkey";
+            columns: ["item_id"];
+            isOneToOne: false;
+            referencedRelation: "inventory_items";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       treatment_items: {
         Row: {
           clinic_id: string;
@@ -1933,6 +2136,14 @@ export type Database = {
         Returns: number;
       };
       reset_demo_clinic: { Args: Record<PropertyKey, never>; Returns: undefined };
+      set_patient_document_id: {
+        Args: { p_patient_id: string; p_document_id: string | null };
+        Returns: undefined;
+      };
+      get_patient_document_id: {
+        Args: { p_patient_id: string };
+        Returns: string | null;
+      };
       list_patients_with_last_and_next_appointment: {
         Args: { p_clinic_id: string };
         Returns: {
@@ -1987,6 +2198,8 @@ export type Database = {
         | "sellante"
         | "fractura"
         | "protesis";
+      inventory_movement_kind: "entrada" | "salida" | "ajuste";
+      periodontal_point: "mv" | "v" | "dv" | "ml" | "l" | "dl" | "whole";
     };
     CompositeTypes: {
       [_ in never]: never;
