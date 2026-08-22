@@ -13,6 +13,8 @@ Ley 21.719 (Chile, protección de datos) exige cifrado explícito de datos sensi
 
 La Ley 21.719 puede satisfacerse totalmente con (1) dependiendo de la interpretación — **esto hay que confirmarlo con un abogado o asesor de compliance, no asumirlo por código**. No soy la fuente correcta para esa determinación legal. Si (1) alcanza, el trabajo de código baja de "Alto esfuerzo" a "revisar y documentar la política de retención/backup ya existente". Si hace falta (2), sigue el resto de este plan.
 
+**Actualización 2026-08-22 (búsqueda web, no asesoría legal formal):** varias fuentes (Prey, Confidata, XMS LatAm) coinciden en que la interpretación esperada es cifrado explícito **a nivel de columna en la base de datos** para campos como RUT/nombre/teléfono/historial clínico — no solo el cifrado en reposo de infraestructura. Esto inclina la balanza hacia que sí hace falta (2), pero sigue sin ser una fuente oficial (blogs de consultoras, no el texto de la ley ni un dictamen). No arranco la Fase 1 sin que Walter lo confirme con un abogado — la lectura de un blog no reemplaza eso cuando el dato en juego es RUT/historial clínico real.
+
 ## Por qué (2) no es un fix chico
 
 Revisé el schema real de `patients` (`supabase/migrations/20260811120000_...sql:7-27`). Los candidatos a cifrar y su uso real en el código:
