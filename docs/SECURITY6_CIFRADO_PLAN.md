@@ -1,0 +1,51 @@
+# security-6 — Cifrado de columna para PII/PHI: plan, no implementación
+
+**Por qué este doc y no un commit directo:** de los 41 hallazgos de la auditoría 360, este es el único que decidí NO implementar a ciegas hoy. Los otros 24 items ejecutados fueron cambios acotados y reversibles. Este toca cómo se guardan los datos de pacientes reales de la clínica piloto, con trade-offs de producto que no me corresponde decidir solo — y un fix apurado acá es peor que ningún fix.
+
+## Qué pide el hallazgo
+
+Ley 21.719 (Chile, protección de datos) exige cifrado explícito de datos sensibles, con vigencia plena el 1-dic-2026. Hoy ninguna columna de `patients` (`document_id`, `birth_date`, `phone`, `email`, `full_name`) tiene cifrado a nivel de columna — solo el cifrado en reposo que Supabase ya aplica a nivel de disco (infraestructura, no aplicación).
+
+## Primer punto importante: separar dos cosas distintas
+
+1. **Cifrado en reposo a nivel de infraestructura** — Supabase/Postgres ya lo hace por defecto en el storage subyacente (todo proveedor cloud serio lo hace). Esto protege contra alguien robando el disco físico, no contra alguien con acceso a la DB (service_role key filtrada, un dump, un query directo).
+2. **Cifrado a nivel de columna en la aplicación** — lo que pide el hallazgo. Protege incluso si alguien tiene acceso de lectura a la base (ej. `service_role` key comprometida, un `pg_dump` que se filtra).
+
+La Ley 21.719 puede satisfacerse totalmente con (1) dependiendo de la interpretación — **esto hay que confirmarlo con un abogado o asesor de compliance, no asumirlo por código**. No soy la fuente correcta para esa determinación legal. Si (1) alcanza, el trabajo de código baja de "Alto esfuerzo" a "revisar y documentar la política de retención/backup ya existente". Si hace falta (2), sigue el resto de este plan.
+
+## Por qué (2) no es un fix chico
+
+Revisé el schema real de `patients` (`supabase/migrations/20260811120000_...sql:7-27`). Los candidatos a cifrar y su uso real en el código:
+
+| Columna       | Uso real en el código                                                         | Efecto de cifrarla                                                                                                                                                                                                                                                                                                  |
+| ------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `full_name`   | `listPatients` ordena `.order("full_name", ascending)`, búsqueda por nombre   | Cifrado rompe el orden alfabético y la búsqueda — habría que reconstruir ambos con un índice separado o aceptar perderlos                                                                                                                                                                                           |
+| `document_id` | Dedup exacto en `importPatients` (CSV)                                        | Cifrado **determinístico** (mismo texto → mismo cifrado) preserva el dedup por igualdad. Candidato más seguro para cifrar primero — sin romper nada.                                                                                                                                                                |
+| `phone`       | Lookup exacto para WhatsApp/webhook (`whatsapp_leads`, `findReferrerByCode`)  | Cifrado determinístico también preserva esto — segundo candidato razonable                                                                                                                                                                                                                                          |
+| `birth_date`  | `birthday_greeting` hace match de mes/día en SQL (`EXTRACT`), cálculo de edad | Cifrado (determinístico o no) rompe la posibilidad de filtrar por mes/día en SQL directo — requeriría desencriptar todas las filas en la app para comparar, inviable a escala. Candidato a NO cifrar, o cifrar con una arquitectura distinta (columna separada solo con mes/día en claro + fecha completa cifrada). |
+| `email`       | Poco usado hoy, bajo riesgo relativo                                          | Candidato de baja prioridad                                                                                                                                                                                                                                                                                         |
+
+**Conclusión:** cifrar `patients` entera de un saque rompe búsqueda, orden, y el matching de cumpleaños — tres funciones que ya están en producción con la clínica piloto real. Esto no es "un ALTER TABLE", es un cambio de arquitectura con pérdida de funcionalidad real si se hace mal.
+
+## Propuesta concreta (para decidir, no aplicada)
+
+**Fase 1 (bajo riesgo, esfuerzo medio):** cifrar solo `document_id` con `pgsodium.crypto_aead_det_encrypt` (cifrado determinístico, Supabase lo soporta nativo vía la extensión `pgsodium` ya disponible en todo proyecto Supabase). Mantiene el dedup del importador CSV funcionando. Es el campo de mayor sensibilidad (cédula/RUT/pasaporte) y el de menor superficie de uso en el código — el candidato de menor riesgo para ir primero.
+
+**Fase 2 (esfuerzo medio):** mismo tratamiento para `phone`, coordinado con el flujo de WhatsApp (`normalizeToWaMe`, `findReferrerByCode`, el webhook) — necesita más cuidado porque hay más código que lo toca.
+
+**Fase 3 (esfuerzo alto, requiere rediseño):** `birth_date` — separar en `birth_month_day` (claro, solo para el match de cumpleaños) + `birth_date_enc` (cifrado, para el resto). No recomendable apurar esto.
+
+**`full_name`:** no cifrar en esta ronda — es el campo más usado en UI/búsqueda/orden y cifrarlo tiene el mayor costo de reingeniería para el menor beneficio marginal (ya está protegido por RLS multi-tenant, que es el control real contra el escenario más probable: otro cliente/clínica viendo estos datos).
+
+## Qué falta antes de tocar código
+
+1. **Confirmación legal**: ¿alcanza el cifrado en reposo de infraestructura, o la ley exige cifrado a nivel de aplicación explícitamente? Esto cambia todo el alcance.
+2. **Gestión de claves**: `pgsodium` necesita una clave maestra gestionada por Supabase Vault — hay que decidir rotación, quién tiene acceso, y qué pasa si se pierde (los datos cifrados quedan irrecuperables).
+3. **Ventana de migración**: cifrar datos ya existentes de la clínica piloto real requiere un backfill cuidadoso, probado primero contra datos sintéticos.
+
+## Fecha límite
+
+La ley tiene vigencia plena el **1-dic-2026** — quedan ~3.3 meses desde la fecha de la auditoría. Sugiero:
+
+- Esta semana: confirmar con asesor legal si aplica cifrado de aplicación o alcanza infraestructura.
+- Si aplica: dedicar una sesión completa a Fase 1 (`document_id`) con tiempo para probar el backfill contra datos sintéticos antes de tocar producción.
