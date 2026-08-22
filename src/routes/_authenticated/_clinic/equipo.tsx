@@ -2,9 +2,21 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, UserPlus } from "lucide-react";
+import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { requirePermission } from "@/lib/route-guards";
 import {
   CLINIC_ROLES,
@@ -15,7 +27,107 @@ import {
   type ClinicMember,
   type ClinicRole,
 } from "@/lib/access";
-import { listClinicMembers, removeMember, updateMemberRole } from "@/lib/access.functions";
+import {
+  inviteMember,
+  listClinicMembers,
+  removeMember,
+  updateMemberRole,
+} from "@/lib/access.functions";
+
+const INVITABLE_ROLES = CLINIC_ROLES.filter((r) => r !== "owner");
+
+function InvitarMiembroDialog({ clinicId }: { clinicId: string }) {
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [role, setRole] = useState<ClinicRole>("assistant");
+
+  const queryClient = useQueryClient();
+  const inviteFn = useServerFn(inviteMember);
+
+  const invitar = useMutation({
+    mutationFn: () =>
+      inviteFn({ data: { clinicId, email: email.trim(), fullName: fullName.trim(), role } }),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ["clinic-members", clinicId] });
+      toast.success(
+        res.invited
+          ? "Invitación enviada. Va a recibir un email para crear su contraseña."
+          : "Persona agregada al equipo.",
+      );
+      setOpen(false);
+      setEmail("");
+      setFullName("");
+      setRole("assistant");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm">
+          <UserPlus className="size-4" /> Invitar integrante
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Invitar integrante</DialogTitle>
+          <DialogDescription>
+            Le mandamos un email para que cree su contraseña y entre directo a esta clínica.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="im-nombre">Nombre completo</Label>
+            <input
+              id="im-nombre"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              placeholder="Nombre y apellido"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="im-email">Email</Label>
+            <input
+              id="im-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              placeholder="persona@ejemplo.com"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="im-rol">Rol</Label>
+            <select
+              id="im-rol"
+              value={role}
+              onChange={(e) => setRole(e.target.value as ClinicRole)}
+              className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              {INVITABLE_ROLES.map((r) => (
+                <option key={r} value={r}>
+                  {ROLE_LABELS[r]}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            onClick={() => invitar.mutate()}
+            disabled={invitar.isPending || !email.trim() || !fullName.trim()}
+          >
+            {invitar.isPending && <Loader2 className="size-3.5 animate-spin" />}
+            Enviar invitación
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/_clinic/equipo")({
   beforeLoad: requirePermission("team:view"),
@@ -79,15 +191,18 @@ function EquipoPage() {
         )}
 
         <section className="space-y-4">
-          <div>
-            <h2 className="font-display text-xl font-semibold">
-              Integrantes de {access.clinic!.name}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {puedeGestionar
-                ? "Cambia el rol de cada persona para ajustar qué secciones puede abrir."
-                : "Solo propietario y administradores pueden modificar roles."}
-            </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-display text-xl font-semibold">
+                Integrantes de {access.clinic!.name}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {puedeGestionar
+                  ? "Cambia el rol de cada persona para ajustar qué secciones puede abrir."
+                  : "Solo propietario y administradores pueden modificar roles."}
+              </p>
+            </div>
+            {puedeGestionar && <InvitarMiembroDialog clinicId={clinicId} />}
           </div>
 
           <div className="card-clinical divide-y divide-hairline">

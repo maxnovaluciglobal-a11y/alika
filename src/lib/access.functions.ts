@@ -126,6 +126,109 @@ export const updateMemberRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Invita a una persona nueva al equipo de la clínica: crea (o reutiliza)
+ * el usuario en Supabase Auth vía Admin API y lo agrega a `clinic_members`.
+ *
+ * Autorización en dos capas, igual que el resto del módulo:
+ * 1. Chequeo explícito acá (misma condición que `can_manage_clinic`:
+ *    el caller debe ser owner/admin de la clínica) — no depender solo de RLS
+ *    porque el insert real lo hace `supabaseAdmin` con service_role, que
+ *    bypassea RLS por diseño.
+ * 2. La policy `members_insert_managers` sigue protegiendo cualquier otro
+ *    camino de escritura contra esta tabla que no pase por acá.
+ */
+export const inviteMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        email: z.string().trim().toLowerCase().email("Email inválido."),
+        fullName: z.string().trim().min(1, "El nombre es obligatorio.").max(200),
+        role: z.enum(CLINIC_ROLES),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    if (data.role === "owner") {
+      throw new Error("Solo puede existir un propietario por clínica.");
+    }
+
+    // Defensa en profundidad: mismo criterio que can_manage_clinic(clinic_id)
+    // (helper SQL), verificado acá porque el insert de más abajo lo hace el
+    // cliente admin (service_role), que no pasa por RLS.
+    const { data: membership, error: membershipError } = await supabase
+      .from("clinic_members")
+      .select("role")
+      .eq("clinic_id", data.clinicId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (membershipError) throw new Error(membershipError.message);
+    if (!membership || (membership.role !== "owner" && membership.role !== "admin")) {
+      throw new Error("No tienes permisos para invitar integrantes en esta clínica.");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // ¿La clínica ya tiene un miembro con ese email? Evita duplicar el alta.
+    const { data: existingProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("email", data.email)
+      .maybeSingle();
+
+    if (existingProfile) {
+      const { data: existingMember } = await supabaseAdmin
+        .from("clinic_members")
+        .select("id")
+        .eq("clinic_id", data.clinicId)
+        .eq("user_id", existingProfile.id)
+        .maybeSingle();
+      if (existingMember) {
+        throw new Error("Esa persona ya es parte del equipo de esta clínica.");
+      }
+    }
+
+    let newUserId = existingProfile?.id ?? null;
+
+    if (!newUserId) {
+      const { data: invited, error: inviteError } =
+        await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
+          data: { full_name: data.fullName },
+        });
+
+      if (inviteError || !invited?.user) {
+        // Ya existe en auth.users pero sin profile (caso raro) — no reintentamos
+        // login/lookup manual acá, es más seguro pedirle a Walter que lo revise.
+        throw new Error(
+          inviteError?.message?.includes("already been registered")
+            ? "Ya existe una cuenta con ese email. Contacta a soporte para agregarla a esta clínica."
+            : "No se pudo invitar a esa persona. Intenta de nuevo.",
+        );
+      }
+      newUserId = invited.user.id;
+    }
+
+    const { error: memberError } = await supabaseAdmin.from("clinic_members").insert({
+      clinic_id: data.clinicId,
+      user_id: newUserId,
+      role: data.role,
+    });
+
+    if (memberError) {
+      if (memberError.code === "23505") {
+        throw new Error("Esa persona ya es parte del equipo de esta clínica.");
+      }
+      throw new Error("No se pudo agregar a esa persona al equipo.");
+    }
+
+    return { ok: true, invited: !existingProfile };
+  });
+
 export const removeMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ memberId: z.string().uuid() }).parse(input))
