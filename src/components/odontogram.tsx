@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useState, type KeyboardEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { History, Info, Loader2, RotateCcw, X } from "lucide-react";
@@ -21,6 +21,10 @@ import {
   type ToothCondition,
   type ToothSurface,
 } from "@/lib/odontogram";
+// Foco de teclado consistente con el patrón usado en app-shell.tsx
+// (focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring).
+const FOCUS_RING_CLASS =
+  "outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring";
 import {
   listOdontogramHistory,
   listOdontogramMarks,
@@ -57,6 +61,29 @@ function ToothCell({
   const wholeCondition = surfaces.whole?.condition;
   const isWholeOverride = wholeCondition && WHOLE_TOOTH_CONDITIONS.includes(wholeCondition);
   const wholeColor = isWholeOverride ? CONDITION_COLORS[wholeCondition] : null;
+
+  // Activa la misma acción que el click: usada tanto por onClick (mouse/touch)
+  // como por onKeyDown (Enter/Space) de cada superficie enfocable.
+  function activate(click: ToothClick) {
+    onClick(click);
+  }
+
+  function handleKeyDown(e: KeyboardEvent<SVGElement>, click: ToothClick) {
+    if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+      e.preventDefault();
+      e.stopPropagation();
+      activate(click);
+    }
+  }
+
+  function surfaceLabel(surface: Exclude<ToothSurface, "whole">) {
+    const condition = surfaces[surface]?.condition ?? "sano";
+    return `Diente ${tooth}, superficie ${SURFACE_LABELS[surface]}, ${CONDITION_LABELS[condition]}`;
+  }
+
+  const wholeLabel = wholeColor
+    ? `Diente ${tooth}, pieza completa, ${CONDITION_LABELS[wholeCondition as ToothCondition]}`
+    : `Diente ${tooth}, marcar condición de la pieza completa`;
 
   const zones: {
     surface: ToothSurface;
@@ -102,8 +129,8 @@ function ToothCell({
         width={s}
         height={s}
         viewBox={`0 0 ${s} ${s}`}
-        className="cursor-pointer rounded-sm border border-hairline transition-colors hover:border-brand"
-        role="img"
+        className="cursor-pointer overflow-visible rounded-sm border border-hairline transition-colors hover:border-brand"
+        role="group"
         aria-label={`Pieza ${tooth}`}
       >
         {wholeColor && (
@@ -114,7 +141,12 @@ function ToothCell({
             height={s}
             fill={wholeColor}
             opacity={0.85}
-            onClick={() => onClick({ tooth, surface: "whole" })}
+            tabIndex={0}
+            role="button"
+            aria-label={wholeLabel}
+            className={FOCUS_RING_CLASS}
+            onClick={() => activate({ tooth, surface: "whole" })}
+            onKeyDown={(e) => handleKeyDown(e, { tooth, surface: "whole" })}
           />
         )}
         {!wholeColor &&
@@ -125,10 +157,15 @@ function ToothCell({
               fill={z.color}
               stroke="rgba(0,0,0,0.08)"
               strokeWidth={0.5}
+              tabIndex={0}
+              role="button"
+              aria-label={surfaceLabel(z.surface as Exclude<ToothSurface, "whole">)}
+              className={FOCUS_RING_CLASS}
               onClick={(e) => {
                 e.stopPropagation();
-                onClick({ tooth, surface: z.surface });
+                activate({ tooth, surface: z.surface });
               }}
+              onKeyDown={(e) => handleKeyDown(e, { tooth, surface: z.surface })}
             />
           ))}
         {!wholeColor && (
@@ -144,7 +181,9 @@ function ToothCell({
           />
         )}
         {/* Hit-area invisible de la zona oclusal, agrandada a 24x24px mínimo
-            (WCAG 2.5.8) por encima del cuadrado visual sin modificarlo. */}
+            (WCAG 2.5.8) por encima del cuadrado visual sin modificarlo. Es el
+            elemento enfocable real de la superficie oclusal (el cuadrado
+            visual de arriba es puramente decorativo, pointerEvents none). */}
         {!wholeColor && (
           <rect
             x={c - oclusalHitSize / 2}
@@ -152,13 +191,21 @@ function ToothCell({
             width={oclusalHitSize}
             height={oclusalHitSize}
             fill="transparent"
+            tabIndex={0}
+            role="button"
+            aria-label={surfaceLabel("oclusal")}
+            className={FOCUS_RING_CLASS}
             onClick={(e) => {
               e.stopPropagation();
-              onClick({ tooth, surface: "oclusal" });
+              activate({ tooth, surface: "oclusal" });
             }}
+            onKeyDown={(e) => handleKeyDown(e, { tooth, surface: "oclusal" })}
           />
         )}
-        {/* Zona invisible para marcar "whole" cuando aún no hay override — click en borde superior */}
+        {/* Zona invisible para marcar "whole" cuando aún no hay override — click en borde superior.
+            También el punto de entrada por teclado a "pieza completa": el foco visible puede
+            recortarse por overflow del layout de la fila (overflow-x: auto en el contenedor
+            padre), es una limitación conocida documentada en el reporte de esta tarea. */}
         {!wholeColor && (
           <rect
             x={0}
@@ -166,7 +213,12 @@ function ToothCell({
             width={s}
             height={6}
             fill="transparent"
-            onClick={() => onClick({ tooth, surface: "whole" })}
+            tabIndex={0}
+            role="button"
+            aria-label={wholeLabel}
+            className={FOCUS_RING_CLASS}
+            onClick={() => activate({ tooth, surface: "whole" })}
+            onKeyDown={(e) => handleKeyDown(e, { tooth, surface: "whole" })}
           />
         )}
       </svg>
