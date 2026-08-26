@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
 import { Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -77,20 +76,6 @@ function AuthPage() {
     setLoading(false);
   }
 
-  async function handleGoogle() {
-    setError(null);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      setError("No se pudo iniciar sesión con Google. Intenta nuevamente.");
-      return;
-    }
-    if (result.redirected) return;
-    await router.invalidate();
-    navigate({ to: "/dashboard" });
-  }
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4 py-12">
       <div className="w-full max-w-md">
@@ -111,20 +96,7 @@ function AuthPage() {
               : "En pocos minutos dejas tu clínica configurada."}
           </p>
 
-          <button
-            type="button"
-            onClick={handleGoogle}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary"
-          >
-            Continuar con Google
-          </button>
-
-          <div className="my-5 flex items-center gap-3 text-[11px] uppercase tracking-wider text-muted-foreground">
-            <span className="h-px flex-1 bg-border" />o con tu correo
-            <span className="h-px flex-1 bg-border" />
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {mode === "signup" && (
               <div>
                 <label htmlFor="fullName" className="mb-1.5 block text-xs font-medium">
