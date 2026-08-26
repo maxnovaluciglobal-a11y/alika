@@ -9,6 +9,8 @@ import { PacienteTimeline } from "@/components/paciente-timeline";
 import { NotasClinicas } from "@/components/notas-clinicas";
 import { AllergyAlertBanner, MedicalHistoryCard } from "@/components/medical-history-card";
 import { getMedicalHistory } from "@/lib/medical-history.functions";
+import { PatientDocumentsCard } from "@/components/patient-documents-card";
+import { PatientConsentsCard } from "@/components/patient-consents-card";
 import { Odontogram } from "@/components/odontogram";
 import { PeriodontalChart } from "@/components/periodontal-chart";
 import { FinanceSection } from "@/components/finance-section";
@@ -276,6 +278,24 @@ function PacienteDetalle() {
                     userId={access.userId}
                   />
                 )}
+
+                {access.clinic?.id && (
+                  <PatientDocumentsCard
+                    clinicId={access.clinic.id}
+                    patientId={paciente.id}
+                    puedeEditar={hasPermission(access.role, "clinical:write")}
+                  />
+                )}
+
+                {access.clinic?.id && (
+                  <PatientConsentsCard
+                    clinicId={access.clinic.id}
+                    patientId={paciente.id}
+                    patientName={paciente.nombre}
+                    puedeEditar={hasPermission(access.role, "clinical:write")}
+                    puedeGestionar={hasPermission(access.role, "patients:manage")}
+                  />
+                )}
               </>
             ) : (
               <div className="card-clinical flex items-center gap-3 p-6 text-sm text-muted-foreground">
@@ -340,20 +360,6 @@ function PacienteDetalle() {
                 <Sparkles className="size-3" /> Resumen IA
               </p>
               <p className="text-xs leading-relaxed text-muted-foreground">{paciente.resumenIA}</p>
-            </div>
-
-            <div className="card-clinical divide-y divide-hairline">
-              {["Radiografías", "Consentimientos", "Presupuestos"].map((a) => (
-                <button
-                  key={a}
-                  disabled
-                  title="Próximamente"
-                  className="flex w-full cursor-not-allowed items-center justify-between px-5 py-3 text-left text-sm text-muted-foreground/60"
-                >
-                  <span>{a}</span>
-                  <span className="text-[10px] uppercase tracking-wide">Próximamente</span>
-                </button>
-              ))}
             </div>
           </aside>
         </div>

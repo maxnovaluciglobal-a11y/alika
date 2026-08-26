@@ -993,6 +993,174 @@ export type Database = {
           },
         ];
       };
+      patient_documents: {
+        Row: {
+          archived_at: string | null;
+          archived_by: string | null;
+          clinic_id: string;
+          created_at: string;
+          id: string;
+          kind: Database["public"]["Enums"]["patient_document_kind"];
+          mime_type: string;
+          filename: string;
+          notes: string | null;
+          patient_id: string;
+          size_bytes: number;
+          storage_path: string;
+          uploaded_by: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          clinic_id: string;
+          created_at?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["patient_document_kind"];
+          mime_type: string;
+          filename: string;
+          notes?: string | null;
+          patient_id: string;
+          size_bytes: number;
+          storage_path: string;
+          uploaded_by?: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          clinic_id?: string;
+          created_at?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["patient_document_kind"];
+          mime_type?: string;
+          filename?: string;
+          notes?: string | null;
+          patient_id?: string;
+          size_bytes?: number;
+          storage_path?: string;
+          uploaded_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "patient_documents_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "patient_documents_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      consent_templates: {
+        Row: {
+          active: boolean;
+          body: string;
+          clinic_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          title: string;
+        };
+        Insert: {
+          active?: boolean;
+          body: string;
+          clinic_id: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          title: string;
+        };
+        Update: {
+          active?: boolean;
+          body?: string;
+          clinic_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "consent_templates_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      patient_consents: {
+        Row: {
+          body_snapshot: string;
+          clinic_id: string;
+          id: string;
+          patient_id: string;
+          recorded_by: string;
+          revoked_at: string | null;
+          revoked_by: string | null;
+          signature_storage_path: string;
+          signed_at: string;
+          signed_by_name: string;
+          template_id: string | null;
+          title_snapshot: string;
+        };
+        Insert: {
+          body_snapshot: string;
+          clinic_id: string;
+          id?: string;
+          patient_id: string;
+          recorded_by?: string;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          signature_storage_path: string;
+          signed_at?: string;
+          signed_by_name: string;
+          template_id?: string | null;
+          title_snapshot: string;
+        };
+        Update: {
+          body_snapshot?: string;
+          clinic_id?: string;
+          id?: string;
+          patient_id?: string;
+          recorded_by?: string;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          signature_storage_path?: string;
+          signed_at?: string;
+          signed_by_name?: string;
+          template_id?: string | null;
+          title_snapshot?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "patient_consents_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "patient_consents_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "patient_consents_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "consent_templates";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       patients: {
         Row: {
           ai_summary: string | null;
@@ -2269,6 +2437,7 @@ export type Database = {
       message_direction: "outbound" | "inbound";
       whatsapp_lead_status: "new" | "contacted" | "converted" | "discarded";
       message_status: "draft" | "queued" | "sent" | "delivered" | "read" | "failed";
+      patient_document_kind: "image" | "radiograph" | "other";
       message_template_kind:
         | "appointment_reminder"
         | "appointment_checkin"

@@ -22,6 +22,7 @@ import {
   Landmark,
   Boxes,
   Building2,
+  FileSignature,
   UserRound,
 } from "lucide-react";
 
@@ -64,6 +65,12 @@ const nav = [
     to: "/profesionales",
     label: "Profesionales",
     icon: UserRound,
+    permission: "settings:manage",
+  },
+  {
+    to: "/consentimientos",
+    label: "Consentimientos",
+    icon: FileSignature,
     permission: "settings:manage",
   },
   { to: "/sandbox-email", label: "Sandbox email", icon: FlaskConical, permission: "team:manage" },

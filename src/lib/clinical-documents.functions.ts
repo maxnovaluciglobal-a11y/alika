@@ -1,0 +1,298 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+const BUCKET = "clinical-documents";
+const SIGNED_URL_TTL_SECONDS = 60 * 10;
+
+function decodeDataUrl(dataUrl: string): { bytes: Uint8Array; mimeType: string } {
+  const match = /^data:([^;]+);base64,(.+)$/.exec(dataUrl);
+  if (!match) throw new Error("Archivo inválido: formato de datos no reconocido.");
+  const [, mimeType, base64] = match;
+  const bytes = Uint8Array.from(Buffer.from(base64, "base64"));
+  return { bytes, mimeType };
+}
+
+function safeFilename(name: string): string {
+  return name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-100);
+}
+
+// ---------------------------------------------------------------
+// Documentos: imágenes y radiografías
+// ---------------------------------------------------------------
+
+export type PatientDocument = {
+  id: string;
+  kind: "image" | "radiograph" | "other";
+  filename: string;
+  notes: string | null;
+  createdAt: string;
+  uploadedBy: string;
+  archivedAt: string | null;
+  url: string | null;
+};
+
+export const listPatientDocuments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<PatientDocument[]> => {
+    const { data: rows, error } = await context.supabase
+      .from("patient_documents")
+      .select("id, kind, storage_path, filename, notes, created_at, uploaded_by, archived_at")
+      .eq("clinic_id", data.clinicId)
+      .eq("patient_id", data.patientId)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+
+    const documents: PatientDocument[] = [];
+    for (const row of rows ?? []) {
+      let url: string | null = null;
+      if (!row.archived_at) {
+        const { data: signed } = await context.supabase.storage
+          .from(BUCKET)
+          .createSignedUrl(row.storage_path, SIGNED_URL_TTL_SECONDS);
+        url = signed?.signedUrl ?? null;
+      }
+      documents.push({
+        id: row.id,
+        kind: row.kind,
+        filename: row.filename,
+        notes: row.notes,
+        createdAt: row.created_at,
+        uploadedBy: row.uploaded_by,
+        archivedAt: row.archived_at,
+        url,
+      });
+    }
+    return documents;
+  });
+
+export const uploadPatientDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        patientId: z.string().uuid(),
+        kind: z.enum(["image", "radiograph", "other"]),
+        filename: z.string().trim().min(1).max(150),
+        notes: z.string().trim().max(500).optional().or(z.literal("")),
+        // data URL: "data:<mime>;base64,<contenido>" — tope 15MB decodificado.
+        dataUrl: z.string().min(1).max(21_000_000),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { bytes, mimeType } = decodeDataUrl(data.dataUrl);
+    if (bytes.byteLength > 15 * 1024 * 1024) {
+      throw new Error("El archivo supera el máximo de 15MB.");
+    }
+    const path = `${data.clinicId}/${data.patientId}/${crypto.randomUUID()}-${safeFilename(data.filename)}`;
+
+    const { error: uploadError } = await context.supabase.storage
+      .from(BUCKET)
+      .upload(path, bytes, { contentType: mimeType, upsert: false });
+    if (uploadError) throw new Error(uploadError.message);
+
+    const { error: insertError } = await context.supabase.from("patient_documents").insert({
+      clinic_id: data.clinicId,
+      patient_id: data.patientId,
+      kind: data.kind,
+      storage_path: path,
+      filename: data.filename,
+      mime_type: mimeType,
+      size_bytes: bytes.byteLength,
+      notes: data.notes?.trim() || null,
+      uploaded_by: context.userId,
+    });
+    if (insertError) {
+      await context.supabase.storage.from(BUCKET).remove([path]);
+      throw new Error("No tienes permisos para subir documentos clínicos.");
+    }
+    return { ok: true };
+  });
+
+export const archivePatientDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ clinicId: z.string().uuid(), documentId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("patient_documents")
+      .update({ archived_at: new Date().toISOString(), archived_by: context.userId })
+      .eq("id", data.documentId)
+      .eq("clinic_id", data.clinicId);
+    if (error) throw new Error("No tienes permisos para archivar este documento.");
+    return { ok: true };
+  });
+
+// ---------------------------------------------------------------
+// Consentimientos informados
+// ---------------------------------------------------------------
+
+export type ConsentTemplate = {
+  id: string;
+  title: string;
+  body: string;
+  active: boolean;
+};
+
+export const listConsentTemplates = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<ConsentTemplate[]> => {
+    const { data: rows, error } = await context.supabase
+      .from("consent_templates")
+      .select("id, title, body, active")
+      .eq("clinic_id", data.clinicId)
+      .order("title", { ascending: true });
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+export const createConsentTemplate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        title: z.string().trim().min(2).max(120),
+        body: z.string().trim().min(10).max(8000),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("consent_templates").insert({
+      clinic_id: data.clinicId,
+      title: data.title,
+      body: data.body,
+      created_by: context.userId,
+    });
+    if (error) throw new Error("No tienes permisos para crear plantillas de consentimiento.");
+    return { ok: true };
+  });
+
+export const setConsentTemplateActive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({ clinicId: z.string().uuid(), templateId: z.string().uuid(), active: z.boolean() })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("consent_templates")
+      .update({ active: data.active })
+      .eq("id", data.templateId)
+      .eq("clinic_id", data.clinicId);
+    if (error) throw new Error("No tienes permisos para editar plantillas de consentimiento.");
+    return { ok: true };
+  });
+
+export type PatientConsent = {
+  id: string;
+  titleSnapshot: string;
+  bodySnapshot: string;
+  signedByName: string;
+  signedAt: string;
+  revokedAt: string | null;
+  signatureUrl: string | null;
+};
+
+export const listPatientConsents = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<PatientConsent[]> => {
+    const { data: rows, error } = await context.supabase
+      .from("patient_consents")
+      .select(
+        "id, title_snapshot, body_snapshot, signature_storage_path, signed_by_name, signed_at, revoked_at",
+      )
+      .eq("clinic_id", data.clinicId)
+      .eq("patient_id", data.patientId)
+      .order("signed_at", { ascending: false });
+    if (error) throw new Error(error.message);
+
+    const consents: PatientConsent[] = [];
+    for (const row of rows ?? []) {
+      const { data: signed } = await context.supabase.storage
+        .from(BUCKET)
+        .createSignedUrl(row.signature_storage_path, SIGNED_URL_TTL_SECONDS);
+      consents.push({
+        id: row.id,
+        titleSnapshot: row.title_snapshot,
+        bodySnapshot: row.body_snapshot,
+        signedByName: row.signed_by_name,
+        signedAt: row.signed_at,
+        revokedAt: row.revoked_at,
+        signatureUrl: signed?.signedUrl ?? null,
+      });
+    }
+    return consents;
+  });
+
+export const signPatientConsent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        patientId: z.string().uuid(),
+        templateId: z.string().uuid().optional(),
+        titleSnapshot: z.string().trim().min(2).max(120),
+        bodySnapshot: z.string().trim().min(10).max(8000),
+        signedByName: z.string().trim().min(2).max(120),
+        // PNG del canvas de firma, data URL.
+        signatureDataUrl: z.string().min(1).max(2_000_000),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { bytes, mimeType } = decodeDataUrl(data.signatureDataUrl);
+    if (!mimeType.startsWith("image/")) {
+      throw new Error("La firma debe ser una imagen.");
+    }
+    const path = `${data.clinicId}/${data.patientId}/consent-signatures/${crypto.randomUUID()}.png`;
+
+    const { error: uploadError } = await context.supabase.storage
+      .from(BUCKET)
+      .upload(path, bytes, { contentType: mimeType, upsert: false });
+    if (uploadError) throw new Error(uploadError.message);
+
+    const { error: insertError } = await context.supabase.from("patient_consents").insert({
+      clinic_id: data.clinicId,
+      patient_id: data.patientId,
+      template_id: data.templateId ?? null,
+      title_snapshot: data.titleSnapshot,
+      body_snapshot: data.bodySnapshot,
+      signature_storage_path: path,
+      signed_by_name: data.signedByName,
+      recorded_by: context.userId,
+    });
+    if (insertError) {
+      await context.supabase.storage.from(BUCKET).remove([path]);
+      throw new Error("No tienes permisos para registrar consentimientos firmados.");
+    }
+    return { ok: true };
+  });
+
+export const revokePatientConsent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ clinicId: z.string().uuid(), consentId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("patient_consents")
+      .update({ revoked_at: new Date().toISOString(), revoked_by: context.userId })
+      .eq("id", data.consentId)
+      .eq("clinic_id", data.clinicId);
+    if (error) throw new Error("No tienes permisos para revocar este consentimiento.");
+    return { ok: true };
+  });

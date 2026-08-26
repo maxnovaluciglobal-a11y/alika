@@ -36,6 +36,7 @@ import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as PortalInicioRouteImport } from './routes/portal.inicio'
 import { Route as AuthenticatedClinicAgendaRouteImport } from './routes/_authenticated/_clinic/agenda'
 import { Route as AuthenticatedClinicComplianceRouteImport } from './routes/_authenticated/_clinic/compliance'
+import { Route as AuthenticatedClinicConsentimientosRouteImport } from './routes/_authenticated/_clinic/consentimientos'
 import { Route as AuthenticatedClinicDashboardRouteImport } from './routes/_authenticated/_clinic/dashboard'
 import { Route as AuthenticatedClinicDominioEmailRouteImport } from './routes/_authenticated/_clinic/dominio-email'
 import { Route as AuthenticatedClinicEquipoRouteImport } from './routes/_authenticated/_clinic/equipo'
@@ -191,6 +192,12 @@ const AuthenticatedClinicComplianceRoute =
     path: '/compliance',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
+const AuthenticatedClinicConsentimientosRoute =
+  AuthenticatedClinicConsentimientosRouteImport.update({
+    id: '/consentimientos',
+    path: '/consentimientos',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
 const AuthenticatedClinicDashboardRoute =
   AuthenticatedClinicDashboardRouteImport.update({
     id: '/dashboard',
@@ -325,6 +332,7 @@ export interface FileRoutesByFullPath {
   '/portal/': typeof PortalIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
   '/compliance': typeof AuthenticatedClinicComplianceRoute
+  '/consentimientos': typeof AuthenticatedClinicConsentimientosRoute
   '/dashboard': typeof AuthenticatedClinicDashboardRoute
   '/dominio-email': typeof AuthenticatedClinicDominioEmailRoute
   '/equipo': typeof AuthenticatedClinicEquipoRoute
@@ -368,6 +376,7 @@ export interface FileRoutesByTo {
   '/portal': typeof PortalIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
   '/compliance': typeof AuthenticatedClinicComplianceRoute
+  '/consentimientos': typeof AuthenticatedClinicConsentimientosRoute
   '/dashboard': typeof AuthenticatedClinicDashboardRoute
   '/dominio-email': typeof AuthenticatedClinicDominioEmailRoute
   '/equipo': typeof AuthenticatedClinicEquipoRoute
@@ -416,6 +425,7 @@ export interface FileRoutesById {
   '/portal/': typeof PortalIndexRoute
   '/_authenticated/_clinic/agenda': typeof AuthenticatedClinicAgendaRoute
   '/_authenticated/_clinic/compliance': typeof AuthenticatedClinicComplianceRoute
+  '/_authenticated/_clinic/consentimientos': typeof AuthenticatedClinicConsentimientosRoute
   '/_authenticated/_clinic/dashboard': typeof AuthenticatedClinicDashboardRoute
   '/_authenticated/_clinic/dominio-email': typeof AuthenticatedClinicDominioEmailRoute
   '/_authenticated/_clinic/equipo': typeof AuthenticatedClinicEquipoRoute
@@ -463,6 +473,7 @@ export interface FileRouteTypes {
     | '/portal/'
     | '/agenda'
     | '/compliance'
+    | '/consentimientos'
     | '/dashboard'
     | '/dominio-email'
     | '/equipo'
@@ -506,6 +517,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/agenda'
     | '/compliance'
+    | '/consentimientos'
     | '/dashboard'
     | '/dominio-email'
     | '/equipo'
@@ -553,6 +565,7 @@ export interface FileRouteTypes {
     | '/portal/'
     | '/_authenticated/_clinic/agenda'
     | '/_authenticated/_clinic/compliance'
+    | '/_authenticated/_clinic/consentimientos'
     | '/_authenticated/_clinic/dashboard'
     | '/_authenticated/_clinic/dominio-email'
     | '/_authenticated/_clinic/equipo'
@@ -782,6 +795,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicComplianceRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
+    '/_authenticated/_clinic/consentimientos': {
+      id: '/_authenticated/_clinic/consentimientos'
+      path: '/consentimientos'
+      fullPath: '/consentimientos'
+      preLoaderRoute: typeof AuthenticatedClinicConsentimientosRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
     '/_authenticated/_clinic/dashboard': {
       id: '/_authenticated/_clinic/dashboard'
       path: '/dashboard'
@@ -914,6 +934,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedClinicRouteRouteChildren {
   AuthenticatedClinicAgendaRoute: typeof AuthenticatedClinicAgendaRoute
   AuthenticatedClinicComplianceRoute: typeof AuthenticatedClinicComplianceRoute
+  AuthenticatedClinicConsentimientosRoute: typeof AuthenticatedClinicConsentimientosRoute
   AuthenticatedClinicDashboardRoute: typeof AuthenticatedClinicDashboardRoute
   AuthenticatedClinicDominioEmailRoute: typeof AuthenticatedClinicDominioEmailRoute
   AuthenticatedClinicEquipoRoute: typeof AuthenticatedClinicEquipoRoute
@@ -937,6 +958,8 @@ const AuthenticatedClinicRouteRouteChildren: AuthenticatedClinicRouteRouteChildr
   {
     AuthenticatedClinicAgendaRoute: AuthenticatedClinicAgendaRoute,
     AuthenticatedClinicComplianceRoute: AuthenticatedClinicComplianceRoute,
+    AuthenticatedClinicConsentimientosRoute:
+      AuthenticatedClinicConsentimientosRoute,
     AuthenticatedClinicDashboardRoute: AuthenticatedClinicDashboardRoute,
     AuthenticatedClinicDominioEmailRoute: AuthenticatedClinicDominioEmailRoute,
     AuthenticatedClinicEquipoRoute: AuthenticatedClinicEquipoRoute,
