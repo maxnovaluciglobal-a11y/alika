@@ -93,6 +93,24 @@ export const FDI_ALL_ADULT = [
   ...FDI_LOWER_LEFT,
 ] as const;
 
+/**
+ * Dentición temporal (odontopediatría): cuadrantes 5-8, 5 piezas cada uno
+ * (sin molares permanentes). Mismo patrón FDI, mismas condiciones y misma
+ * tabla odontogram_marks — el CHECK de rango ya lo permite desde que se creó
+ * el odontograma, solo faltaba exponerlo en la UI.
+ */
+export const FDI_UPPER_RIGHT_PRIMARY = [55, 54, 53, 52, 51] as const;
+export const FDI_UPPER_LEFT_PRIMARY = [61, 62, 63, 64, 65] as const;
+export const FDI_LOWER_LEFT_PRIMARY = [71, 72, 73, 74, 75] as const;
+export const FDI_LOWER_RIGHT_PRIMARY = [85, 84, 83, 82, 81] as const;
+
+export const FDI_ALL_PRIMARY = [
+  ...FDI_UPPER_RIGHT_PRIMARY,
+  ...FDI_UPPER_LEFT_PRIMARY,
+  ...FDI_LOWER_RIGHT_PRIMARY,
+  ...FDI_LOWER_LEFT_PRIMARY,
+] as const;
+
 export interface OdontogramMark {
   id: string;
   toothNumber: number;

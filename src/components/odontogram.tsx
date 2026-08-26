@@ -10,9 +10,13 @@ import {
   CONDITION_COLORS,
   CONDITION_LABELS,
   FDI_LOWER_LEFT,
+  FDI_LOWER_LEFT_PRIMARY,
   FDI_LOWER_RIGHT,
+  FDI_LOWER_RIGHT_PRIMARY,
   FDI_UPPER_LEFT,
+  FDI_UPPER_LEFT_PRIMARY,
   FDI_UPPER_RIGHT,
+  FDI_UPPER_RIGHT_PRIMARY,
   SURFACE_LABELS,
   TOOTH_CONDITIONS,
   WHOLE_TOOTH_CONDITIONS,
@@ -262,6 +266,7 @@ export function Odontogram({ clinicId, patientId, puedeEditar, userId }: Props) 
 
   const [selection, setSelection] = useState<ToothClick | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [denticion, setDenticion] = useState<"permanente" | "temporal">("permanente");
 
   const marksKey = ["odontogram-marks", clinicId, patientId];
   const historyKey = ["odontogram-history", clinicId, patientId];
@@ -333,12 +338,38 @@ export function Odontogram({ clinicId, patientId, puedeEditar, userId }: Props) 
             entera.
           </p>
         </div>
-        <button
-          onClick={() => setShowHistory((v) => !v)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium hover:bg-secondary/60"
-        >
-          <History className="size-3" /> {showHistory ? "Ocultar historia" : "Ver historia"}
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-lg border border-hairline p-0.5 text-xs">
+            <button
+              onClick={() => setDenticion("permanente")}
+              className={cn(
+                "rounded-md px-2.5 py-1 font-medium",
+                denticion === "permanente"
+                  ? "bg-secondary text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Permanente
+            </button>
+            <button
+              onClick={() => setDenticion("temporal")}
+              className={cn(
+                "rounded-md px-2.5 py-1 font-medium",
+                denticion === "temporal"
+                  ? "bg-secondary text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Temporal
+            </button>
+          </div>
+          <button
+            onClick={() => setShowHistory((v) => !v)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium hover:bg-secondary/60"
+          >
+            <History className="size-3" /> {showHistory ? "Ocultar historia" : "Ver historia"}
+          </button>
+        </div>
       </div>
 
       {isLoading && <p className="text-xs text-muted-foreground">Cargando odontograma…</p>}
@@ -346,20 +377,40 @@ export function Odontogram({ clinicId, patientId, puedeEditar, userId }: Props) 
       {!isLoading && (
         <div className="space-y-4 overflow-x-auto">
           <div className="flex flex-col items-center gap-3">
-            <ToothRow
-              teeth={[...FDI_UPPER_RIGHT, ...FDI_UPPER_LEFT]}
-              byTooth={byTooth}
-              onClick={setSelection}
-            />
-            <ToothRow
-              teeth={[...FDI_LOWER_RIGHT, ...FDI_LOWER_LEFT]}
-              byTooth={byTooth}
-              onClick={setSelection}
-            />
+            {denticion === "permanente" ? (
+              <>
+                <ToothRow
+                  teeth={[...FDI_UPPER_RIGHT, ...FDI_UPPER_LEFT]}
+                  byTooth={byTooth}
+                  onClick={setSelection}
+                />
+                <ToothRow
+                  teeth={[...FDI_LOWER_RIGHT, ...FDI_LOWER_LEFT]}
+                  byTooth={byTooth}
+                  onClick={setSelection}
+                />
+              </>
+            ) : (
+              <>
+                <ToothRow
+                  teeth={[...FDI_UPPER_RIGHT_PRIMARY, ...FDI_UPPER_LEFT_PRIMARY]}
+                  byTooth={byTooth}
+                  onClick={setSelection}
+                />
+                <ToothRow
+                  teeth={[...FDI_LOWER_RIGHT_PRIMARY, ...FDI_LOWER_LEFT_PRIMARY]}
+                  byTooth={byTooth}
+                  onClick={setSelection}
+                />
+              </>
+            )}
           </div>
 
           <p className="flex items-center gap-1.5 pt-2 text-[11px] text-muted-foreground">
-            <Info className="size-3" /> Arriba: piezas 18→11 · 21→28. Abajo: 48→41 · 31→38.
+            <Info className="size-3" />
+            {denticion === "permanente"
+              ? "Arriba: piezas 18→11 · 21→28. Abajo: 48→41 · 31→38."
+              : "Arriba: piezas 55→51 · 61→65. Abajo: 85→81 · 71→75 (cuadrantes 5-8, notación FDI)."}
           </p>
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1 text-[10px] text-muted-foreground">

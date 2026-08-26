@@ -221,6 +221,10 @@ export const createAppointment = createServerFn({ method: "POST" })
         patientId: z.string().uuid(),
         professionalId: z.string().uuid(),
         tratamiento: z.string().trim().min(1, "Indica el tratamiento o motivo."),
+        // Opcional: si el texto coincide con un procedimiento del catálogo de
+        // Finanzas, el cliente manda su id acá. No reemplaza el texto libre
+        // (sigue siendo válido "Control", "Urgencia", etc. sin catálogo).
+        procedureId: z.string().uuid().optional(),
         // Valor crudo del <input type="datetime-local"> ("YYYY-MM-DDTHH:mm").
         // Se interpreta como wall-clock EN LA TIMEZONE DE LA SUCURSAL, no del
         // servidor. En Vercel el server corre en UTC — sin este fix las citas
@@ -317,6 +321,7 @@ export const createAppointment = createServerFn({ method: "POST" })
         patient_id: data.patientId,
         professional_id: data.professionalId,
         treatment_label: data.tratamiento,
+        procedure_id: data.procedureId ?? null,
         starts_at: startsAt.toISOString(),
         ends_at: endsAt.toISOString(),
         is_priority: data.prioridad ?? false,

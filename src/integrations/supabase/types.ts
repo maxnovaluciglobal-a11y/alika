@@ -1288,6 +1288,7 @@ export type Database = {
           notes: string | null;
           operatory_id: string | null;
           patient_id: string;
+          procedure_id: string | null;
           professional_id: string;
           starts_at: string;
           status: Database["public"]["Enums"]["appointment_status"];
@@ -1306,6 +1307,7 @@ export type Database = {
           notes?: string | null;
           operatory_id?: string | null;
           patient_id: string;
+          procedure_id?: string | null;
           professional_id: string;
           starts_at: string;
           status?: Database["public"]["Enums"]["appointment_status"];
@@ -1324,6 +1326,7 @@ export type Database = {
           notes?: string | null;
           operatory_id?: string | null;
           patient_id?: string;
+          procedure_id?: string | null;
           professional_id?: string;
           starts_at?: string;
           status?: Database["public"]["Enums"]["appointment_status"];
@@ -1337,6 +1340,13 @@ export type Database = {
             columns: ["branch_id"];
             isOneToOne: false;
             referencedRelation: "branches";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "appointments_procedure_id_fkey";
+            columns: ["procedure_id"];
+            isOneToOne: false;
+            referencedRelation: "procedures";
             referencedColumns: ["id"];
           },
           {

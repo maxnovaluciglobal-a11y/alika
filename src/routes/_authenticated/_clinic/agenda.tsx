@@ -44,6 +44,7 @@ import {
 // timezone real de la clínica vía access.clinic?.timezone.
 const HOY = hoyISO();
 import { listBranches, listProfessionals } from "@/lib/clinic-catalog.functions";
+import { listProcedures } from "@/lib/finance.functions";
 import { listPatients } from "@/lib/patients.functions";
 import {
   createAppointment,
@@ -252,6 +253,14 @@ function NuevaCitaDialog({
   const [duracion, setDuracion] = useState(30);
 
   const createFn = useServerFn(createAppointment);
+  const fetchProcedures = useServerFn(listProcedures);
+  const proceduresQuery = useQuery({
+    queryKey: ["procedures", clinicId],
+    queryFn: () => fetchProcedures({ data: { clinicId } }),
+  });
+  const procedimientoSeleccionado = proceduresQuery.data?.find(
+    (p) => p.name.trim().toLowerCase() === tratamiento.trim().toLowerCase(),
+  );
 
   // Feriados (Nager.Date) del país de la clínica, para avisarle al staff si
   // agendó sobre un feriado (no bloquea: la clínica puede igual atender).
@@ -293,6 +302,7 @@ function NuevaCitaDialog({
       patientId: pacienteId,
       professionalId: profesionalId,
       tratamiento: tratamiento.trim(),
+      procedureId: procedimientoSeleccionado?.id,
       // `startsAt` viaja como wall-clock crudo y el servidor lo interpreta en
       // la timezone de la sucursal. Es determinista: da igual si esto se
       // sincroniza dentro de tres días, la hora agendada no se corre.
@@ -378,8 +388,19 @@ function NuevaCitaDialog({
               value={tratamiento}
               onChange={(e) => setTratamiento(e.target.value)}
               placeholder="Ej: Control, limpieza…"
+              list="nc-procedimientos"
               className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
             />
+            <datalist id="nc-procedimientos">
+              {(proceduresQuery.data ?? []).map((p) => (
+                <option key={p.id} value={p.name} />
+              ))}
+            </datalist>
+            {procedimientoSeleccionado && (
+              <p className="text-[11px] text-muted-foreground">
+                Ligado al procedimiento del catálogo — se reflejará en presupuestos futuros.
+              </p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
