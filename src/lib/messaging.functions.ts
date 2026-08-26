@@ -13,6 +13,7 @@ import {
   type OutreachTemplateKind,
 } from "@/lib/messaging";
 import { tryMetaTemplateSend } from "@/lib/whatsapp.functions";
+import { sendEmail } from "@/lib/email.server";
 
 const MESSAGE_COLUMNS =
   "id, appointment_id, quote_id, template_id, template_kind, channel, status, recipient, body, sent_at, created_at";
@@ -247,6 +248,97 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
     },
   );
 
+/**
+ * Envío real de email por template — mismo patrón que
+ * sendWhatsAppFromTemplate (resuelve template, renderiza variables,
+ * registra en `messages`), pero sin fallback tipo wa.me: si el envío
+ * falla (sin RESEND_API_KEY, sandbox bloqueando, o error de Resend), se
+ * registra igual con status "failed" para que quede en el historial por
+ * qué no salió, y se le devuelve el motivo al staff.
+ */
+export const sendEmailFromTemplate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        patientId: z.string().uuid(),
+        templateKind: z.enum(MESSAGE_TEMPLATE_KINDS),
+        variables: z.record(z.string(), z.string()).default({}),
+        appointmentId: z.string().uuid().optional(),
+        quoteId: z.string().uuid().optional(),
+      })
+      .parse(input),
+  )
+  .handler(
+    async ({ data, context }): Promise<{ id: string; sent: boolean; reason: string | null }> => {
+      const { supabase, userId } = context;
+
+      const [{ data: patient, error: patientErr }, { data: clinic, error: clinicErr }] =
+        await Promise.all([
+          supabase
+            .from("patients")
+            .select("full_name, email")
+            .eq("clinic_id", data.clinicId)
+            .eq("id", data.patientId)
+            .maybeSingle(),
+          supabase.from("clinics").select("name").eq("id", data.clinicId).maybeSingle(),
+        ]);
+      if (patientErr) throw new Error(patientErr.message);
+      if (clinicErr) throw new Error(clinicErr.message);
+      if (!patient) throw new Error("Paciente no encontrado.");
+
+      const recipient = (patient.email ?? "").trim();
+      if (!recipient) {
+        throw new Error("El paciente no tiene email cargado.");
+      }
+
+      const { data: template, error: templateErr } = await supabase
+        .from("message_templates")
+        .select("id, subject, body")
+        .eq("clinic_id", data.clinicId)
+        .eq("channel", "email")
+        .eq("kind", data.templateKind)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      if (templateErr) throw new Error(templateErr.message);
+      if (!template) throw new Error("No hay plantilla de email activa para este tipo de aviso.");
+
+      const vars = { ...data.variables, paciente: patient.full_name, clinica: clinic?.name ?? "" };
+      const subject = renderTemplate(template.subject ?? "", vars);
+      const html = renderTemplate(template.body, vars);
+
+      const result = await sendEmail({ to: recipient, subject, html });
+
+      const nowIso = new Date().toISOString();
+      const { data: inserted, error: insertErr } = await supabase
+        .from("messages")
+        .insert({
+          clinic_id: data.clinicId,
+          patient_id: data.patientId,
+          appointment_id: data.appointmentId ?? null,
+          quote_id: data.quoteId ?? null,
+          template_id: template.id,
+          template_kind: data.templateKind,
+          channel: "email",
+          direction: "outbound",
+          status: result.ok ? "sent" : "failed",
+          recipient,
+          body: html,
+          external_id: result.ok ? result.externalId : null,
+          error: result.ok ? null : result.reason,
+          sent_at: result.ok ? nowIso : null,
+          sent_by: userId,
+        })
+        .select("id")
+        .single();
+      if (insertErr) throw new Error("No pudimos registrar el mensaje. " + insertErr.message);
+
+      return { id: inserted.id, sent: result.ok, reason: result.ok ? null : result.reason };
+    },
+  );
+
 const DEFAULT_TIMEZONE = "America/Santiago";
 const HORA_48H_MS = 48 * 60 * 60 * 1000;
 const HORA_3H_MS = 3 * 60 * 60 * 1000;
@@ -277,6 +369,7 @@ export interface PendingReminder {
   patientId: string;
   patientName: string;
   patientPhone: string | null;
+  patientEmail: string | null;
   treatmentLabel: string;
   professionalName: string;
   startsAt: string;
@@ -284,6 +377,9 @@ export interface PendingReminder {
   hora: string;
   /** Cuál de los dos avisos le falta a esta cita. */
   reminderKind: "appointment_reminder" | "appointment_checkin";
+  /** Independiente por canal: WhatsApp y email no se tapan entre sí. */
+  whatsappSent: boolean;
+  emailSent: boolean;
 }
 
 /**
@@ -332,18 +428,28 @@ export const listPendingReminders = createServerFn({ method: "GET" })
     if (candidatas.length === 0) return [];
 
     const appointmentIds = candidatas.map((a) => a.id);
+    // channel entra al select y al dedupe: un recordatorio mandado por
+    // WhatsApp no debe tapar el botón de email de esa misma cita, y
+    // viceversa — son dos avisos independientes, no uno con dos caminos.
     const { data: enviados, error: msgError } = await supabase
       .from("messages")
-      .select("appointment_id, template_kind")
+      .select("appointment_id, template_kind, channel")
       .eq("clinic_id", data.clinicId)
       .in("appointment_id", appointmentIds)
-      .in("template_kind", ["appointment_reminder", "appointment_checkin"]);
+      .in("template_kind", ["appointment_reminder", "appointment_checkin"])
+      .eq("status", "sent");
     if (msgError) throw new Error(msgError.message);
 
-    const yaEnviado = new Set(
-      (enviados ?? []).map((m) => `${m.appointment_id}:${m.template_kind}`),
+    const enviadoPorCanal = new Set(
+      (enviados ?? []).map((m) => `${m.appointment_id}:${m.template_kind}:${m.channel}`),
     );
-    const pendientes = candidatas.filter((a) => !yaEnviado.has(`${a.id}:${a.reminderKind}`));
+    const pendientes = candidatas
+      .map((a) => ({
+        ...a,
+        whatsappSent: enviadoPorCanal.has(`${a.id}:${a.reminderKind}:whatsapp`),
+        emailSent: enviadoPorCanal.has(`${a.id}:${a.reminderKind}:email`),
+      }))
+      .filter((a) => !a.whatsappSent || !a.emailSent);
     if (pendientes.length === 0) return [];
 
     const patientIds = [...new Set(pendientes.map((a) => a.patient_id))];
@@ -357,7 +463,7 @@ export const listPendingReminders = createServerFn({ method: "GET" })
     ] = await Promise.all([
       supabase
         .from("patients")
-        .select("id, full_name, phone")
+        .select("id, full_name, phone, email")
         .in("id", patientIds.length ? patientIds : [""]),
       supabase
         .from("professionals")
@@ -387,12 +493,15 @@ export const listPendingReminders = createServerFn({ method: "GET" })
         patientId: a.patient_id,
         patientName: patient?.full_name ?? "Paciente",
         patientPhone: patient?.phone ?? null,
+        patientEmail: patient?.email ?? null,
         treatmentLabel: a.treatment_label || "Consulta",
         professionalName: profNameById.get(a.professional_id) ?? "—",
         startsAt: a.starts_at,
         fechaLarga,
         hora,
         reminderKind: a.reminderKind,
+        whatsappSent: a.whatsappSent,
+        emailSent: a.emailSent,
       };
     });
   });

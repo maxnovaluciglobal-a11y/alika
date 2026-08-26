@@ -16,6 +16,7 @@ import {
 
 import { AppShell } from "@/components/app-shell";
 import { WhatsAppButton } from "@/components/whatsapp-button";
+import { EmailButton } from "@/components/email-button";
 import { requirePermission } from "@/lib/route-guards";
 import {
   listPendingOutreach,
@@ -272,28 +273,50 @@ function ReminderList({
             <p className="truncate text-xs text-muted-foreground">
               {r.treatmentLabel} · {r.professionalName} · {r.fechaLarga} {r.hora}
             </p>
-            {!r.patientPhone && (
+            {!r.patientPhone && !r.patientEmail && (
               <p className="mt-1 text-[11px] text-destructive">
-                Sin teléfono cargado — no se puede enviar.
+                Sin teléfono ni email cargados — no se puede enviar.
               </p>
             )}
           </div>
-          <WhatsAppButton
-            clinicId={clinicId}
-            patientId={r.patientId}
-            appointmentId={r.appointmentId}
-            templateKind={r.reminderKind}
-            variant="full"
-            label="Enviar"
-            variables={{
-              tratamiento: r.treatmentLabel,
-              fecha_larga: r.fechaLarga,
-              hora: r.hora,
-              profesional: r.professionalName,
-              clinica,
-            }}
-            onSent={onSent}
-          />
+          <div className="flex flex-wrap gap-2">
+            {!r.whatsappSent && r.patientPhone && (
+              <WhatsAppButton
+                clinicId={clinicId}
+                patientId={r.patientId}
+                appointmentId={r.appointmentId}
+                templateKind={r.reminderKind}
+                variant="full"
+                label="WhatsApp"
+                variables={{
+                  tratamiento: r.treatmentLabel,
+                  fecha_larga: r.fechaLarga,
+                  hora: r.hora,
+                  profesional: r.professionalName,
+                  clinica,
+                }}
+                onSent={onSent}
+              />
+            )}
+            {!r.emailSent && r.patientEmail && (
+              <EmailButton
+                clinicId={clinicId}
+                patientId={r.patientId}
+                appointmentId={r.appointmentId}
+                templateKind={r.reminderKind}
+                variant="full"
+                label="Email"
+                variables={{
+                  tratamiento: r.treatmentLabel,
+                  fecha_larga: r.fechaLarga,
+                  hora: r.hora,
+                  profesional: r.professionalName,
+                  clinica,
+                }}
+                onSent={onSent}
+              />
+            )}
+          </div>
         </div>
       ))}
     </div>

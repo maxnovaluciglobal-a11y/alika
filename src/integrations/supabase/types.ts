@@ -1810,6 +1810,7 @@ export type Database = {
           meta_status: string;
           meta_template_name: string | null;
           name: string;
+          subject: string | null;
           updated_at: string;
         };
         Insert: {
@@ -1826,6 +1827,7 @@ export type Database = {
           meta_status?: string;
           meta_template_name?: string | null;
           name: string;
+          subject?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -1842,6 +1844,7 @@ export type Database = {
           meta_status?: string;
           meta_template_name?: string | null;
           name?: string;
+          subject?: string | null;
           updated_at?: string;
         };
         Relationships: [
