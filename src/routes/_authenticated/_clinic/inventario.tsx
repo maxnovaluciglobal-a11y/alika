@@ -27,7 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { hasPermission } from "@/lib/access";
-import { formatMoney } from "@/lib/finance";
+import { formatMoney, fromCents, toCents } from "@/lib/finance";
 import {
   createInventoryItem,
   listInventoryItems,
@@ -54,7 +54,7 @@ function inputClass() {
   return "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
 }
 
-function CrearItemDialog({ clinicId }: { clinicId: string }) {
+function CrearItemDialog({ clinicId, currency }: { clinicId: string; currency: string }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [unit, setUnit] = useState("");
@@ -73,7 +73,7 @@ function CrearItemDialog({ clinicId }: { clinicId: string }) {
           name: name.trim(),
           unit: unit.trim(),
           minStock: minStock.trim() === "" ? null : Number(minStock),
-          costCents: costPesos.trim() === "" ? null : Math.round(Number(costPesos) * 100),
+          costCents: costPesos.trim() === "" ? null : toCents(Number(costPesos), currency),
           notes: notes.trim() || undefined,
         },
       }),
@@ -176,13 +176,21 @@ function CrearItemDialog({ clinicId }: { clinicId: string }) {
   );
 }
 
-function EditarItemDialog({ clinicId, item }: { clinicId: string; item: InventoryItem }) {
+function EditarItemDialog({
+  clinicId,
+  item,
+  currency,
+}: {
+  clinicId: string;
+  item: InventoryItem;
+  currency: string;
+}) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(item.name);
   const [unit, setUnit] = useState(item.unit);
   const [minStock, setMinStock] = useState(item.minStock == null ? "" : String(item.minStock));
   const [costPesos, setCostPesos] = useState(
-    item.costCents == null ? "" : String(item.costCents / 100),
+    item.costCents == null ? "" : String(fromCents(item.costCents, currency)),
   );
   const [notes, setNotes] = useState(item.notes ?? "");
   const [isActive, setIsActive] = useState(item.isActive);
@@ -199,7 +207,7 @@ function EditarItemDialog({ clinicId, item }: { clinicId: string; item: Inventor
           name: name.trim(),
           unit: unit.trim(),
           minStock: minStock.trim() === "" ? null : Number(minStock),
-          costCents: costPesos.trim() === "" ? null : Math.round(Number(costPesos) * 100),
+          costCents: costPesos.trim() === "" ? null : toCents(Number(costPesos), currency),
           notes: notes.trim() || undefined,
           isActive,
         },
@@ -506,6 +514,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/inventario")({
 function InventarioPage() {
   const { access } = Route.useRouteContext();
   const clinicId = access.clinic!.id;
+  const currency = access.clinic!.currency;
   const puedeGestionar = hasPermission(access.role, "inventory:manage");
   const puedeRegistrarMovimiento = access.role != null && MOVEMENT_ROLES.has(access.role);
 
@@ -534,7 +543,7 @@ function InventarioPage() {
                 : "Todo el stock está sobre el mínimo configurado."}
             </p>
           </div>
-          {puedeGestionar && <CrearItemDialog clinicId={clinicId} />}
+          {puedeGestionar && <CrearItemDialog clinicId={clinicId} currency={currency} />}
         </div>
 
         <section className="card-clinical divide-y divide-hairline">
@@ -593,7 +602,9 @@ function InventarioPage() {
                         : `${item.minStock} ${item.unit}`}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {item.costCents == null ? "Sin costo cargado" : formatMoney(item.costCents)}
+                      {item.costCents == null
+                        ? "Sin costo cargado"
+                        : formatMoney(item.costCents, currency)}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap justify-end gap-2">
@@ -601,7 +612,9 @@ function InventarioPage() {
                         {puedeRegistrarMovimiento && (
                           <RegistrarMovimientoDialog clinicId={clinicId} item={item} />
                         )}
-                        {puedeGestionar && <EditarItemDialog clinicId={clinicId} item={item} />}
+                        {puedeGestionar && (
+                          <EditarItemDialog clinicId={clinicId} item={item} currency={currency} />
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -635,7 +648,7 @@ function InventarioPage() {
                       <TableCell>
                         <div className="flex flex-wrap justify-end gap-2">
                           <HistorialMovimientosDialog clinicId={clinicId} item={item} />
-                          <EditarItemDialog clinicId={clinicId} item={item} />
+                          <EditarItemDialog clinicId={clinicId} item={item} currency={currency} />
                         </div>
                       </TableCell>
                     </TableRow>

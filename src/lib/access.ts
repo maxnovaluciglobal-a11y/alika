@@ -109,6 +109,8 @@ export type ClinicAccess = {
     country: string;
     /** Clínica demo pública: solo lectura a nivel de trigger, ver migración 20260815180000. */
     isDemo: boolean;
+    /** Moneda ISO 4217 de la clínica (ej. "CLP"). Usar con formatMoney/toCents/fromCents. */
+    currency: string;
   } | null;
   /** Rol vigente en la interfaz: el real, o el simulado si el admin activó la simulación. */
   role: ClinicRole | null;
