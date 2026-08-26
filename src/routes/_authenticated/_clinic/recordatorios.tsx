@@ -93,6 +93,11 @@ const OUTREACH_META: Record<
     icon: Users,
     badgeClass: "bg-ai-soft text-ai",
   },
+  nps_survey: {
+    label: "Encuesta de satisfacción",
+    icon: Star,
+    badgeClass: "bg-brand-soft text-brand",
+  },
 };
 
 function RecordatoriosPage() {
@@ -133,6 +138,7 @@ function RecordatoriosPage() {
       birthday_greeting: [],
       treatment_followup: [],
       referral_invite: [],
+      nps_survey: [],
     };
     for (const item of outreach) groups[item.kind].push(item);
     return groups;
@@ -344,6 +350,8 @@ function outreachDetail(item: PendingOutreachItem): string {
       return item.treatmentLabel ? `Tratamiento: ${item.treatmentLabel}` : "Tratamiento reciente";
     case "referral_invite":
       return item.referralCode ? `Código: ${item.referralCode}` : "";
+    case "nps_survey":
+      return item.treatmentLabel ? `Tratamiento: ${item.treatmentLabel}` : "Tratamiento reciente";
   }
 }
 
@@ -380,6 +388,8 @@ function outreachVariables(item: PendingOutreachItem): Record<string, string> {
       return {};
     case "referral_invite":
       return { codigo: item.referralCode ?? "" };
+    case "nps_survey":
+      return { tratamiento: item.treatmentLabel ?? "tu tratamiento" };
   }
 }
 

@@ -132,3 +132,81 @@ export const getFinanceSummary = createServerFn({ method: "GET" })
       byProfessional,
     };
   });
+
+export interface QuoteConversionReport {
+  currency: string;
+  /** Presupuestos creados (en cualquier estado) con created_at en el rango. */
+  created: number;
+  accepted: number;
+  rejected: number;
+  /** sent | expired | draft que no terminaron aceptados ni rechazados. */
+  pending: number;
+  /** accepted / (accepted + rejected), en % (0-100). null si no hay resueltos. */
+  conversionRate: number | null;
+  acceptedTotalCents: number;
+  createdTotalCents: number;
+}
+
+/**
+ * Conversión de presupuestos del período (reporte ampliado, Tier 3-L). Mira
+ * quotes por created_at en el rango y clasifica por estado actual. La tasa de
+ * conversión es sobre los que ya se resolvieron (aceptado vs rechazado), no
+ * sobre el total — un presupuesto todavía "sent" no cuenta como perdido.
+ * Mismo criterio de fecha UTC que getFinanceSummary.
+ */
+export const getQuoteConversionReport = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        desde: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        hasta: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<QuoteConversionReport> => {
+    const desdeIso = `${data.desde}T00:00:00.000Z`;
+    const hastaIso = `${data.hasta}T23:59:59.999Z`;
+
+    const { data: quotes, error } = await context.supabase
+      .from("quotes")
+      .select("status, total_cents, currency, created_at")
+      .eq("clinic_id", data.clinicId)
+      .gte("created_at", desdeIso)
+      .lte("created_at", hastaIso);
+    if (error) throw new Error(error.message);
+
+    const rows = quotes ?? [];
+    const currency = rows[0]?.currency ?? "CLP";
+    let accepted = 0;
+    let rejected = 0;
+    let pending = 0;
+    let acceptedTotalCents = 0;
+    let createdTotalCents = 0;
+    for (const q of rows) {
+      createdTotalCents += q.total_cents ?? 0;
+      // 'converted' = aceptado y ya convertido en plan; cuenta como aceptado.
+      if (q.status === "accepted" || q.status === "converted") {
+        accepted += 1;
+        acceptedTotalCents += q.total_cents ?? 0;
+      } else if (q.status === "rejected") {
+        rejected += 1;
+      } else {
+        pending += 1;
+      }
+    }
+    const resolved = accepted + rejected;
+    const conversionRate = resolved > 0 ? Math.round((accepted / resolved) * 100) : null;
+
+    return {
+      currency,
+      created: rows.length,
+      accepted,
+      rejected,
+      pending,
+      conversionRate,
+      acceptedTotalCents,
+      createdTotalCents,
+    };
+  });

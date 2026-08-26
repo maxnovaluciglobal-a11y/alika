@@ -80,6 +80,7 @@ export const OUTREACH_TEMPLATE_KINDS = [
   "birthday_greeting",
   "treatment_followup",
   "referral_invite",
+  "nps_survey",
 ] as const;
 export type OutreachTemplateKind = (typeof OUTREACH_TEMPLATE_KINDS)[number];
 

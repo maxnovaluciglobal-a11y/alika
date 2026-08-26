@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { FileSignature, Loader2, ShieldCheck, ShieldX } from "lucide-react";
@@ -21,6 +21,7 @@ import {
   revokePatientConsent,
   signPatientConsent,
 } from "@/lib/clinical-documents.functions";
+import { SignaturePad } from "@/components/signature-pad";
 
 function inputClass() {
   return "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
@@ -34,83 +35,6 @@ function formatFechaHora(iso: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function SignaturePad({ onChange }: { onChange: (dataUrl: string | null) => void }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const drawing = useRef(false);
-  const hasStroke = useRef(false);
-
-  function ctx() {
-    return canvasRef.current?.getContext("2d") ?? null;
-  }
-
-  function pointerPos(e: React.PointerEvent<HTMLCanvasElement>) {
-    const rect = canvasRef.current!.getBoundingClientRect();
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  }
-
-  function start(e: React.PointerEvent<HTMLCanvasElement>) {
-    drawing.current = true;
-    const c = ctx();
-    if (!c) return;
-    const { x, y } = pointerPos(e);
-    c.beginPath();
-    c.moveTo(x, y);
-  }
-
-  function move(e: React.PointerEvent<HTMLCanvasElement>) {
-    if (!drawing.current) return;
-    const c = ctx();
-    if (!c) return;
-    const { x, y } = pointerPos(e);
-    c.lineWidth = 2;
-    c.lineCap = "round";
-    c.strokeStyle = "#16211D";
-    c.lineTo(x, y);
-    c.stroke();
-    hasStroke.current = true;
-    onChange(canvasRef.current!.toDataURL("image/png"));
-  }
-
-  function end() {
-    drawing.current = false;
-  }
-
-  function limpiar() {
-    const c = ctx();
-    const canvas = canvasRef.current;
-    if (!c || !canvas) return;
-    c.clearRect(0, 0, canvas.width, canvas.height);
-    hasStroke.current = false;
-    onChange(null);
-  }
-
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <Label>Firma</Label>
-        <button
-          type="button"
-          onClick={limpiar}
-          className="text-xs text-muted-foreground hover:text-foreground"
-        >
-          Limpiar
-        </button>
-      </div>
-      <canvas
-        ref={canvasRef}
-        width={460}
-        height={160}
-        onPointerDown={start}
-        onPointerMove={move}
-        onPointerUp={end}
-        onPointerLeave={end}
-        className="w-full touch-none rounded-lg border border-hairline bg-secondary/20"
-      />
-      <p className="text-[11px] text-muted-foreground">Firmá con el dedo o el mouse.</p>
-    </div>
-  );
 }
 
 export function PatientConsentsCard({

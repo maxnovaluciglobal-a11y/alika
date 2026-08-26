@@ -555,6 +555,14 @@ const BIRTHDAY_COOLDOWN_MS = 300 * 24 * 60 * 60 * 1000; // no repetir en el mism
 const TREATMENT_FOLLOWUP_MIN_DELAY_MS = 2 * 24 * 60 * 60 * 1000; // 2 días después de completado
 const TREATMENT_FOLLOWUP_MAX_WINDOW_MS = 10 * 24 * 60 * 60 * 1000; // no revivir tratamientos viejos
 const REFERRAL_INVITE_COOLDOWN_MS = 90 * 24 * 60 * 60 * 1000;
+// Encuesta de satisfacción (nps_survey): tras un tratamiento completado, en
+// una ventana un poco más amplia que treatment_followup (que es el saludo
+// humano de 2-10 días) — la encuesta pide una calificación y conviene un par
+// de días después de ese primer contacto. Cooldown largo: una encuesta por
+// paciente cada 180 días, para no fatigar con pedidos de nota.
+const NPS_SURVEY_MIN_DELAY_MS = 3 * 24 * 60 * 60 * 1000;
+const NPS_SURVEY_MAX_WINDOW_MS = 21 * 24 * 60 * 60 * 1000;
+const NPS_SURVEY_COOLDOWN_MS = 180 * 24 * 60 * 60 * 1000;
 
 export interface PendingOutreachItem {
   patientId: string;
@@ -687,6 +695,7 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
     const lastBirthdayByPatient = new Map<string, string>();
     const lastTreatmentFollowupByPatient = new Map<string, string>();
     const lastReferralInviteByPatient = new Map<string, string>();
+    const lastNpsSurveyByPatient = new Map<string, string>();
     const reviewRequestedAppointments = new Set<string>();
     for (const m of recentOutreach ?? []) {
       if (m.template_kind === "hygiene_recall" && !lastHygieneRecallByPatient.has(m.patient_id)) {
@@ -713,6 +722,9 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
       }
       if (m.template_kind === "referral_invite" && !lastReferralInviteByPatient.has(m.patient_id)) {
         lastReferralInviteByPatient.set(m.patient_id, m.created_at);
+      }
+      if (m.template_kind === "nps_survey" && !lastNpsSurveyByPatient.has(m.patient_id)) {
+        lastNpsSurveyByPatient.set(m.patient_id, m.created_at);
       }
       if (m.template_kind === "review_request" && m.appointment_id) {
         reviewRequestedAppointments.add(m.appointment_id);
@@ -860,6 +872,26 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
         patientName: patient.full_name,
         patientPhone: patient.phone,
         kind: "treatment_followup",
+        treatmentLabel: label,
+      });
+    }
+
+    // ── nps_survey ── (encuesta de satisfacción: misma fuente que el followup
+    // —último tratamiento completado— pero ventana un poco más tardía y
+    // cooldown largo. Pide una calificación; el paciente responde por el mismo
+    // canal y el staff la lee en el historial, sin captura estructurada todavía.)
+    for (const [patientId, { completedAt, label }] of lastCompletedByPatient) {
+      const patient = patientById.get(patientId);
+      if (!patient) continue;
+      const sinceMs = ahora - new Date(completedAt).getTime();
+      if (sinceMs < NPS_SURVEY_MIN_DELAY_MS || sinceMs > NPS_SURVEY_MAX_WINDOW_MS) continue;
+      const lastSent = lastNpsSurveyByPatient.get(patientId);
+      if (lastSent && ahora - new Date(lastSent).getTime() < NPS_SURVEY_COOLDOWN_MS) continue;
+      items.push({
+        patientId,
+        patientName: patient.full_name,
+        patientPhone: patient.phone,
+        kind: "nps_survey",
         treatmentLabel: label,
       });
     }

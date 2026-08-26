@@ -26,6 +26,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { SignaturePad } from "@/components/signature-pad";
 import {
   PAYMENT_METHODS,
   PAYMENT_METHOD_LABELS,
@@ -622,6 +623,66 @@ function NuevoPagoDialog({
   );
 }
 
+/** Aceptar un presupuesto capturando (opcionalmente) la firma del paciente.
+ * La firma es evidencia adicional del consentimiento — aceptar sin firma sigue
+ * siendo válido (queda el nombre + IP como antes). */
+function AceptarPresupuestoDialog({
+  defaultName,
+  pending,
+  onConfirm,
+}: {
+  defaultName: string;
+  pending: boolean;
+  onConfirm: (acceptedByName: string | undefined, signatureDataUrl: string | undefined) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [nombre, setNombre] = useState(defaultName);
+  const [firma, setFirma] = useState<string | null>(null);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" disabled={pending}>
+          <Check className="size-3.5" /> Aceptar
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Aceptar presupuesto</DialogTitle>
+          <DialogDescription>
+            Al aceptar se crea el plan de tratamiento. La firma del paciente es opcional pero queda
+            como evidencia del consentimiento.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Nombre de quien aprueba (opcional)</Label>
+            <input
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              placeholder="Nombre del paciente o responsable"
+            />
+          </div>
+          <SignaturePad label="Firma del paciente (opcional)" onChange={setFirma} />
+        </div>
+        <DialogFooter>
+          <Button
+            onClick={() => {
+              onConfirm(nombre.trim() || undefined, firma ?? undefined);
+              setOpen(false);
+            }}
+            disabled={pending}
+          >
+            {pending && <Loader2 className="size-3.5 animate-spin" />}
+            Confirmar aceptación
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar, userId }: Props) {
   const queryClient = useQueryClient();
   const [expandedQuote, setExpandedQuote] = useState<string | null>(null);
@@ -665,7 +726,15 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
   const currency = planesActivos[0]?.currency ?? payments[0]?.currency ?? "CLP";
 
   const accept = useMutation({
-    mutationFn: (quoteId: string) => setStatusFn({ data: { quoteId, status: "accepted" } }),
+    mutationFn: (v: { quoteId: string; acceptedByName?: string; signatureDataUrl?: string }) =>
+      setStatusFn({
+        data: {
+          quoteId: v.quoteId,
+          status: "accepted",
+          acceptedByName: v.acceptedByName,
+          signatureDataUrl: v.signatureDataUrl,
+        },
+      }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["quotes", clinicId, patientId] });
       await queryClient.invalidateQueries({ queryKey: ["treatment-plans", clinicId, patientId] });
@@ -883,13 +952,17 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
                       <div className="flex flex-wrap items-center gap-2 border-t border-hairline px-4 py-2">
                         {canAccept && (
                           <>
-                            <Button
-                              size="sm"
-                              onClick={() => accept.mutate(quote.id)}
-                              disabled={accept.isPending}
-                            >
-                              <Check className="size-3.5" /> Aceptar
-                            </Button>
+                            <AceptarPresupuestoDialog
+                              defaultName=""
+                              pending={accept.isPending}
+                              onConfirm={(acceptedByName, signatureDataUrl) =>
+                                accept.mutate({
+                                  quoteId: quote.id,
+                                  acceptedByName,
+                                  signatureDataUrl,
+                                })
+                              }
+                            />
                             <Button
                               variant="ghost"
                               size="sm"

@@ -59,6 +59,7 @@ export const META_TEMPLATE_PARAM_ORDER: Record<
   birthday_greeting: ["paciente", "clinica"],
   treatment_followup: ["paciente", "clinica"],
   referral_invite: ["paciente", "clinica", "codigo"],
+  nps_survey: ["paciente", "tratamiento", "clinica"],
 };
 
 /**

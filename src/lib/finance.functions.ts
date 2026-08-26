@@ -347,6 +347,9 @@ export const setQuoteStatus = createServerFn({ method: "POST" })
         quoteId: z.string().uuid(),
         status: z.enum(QUOTE_STATUSES),
         acceptedByName: z.string().trim().max(120).optional(),
+        // Firma manuscrita (PNG data URL) al aceptar. Opcional: aceptar sin
+        // firma sigue siendo válido (queda la evidencia de IP + nombre).
+        signatureDataUrl: z.string().max(2_000_000).optional(),
       })
       .parse(input),
   )
@@ -365,6 +368,28 @@ export const setQuoteStatus = createServerFn({ method: "POST" })
       acceptedUserAgent = req?.headers.get("user-agent") ?? null;
     }
 
+    // Firma manuscrita al aceptar: se sube al bucket privado clinical-documents
+    // bajo {clinic_id}/{patient_id}/quote-signatures/. Path en accepted_signature_path.
+    let signaturePath: string | null = null;
+    if (data.status === "accepted" && data.signatureDataUrl) {
+      const match = /^data:(image\/[^;]+);base64,(.+)$/.exec(data.signatureDataUrl);
+      if (match) {
+        const { data: quote } = await context.supabase
+          .from("quotes")
+          .select("clinic_id, patient_id")
+          .eq("id", data.quoteId)
+          .maybeSingle();
+        if (quote) {
+          const bytes = Uint8Array.from(Buffer.from(match[2], "base64"));
+          const path = `${quote.clinic_id}/${quote.patient_id}/quote-signatures/${crypto.randomUUID()}.png`;
+          const { error: upErr } = await context.supabase.storage
+            .from("clinical-documents")
+            .upload(path, bytes, { contentType: match[1], upsert: false });
+          if (!upErr) signaturePath = path;
+        }
+      }
+    }
+
     const patch = {
       status: data.status,
       ...(data.status === "sent" && { sent_at: now }),
@@ -373,6 +398,7 @@ export const setQuoteStatus = createServerFn({ method: "POST" })
         data.acceptedByName && { accepted_by_name: data.acceptedByName }),
       ...(data.status === "accepted" && { accepted_ip: acceptedIp }),
       ...(data.status === "accepted" && { accepted_user_agent: acceptedUserAgent }),
+      ...(signaturePath && { accepted_signature_path: signaturePath }),
       ...(data.status === "rejected" && { rejected_at: now }),
     };
 
