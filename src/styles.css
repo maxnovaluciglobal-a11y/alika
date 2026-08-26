@@ -231,6 +231,11 @@
     border-color: var(--color-border);
   }
 
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
   body {
     background-color: var(--color-surface);
     color: var(--color-foreground);
