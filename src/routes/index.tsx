@@ -126,7 +126,7 @@ function MiniOdontograma() {
               key={n}
               className={cn(
                 "grid size-6 place-items-center rounded-[5px] border text-[9px] font-medium tabular-nums",
-                marcados[n] ?? "border-hairline text-muted-foreground/60",
+                marcados[n] ?? "border-hairline text-muted-foreground",
               )}
             >
               {n}
@@ -531,20 +531,22 @@ function Landing() {
                 <p className="mt-3 text-3xl font-bold">
                   US$29<span className="text-sm font-normal text-muted-foreground">/mes</span>
                 </p>
-                <p className="text-sm text-muted-foreground/70 line-through">US$49/mes</p>
-                <p className="mt-1 text-xs text-muted-foreground/80">
+                <p className="text-sm text-muted-foreground line-through">US$49/mes</p>
+                <p className="mt-1 text-xs text-muted-foreground">
                   {approxLocalPricesLabel(29)}{" "}
                   <span className="italic">(referencial, el cobro es en USD)</span>
                 </p>
               </div>
               <div className="rounded-2xl border-2 border-mint-strong bg-mint-soft p-6 text-left">
                 <p className="text-sm font-semibold">Alika Clínica</p>
-                <p className="text-xs text-muted-foreground">Hasta 3 profesionales / sillones</p>
+                {/* text-ink/70 en vez de text-muted-foreground: sobre bg-mint-soft el
+                    muted-foreground estándar caía a 4.29:1, debajo del 4.5:1 de WCAG AA. */}
+                <p className="text-xs text-ink/70">Hasta 3 profesionales / sillones</p>
                 <p className="mt-3 text-3xl font-bold">
-                  US$69<span className="text-sm font-normal text-muted-foreground">/mes</span>
+                  US$69<span className="text-sm font-normal text-ink/70">/mes</span>
                 </p>
-                <p className="text-sm text-muted-foreground/70 line-through">US$99/mes</p>
-                <p className="mt-1 text-xs text-muted-foreground/80">
+                <p className="text-sm text-ink/70 line-through">US$99/mes</p>
+                <p className="mt-1 text-xs text-ink/70">
                   {approxLocalPricesLabel(69)}{" "}
                   <span className="italic">(referencial, el cobro es en USD)</span>
                 </p>
@@ -640,8 +642,8 @@ function FeatureRow({
   flip?: boolean;
 }) {
   return (
-    <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
-      <div className={cn(flip && "lg:order-2")}>
+    <div className="grid min-w-0 items-center gap-8 lg:grid-cols-2 lg:gap-14">
+      <div className={cn("min-w-0", flip && "lg:order-2")}>
         <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-mint-strong">
           <Icon className="size-4" />
           {tag}
@@ -649,7 +651,11 @@ function FeatureRow({
         <h3 className="font-precise text-2xl font-bold leading-snug sm:text-3xl">{title}</h3>
         <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">{text}</p>
       </div>
-      <div className={cn(flip && "lg:order-1")}>{media}</div>
+      {/* min-w-0: sin esto, el track de grid en mobile (una sola columna) se
+          expandía al ancho intrínseco de la fila WhatsApp con el teléfono
+          "+56 9 5555 1234" sin truncar, generando overflow horizontal en toda
+          la página (scrollWidth 433px en viewport de 375px). */}
+      <div className={cn("min-w-0", flip && "lg:order-1")}>{media}</div>
     </div>
   );
 }
