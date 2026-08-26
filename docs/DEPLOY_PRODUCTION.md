@@ -51,11 +51,10 @@ Estas cosas requieren decisión y firma de Walter antes de tocar código product
   - `PUBLIC_APP_URL=https://alika.com`
 - [ ] Configurar branch protection: solo `main` deploya a producción; PRs deploy a preview.
 
-### 2.3 Supabase (Lovable Cloud o migrar)
+### 2.3 Supabase
 
-- [ ] Confirmar que el proyecto Supabase actual (`9f5bde21-41b4-43c0-bc81-ea2215cab660`) va a soportar producción. **Decisión:** ¿seguir con Lovable Cloud o migrar a Supabase self-hosted / Supabase cloud propio?
-- [ ] Si se migra: `pg_dump` del schema + datos, restaurar en nueva instancia, apuntar `.env` nuevo.
-- [ ] Verificar plan de Supabase permite el volumen esperado (Lovable Cloud tiene límites que no están claros hoy).
+- [x] **Resuelto** — se migró de Lovable Cloud al Supabase propio (`hvfkygoguxvpmwslrccb`, sa-east-1) el 2026-08-14. Ver `docs/SUPABASE_MIGRATION.md`. Prod corre contra el propio, verificado.
+- [ ] Verificar que el plan actual (Free tier) alcanza el volumen esperado a medida que entren clínicas piloto reales — upgrade si hace falta.
 - [ ] Setear backup diario propio via pg_dump + rclone a B2 (`~/.claude/projects/-Users-walterlamadriz-Documents/memory/gastrocore360_b2_offsite.md` tiene el patrón usado en GastroCore).
 
 ### 2.4 Monitoreo

@@ -26,7 +26,7 @@ VITE_SUPABASE_PROJECT_ID=hvfkygoguxvpmwslrccb
 SUPABASE_SERVICE_ROLE_KEY=sb_secret_...   (⚠️ nunca commitear)
 ```
 
-**Vercel Env Vars: pendiente rotar** — requiere `vercel login` + `vercel env add` de los 4 valores anteriores. Hasta que se roten, prod SIGUE en Lovable Cloud. Cuando se rote, hay unos ~15 min de propagación entre "cambio env vars" y "redeploy activo".
+**Vercel Env Vars: rotadas.** Prod corre contra el Supabase propio desde antes del 2026-08-25 (verificado en el bundle servido de `alika-omega.vercel.app`, que resuelve contra `hvfkygoguxvpmwslrccb.supabase.co`).
 
 ## Verificado end-to-end en dev
 
@@ -41,7 +41,7 @@ SUPABASE_SERVICE_ROLE_KEY=sb_secret_...   (⚠️ nunca commitear)
 
 - El proyecto Supabase que corre bajo Lovable Cloud (`jysoyttegoxynwrbgnlg.supabase.co`) sigue existiendo pero no lo apunta nadie.
 - Cuando prod también migre, se puede pausar/cancelar desde el dashboard de Lovable → ahorro de MAU.
-- **NO borrar antes de tener prod migrado y verificado 48 hs** — es el rollback más rápido si algo falla.
+- **NO borrar antes de tener prod migrado y verificado 48 hs** — es el rollback más rápido si algo falla. Esa condición ya se cumplió (prod lleva días corriendo estable contra el propio); borrarlo o no queda a criterio de Walter, no es automático.
 
 ## Rollback
 
