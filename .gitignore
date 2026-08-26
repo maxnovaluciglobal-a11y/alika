@@ -41,5 +41,3 @@ dist-ssr
 
 # Supabase CLI: guarda a qué proyecto está linkeado el checkout local
 supabase/.temp
-
-# (sin efecto — commit de prueba para confirmar reconexión de Vercel)
