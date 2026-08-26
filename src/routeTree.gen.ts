@@ -35,6 +35,7 @@ import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as PortalInicioRouteImport } from './routes/portal.inicio'
 import { Route as AuthenticatedClinicAgendaRouteImport } from './routes/_authenticated/_clinic/agenda'
+import { Route as AuthenticatedClinicComisionesRouteImport } from './routes/_authenticated/_clinic/comisiones'
 import { Route as AuthenticatedClinicComplianceRouteImport } from './routes/_authenticated/_clinic/compliance'
 import { Route as AuthenticatedClinicConsentimientosRouteImport } from './routes/_authenticated/_clinic/consentimientos'
 import { Route as AuthenticatedClinicDashboardRouteImport } from './routes/_authenticated/_clinic/dashboard'
@@ -186,6 +187,12 @@ const AuthenticatedClinicAgendaRoute =
     path: '/agenda',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
+const AuthenticatedClinicComisionesRoute =
+  AuthenticatedClinicComisionesRouteImport.update({
+    id: '/comisiones',
+    path: '/comisiones',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
 const AuthenticatedClinicComplianceRoute =
   AuthenticatedClinicComplianceRouteImport.update({
     id: '/compliance',
@@ -331,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/docs/': typeof DocsIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
+  '/comisiones': typeof AuthenticatedClinicComisionesRoute
   '/compliance': typeof AuthenticatedClinicComplianceRoute
   '/consentimientos': typeof AuthenticatedClinicConsentimientosRoute
   '/dashboard': typeof AuthenticatedClinicDashboardRoute
@@ -375,6 +383,7 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsIndexRoute
   '/portal': typeof PortalIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
+  '/comisiones': typeof AuthenticatedClinicComisionesRoute
   '/compliance': typeof AuthenticatedClinicComplianceRoute
   '/consentimientos': typeof AuthenticatedClinicConsentimientosRoute
   '/dashboard': typeof AuthenticatedClinicDashboardRoute
@@ -424,6 +433,7 @@ export interface FileRoutesById {
   '/docs/': typeof DocsIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/_authenticated/_clinic/agenda': typeof AuthenticatedClinicAgendaRoute
+  '/_authenticated/_clinic/comisiones': typeof AuthenticatedClinicComisionesRoute
   '/_authenticated/_clinic/compliance': typeof AuthenticatedClinicComplianceRoute
   '/_authenticated/_clinic/consentimientos': typeof AuthenticatedClinicConsentimientosRoute
   '/_authenticated/_clinic/dashboard': typeof AuthenticatedClinicDashboardRoute
@@ -472,6 +482,7 @@ export interface FileRouteTypes {
     | '/docs/'
     | '/portal/'
     | '/agenda'
+    | '/comisiones'
     | '/compliance'
     | '/consentimientos'
     | '/dashboard'
@@ -516,6 +527,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/portal'
     | '/agenda'
+    | '/comisiones'
     | '/compliance'
     | '/consentimientos'
     | '/dashboard'
@@ -564,6 +576,7 @@ export interface FileRouteTypes {
     | '/docs/'
     | '/portal/'
     | '/_authenticated/_clinic/agenda'
+    | '/_authenticated/_clinic/comisiones'
     | '/_authenticated/_clinic/compliance'
     | '/_authenticated/_clinic/consentimientos'
     | '/_authenticated/_clinic/dashboard'
@@ -788,6 +801,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicAgendaRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
+    '/_authenticated/_clinic/comisiones': {
+      id: '/_authenticated/_clinic/comisiones'
+      path: '/comisiones'
+      fullPath: '/comisiones'
+      preLoaderRoute: typeof AuthenticatedClinicComisionesRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
     '/_authenticated/_clinic/compliance': {
       id: '/_authenticated/_clinic/compliance'
       path: '/compliance'
@@ -933,6 +953,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedClinicRouteRouteChildren {
   AuthenticatedClinicAgendaRoute: typeof AuthenticatedClinicAgendaRoute
+  AuthenticatedClinicComisionesRoute: typeof AuthenticatedClinicComisionesRoute
   AuthenticatedClinicComplianceRoute: typeof AuthenticatedClinicComplianceRoute
   AuthenticatedClinicConsentimientosRoute: typeof AuthenticatedClinicConsentimientosRoute
   AuthenticatedClinicDashboardRoute: typeof AuthenticatedClinicDashboardRoute
@@ -957,6 +978,7 @@ interface AuthenticatedClinicRouteRouteChildren {
 const AuthenticatedClinicRouteRouteChildren: AuthenticatedClinicRouteRouteChildren =
   {
     AuthenticatedClinicAgendaRoute: AuthenticatedClinicAgendaRoute,
+    AuthenticatedClinicComisionesRoute: AuthenticatedClinicComisionesRoute,
     AuthenticatedClinicComplianceRoute: AuthenticatedClinicComplianceRoute,
     AuthenticatedClinicConsentimientosRoute:
       AuthenticatedClinicConsentimientosRoute,

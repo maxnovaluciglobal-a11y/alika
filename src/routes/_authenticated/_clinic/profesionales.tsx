@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Clock, Loader2, Plus, UserRound } from "lucide-react";
+import { Clock, Loader2, Percent, Plus, UserRound } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -27,6 +27,13 @@ import {
   type ProfessionalDetail,
   type ScheduleBlock,
 } from "@/lib/professionals.functions";
+import {
+  listCommissionRules,
+  removeCommissionRule,
+  setCommissionRule,
+  type CommissionKind,
+} from "@/lib/commissions.functions";
+import { formatMoney, fromCents, toCents } from "@/lib/finance";
 import { requirePermission } from "@/lib/route-guards";
 
 function inputClass() {
@@ -311,6 +318,157 @@ function EditarProfesionalDialog({
   );
 }
 
+function ComisionDialog({
+  clinicId,
+  professional,
+  currency,
+}: {
+  clinicId: string;
+  professional: ProfessionalDetail;
+  currency: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [kind, setKind] = useState<CommissionKind>("percent");
+  const [percent, setPercent] = useState(""); // en %, ej "40"
+  const [fixed, setFixed] = useState(""); // en unidad monetaria
+
+  const fetchRules = useServerFn(listCommissionRules);
+  const rulesQuery = useQuery({
+    queryKey: ["commission-rules", clinicId],
+    queryFn: () => fetchRules({ data: { clinicId } }),
+    enabled: open,
+  });
+
+  useEffect(() => {
+    const rule = rulesQuery.data?.find((r) => r.professionalId === professional.id);
+    if (rule) {
+      setKind(rule.kind);
+      setPercent(rule.percentBps ? String(rule.percentBps / 100) : "");
+      setFixed(rule.fixedCents ? String(fromCents(rule.fixedCents, currency)) : "");
+    }
+  }, [rulesQuery.data, professional.id, currency]);
+
+  const queryClient = useQueryClient();
+  const saveFn = useServerFn(setCommissionRule);
+  const removeFn = useServerFn(removeCommissionRule);
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["commission-rules", clinicId] });
+    queryClient.invalidateQueries({ queryKey: ["commission-report", clinicId] });
+  };
+
+  const guardar = useMutation({
+    mutationFn: () =>
+      saveFn({
+        data: {
+          clinicId,
+          professionalId: professional.id,
+          kind,
+          percentBps: kind === "percent" ? Math.round(Number(percent || 0) * 100) : 0,
+          fixedCents: kind === "fixed" ? toCents(Number(fixed || 0), currency) : 0,
+        },
+      }),
+    onSuccess: () => {
+      invalidate();
+      toast.success("Comisión actualizada.");
+      setOpen(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const quitar = useMutation({
+    mutationFn: () => removeFn({ data: { clinicId, professionalId: professional.id } }),
+    onSuccess: () => {
+      invalidate();
+      toast.success("Comisión quitada.");
+      setOpen(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const tieneRegla = Boolean(rulesQuery.data?.some((r) => r.professionalId === professional.id));
+  const percentInvalido = kind === "percent" && (Number(percent) < 0 || Number(percent) > 100);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <Percent className="size-3.5" /> Comisión
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Comisión — {professional.fullName}</DialogTitle>
+          <DialogDescription>
+            Se calcula sobre los procedimientos completados en el período (ver Comisiones).
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Tipo de comisión</Label>
+            <select
+              value={kind}
+              onChange={(e) => setKind(e.target.value as CommissionKind)}
+              className={inputClass()}
+            >
+              <option value="percent">% sobre producción</option>
+              <option value="fixed">Monto fijo por procedimiento</option>
+            </select>
+          </div>
+          {kind === "percent" ? (
+            <div className="space-y-1.5">
+              <Label>Porcentaje (%)</Label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step="0.5"
+                value={percent}
+                onChange={(e) => setPercent(e.target.value)}
+                className={inputClass()}
+                placeholder="Ej: 40"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Comisión = {percent || 0}% de lo producido (procedimientos completados) en el
+                período.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label>Monto por procedimiento ({currency})</Label>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={fixed}
+                onChange={(e) => setFixed(e.target.value)}
+                className={inputClass()}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Comisión = {formatMoney(toCents(Number(fixed || 0), currency), currency)} × cantidad
+                de procedimientos completados.
+              </p>
+            </div>
+          )}
+        </div>
+        <DialogFooter className="sm:justify-between">
+          {tieneRegla ? (
+            <Button variant="ghost" onClick={() => quitar.mutate()} disabled={quitar.isPending}>
+              Quitar comisión
+            </Button>
+          ) : (
+            <span />
+          )}
+          <Button onClick={() => guardar.mutate()} disabled={guardar.isPending || percentInvalido}>
+            {guardar.isPending && <Loader2 className="size-3.5 animate-spin" />}
+            Guardar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function HorarioDialog({
   clinicId,
   professional,
@@ -538,6 +696,11 @@ function ProfesionalesPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <HorarioDialog clinicId={clinicId} professional={professional} />
+                <ComisionDialog
+                  clinicId={clinicId}
+                  professional={professional}
+                  currency={access.clinic!.currency}
+                />
                 <EditarProfesionalDialog
                   clinicId={clinicId}
                   professional={professional}

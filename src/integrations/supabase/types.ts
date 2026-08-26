@@ -1056,6 +1056,51 @@ export type Database = {
           },
         ];
       };
+      commission_rules: {
+        Row: {
+          clinic_id: string;
+          fixed_cents: number;
+          kind: string;
+          percent_bps: number;
+          professional_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          clinic_id: string;
+          fixed_cents?: number;
+          kind: string;
+          percent_bps?: number;
+          professional_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          clinic_id?: string;
+          fixed_cents?: number;
+          kind?: string;
+          percent_bps?: number;
+          professional_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commission_rules_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "commission_rules_professional_id_fkey";
+            columns: ["professional_id"];
+            isOneToOne: false;
+            referencedRelation: "professionals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       email_sandbox_config: {
         Row: {
           allowlist: string[];
