@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { FlaskConical, ShieldAlert, ShieldCheck, Siren } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/route-guards";
+import { getEmailSandboxConfig, setEmailSandboxConfig } from "@/lib/email-config.functions";
 import {
   DEFAULT_EMAIL_SANDBOX,
-  guardarEmailSandbox,
   isValidEmail,
-  leerEmailSandbox,
   parseAllowlist,
   resolveEmailRecipient,
   resumenSandbox,
@@ -85,6 +85,9 @@ function Switch({
 
 function SandboxEmailPage() {
   const { access } = Route.useRouteContext();
+  const clinicId = access.clinic?.id;
+  const fetchConfig = useServerFn(getEmailSandboxConfig);
+  const saveConfig = useServerFn(setEmailSandboxConfig);
   const [config, setConfig] = useState<EmailSandboxConfig>(DEFAULT_EMAIL_SANDBOX);
   const [allowlistTexto, setAllowlistTexto] = useState("");
   const [prueba, setPrueba] = useState("");
@@ -105,18 +108,46 @@ function SandboxEmailPage() {
   );
 
   useEffect(() => {
-    const guardado = leerEmailSandbox();
-    setConfig(guardado);
-    setAllowlistTexto(guardado.allowlist.join("\n"));
+    if (!clinicId) return;
+    let cancelado = false;
+    void fetchConfig({ data: { clinicId } })
+      .then((guardado) => {
+        if (cancelado) return;
+        setConfig(guardado);
+        setAllowlistTexto(guardado.allowlist.join("\n"));
+      })
+      .catch(() => {
+        if (!cancelado) toast.error("No pudimos cargar la configuración de sandbox.");
+      })
+      .finally(() => {
+        if (!cancelado) setListo(true);
+      });
     setVerificacionDns(leerVerificacion());
     setLog(leerEmailTestLog());
-    setListo(true);
-  }, []);
+    return () => {
+      cancelado = true;
+    };
+  }, [clinicId, fetchConfig]);
+
+  function persistir(siguiente: EmailSandboxConfig) {
+    if (!clinicId) return;
+    void saveConfig({
+      data: {
+        clinicId,
+        mode: siguiente.mode,
+        redirectTo: siguiente.redirectTo,
+        allowlist: siguiente.allowlist,
+        redirectEnabled: siguiente.redirectEnabled,
+        prefixSubject: siguiente.prefixSubject,
+        minEntregasProduccion: siguiente.minEntregasProduccion,
+      },
+    }).catch((e: Error) => toast.error(e.message));
+  }
 
   function actualizar(parcial: Partial<EmailSandboxConfig>) {
     setConfig((prev) => {
       const siguiente = { ...prev, ...parcial };
-      guardarEmailSandbox(siguiente);
+      persistir(siguiente);
       return siguiente;
     });
   }

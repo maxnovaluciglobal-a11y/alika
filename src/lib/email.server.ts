@@ -1,39 +1,43 @@
 /**
  * Envío real de email — la pieza que faltaba en la infraestructura ya
- * construida (dns-email.ts autentica el dominio, email-sandbox.ts decide
- * el destinatario). Server-only: usa RESEND_API_KEY, nunca debe importarse
- * desde código de cliente.
+ * construida (dns-email.ts autentica el dominio, email-sandbox.ts decide el
+ * destinatario). Server-only: usa RESEND_API_KEY, nunca debe importarse desde
+ * código de cliente.
  *
- * El sandbox de `/sandbox-email` (email-sandbox.ts) vive hoy SOLO en
- * localStorage del navegador — nunca llegó al servidor porque hasta acá no
- * había ningún envío real que gatear. Este módulo usa la variable de
- * entorno EMAIL_SANDBOX en su lugar (server-side, con default seguro). Son
- * dos gates independientes por ahora — unificarlos (mover la config de
- * sandbox a una tabla) queda pendiente, no es parte de este cambio.
+ * Gate de sandbox UNIFICADO (2026-08-26): la decisión de destinatario ahora
+ * pasa siempre por `resolveEmailRecipient` (email-sandbox.ts), con la config
+ * leída de la tabla `email_sandbox_config` por el caller y pasada acá. Antes
+ * había dos gates desconectados — la config de `/sandbox-email` en localStorage
+ * (nunca llegaba al server) y `process.env.EMAIL_SANDBOX` (ignoraba esa
+ * config). Ahora la DB es la única fuente de verdad, compartida por ambos.
  */
 import { Resend } from "resend";
 
+import {
+  DEFAULT_EMAIL_SANDBOX,
+  resolveEmailRecipient,
+  type EmailSandboxConfig,
+} from "@/lib/email-sandbox";
+
 export type SendEmailResult =
-  | { ok: true; externalId: string | null; recipient: string; sandboxed: boolean }
+  | { ok: true; externalId: string | null; recipient: string; redirected: boolean }
   | { ok: false; reason: string };
 
-function isSandboxMode(): boolean {
-  // Default true a propósito: sin la env var seteada explícitamente en
-  // "false", nunca se manda un email real por accidente.
-  return process.env.EMAIL_SANDBOX !== "false";
-}
-
 /**
- * Envía un email. En sandbox (default), se redirige a EMAIL_SANDBOX_REDIRECT_TO si
- * está seteada, o se bloquea sin llamar a Resend si no hay ninguna
- * dirección de prueba configurada — nunca sale nada a un destinatario real
- * por accidente.
+ * Envía un email respetando la config de sandbox de la clínica. Si el gate
+ * resuelve `block`, no llama a Resend. Si resuelve `redirect`, manda a la
+ * dirección de pruebas con el asunto prefijado. Solo `send` en modo producción
+ * (o allowlist) llega al destinatario real. `sandboxConfig` viene de la DB
+ * (getEmailSandboxConfig); si no se pasa, se asume el default seguro (sandbox).
  */
-export async function sendEmail(params: {
-  to: string;
-  subject: string;
-  html: string;
-}): Promise<SendEmailResult> {
+export async function sendEmail(
+  params: {
+    to: string;
+    subject: string;
+    html: string;
+  },
+  sandboxConfig: EmailSandboxConfig = DEFAULT_EMAIL_SANDBOX,
+): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
 
@@ -45,22 +49,14 @@ export async function sendEmail(params: {
     };
   }
 
-  const sandbox = isSandboxMode();
-  let recipient = params.to;
-  let subject = params.subject;
-
-  if (sandbox) {
-    const sandboxTo = process.env.EMAIL_SANDBOX_REDIRECT_TO;
-    if (!sandboxTo) {
-      return {
-        ok: false,
-        reason:
-          "Modo sandbox activo y sin EMAIL_SANDBOX_REDIRECT_TO configurada: el envío se bloqueó para no mandar nada real por accidente.",
-      };
-    }
-    recipient = sandboxTo;
-    subject = `[SANDBOX → ${params.to}] ${params.subject}`;
+  const decision = resolveEmailRecipient(params.to, sandboxConfig);
+  if (decision.action === "block") {
+    return { ok: false, reason: decision.reason };
   }
+
+  const recipient = decision.recipient;
+  const subject = `${decision.subjectPrefix}${params.subject}`;
+  const redirected = decision.action === "redirect";
 
   const resend = new Resend(apiKey);
   const { data, error } = await resend.emails.send({
@@ -74,5 +70,5 @@ export async function sendEmail(params: {
     return { ok: false, reason: error.message };
   }
 
-  return { ok: true, externalId: data?.id ?? null, recipient, sandboxed: sandbox };
+  return { ok: true, externalId: data?.id ?? null, recipient, redirected };
 }

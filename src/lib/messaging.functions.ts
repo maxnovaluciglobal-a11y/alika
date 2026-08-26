@@ -14,6 +14,34 @@ import {
 } from "@/lib/messaging";
 import { tryMetaTemplateSend } from "@/lib/whatsapp.functions";
 import { sendEmail } from "@/lib/email.server";
+import { DEFAULT_EMAIL_SANDBOX, clampMinEntregas } from "@/lib/email-sandbox";
+import type { EmailSandboxConfig } from "@/lib/email-sandbox";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+
+/** Lee la config de sandbox de email de la clínica desde la DB (fuente de
+ * verdad única, compartida con /sandbox-email). Sin fila = default seguro. */
+async function loadEmailSandboxConfig(
+  supabase: SupabaseClient<Database>,
+  clinicId: string,
+): Promise<EmailSandboxConfig> {
+  const { data: row } = await supabase
+    .from("email_sandbox_config")
+    .select(
+      "mode, redirect_to, allowlist, redirect_enabled, prefix_subject, min_entregas_produccion",
+    )
+    .eq("clinic_id", clinicId)
+    .maybeSingle();
+  if (!row) return DEFAULT_EMAIL_SANDBOX;
+  return {
+    mode: row.mode === "production" ? "production" : "sandbox",
+    redirectTo: row.redirect_to ?? "",
+    allowlist: Array.isArray(row.allowlist) ? row.allowlist : [],
+    redirectEnabled: row.redirect_enabled,
+    prefixSubject: row.prefix_subject,
+    minEntregasProduccion: clampMinEntregas(row.min_entregas_produccion),
+  };
+}
 
 const MESSAGE_COLUMNS =
   "id, appointment_id, quote_id, template_id, template_kind, channel, status, recipient, body, sent_at, created_at";
@@ -309,7 +337,8 @@ export const sendEmailFromTemplate = createServerFn({ method: "POST" })
       const subject = renderTemplate(template.subject ?? "", vars);
       const html = renderTemplate(template.body, vars);
 
-      const result = await sendEmail({ to: recipient, subject, html });
+      const sandboxConfig = await loadEmailSandboxConfig(supabase, data.clinicId);
+      const result = await sendEmail({ to: recipient, subject, html }, sandboxConfig);
 
       const nowIso = new Date().toISOString();
       const { data: inserted, error: insertErr } = await supabase

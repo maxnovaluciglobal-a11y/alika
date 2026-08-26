@@ -1056,6 +1056,50 @@ export type Database = {
           },
         ];
       };
+      email_sandbox_config: {
+        Row: {
+          allowlist: string[];
+          clinic_id: string;
+          min_entregas_produccion: number;
+          mode: string;
+          prefix_subject: boolean;
+          redirect_enabled: boolean;
+          redirect_to: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          allowlist?: string[];
+          clinic_id: string;
+          min_entregas_produccion?: number;
+          mode?: string;
+          prefix_subject?: boolean;
+          redirect_enabled?: boolean;
+          redirect_to?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          allowlist?: string[];
+          clinic_id?: string;
+          min_entregas_produccion?: number;
+          mode?: string;
+          prefix_subject?: boolean;
+          redirect_enabled?: boolean;
+          redirect_to?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "email_sandbox_config_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: true;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       consent_templates: {
         Row: {
           active: boolean;

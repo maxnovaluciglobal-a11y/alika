@@ -14,10 +14,11 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/route-guards";
+import { useServerFn } from "@tanstack/react-start";
 import { leerVerificacion, type DnsVerification } from "@/lib/dns-email";
+import { getEmailSandboxConfig } from "@/lib/email-config.functions";
 import {
   DEFAULT_EMAIL_SANDBOX,
-  leerEmailSandbox,
   resumenSandbox,
   type EmailSandboxConfig,
 } from "@/lib/email-sandbox";
@@ -177,6 +178,8 @@ function PreflightPanel({ report }: { report: PreflightReport | null }) {
 
 function PruebasEmailPage() {
   const { access } = Route.useRouteContext();
+  const clinicId = access.clinic?.id;
+  const fetchConfig = useServerFn(getEmailSandboxConfig);
   const [config, setConfig] = useState<EmailSandboxConfig>(DEFAULT_EMAIL_SANDBOX);
   const [verificacion, setVerificacion] = useState<DnsVerification | null>(null);
   const [log, setLog] = useState<EmailTestEntry[]>([]);
@@ -189,10 +192,14 @@ function PruebasEmailPage() {
   const [verificando, setVerificando] = useState(false);
 
   useEffect(() => {
-    setConfig(leerEmailSandbox());
+    if (clinicId) {
+      void fetchConfig({ data: { clinicId } })
+        .then(setConfig)
+        .catch(() => setConfig(DEFAULT_EMAIL_SANDBOX));
+    }
     setLog(leerEmailTestLog());
     setVerificacion(leerVerificacion());
-  }, []);
+  }, [clinicId, fetchConfig]);
 
   const def = useMemo(() => definicionPlantilla(plantilla), [plantilla]);
   const resumen = useMemo(() => resumenSandbox(config), [config]);
