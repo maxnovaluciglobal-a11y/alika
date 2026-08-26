@@ -7,6 +7,46 @@ import { filaYaCreada } from "@/lib/idempotency";
 
 const DEFAULT_TIMEZONE = "America/Santiago";
 
+const DIA_SEMANA_CORTO: Record<string, number> = {
+  Sun: 0,
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+};
+const DIA_SEMANA_LABEL: Record<number, string> = {
+  0: "domingo",
+  1: "lunes",
+  2: "martes",
+  3: "miércoles",
+  4: "jueves",
+  5: "viernes",
+  6: "sábado",
+};
+
+/** Día de la semana (0=domingo…6=sábado, igual que Date.getDay()) según lo
+ * percibe la timezone dada, no la del server — una cita a las 23:30 en
+ * Santiago puede caer en otro día calendario en UTC. */
+function diaSemanaLocal(date: Date, timeZone: string): number {
+  const corto = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short" }).format(date);
+  return DIA_SEMANA_CORTO[corto] ?? date.getUTCDay();
+}
+
+/** Hora local "HH:MM" del instante, en la timezone dada. */
+function horaLocalHHMM(date: Date, timeZone: string): string {
+  const partes = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const h = partes.find((p) => p.type === "hour")?.value ?? "00";
+  const m = partes.find((p) => p.type === "minute")?.value ?? "00";
+  return `${h}:${m}`;
+}
+
 type AppointmentRow = {
   id: string;
   patient_id: string;
@@ -205,6 +245,39 @@ export const createAppointment = createServerFn({ method: "POST" })
     const startsAt = wallTimeInTzToUtc(data.startsAt, timeZone);
     if (Number.isNaN(startsAt.getTime())) throw new Error("Fecha/hora de inicio inválida.");
     const endsAt = new Date(startsAt.getTime() + data.duracionMin * 60_000);
+
+    // Bloqueo DURO (a diferencia del aviso soft de solapamiento de más
+    // abajo) contra el horario declarado del profesional en /profesionales.
+    // Un profesional SIN ninguna fila en professional_schedules no tiene
+    // restricción declarada — no cambia nada para las clínicas que todavía
+    // no cargaron horarios (compatibilidad hacia atrás total). Si SÍ tiene
+    // al menos un día declarado, agendar fuera de eso es un error de
+    // operador prevenible, no una decisión legítima de clínica como sí
+    // puede serlo un doble-booking (cubrir un turno, urgencia).
+    const { data: horarios, error: horariosErr } = await context.supabase
+      .from("professional_schedules")
+      .select("day_of_week, start_time, end_time")
+      .eq("clinic_id", data.clinicId)
+      .eq("professional_id", data.professionalId);
+    if (horariosErr) throw new Error(horariosErr.message);
+
+    if (horarios && horarios.length > 0) {
+      const dia = diaSemanaLocal(startsAt, timeZone);
+      const bloqueDia = horarios.find((h) => h.day_of_week === dia);
+      if (!bloqueDia) {
+        throw new Error(`El profesional no atiende los ${DIA_SEMANA_LABEL[dia]}.`);
+      }
+      const horaInicio = horaLocalHHMM(startsAt, timeZone);
+      const horaFin = horaLocalHHMM(endsAt, timeZone);
+      const inicioOk = horaInicio >= bloqueDia.start_time.slice(0, 5);
+      const finOk = horaFin <= bloqueDia.end_time.slice(0, 5);
+      if (!inicioOk || !finOk) {
+        throw new Error(
+          `Fuera del horario del profesional los ${DIA_SEMANA_LABEL[dia]} ` +
+            `(${bloqueDia.start_time.slice(0, 5)}–${bloqueDia.end_time.slice(0, 5)}).`,
+        );
+      }
+    }
 
     // Aviso SOFT de doble-booking, no bloqueo duro (mismo criterio que Open
     // Dental): dos citas del mismo profesional cuyos rangos se cruzan. No

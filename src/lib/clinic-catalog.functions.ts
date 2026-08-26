@@ -127,3 +127,17 @@ export const listProfessionals = createServerFn({ method: "GET" })
       sucursalId: r.branch_id ?? "",
     }));
   });
+
+/** Especialidades de la clínica — catálogo liviano para selects. */
+export const listSpecialties = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<{ id: string; name: string }[]> => {
+    const { data: rows, error } = await context.supabase
+      .from("specialties")
+      .select("id, name")
+      .eq("clinic_id", data.clinicId)
+      .order("name", { ascending: true });
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });

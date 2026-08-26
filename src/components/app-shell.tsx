@@ -22,6 +22,7 @@ import {
   Landmark,
   Boxes,
   Building2,
+  UserRound,
 } from "lucide-react";
 
 import { AlikaLogo } from "@/components/alika-logo";
@@ -59,6 +60,12 @@ const nav = [
   { to: "/compliance", label: "Compliance", icon: FileSearch, permission: "team:manage" },
   { to: "/preferencias", label: "Preferencias", icon: BellRing, permission: "dashboard:view" },
   { to: "/sucursales", label: "Sucursales", icon: Building2, permission: "settings:manage" },
+  {
+    to: "/profesionales",
+    label: "Profesionales",
+    icon: UserRound,
+    permission: "settings:manage",
+  },
   { to: "/sandbox-email", label: "Sandbox email", icon: FlaskConical, permission: "team:manage" },
   { to: "/dominio-email", label: "Dominio de email", icon: ShieldCheck, permission: "team:manage" },
   { to: "/pruebas-email", label: "Pruebas de email", icon: MailCheck, permission: "team:manage" },
