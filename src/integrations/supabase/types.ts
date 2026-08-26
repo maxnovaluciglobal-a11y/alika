@@ -2269,9 +2269,11 @@ export type Database = {
       inventory_movements: {
         Row: {
           clinic_id: string;
+          expiration_date: string | null;
           id: string;
           item_id: string;
           kind: Database["public"]["Enums"]["inventory_movement_kind"];
+          lot_number: string | null;
           quantity: number;
           reason: string | null;
           recorded_at: string;
@@ -2279,9 +2281,11 @@ export type Database = {
         };
         Insert: {
           clinic_id: string;
+          expiration_date?: string | null;
           id?: string;
           item_id: string;
           kind: Database["public"]["Enums"]["inventory_movement_kind"];
+          lot_number?: string | null;
           quantity: number;
           reason?: string | null;
           recorded_at?: string;
@@ -2289,9 +2293,11 @@ export type Database = {
         };
         Update: {
           clinic_id?: string;
+          expiration_date?: string | null;
           id?: string;
           item_id?: string;
           kind?: Database["public"]["Enums"]["inventory_movement_kind"];
+          lot_number?: string | null;
           quantity?: number;
           reason?: string | null;
           recorded_at?: string;

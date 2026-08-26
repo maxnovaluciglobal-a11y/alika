@@ -30,6 +30,7 @@ import { hasPermission } from "@/lib/access";
 import { formatMoney, fromCents, toCents } from "@/lib/finance";
 import {
   createInventoryItem,
+  listExpiringLots,
   listInventoryItems,
   listInventoryMovements,
   registerInventoryMovement,
@@ -317,6 +318,8 @@ function RegistrarMovimientoDialog({ clinicId, item }: { clinicId: string; item:
   const [kind, setKind] = useState<InventoryMovementKind>("entrada");
   const [quantity, setQuantity] = useState("");
   const [reason, setReason] = useState("");
+  const [lotNumber, setLotNumber] = useState("");
+  const [expirationDate, setExpirationDate] = useState("");
 
   const queryClient = useQueryClient();
   const registerFn = useServerFn(registerInventoryMovement);
@@ -330,15 +333,20 @@ function RegistrarMovimientoDialog({ clinicId, item }: { clinicId: string; item:
           kind,
           quantity: Number(quantity),
           reason: reason.trim() || undefined,
+          lotNumber: kind === "entrada" ? lotNumber.trim() || undefined : undefined,
+          expirationDate: kind === "entrada" ? expirationDate || undefined : undefined,
         },
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventory-items", clinicId] });
       queryClient.invalidateQueries({ queryKey: ["inventory-movements", clinicId, item.id] });
+      queryClient.invalidateQueries({ queryKey: ["inventory-expiring", clinicId] });
       toast.success("Movimiento registrado.");
       setOpen(false);
       setQuantity("");
       setReason("");
+      setLotNumber("");
+      setExpirationDate("");
       setKind("entrada");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -404,6 +412,30 @@ function RegistrarMovimientoDialog({ clinicId, item }: { clinicId: string; item:
               placeholder="compra, uso en tratamiento, merma, conteo físico…"
             />
           </div>
+          {kind === "entrada" && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor={`mv-lote-${item.id}`}>Lote (opcional)</Label>
+                <input
+                  id={`mv-lote-${item.id}`}
+                  value={lotNumber}
+                  onChange={(e) => setLotNumber(e.target.value)}
+                  className={inputClass()}
+                  placeholder="Ej: L-2026-042"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor={`mv-venc-${item.id}`}>Vencimiento (opcional)</Label>
+                <input
+                  id={`mv-venc-${item.id}`}
+                  type="date"
+                  value={expirationDate}
+                  onChange={(e) => setExpirationDate(e.target.value)}
+                  className={inputClass()}
+                />
+              </div>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button
@@ -460,6 +492,7 @@ function HistorialMovimientosDialog({ clinicId, item }: { clinicId: string; item
                   <TableHead>Fecha</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Cantidad</TableHead>
+                  <TableHead>Lote / vence</TableHead>
                   <TableHead>Motivo</TableHead>
                 </TableRow>
               </TableHeader>
@@ -476,6 +509,22 @@ function HistorialMovimientosDialog({ clinicId, item }: { clinicId: string; item
                     </TableCell>
                     <TableCell>
                       {m.quantity} {item.unit}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                      {m.lotNumber || m.expirationDate ? (
+                        <>
+                          {m.lotNumber && <span>{m.lotNumber}</span>}
+                          {m.lotNumber && m.expirationDate && " · "}
+                          {m.expirationDate && (
+                            <span>
+                              vence{" "}
+                              {new Date(m.expirationDate + "T00:00:00").toLocaleDateString("es-CL")}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        "—"
+                      )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {m.reason ?? "—"}
@@ -524,10 +573,18 @@ function InventarioPage() {
     queryFn: () => fetchItems({ data: { clinicId } }),
   });
 
+  const fetchExpiring = useServerFn(listExpiringLots);
+  const expiringQuery = useQuery({
+    queryKey: ["inventory-expiring", clinicId],
+    queryFn: () => fetchExpiring({ data: { clinicId, withinDays: 60 } }),
+  });
+
   const items = itemsQuery.data?.items ?? [];
   const activeItems = items.filter((i) => i.isActive);
   const inactiveItems = items.filter((i) => !i.isActive);
   const lowStockCount = activeItems.filter((i) => i.belowMinStock).length;
+  const expiringLots = expiringQuery.data ?? [];
+  const hoyISO = new Date().toISOString().slice(0, 10);
 
   return (
     <AppShell title="Inventario" access={access}>
@@ -545,6 +602,40 @@ function InventarioPage() {
           </div>
           {puedeGestionar && <CrearItemDialog clinicId={clinicId} currency={currency} />}
         </div>
+
+        {expiringLots.length > 0 && (
+          <section className="rounded-2xl border border-warning/30 bg-warning/5 p-5">
+            <h3 className="flex items-center gap-2 font-display text-sm font-semibold text-warning">
+              <AlertTriangle className="size-4" /> Lotes próximos a vencer (60 días)
+            </h3>
+            <ul className="mt-3 space-y-1.5 text-sm">
+              {expiringLots.map((lot) => {
+                const vencido = lot.expirationDate < hoyISO;
+                return (
+                  <li
+                    key={lot.movementId}
+                    className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline/60 pt-1.5 first:border-t-0 first:pt-0"
+                  >
+                    <span>
+                      <span className="font-medium">{lot.itemName}</span>
+                      {lot.lotNumber && (
+                        <span className="text-muted-foreground"> · lote {lot.lotNumber}</span>
+                      )}
+                      <span className="text-muted-foreground">
+                        {" "}
+                        · {lot.quantity} {lot.unit}
+                      </span>
+                    </span>
+                    <Badge variant={vencido ? "destructive" : "secondary"}>
+                      {vencido ? "Vencido" : "Vence"}{" "}
+                      {new Date(lot.expirationDate + "T00:00:00").toLocaleDateString("es-CL")}
+                    </Badge>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
 
         <section className="card-clinical divide-y divide-hairline">
           {itemsQuery.isLoading && (

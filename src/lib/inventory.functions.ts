@@ -28,8 +28,20 @@ export type InventoryMovement = {
   kind: InventoryMovementKind;
   quantity: number;
   reason: string | null;
+  lotNumber: string | null;
+  expirationDate: string | null;
   recordedBy: string;
   recordedAt: string;
+};
+
+export type ExpiringLot = {
+  movementId: string;
+  itemId: string;
+  itemName: string;
+  unit: string;
+  quantity: number;
+  lotNumber: string | null;
+  expirationDate: string;
 };
 
 const INVENTORY_ITEM_COLUMNS =
@@ -170,6 +182,13 @@ export const registerInventoryMovement = createServerFn({ method: "POST" })
         kind: z.enum(["entrada", "salida", "ajuste"]),
         quantity: z.number().positive("La cantidad debe ser mayor a 0."),
         reason: z.string().trim().max(300).optional(),
+        // Solo tienen sentido en una entrada — un lote que llega con su
+        // propio vencimiento. En salida/ajuste el cliente no los manda.
+        lotNumber: z.string().trim().max(80).optional(),
+        expirationDate: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional(),
       })
       .parse(input),
   )
@@ -182,6 +201,8 @@ export const registerInventoryMovement = createServerFn({ method: "POST" })
         kind: data.kind,
         quantity: data.quantity,
         reason: data.reason || null,
+        lot_number: data.kind === "entrada" ? data.lotNumber || null : null,
+        expiration_date: data.kind === "entrada" ? data.expirationDate || null : null,
       })
       .select("id")
       .single();
@@ -221,7 +242,9 @@ export const listInventoryMovements = createServerFn({ method: "GET" })
     async ({ data, context }): Promise<{ items: InventoryMovement[]; truncated: boolean }> => {
       const { data: rows, error } = await context.supabase
         .from("inventory_movements")
-        .select("id, item_id, kind, quantity, reason, recorded_by, recorded_at")
+        .select(
+          "id, item_id, kind, quantity, reason, lot_number, expiration_date, recorded_by, recorded_at",
+        )
         .eq("clinic_id", data.clinicId)
         .eq("item_id", data.itemId)
         .order("recorded_at", { ascending: false })
@@ -236,9 +259,67 @@ export const listInventoryMovements = createServerFn({ method: "GET" })
         kind: r.kind as InventoryMovementKind,
         quantity: r.quantity,
         reason: r.reason,
+        lotNumber: r.lot_number,
+        expirationDate: r.expiration_date,
         recordedBy: r.recorded_by,
         recordedAt: r.recorded_at,
       }));
       return { items, truncated };
     },
   );
+
+/** Lotes de entradas con vencimiento dentro de `withinDays` (default 60),
+ * ordenados por fecha más próxima primero. No rastrea cuánto de ese lote
+ * queda en stock (el ledger es agregado por ítem, ver comentario en la
+ * migración) — es un aviso de "esto vence pronto", no un FEFO exacto. */
+export const listExpiringLots = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        withinDays: z.number().int().min(1).max(365).default(60),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<ExpiringLot[]> => {
+    const limit = new Date();
+    limit.setDate(limit.getDate() + data.withinDays);
+    const limitDate = limit.toISOString().slice(0, 10);
+
+    const { data: movements, error } = await context.supabase
+      .from("inventory_movements")
+      .select("id, item_id, quantity, lot_number, expiration_date")
+      .eq("clinic_id", data.clinicId)
+      .eq("kind", "entrada")
+      .not("expiration_date", "is", null)
+      .lte("expiration_date", limitDate)
+      .order("expiration_date", { ascending: true });
+    if (error) throw new Error(error.message);
+    if (!movements || movements.length === 0) return [];
+
+    const itemIds = [...new Set(movements.map((m) => m.item_id))];
+    const { data: items, error: itemsError } = await context.supabase
+      .from("inventory_items")
+      .select("id, name, unit")
+      .eq("clinic_id", data.clinicId)
+      .in("id", itemIds);
+    if (itemsError) throw new Error(itemsError.message);
+    const itemById = new Map((items ?? []).map((i) => [i.id, i]));
+
+    return movements
+      .map((m) => {
+        const item = itemById.get(m.item_id);
+        if (!item || !m.expiration_date) return null;
+        return {
+          movementId: m.id,
+          itemId: m.item_id,
+          itemName: item.name,
+          unit: item.unit,
+          quantity: m.quantity,
+          lotNumber: m.lot_number,
+          expirationDate: m.expiration_date,
+        };
+      })
+      .filter((x): x is ExpiringLot => x !== null);
+  });
