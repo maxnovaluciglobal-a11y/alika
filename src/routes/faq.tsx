@@ -111,7 +111,7 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
     items: [
       {
         q: "¿Cuánto cuesta Alika?",
-        a: "US$49/mes, flat por clínica — sin cobro por profesional ni por sucursal. Las primeras clínicas quedan con este precio fundador de por vida. Trial de 14 días sin tarjeta.",
+        a: "Desde US$29/mes (Solo, 1 profesional) o US$69/mes (Clínica, hasta 3) — sin cobro por sucursal. Las primeras clínicas quedan con este precio fundador de por vida. Trial de 14 días sin tarjeta.",
       },
     ],
   },
