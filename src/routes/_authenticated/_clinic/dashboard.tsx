@@ -115,7 +115,15 @@ function Dashboard() {
               <h2 className="font-display text-xl font-semibold">Agenda de hoy</h2>
               <Link
                 to="/agenda"
-                search={{ q: "", fecha: hoy, sucursal: "", profesional: "", estado: "", page: 1 }}
+                search={{
+                  q: "",
+                  fecha: hoy,
+                  vista: "dia",
+                  sucursal: "",
+                  profesional: "",
+                  estado: "",
+                  page: 1,
+                }}
                 className="rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium transition-colors hover:bg-secondary"
               >
                 Abrir agenda

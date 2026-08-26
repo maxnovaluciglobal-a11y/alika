@@ -2,12 +2,24 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronDown, Clock, Inbox, Loader2, Plus, Sparkles, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Inbox,
+  Loader2,
+  Plus,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { DateField, FilterBar, Paginacion, SearchField, SelectField } from "@/components/filters";
 import { AgendaGrid } from "@/components/agenda-grid";
+import { AgendaMonth, AgendaWeek } from "@/components/agenda-views";
+import { addDaysISO, addMonthsISO, rangoDeVista } from "@/lib/agenda-fechas";
 import { Button } from "@/components/ui/button";
 import { HolidayNotice } from "@/components/holiday-notice";
 import { WhatsAppButton } from "@/components/whatsapp-button";
@@ -62,19 +74,57 @@ import {
 import { coincide, num, paginar, str } from "@/lib/search";
 import { cn } from "@/lib/utils";
 
+type VistaAgenda = "dia" | "semana" | "mes";
+
+/** Mueve la fecha un período hacia adelante/atrás según la vista activa. */
+function desplazarPeriodo(vista: VistaAgenda, fecha: string, dir: 1 | -1): string {
+  if (vista === "semana") return addDaysISO(fecha, dir * 7);
+  if (vista === "mes") return addMonthsISO(fecha, dir);
+  return addDaysISO(fecha, dir);
+}
+
+/** Título del período visible: día largo, rango de semana, o mes + año. */
+function labelPeriodo(vista: VistaAgenda, fecha: string): string {
+  if (vista === "dia") return formatoFechaLarga(fecha) || fecha;
+  const parse = (iso: string) => new Date(`${iso}T00:00:00Z`);
+  if (vista === "mes") {
+    return new Intl.DateTimeFormat("es", {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    }).format(parse(fecha));
+  }
+  const [desde, hasta] = rangoDeVista("semana", fecha);
+  const d = parse(desde);
+  const h = parse(hasta);
+  const dia = (x: Date) =>
+    new Intl.DateTimeFormat("es", { day: "numeric", timeZone: "UTC" }).format(x);
+  const mesAnio = (x: Date) =>
+    new Intl.DateTimeFormat("es", { month: "short", year: "numeric", timeZone: "UTC" }).format(x);
+  return d.getUTCMonth() === h.getUTCMonth()
+    ? `${dia(d)}–${dia(h)} ${mesAnio(h)}`
+    : `${dia(d)} ${mesAnio(d)} – ${dia(h)} ${mesAnio(h)}`;
+}
+
 interface AgendaSearch {
   q: string;
   fecha: string;
+  vista: VistaAgenda;
   sucursal: string;
   profesional: string;
   estado: string;
   page: number;
 }
 
+function parseVista(v: unknown): VistaAgenda {
+  return v === "semana" || v === "mes" ? v : "dia";
+}
+
 export const Route = createFileRoute("/_authenticated/_clinic/agenda")({
   validateSearch: (search: Record<string, unknown>): AgendaSearch => ({
     q: str(search.q),
     fecha: str(search.fecha, HOY),
+    vista: parseVista(search.vista),
     sucursal: str(search.sucursal),
     profesional: str(search.profesional),
     estado: str(search.estado),
@@ -750,18 +800,35 @@ function AgendaPage() {
   const set = (patch: Partial<AgendaSearch>) =>
     navigate({ search: (prev: AgendaSearch) => ({ ...prev, ...patch, page: patch.page ?? 1 }) });
 
+  // Rango de fechas visible según la vista (día = un día; semana = L→D;
+  // mes = primer→último del mes). El listado de abajo y las tres vistas
+  // comparten este rango, así el conteo y el listado siempre concuerdan.
+  const [rangoDesde, rangoHasta] = useMemo(
+    () => rangoDeVista(search.vista, search.fecha),
+    [search.vista, search.fecha],
+  );
+
   const filtradas = useMemo(
     () =>
       citas.filter((c) => {
         const profesionalNombre = profesionales.find((p) => p.id === c.profesionalId)?.nombre;
         if (!coincide(search.q, c.paciente, c.tratamiento, profesionalNombre)) return false;
-        if (search.fecha && c.fecha !== search.fecha) return false;
+        if (c.fecha < rangoDesde || c.fecha > rangoHasta) return false;
         if (search.sucursal && c.sucursalId !== search.sucursal) return false;
         if (search.profesional && c.profesionalId !== search.profesional) return false;
         if (search.estado && c.estado !== search.estado) return false;
         return true;
       }),
-    [citas, profesionales, search],
+    [
+      citas,
+      profesionales,
+      search.q,
+      search.sucursal,
+      search.profesional,
+      search.estado,
+      rangoDesde,
+      rangoHasta,
+    ],
   );
 
   const columnas = useMemo(
@@ -810,7 +877,15 @@ function AgendaPage() {
           activos={activos}
           onReset={() =>
             navigate({
-              search: { q: "", fecha: hoy, sucursal: "", profesional: "", estado: "", page: 1 },
+              search: {
+                q: "",
+                fecha: hoy,
+                vista: search.vista,
+                sucursal: "",
+                profesional: "",
+                estado: "",
+                page: 1,
+              },
             })
           }
         >
@@ -849,17 +924,72 @@ function AgendaPage() {
         <div className="grid gap-8 xl:grid-cols-12">
           <div className="space-y-4 xl:col-span-9">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-display text-xl font-semibold capitalize">
-                {search.fecha ? formatoFechaLarga(search.fecha) : "Todas las fechas"}
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                {isLoading
-                  ? "Cargando…"
-                  : `${filtradas.length} cita${filtradas.length === 1 ? "" : "s"} en la vista`}
-              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label="Período anterior"
+                  onClick={() => set({ fecha: desplazarPeriodo(search.vista, search.fecha, -1) })}
+                  className="grid size-8 place-items-center rounded-lg border border-hairline hover:bg-secondary/60"
+                >
+                  <ChevronLeft className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => set({ fecha: hoy })}
+                  className="rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium hover:bg-secondary/60"
+                >
+                  Hoy
+                </button>
+                <button
+                  type="button"
+                  aria-label="Período siguiente"
+                  onClick={() => set({ fecha: desplazarPeriodo(search.vista, search.fecha, 1) })}
+                  className="grid size-8 place-items-center rounded-lg border border-hairline hover:bg-secondary/60"
+                >
+                  <ChevronRight className="size-4" />
+                </button>
+                <h2 className="ml-1 font-display text-lg font-semibold capitalize">
+                  {labelPeriodo(search.vista, search.fecha)}
+                </h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex rounded-lg border border-hairline p-0.5 text-xs">
+                  {(["dia", "semana", "mes"] as const).map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => set({ vista: v })}
+                      className={cn(
+                        "rounded-md px-2.5 py-1 font-medium capitalize",
+                        search.vista === v
+                          ? "bg-secondary text-foreground"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {v === "dia" ? "Día" : v}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {isLoading
+                    ? "Cargando…"
+                    : `${filtradas.length} cita${filtradas.length === 1 ? "" : "s"}`}
+                </p>
+              </div>
             </div>
 
-            <AgendaGrid citas={filtradas} profesionales={columnas} />
+            {search.vista === "dia" && <AgendaGrid citas={filtradas} profesionales={columnas} />}
+            {search.vista === "semana" && (
+              <AgendaWeek citas={filtradas} fecha={search.fecha} hoy={hoy} />
+            )}
+            {search.vista === "mes" && (
+              <AgendaMonth
+                citas={filtradas}
+                fecha={search.fecha}
+                hoy={hoy}
+                onSelectDay={(dia) => set({ fecha: dia, vista: "dia" })}
+              />
+            )}
 
             <div className="card-clinical overflow-hidden">
               <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
