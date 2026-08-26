@@ -942,6 +942,57 @@ export type Database = {
           },
         ];
       };
+      patient_medical_history: {
+        Row: {
+          allergies: string[];
+          chronic_medications: string[];
+          clinic_id: string;
+          conditions: string[];
+          id: string;
+          notes: string | null;
+          patient_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          allergies?: string[];
+          chronic_medications?: string[];
+          clinic_id: string;
+          conditions?: string[];
+          id?: string;
+          notes?: string | null;
+          patient_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          allergies?: string[];
+          chronic_medications?: string[];
+          clinic_id?: string;
+          conditions?: string[];
+          id?: string;
+          notes?: string | null;
+          patient_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "patient_medical_history_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "patient_medical_history_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: true;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       patients: {
         Row: {
           ai_summary: string | null;

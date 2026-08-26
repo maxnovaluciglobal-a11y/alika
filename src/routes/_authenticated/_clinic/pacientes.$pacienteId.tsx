@@ -1,10 +1,14 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Mail, Phone, ShieldAlert, Sparkles } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/route-guards";
 import { PacienteTimeline } from "@/components/paciente-timeline";
 import { NotasClinicas } from "@/components/notas-clinicas";
+import { AllergyAlertBanner, MedicalHistoryCard } from "@/components/medical-history-card";
+import { getMedicalHistory } from "@/lib/medical-history.functions";
 import { Odontogram } from "@/components/odontogram";
 import { PeriodontalChart } from "@/components/periodontal-chart";
 import { FinanceSection } from "@/components/finance-section";
@@ -106,6 +110,14 @@ function PacienteDetalle() {
   const { access } = Route.useRouteContext();
   const { paciente } = Route.useLoaderData() as { paciente: Paciente };
   const puedeVerClinico = hasPermission(access.role, "clinical:view");
+  const clinicId = access.clinic?.id;
+
+  const fetchMedicalHistory = useServerFn(getMedicalHistory);
+  const medicalHistoryQuery = useQuery({
+    queryKey: ["medical-history", clinicId, paciente.id],
+    queryFn: () => fetchMedicalHistory({ data: { clinicId: clinicId!, patientId: paciente.id } }),
+    enabled: Boolean(clinicId) && puedeVerClinico,
+  });
 
   return (
     <AppShell title="Ficha del paciente" access={access}>
@@ -186,6 +198,12 @@ function PacienteDetalle() {
                 </div>
               </div>
 
+              {medicalHistoryQuery.data && medicalHistoryQuery.data.allergies.length > 0 && (
+                <div className="mt-4">
+                  <AllergyAlertBanner allergies={medicalHistoryQuery.data.allergies} />
+                </div>
+              )}
+
               <div className="mt-6 grid gap-4 border-t border-hairline pt-5 sm:grid-cols-3">
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -224,6 +242,14 @@ function PacienteDetalle() {
 
             {puedeVerClinico ? (
               <>
+                {clinicId && (
+                  <MedicalHistoryCard
+                    clinicId={clinicId}
+                    patientId={paciente.id}
+                    puedeEditar={hasPermission(access.role, "clinical:write")}
+                  />
+                )}
+
                 <NotasClinicas
                   paciente={paciente}
                   clinicId={access.clinic?.id ?? null}
