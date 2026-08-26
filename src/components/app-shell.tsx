@@ -15,7 +15,6 @@ import {
   FlaskConical,
   MailCheck,
   LogOut,
-  Sparkles,
   Moon,
   Sun,
   MessageCircleMore,
@@ -202,18 +201,6 @@ export function AppShell({
             );
           })}
         </nav>
-
-        <div className="m-4 rounded-xl border border-ai/15 bg-ai-soft p-4">
-          <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-ai">
-            <Sparkles className="size-3" /> Asistente IA
-          </p>
-          <p className="mb-3 text-xs text-muted-foreground">
-            3 pacientes podrían reagendar hoy para optimizar el Box 2.
-          </p>
-          <button className="w-full rounded-lg bg-ai py-2 text-xs font-medium text-ai-foreground transition-opacity hover:opacity-90">
-            Ver sugerencias
-          </button>
-        </div>
       </aside>
 
       <main className="flex min-h-screen min-w-0 flex-1 flex-col">
