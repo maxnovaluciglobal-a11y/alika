@@ -46,6 +46,7 @@ import { Route as AuthenticatedClinicPreferenciasRouteImport } from './routes/_a
 import { Route as AuthenticatedClinicPruebasEmailRouteImport } from './routes/_authenticated/_clinic/pruebas-email'
 import { Route as AuthenticatedClinicRecordatoriosRouteImport } from './routes/_authenticated/_clinic/recordatorios'
 import { Route as AuthenticatedClinicSandboxEmailRouteImport } from './routes/_authenticated/_clinic/sandbox-email'
+import { Route as AuthenticatedClinicSucursalesRouteImport } from './routes/_authenticated/_clinic/sucursales'
 import { Route as AuthenticatedClinicSuscripcionRouteImport } from './routes/_authenticated/_clinic/suscripcion'
 import { Route as AuthenticatedClinicTratamientosRouteImport } from './routes/_authenticated/_clinic/tratamientos'
 import { Route as AuthenticatedClinicWhatsappRouteImport } from './routes/_authenticated/_clinic/whatsapp'
@@ -249,6 +250,12 @@ const AuthenticatedClinicSandboxEmailRoute =
     path: '/sandbox-email',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
+const AuthenticatedClinicSucursalesRoute =
+  AuthenticatedClinicSucursalesRouteImport.update({
+    id: '/sucursales',
+    path: '/sucursales',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
 const AuthenticatedClinicSuscripcionRoute =
   AuthenticatedClinicSuscripcionRouteImport.update({
     id: '/suscripcion',
@@ -321,6 +328,7 @@ export interface FileRoutesByFullPath {
   '/pruebas-email': typeof AuthenticatedClinicPruebasEmailRoute
   '/recordatorios': typeof AuthenticatedClinicRecordatoriosRoute
   '/sandbox-email': typeof AuthenticatedClinicSandboxEmailRoute
+  '/sucursales': typeof AuthenticatedClinicSucursalesRoute
   '/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/whatsapp': typeof AuthenticatedClinicWhatsappRoute
@@ -362,6 +370,7 @@ export interface FileRoutesByTo {
   '/pruebas-email': typeof AuthenticatedClinicPruebasEmailRoute
   '/recordatorios': typeof AuthenticatedClinicRecordatoriosRoute
   '/sandbox-email': typeof AuthenticatedClinicSandboxEmailRoute
+  '/sucursales': typeof AuthenticatedClinicSucursalesRoute
   '/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/whatsapp': typeof AuthenticatedClinicWhatsappRoute
@@ -408,6 +417,7 @@ export interface FileRoutesById {
   '/_authenticated/_clinic/pruebas-email': typeof AuthenticatedClinicPruebasEmailRoute
   '/_authenticated/_clinic/recordatorios': typeof AuthenticatedClinicRecordatoriosRoute
   '/_authenticated/_clinic/sandbox-email': typeof AuthenticatedClinicSandboxEmailRoute
+  '/_authenticated/_clinic/sucursales': typeof AuthenticatedClinicSucursalesRoute
   '/_authenticated/_clinic/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/_authenticated/_clinic/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/_authenticated/_clinic/whatsapp': typeof AuthenticatedClinicWhatsappRoute
@@ -453,6 +463,7 @@ export interface FileRouteTypes {
     | '/pruebas-email'
     | '/recordatorios'
     | '/sandbox-email'
+    | '/sucursales'
     | '/suscripcion'
     | '/tratamientos'
     | '/whatsapp'
@@ -494,6 +505,7 @@ export interface FileRouteTypes {
     | '/pruebas-email'
     | '/recordatorios'
     | '/sandbox-email'
+    | '/sucursales'
     | '/suscripcion'
     | '/tratamientos'
     | '/whatsapp'
@@ -539,6 +551,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_clinic/pruebas-email'
     | '/_authenticated/_clinic/recordatorios'
     | '/_authenticated/_clinic/sandbox-email'
+    | '/_authenticated/_clinic/sucursales'
     | '/_authenticated/_clinic/suscripcion'
     | '/_authenticated/_clinic/tratamientos'
     | '/_authenticated/_clinic/whatsapp'
@@ -826,6 +839,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicSandboxEmailRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
+    '/_authenticated/_clinic/sucursales': {
+      id: '/_authenticated/_clinic/sucursales'
+      path: '/sucursales'
+      fullPath: '/sucursales'
+      preLoaderRoute: typeof AuthenticatedClinicSucursalesRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
     '/_authenticated/_clinic/suscripcion': {
       id: '/_authenticated/_clinic/suscripcion'
       path: '/suscripcion'
@@ -884,6 +904,7 @@ interface AuthenticatedClinicRouteRouteChildren {
   AuthenticatedClinicPruebasEmailRoute: typeof AuthenticatedClinicPruebasEmailRoute
   AuthenticatedClinicRecordatoriosRoute: typeof AuthenticatedClinicRecordatoriosRoute
   AuthenticatedClinicSandboxEmailRoute: typeof AuthenticatedClinicSandboxEmailRoute
+  AuthenticatedClinicSucursalesRoute: typeof AuthenticatedClinicSucursalesRoute
   AuthenticatedClinicSuscripcionRoute: typeof AuthenticatedClinicSuscripcionRoute
   AuthenticatedClinicTratamientosRoute: typeof AuthenticatedClinicTratamientosRoute
   AuthenticatedClinicWhatsappRoute: typeof AuthenticatedClinicWhatsappRoute
@@ -906,6 +927,7 @@ const AuthenticatedClinicRouteRouteChildren: AuthenticatedClinicRouteRouteChildr
     AuthenticatedClinicRecordatoriosRoute:
       AuthenticatedClinicRecordatoriosRoute,
     AuthenticatedClinicSandboxEmailRoute: AuthenticatedClinicSandboxEmailRoute,
+    AuthenticatedClinicSucursalesRoute: AuthenticatedClinicSucursalesRoute,
     AuthenticatedClinicSuscripcionRoute: AuthenticatedClinicSuscripcionRoute,
     AuthenticatedClinicTratamientosRoute: AuthenticatedClinicTratamientosRoute,
     AuthenticatedClinicWhatsappRoute: AuthenticatedClinicWhatsappRoute,
