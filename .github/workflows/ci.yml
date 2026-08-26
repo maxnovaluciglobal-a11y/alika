@@ -33,17 +33,24 @@ jobs:
     runs-on: ubuntu-latest
     # tests/*.test.ts corren contra el Supabase real (transacción con
     # ROLLBACK por test, no dejan datos — ver tests/helpers/db.ts). Necesita
-    # los 5 secrets de conexión (PGHOST/PGPORT/PGUSER/PGDATABASE/PGPASSWORD)
-    # cargados en Settings → Secrets and variables → Actions.
+    # los 5 secrets de conexión directa (PGHOST/PGPORT/PGUSER/PGDATABASE/
+    # PGPASSWORD) más 3 secrets del cliente Supabase (SUPABASE_URL/
+    # SUPABASE_PUBLISHABLE_KEY/SUPABASE_SERVICE_ROLE_KEY, usados por
+    # tests/rls-enforcement-smoke.test.ts) cargados en Settings → Secrets
+    # and variables → Actions.
     #
-    # Cargados por Walter el 2026-08-17 — el job vuelve a bloquear el
-    # workflow si falla (ya no hay continue-on-error).
+    # PG* cargados por Walter el 2026-08-17. SUPABASE_* cargados el
+    # 2026-08-26 — el job vuelve a bloquear el workflow si falla (ya no hay
+    # continue-on-error).
     env:
       PGHOST: ${{ secrets.PGHOST }}
       PGPORT: ${{ secrets.PGPORT }}
       PGUSER: ${{ secrets.PGUSER }}
       PGDATABASE: ${{ secrets.PGDATABASE }}
       PGPASSWORD: ${{ secrets.PGPASSWORD }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
