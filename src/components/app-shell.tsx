@@ -155,7 +155,12 @@ export function AppShell({
     // No alcanza con limpiar memoria: en una PC compartida los datos de
     // pacientes quedarían en IndexedDB para el próximo que entre.
     await resetOfflineCache();
-    await supabase.auth.signOut();
+    // scope "local" a propósito: la clínica demo comparte una sola cuenta
+    // (demo@alika.app) entre todos los visitantes anónimos. El scope por
+    // defecto de Supabase ("global") revoca el refresh token en el server
+    // para TODA sesión de ese user, así que cualquier visitante que cierre
+    // sesión echaba de la demo a cualquier otro visitante concurrente.
+    await supabase.auth.signOut({ scope: "local" });
     navigate({ to: "/auth", replace: true });
   }
 
@@ -211,7 +216,7 @@ export function AppShell({
         </div>
       </aside>
 
-      <main className="flex min-h-screen flex-1 flex-col">
+      <main className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-5 sm:px-8">
           <h1 className="font-display text-lg font-semibold">{title}</h1>
           <div className="flex items-center gap-3">
