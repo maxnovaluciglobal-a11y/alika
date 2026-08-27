@@ -1,10 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
-// Se puede sobreescribir con PUBLIC_APP_URL para preview/staging distintos.
-const BASE_URL =
-  (typeof process !== "undefined" && process.env.PUBLIC_APP_URL) || "https://alika.com";
-
 interface SitemapEntry {
   path: string;
   changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
@@ -14,7 +10,16 @@ interface SitemapEntry {
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
-      GET: async () => {
+      GET: async ({ request }) => {
+        // `alika.com` todavía no está comprado (ver docs/DEPLOY_PRODUCTION.md) — hardcodearlo
+        // acá generaba URLs a un dominio que no resuelve a la app. PUBLIC_APP_URL manda
+        // cuando está seteada (preview/staging/prod con dominio propio ya definido); si no,
+        // se deriva del host real de la request (hoy `alika-omega.vercel.app`), así el
+        // sitemap siempre queda correcto sin volver a tocar este archivo cuando cambie el dominio.
+        const BASE_URL =
+          (typeof process !== "undefined" && process.env.PUBLIC_APP_URL) ||
+          new URL(request.url).origin;
+
         // Solo rutas públicas: la app clínica está detrás de autenticación y no se indexa.
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },

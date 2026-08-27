@@ -3,9 +3,10 @@
  * junto al precio en dólares. PURAMENTE DECORATIVO / INFORMATIVO.
  *
  * Esto NO es dinero real de la app (no tiene nada que ver con `finance.ts`,
- * `formatMoney`, ni con montos cobrados por Stripe). El cobro real siempre
- * es US$49/mes flat, en USD, vía `src/lib/billing.functions.ts` — este
- * archivo no debe tocarse ni usarse para calcular nada que afecte un cobro.
+ * `formatMoney`, ni con montos cobrados por Stripe). El cobro real es por
+ * uno de los dos tiers de fundador definidos en `src/lib/stripe.server.ts`
+ * ("solo" US$29/mes, "clínica" US$69/mes, ambos con trial de 14 días) —
+ * este archivo no debe tocarse ni usarse para calcular nada que afecte un cobro.
  *
  * Tipos de cambio APROXIMADOS, cargados a mano el 2026-08-22 (cotización
  * spot USD/CLP, USD/MXN, USD/COP consultada ese día). Fluctúan a diario —

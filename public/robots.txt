@@ -18,4 +18,7 @@ Disallow: /configuracion
 Disallow: /portal
 Disallow: /onboarding
 
-Sitemap: https://alika.com/sitemap.xml
+# Dominio final (alika.com) todavía no está comprado (ver docs/DEPLOY_PRODUCTION.md).
+# Este archivo es estático (no puede leer PUBLIC_APP_URL como sitemap.xml.ts) —
+# actualizar esta línea a mano cuando el dominio productivo esté decidido.
+Sitemap: https://alika-omega.vercel.app/sitemap.xml

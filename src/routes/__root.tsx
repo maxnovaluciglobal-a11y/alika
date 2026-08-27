@@ -83,6 +83,18 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+// Mismo criterio que src/routes/sitemap[.]xml.ts: PUBLIC_APP_URL manda si está
+// seteada; si no, se cae al dominio real de hoy (alika.com todavía no está
+// comprado, ver docs/DEPLOY_PRODUCTION.md). og:image/twitter:image necesitan
+// una URL absoluta — no alcanza con una ruta relativa como en <img src>.
+const SITE_URL =
+  (typeof process !== "undefined" && process.env.PUBLIC_APP_URL) ||
+  "https://alika-omega.vercel.app";
+
+// Reusa la foto del hero de la landing (src/routes/index.tsx) como preview de
+// WhatsApp/redes — no hay todavía un asset dedicado para social share.
+const SOCIAL_IMAGE_URL = `${SITE_URL}/landing/dentist.jpg`;
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -101,7 +113,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Agenda, pacientes, historia clínica e IA para clínicas dentales de LatAm.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: SOCIAL_IMAGE_URL },
+      { property: "og:image:width", content: "1280" },
+      { property: "og:image:height", content: "853" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: SOCIAL_IMAGE_URL },
       // Pinta la barra del navegador con el teal de marca cuando la app corre
       // instalada (display: standalone).
       { name: "theme-color", content: "#0d9488" },
