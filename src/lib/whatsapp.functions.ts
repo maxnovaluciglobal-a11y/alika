@@ -335,6 +335,13 @@ export interface WhatsAppLead {
   firstMessage: string;
   status: "new" | "contacted" | "converted" | "discarded";
   createdAt: string;
+  /**
+   * Cuándo el webhook logró mandar la auto-respuesta (Fase 3). Null si
+   * todavía no se intentó, o si `sendMetaTextMessage` falló — en ese segundo
+   * caso ya no vuelve a reintentarse solo, así que la UI usa esto para
+   * avisar al staff (ver `LeadsSection` en whatsapp.tsx).
+   */
+  autoRepliedAt: string | null;
   /** Nombre del paciente que lo refirió (Fase 4), si el webhook detectó un código válido en el primer mensaje. */
   referredByName: string | null;
 }
@@ -346,6 +353,7 @@ type WhatsAppLeadRow = {
   first_message: string;
   status: string;
   created_at: string;
+  auto_replied_at: string | null;
   referred_by_patient_id: string | null;
 };
 
@@ -357,6 +365,7 @@ function mapLead(row: WhatsAppLeadRow, referredByName: string | null): WhatsAppL
     firstMessage: row.first_message,
     status: row.status as WhatsAppLead["status"],
     createdAt: row.created_at,
+    autoRepliedAt: row.auto_replied_at,
     referredByName,
   };
 }
@@ -368,7 +377,9 @@ export const listWhatsAppLeads = createServerFn({ method: "GET" })
   .handler(async ({ data, context }): Promise<WhatsAppLead[]> => {
     const { data: rows, error } = await context.supabase
       .from("whatsapp_leads")
-      .select("id, phone, name, first_message, status, created_at, referred_by_patient_id")
+      .select(
+        "id, phone, name, first_message, status, created_at, auto_replied_at, referred_by_patient_id",
+      )
       .eq("clinic_id", data.clinicId)
       .eq("status", "new")
       .order("created_at", { ascending: false })

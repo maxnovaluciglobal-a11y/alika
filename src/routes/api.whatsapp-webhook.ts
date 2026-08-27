@@ -5,6 +5,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { normalizeToWaMe } from "@/lib/messaging";
 import { isClinicOpenNow } from "@/lib/whatsapp";
 import { sendMetaTextMessage } from "@/lib/whatsapp.functions";
+import { captureException } from "@/lib/sentry";
 import type { Database } from "@/integrations/supabase/types";
 
 type SupabaseAdminClient = SupabaseClient<Database>;
@@ -335,8 +336,16 @@ async function handleUnknownSender(
       .eq("id", inserted.id);
   } catch (err) {
     // El lead ya quedó guardado — si la auto-respuesta falla, el staff lo ve
-    // igual en /whatsapp, solo no recibió el mensaje automático.
+    // igual en /whatsapp, solo no recibió el mensaje automático. Reportamos a
+    // Sentry porque antes esto era un fallo 100% silencioso (solo
+    // console.error, que nadie mira en prod) — captación real perdida sin
+    // que nadie se entere. La UI de /whatsapp también marca el lead como
+    // "sin auto-respuesta" si pasan varios minutos sin `auto_replied_at`.
     console.error("[whatsapp-webhook] auto-respuesta a lead falló:", (err as Error).message);
+    captureException(err, {
+      tags: { boundary: "whatsapp_webhook_lead_auto_reply" },
+      extra: { clinicId, leadId: inserted.id },
+    });
   }
 }
 

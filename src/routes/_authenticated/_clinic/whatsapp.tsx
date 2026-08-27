@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  AlertTriangle,
   Check,
   CheckCircle2,
   Copy,
@@ -344,6 +345,17 @@ function WaMeLinkCard({ displayPhone }: { displayPhone: string }) {
   );
 }
 
+// Si pasó esto desde que se creó el lead y `autoRepliedAt` sigue null, algo
+// falló mandando la auto-respuesta (ver el catch en api.whatsapp-webhook.ts,
+// que ahora reporta a Sentry) — se lo marcamos al staff en vez de dejar que
+// se entere solo revisando Sentry.
+const AUTO_REPLY_STALE_MS = 5 * 60 * 1000;
+
+function isAutoReplyStale(lead: Pick<WhatsAppLead, "createdAt" | "autoRepliedAt">): boolean {
+  if (lead.autoRepliedAt) return false;
+  return Date.now() - new Date(lead.createdAt).getTime() > AUTO_REPLY_STALE_MS;
+}
+
 /** Desconocidos que escribieron por primera vez (Fase 3) — capturados y auto-respondidos por el webhook, sin plantilla. */
 function LeadsSection({ clinicId }: { clinicId: string }) {
   const queryClient = useQueryClient();
@@ -378,7 +390,18 @@ function LeadsSection({ clinicId }: { clinicId: string }) {
         {leads.map((lead: WhatsAppLead) => (
           <div key={lead.id} className="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
             <div className="min-w-0">
-              <p className="text-sm font-medium">{lead.name || lead.phone}</p>
+              <p className="flex items-center gap-1.5 text-sm font-medium">
+                {lead.name || lead.phone}
+                {isAutoReplyStale(lead) && (
+                  <span
+                    title="La auto-respuesta no se pudo mandar — contactalo a mano."
+                    className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive"
+                  >
+                    <AlertTriangle className="size-3" aria-hidden="true" />
+                    Sin auto-respuesta
+                  </span>
+                )}
+              </p>
               {lead.name && <p className="text-xs text-muted-foreground">{lead.phone}</p>}
               <p className="mt-1 truncate text-xs text-muted-foreground">{lead.firstMessage}</p>
               {lead.referredByName && (

@@ -554,6 +554,7 @@ const QUOTE_FOLLOW_UP_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000; // no repetir el n
 const BIRTHDAY_COOLDOWN_MS = 300 * 24 * 60 * 60 * 1000; // no repetir en el mismo año
 const TREATMENT_FOLLOWUP_MIN_DELAY_MS = 2 * 24 * 60 * 60 * 1000; // 2 días después de completado
 const TREATMENT_FOLLOWUP_MAX_WINDOW_MS = 10 * 24 * 60 * 60 * 1000; // no revivir tratamientos viejos
+const TREATMENT_FOLLOWUP_COOLDOWN_MS = 10 * 24 * 60 * 60 * 1000; // no re-sugerir antes de esto
 const REFERRAL_INVITE_COOLDOWN_MS = 90 * 24 * 60 * 60 * 1000;
 // Encuesta de satisfacción (nps_survey): tras un tratamiento completado, en
 // una ventana un poco más amplia que treatment_followup (que es el saludo
@@ -864,7 +865,7 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
         continue;
       }
       const lastSent = lastTreatmentFollowupByPatient.get(patientId);
-      if (lastSent && ahora - new Date(lastSent).getTime() < TREATMENT_FOLLOWUP_MAX_WINDOW_MS) {
+      if (lastSent && ahora - new Date(lastSent).getTime() < TREATMENT_FOLLOWUP_COOLDOWN_MS) {
         continue;
       }
       items.push({

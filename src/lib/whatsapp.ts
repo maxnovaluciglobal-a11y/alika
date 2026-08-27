@@ -28,8 +28,9 @@ export interface WhatsAppAccount {
  * valide por nosotros).
  *
  * Los kinds que no están acá (appointment_confirmation, quote_sent,
- * payment_receipt, nps_survey, custom) siguen siendo wa.me-only por ahora:
- * no forman parte del alcance de Fase 1.
+ * payment_receipt, custom) siguen siendo wa.me-only por ahora: no forman
+ * parte del alcance de Fase 1. `nps_survey` SÍ tiene mapeo (ver más abajo,
+ * viene incluido vía `OutreachTemplateKind`).
  */
 export const META_TEMPLATE_PARAM_ORDER: Record<
   | "appointment_reminder"
