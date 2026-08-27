@@ -2695,7 +2695,8 @@ export type Database = {
         | "portal_invite"
         | "birthday_greeting"
         | "treatment_followup"
-        | "referral_invite";
+        | "referral_invite"
+        | "commission_settled";
       tooth_condition:
         | "sano"
         | "caries"

@@ -20,8 +20,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
 /** Lee la config de sandbox de email de la clínica desde la DB (fuente de
- * verdad única, compartida con /sandbox-email). Sin fila = default seguro. */
-async function loadEmailSandboxConfig(
+ * verdad única, compartida con /sandbox-email). Sin fila = default seguro.
+ * Exportada: `closeCommissionPeriod` (commissions.functions.ts) la reusa
+ * para avisar a profesionales, un destinatario que no encaja en
+ * `sendEmailFromTemplate` (exige patientId) pero debe respetar el mismo
+ * gate de sandbox que cualquier otro email de la clínica. */
+export async function loadEmailSandboxConfig(
   supabase: SupabaseClient<Database>,
   clinicId: string,
 ): Promise<EmailSandboxConfig> {

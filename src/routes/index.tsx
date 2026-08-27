@@ -58,7 +58,7 @@ function CardChrome({ label }: { label: string }) {
 function MiniAgenda() {
   const filas = [
     { h: "09:00", n: "P. González", t: "Control", chip: "Confirmada", tone: "ok" as const },
-    { h: "10:30", n: "R. Fernández", t: "Ortodoncia", chip: "Recordado", tone: "wa" as const },
+    { h: "10:30", n: "R. Fernández", t: "Ortodoncia", chip: "Por confirmar", tone: "wa" as const },
     { h: "11:15", n: "M. Silva", t: "Endodoncia", chip: "En sala", tone: "sala" as const },
   ];
   const tones = {
@@ -616,6 +616,17 @@ function Landing() {
               >
                 Empieza gratis
               </Link>
+              {/* TODO(walter): sin número de WhatsApp real documentado en el
+                  repo, este botón cae al mailto de contacto como fallback
+                  consciente. Cuando haya un número de soporte, reemplazar por
+                  buildWaMeUrl(...) (src/lib/messaging.ts) para abrir wa.me. */}
+              <a
+                href="mailto:maxnovaluciglobal@gmail.com"
+                className="flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
+              >
+                <MessageCircle className="size-4" />
+                Escríbenos por WhatsApp
+              </a>
             </div>
           </div>
         </section>

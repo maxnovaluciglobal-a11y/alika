@@ -64,6 +64,15 @@ const footerColumns: { t: string; links: FooterLink[] }[] = [
     links: [
       { label: "Quiénes somos", kind: "route", to: "/nosotros" },
       { label: "Contacto", kind: "external", href: "mailto:maxnovaluciglobal@gmail.com" },
+      // TODO(walter): sin número de WhatsApp real documentado en el repo,
+      // este link cae al mismo mailto de contacto como fallback consciente.
+      // Cuando haya un número de soporte, cambiar a buildWaMeUrl(...) (ver
+      // src/lib/messaging.ts) para abrir wa.me de verdad.
+      {
+        label: "WhatsApp",
+        kind: "external",
+        href: "mailto:maxnovaluciglobal@gmail.com",
+      },
     ],
   },
   {

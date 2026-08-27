@@ -2,6 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { formatMoney } from "@/lib/finance";
+import { renderTemplate } from "@/lib/messaging";
+import { loadEmailSandboxConfig } from "@/lib/messaging.functions";
+import { sendEmail } from "@/lib/email.server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 export type CommissionKind = "percent" | "fixed";
 
@@ -303,8 +309,105 @@ export const closeCommissionPeriod = createServerFn({ method: "POST" })
       }
       throw new Error(error.message);
     }
+
+    // Aviso al profesional (auditoría 360 v2, F2 comunicaciones) — best
+    // effort: el cierre ya está guardado, un email que falla no debe hacer
+    // fallar la respuesta. Se manda directo con sendEmail (no
+    // sendEmailFromTemplate: esa función exige patientId y el destinatario
+    // acá es un profesional, no un paciente — messages.patient_id es NOT
+    // NULL, así que este aviso no queda registrado en `messages`).
+    await notifyCommissionSettled({
+      supabase: context.supabase,
+      clinicId: data.clinicId,
+      from: data.from,
+      to: data.to,
+      professionalIds: toClose.map((l) => l.professionalId),
+      commissionCentsByProfessional: new Map(
+        toClose.map((l) => [l.professionalId, l.commissionCents ?? 0]),
+      ),
+    });
+
     return { closed: rows.length };
   });
+
+/** Manda el aviso de comisión liquidada a cada profesional cerrado que tenga
+ * email cargado. Nunca lanza — un fallo de envío se loguea y se sigue. */
+async function notifyCommissionSettled(params: {
+  supabase: SupabaseClient<Database>;
+  clinicId: string;
+  from: string;
+  to: string;
+  professionalIds: string[];
+  commissionCentsByProfessional: Map<string, number>;
+}): Promise<void> {
+  const { supabase, clinicId, from, to, professionalIds, commissionCentsByProfessional } = params;
+  try {
+    const [
+      { data: pros, error: prosErr },
+      { data: clinic, error: clinicErr },
+      { data: template, error: templateErr },
+    ] = await Promise.all([
+      supabase
+        .from("professionals")
+        .select("id, full_name, email")
+        .eq("clinic_id", clinicId)
+        .in("id", professionalIds),
+      supabase.from("clinics").select("name, currency").eq("id", clinicId).maybeSingle(),
+      supabase
+        .from("message_templates")
+        .select("subject, body")
+        .eq("clinic_id", clinicId)
+        .eq("channel", "email")
+        .eq("kind", "commission_settled")
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    if (prosErr || clinicErr || templateErr) {
+      console.error(
+        "[commissions] no se pudo preparar el aviso de comisión liquidada",
+        prosErr ?? clinicErr ?? templateErr,
+      );
+      return;
+    }
+    if (!template) {
+      console.error(
+        "[commissions] falta template 'commission_settled' (email) para la clínica",
+        clinicId,
+      );
+      return;
+    }
+
+    const periodo = `${from} a ${to}`;
+    const currency = clinic?.currency ?? "CLP";
+    const sandboxConfig = await loadEmailSandboxConfig(supabase, clinicId);
+
+    for (const pro of pros ?? []) {
+      const recipient = (pro.email ?? "").trim();
+      if (!recipient) continue; // sin email cargado, no hay dónde avisar.
+      const commissionCents = commissionCentsByProfessional.get(pro.id) ?? 0;
+      const vars = {
+        profesional: pro.full_name,
+        periodo,
+        monto: formatMoney(commissionCents, currency),
+        clinica: clinic?.name ?? "",
+      };
+      const subject = renderTemplate(template.subject ?? "", vars);
+      const html = renderTemplate(template.body, vars);
+      const result = await sendEmail({ to: recipient, subject, html }, sandboxConfig);
+      if (!result.ok) {
+        console.error(
+          `[commissions] aviso de comisión liquidada no enviado a profesional ${pro.id}:`,
+          result.reason,
+        );
+      }
+    }
+  } catch (err) {
+    // Best-effort: el cierre del período ya está guardado, esto nunca debe
+    // tumbar la respuesta de closeCommissionPeriod.
+    console.error("[commissions] error inesperado avisando comisión liquidada", err);
+  }
+}
 
 /** Marca un cierre existente como pagado. Solo owner/admin (RLS). */
 export const markCommissionSettlementPaid = createServerFn({ method: "POST" })

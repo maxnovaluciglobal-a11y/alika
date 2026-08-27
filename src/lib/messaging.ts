@@ -37,6 +37,9 @@ export const MESSAGE_TEMPLATE_KINDS = [
   "birthday_greeting",
   "treatment_followup",
   "referral_invite",
+  // F2 comunicaciones (auditoría 360 v2, 26-ago-2026) — migración
+  // 20260827060000. Destinatario = professionals, no patients.
+  "commission_settled",
 ] as const;
 export type MessageTemplateKind = (typeof MESSAGE_TEMPLATE_KINDS)[number];
 
@@ -57,6 +60,7 @@ export const MESSAGE_TEMPLATE_KIND_LABELS: Record<MessageTemplateKind, string> =
   birthday_greeting: "Saludo de cumpleaños",
   treatment_followup: "Seguimiento post-tratamiento",
   referral_invite: "Invitación a referir",
+  commission_settled: "Comisión liquidada",
 };
 
 /**
