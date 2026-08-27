@@ -8,11 +8,12 @@ const hora = new Intl.DateTimeFormat("es", { hour: "2-digit", minute: "2-digit" 
  * Aviso de que la app perdió contacto con el servidor.
  *
  * El texto tiene que ser exacto sobre qué se puede y qué no: cobrar, agendar,
- * guardar una nota clínica y marcar el odontograma quedan guardados en el
- * equipo y se sincronizan solos (ver despachadores en `offline-sync.ts`),
- * pero el resto (mandar un WhatsApp, armar un presupuesto) sigue necesitando
- * conexión. Prometer de más acá es peor que no avisar nada — alguien daría
- * por hecho algo que no pasó.
+ * guardar una nota clínica, marcar el odontograma y editar la anamnesis
+ * (alergias, medicación, antecedentes) quedan guardados en el equipo y se
+ * sincronizan solos (ver despachadores en `offline-sync.ts`), pero el resto
+ * (mandar un WhatsApp, armar un presupuesto) sigue necesitando conexión.
+ * Prometer de más acá es peor que no avisar nada — alguien daría por hecho
+ * algo que no pasó.
  */
 export function OfflineBanner() {
   const { online, lastOnlineAt } = useConnectivity();
@@ -26,9 +27,9 @@ export function OfflineBanner() {
     >
       <WifiOff className="size-4 shrink-0" aria-hidden />
       <span>
-        <strong>Sin conexión.</strong> Puedes seguir cobrando, agendando, guardando notas clínicas y
-        marcando el odontograma: se guarda en este equipo y se sincroniza solo cuando vuelva
-        internet. Ves la información
+        <strong>Sin conexión.</strong> Puedes seguir cobrando, agendando, guardando notas clínicas,
+        marcando el odontograma y editando la anamnesis (alergias, medicación, antecedentes): se
+        guarda en este equipo y se sincroniza solo cuando vuelva internet. Ves la información
         {lastOnlineAt ? ` de las ${hora.format(lastOnlineAt)}` : " guardada"}, y enviar mensajes o
         crear presupuestos sí necesita conexión.
       </span>

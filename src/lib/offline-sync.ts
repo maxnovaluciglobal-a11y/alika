@@ -4,6 +4,7 @@ import { createAppointment, setAppointmentStatus } from "@/lib/appointments.func
 import { registerPayment } from "@/lib/finance.functions";
 import { saveClinicalNote, restoreNoteVersion } from "@/lib/clinical-notes.functions";
 import { setOdontogramMark } from "@/lib/odontogram.functions";
+import { setMedicalHistory } from "@/lib/medical-history.functions";
 import {
   contarIntento,
   leerCola,
@@ -28,6 +29,7 @@ const despachadores: Record<OperacionKind, (payload: never) => Promise<unknown>>
   "cambiar-estado-cita": (payload) => setAppointmentStatus({ data: payload }),
   "guardar-nota": (payload) => saveClinicalNote({ data: payload }),
   "marcar-odontograma": (payload) => setOdontogramMark({ data: payload }),
+  "actualizar-anamnesis": (payload) => setMedicalHistory({ data: payload }),
 };
 
 /**
@@ -71,6 +73,7 @@ const invalidaciones: Record<OperacionKind, string[]> = {
   "cambiar-estado-cita": ["appointments"],
   "guardar-nota": ["clinical-notes"],
   "marcar-odontograma": ["odontogram-marks", "odontogram-history"],
+  "actualizar-anamnesis": ["medical-history"],
 };
 
 let sincronizando = false;
@@ -190,5 +193,7 @@ export function describirItem(item: ItemCola) {
       return "Nota clínica";
     case "marcar-odontograma":
       return "Marca de odontograma";
+    case "actualizar-anamnesis":
+      return "Antecedentes médicos";
   }
 }

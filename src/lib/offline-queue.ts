@@ -14,7 +14,12 @@ const QUEUE_KEY = "items";
 
 /** Qué operaciones sabe reproducir la cola. */
 export type OperacionKind =
-  "crear-cita" | "registrar-pago" | "cambiar-estado-cita" | "guardar-nota" | "marcar-odontograma";
+  | "crear-cita"
+  | "registrar-pago"
+  | "cambiar-estado-cita"
+  | "guardar-nota"
+  | "marcar-odontograma"
+  | "actualizar-anamnesis";
 
 export type EstadoItem =
   /** Esperando conexión. */

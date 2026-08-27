@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, Loader2, Plus, Save, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { getMedicalHistory, setMedicalHistory } from "@/lib/medical-history.functions";
+import { useOfflineMutation } from "@/hooks/use-offline-mutation";
 
 function ChipListEditor({
   label,
@@ -91,10 +92,13 @@ export function MedicalHistoryCard({
   clinicId,
   patientId,
   puedeEditar,
+  userId,
 }: {
   clinicId: string;
   patientId: string;
   puedeEditar: boolean;
+  /** Dueño de lo que quede en la cola offline (ver `offline-queue.ts`). */
+  userId: string;
 }) {
   const fetchFn = useServerFn(getMedicalHistory);
   const historyQuery = useQuery({
@@ -115,26 +119,30 @@ export function MedicalHistoryCard({
     setNotes(historyQuery.data.notes ?? "");
   }, [historyQuery.data]);
 
-  const queryClient = useQueryClient();
   const saveFn = useServerFn(setMedicalHistory);
-  const guardar = useMutation({
-    mutationFn: () =>
-      saveFn({
-        data: {
-          clinicId,
-          patientId,
-          allergies,
-          chronicMedications: medications,
-          conditions,
-          notes,
-        },
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["medical-history", clinicId, patientId] });
-      toast.success("Antecedentes médicos guardados.");
-    },
-    onError: (e: Error) => toast.error(e.message),
+  const guardarOffline = useOfflineMutation<Record<string, unknown>>({
+    kind: "actualizar-anamnesis",
+    userId,
+    ejecutar: (payload) => saveFn({ data: payload as never }),
+    invalidar: [["medical-history", clinicId, patientId]],
+    resumen: () => "Antecedentes médicos",
+    // 1 fila por paciente (no versionada): una segunda edición offline
+    // seguida reemplaza la pendiente anterior en vez de acumular dos
+    // capturas para el mismo registro.
+    identidad: () => patientId,
+    onExito: () => toast.success("Antecedentes médicos guardados."),
   });
+
+  function guardar() {
+    guardarOffline.mutar({
+      clinicId,
+      patientId,
+      allergies,
+      chronicMedications: medications,
+      conditions,
+      notes,
+    });
+  }
 
   const dirty =
     historyQuery.data &&
@@ -150,11 +158,11 @@ export function MedicalHistoryCard({
         {puedeEditar && dirty && (
           <button
             type="button"
-            onClick={() => guardar.mutate()}
-            disabled={guardar.isPending}
+            onClick={guardar}
+            disabled={guardarOffline.enCurso}
             className="flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-brand-foreground hover:opacity-90 disabled:opacity-60"
           >
-            {guardar.isPending ? (
+            {guardarOffline.enCurso ? (
               <Loader2 className="size-3.5 animate-spin" />
             ) : (
               <Save className="size-3.5" />

@@ -249,6 +249,7 @@ function PacienteDetalle() {
                     clinicId={clinicId}
                     patientId={paciente.id}
                     puedeEditar={hasPermission(access.role, "clinical:write")}
+                    userId={access.userId}
                   />
                 )}
 
