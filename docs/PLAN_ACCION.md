@@ -10,28 +10,28 @@ base de datos:
 
 ### Real, con backend Supabase + RLS, testeado
 
-| Módulo | Evidencia |
-|---|---|
-| Auth + creación de clínica | `onboarding.tsx` real, `useQuery(["my-clinics"])` contra Supabase |
-| Equipo y permisos | `clinic_members`, enum `app_role`, helpers `is_clinic_member` / `has_clinic_role` / `can_manage_clinic` (SECURITY DEFINER) |
-| **Notas clínicas** | El módulo más maduro del proyecto: versionado inmutable, flujo de revisión/aprobación por par, extracción de entidades por IA, auditoría, export a PDF, comparador de versiones, **test de RLS en Vitest** (`tests/clinical-notes-rls.test.ts`) |
-| Notificaciones | Realtime vía canal de Supabase, marcado de lectura |
-| Compliance export | Consulta real sobre `clinical_note_audit` + `clinical_note_reviews`, export CSV/PDF |
-| Dominio/email | Subsistema completo de verificación DNS, sandbox de envío, pruebas — construido para producción, no demo |
+| Módulo                     | Evidencia                                                                                                                                                                                                                                       |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Auth + creación de clínica | `onboarding.tsx` real, `useQuery(["my-clinics"])` contra Supabase                                                                                                                                                                               |
+| Equipo y permisos          | `clinic_members`, enum `app_role`, helpers `is_clinic_member` / `has_clinic_role` / `can_manage_clinic` (SECURITY DEFINER)                                                                                                                      |
+| **Notas clínicas**         | El módulo más maduro del proyecto: versionado inmutable, flujo de revisión/aprobación por par, extracción de entidades por IA, auditoría, export a PDF, comparador de versiones, **test de RLS en Vitest** (`tests/clinical-notes-rls.test.ts`) |
+| Notificaciones             | Realtime vía canal de Supabase, marcado de lectura                                                                                                                                                                                              |
+| Compliance export          | Consulta real sobre `clinical_note_audit` + `clinical_note_reviews`, export CSV/PDF                                                                                                                                                             |
+| Dominio/email              | Subsistema completo de verificación DNS, sandbox de envío, pruebas — construido para producción, no demo                                                                                                                                        |
 
 ### Fachada — UI real, datos 100% hardcodeados, cero tabla en la base
 
-| Ruta | Fuente de datos |
-|---|---|
-| `/dashboard` | `kpis`, `pacientes` desde `clinic-data.ts` |
-| `/agenda` | `citas`, `profesionales` desde `clinic-data.ts` |
-| `/pacientes`, `/pacientes/:id` | `getPaciente()` sobre el mismo fixture |
-| `/tratamientos` | ídem |
+| Ruta                           | Fuente de datos                                 |
+| ------------------------------ | ----------------------------------------------- |
+| `/dashboard`                   | `kpis`, `pacientes` desde `clinic-data.ts`      |
+| `/agenda`                      | `citas`, `profesionales` desde `clinic-data.ts` |
+| `/pacientes`, `/pacientes/:id` | `getPaciente()` sobre el mismo fixture          |
+| `/tratamientos`                | ídem                                            |
 
-`clinic-data.ts` (583 líneas) tiene un comentario literal: *"Fecha de referencia
-del prototipo (jueves)"*. No existen las tablas `patients` ni `appointments` en
+`clinic-data.ts` (583 líneas) tiene un comentario literal: _"Fecha de referencia
+del prototipo (jueves)"_. No existen las tablas `patients` ni `appointments` en
 ninguna de las 13 migraciones. El propio doc maestro lo admite en la sección de
-roadmap: *"MVP — implementado en este prototipo la capa de Agenda + Pacientes"*
+roadmap: _"MVP — implementado en este prototipo la capa de Agenda + Pacientes"_
 se refiere a la capa visual, no a datos reales.
 
 ### No existe ni como boceto de código (solo visión en el doc maestro)
@@ -62,6 +62,7 @@ depende de que exista un paciente y una cita de verdad.
 ## 3. Fases
 
 ### Fase 0 — Higiene (hecho en esta sesión)
+
 - [x] Rename `package.json` → `alika`
 - [x] README real (estado, cómo correr, links)
 - [x] `.gitignore` con `.env`
@@ -70,11 +71,12 @@ depende de que exista un paciente y una cita de verdad.
 ### Fase 1 — Pacientes y Agenda reales ✅ código completo, ⚠️ pendiente de aplicar
 
 **Hecho (2026-08-11):**
+
 - Migración `supabase/migrations/20260811120000_...sql`: tablas `patients`,
   `appointments`, `waitlist_entries` + enums `patient_status`/`appointment_status`
-  + columna `professionals.default_operatory_id`. RLS calcada del patrón
-  existente (mismo set de roles que ya definía `patients:manage`/`agenda:manage`
-  en `access.ts`).
+  - columna `professionals.default_operatory_id`. RLS calcada del patrón
+    existente (mismo set de roles que ya definía `patients:manage`/`agenda:manage`
+    en `access.ts`).
 - Server functions nuevas: `patients.functions.ts`, `appointments.functions.ts`,
   `waitlist.functions.ts`, `clinic-catalog.functions.ts` (branches/professionals,
   la tabla `professionals` ya existía pero nunca se había leído desde código).
@@ -99,6 +101,7 @@ contra el proyecto real; una cuenta de prueba se creó de punta a punta. Pero
 `/dashboard`, `/agenda`, `/pacientes` van a fallar en runtime hasta que la
 migración se aplique, porque las tablas no existen todavía. Dos formas de
 desbloquear:
+
 1. Pegar el contenido del `.sql` en el SQL Editor de Supabase (cero credenciales
    nuevas, la vía más simple).
 2. Agregar `SUPABASE_DB_URL` al `.env` local (no compartido en el chat) para
@@ -188,6 +191,7 @@ dashboards configurables. Menor urgencia — dependen de que exista actividad
 real (tratamientos, citas) para tener datos que consumir.
 
 ### Fase 6 — Endurecimiento y operación (en curso 2026-08-13)
+
 - Auditoría multi-agente: 3 agentes en background auditando (a) seguridad+RLS,
   (b) correctitud+bugs, (c) reuso+simplificación+performance. Findings se
   aplican después. Es el paso previo antes de abrir a clínicas reales — evita
@@ -203,7 +207,21 @@ real (tratamientos, citas) para tener datos que consumir.
   Lovable solo si se quiere prototipar UI nueva antes de portarla. Nada de
   force-push en `main` (rompe el sync — AGENTS.md).
 
+### Fase 6b — Cifrado columna PII/PHI (Ley 21.719, Chile)
+
+Fase 1 (dual-write no bloqueante de `document_id`) construida y aplicada
+2026-08-22 (`security-6`, ver auditoría 360 del 21-ago). **Fecha de corte para
+la Fase 1b (cutover real: leer solo del campo cifrado, extender a
+`phone`/`birth_date`): 1-nov-2026** — vigencia plena de la Ley 21.719 es
+1-dic-2026, esto deja ~1 mes de margen real. Bloqueador: confirmar si ya
+existe una key en Supabase Vault para `pgp_sym_encrypt` o si hay que
+generarla (decisión de Walter, ver auditoría 360 v2 del 26-ago,
+`docs/PLAN_EJECUCION_AUDITORIA_2026-08-26.md` Oleada 3). No arrancar el
+cutover de código sin esa key confirmada — es una migración destructiva si
+sale mal a mitad de camino.
+
 ### Fase 7 — Go-to-market
+
 Ambiente de demo público con datos de ejemplo realistas (mismo patrón que
 `demo_chile_data.php` de GastroCore), importadores desde Dentalink/Dentidesk/
 Open Dental (diferenciador #2 del doc maestro: "la migración como producto"),
@@ -242,7 +260,7 @@ landing propia.
 - **types.ts se parchea a MANO** cuando se agrega tabla/enum — no hay
   Supabase CLI configurado.
 - **Diálogos**: Radix Dialog + `useMutation` + `queryClient.invalidateQueries`
-  + `toast`. Reset de campos en `onSuccess`.
+  - `toast`. Reset de campos en `onSuccess`.
 - **Route guards**: `beforeLoad: requirePermission("perm")` con permisos
   definidos en `src/lib/access.ts`.
 - **Fechas**: usar `hoyISO(timeZone)` de `clinic-data.ts` — nunca

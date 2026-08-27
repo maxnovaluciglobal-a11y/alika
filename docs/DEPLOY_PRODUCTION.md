@@ -95,6 +95,10 @@ Loguearse como owner y ejecutar el golden path:
 - [ ] Enviar WhatsApp desde la ficha (wa.me link).
 - [ ] Probar rol simulado (Recepción) y verificar que no ve notas clínicas.
 - [ ] Probar rol simulado (Odontóloga) y verificar que sí ve notas.
+- [ ] **Activar producción de email** (`RESEND_API_KEY`/`EMAIL_FROM` en Vercel + sacar el gate de sandbox en `/sandbox-email` para la clínica) — sin esto, confirmaciones/recordatorios/nps por email no salen.
+- [ ] **Cargar horario del/los profesional/es** en `/profesionales` — sin esto la agenda no filtra disponibilidad real.
+- [ ] **Configurar reglas de comisión** en `/comisiones` si la clínica paga por producción — si se deja sin configurar, el reporte de comisiones queda vacío, no falla, pero no sirve de nada hasta cargarlo.
+- [ ] Confirmar que existe al menos un `consent_template` activo en `/consentimientos` antes de recibir el primer paciente que firme algo (el alta es self-service, no requiere SQL manual — es solo un recordatorio de que alguien tiene que crearlo).
 
 ### 3.2 Seguridad
 
