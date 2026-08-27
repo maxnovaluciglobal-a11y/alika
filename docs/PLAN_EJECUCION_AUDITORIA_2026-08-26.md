@@ -1,3 +1,19 @@
+## ⚠️ ESTADO REAL AL 27-AGO — leer antes de asumir algo por cerrado
+
+Todo el código de las Oleadas 1 y 2 está escrito, testeado (`tsc`/`eslint`/`vitest` limpios) y pusheado a `main` (8 commits, `ce55cfc`..`dda8c93`). **Pero las migraciones de Supabase escritas HOY (27-ago) todavía NO están aplicadas en el Supabase real** — confirmado con query directa (`patient_medical_history_audit`, `commission_settlements`, `inventory_items.branch_id`, el enum `commission_settled` de `message_templates`: ninguno existe todavía en la base real). El código degrada bien (no rompe nada), pero estas features específicas **no funcionan de verdad hasta que Walter corra el SQL**:
+
+- Auditoría de cambios a alergias/medicación (arq-5/seguridad-3)
+- Cerrar período de comisiones / marcar pagado / que el dentist vea su propia comisión (arq-1/arq-8/ops-3/ops-9/ux-3) — si se clickea "Cerrar período" ahora mismo, tira un error de Postgres (tabla inexistente), no crashea la página pero tampoco funciona
+- Índice de performance del reporte de comisiones (arq-9)
+- Inventario por sucursal (producto-2)
+- Aviso por email al cerrar una comisión (F2)
+
+**SQL consolidado listo para pegar en el SQL Editor de Supabase: `docs/PENDIENTES_MIGRACIONES_2026-08-27.sql`** (8 migraciones, ya en el orden correcto). Importante: `20260827060000` (agrega el valor `commission_settled` al enum) tiene que correr y confirmarse ANTES de `20260827060100` (que usa ese valor) — no pegar los dos en la misma sentencia si el editor no separa transacciones, correrlos uno por vez en ese orden.
+
+Las migraciones de F1/F3/F4 (`20260827000000`) ya fueron aplicadas como DATO en vivo con un script puntual el 26-ago para las 2 clínicas existentes — correr esta migración de todos modos es seguro (usa `ON CONFLICT DO NOTHING` / `WHERE body =` exacto) y además la deja funcionando para clínicas NUEVAS que se den de alta después.
+
+---
+
 # Plan de ejecución — Auditoría 360 del 2026-08-26
 
 Implementa los 41 hallazgos con veredicto **agregar** y el 1 con veredicto **sacar** del reporte `docs/AUDITORIA_360_REPORTE_2026-08-26.md` (incluye los 17 hallazgos F1-F8/ops-1 a ops-9 del repaso de Comunicaciones y Operación/GTM, integrados en las oleadas de abajo). No toca los 12 **diferir** ni los 6 **mantener**, salvo donde el reporte pide explícitamente una acción de gestión (fecha de corte de seguridad-2).
