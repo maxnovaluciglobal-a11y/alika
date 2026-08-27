@@ -20,6 +20,10 @@ export type InventoryItem = {
   /** Campo derivado, no columna: true si hay min_stock configurado y el
    * stock actual está en o por debajo de ese umbral. */
   belowMinStock: boolean;
+  /** null = sin sucursal asignada (compartido, o clínica de una sola sede,
+   * o la migración `20260827050000_inventory_branch_segmentation` todavía
+   * no se aplicó — ver degradación null-safe en listInventoryItems). */
+  branchId: string | null;
 };
 
 export type InventoryMovement = {
@@ -47,6 +51,11 @@ export type ExpiringLot = {
 const INVENTORY_ITEM_COLUMNS =
   "id, name, unit, current_stock, min_stock, cost_cents, notes, is_active, created_at";
 
+/** Postgres "undefined_column" — la migración de branch_id todavía no se
+ * aplicó al Supabase real. No es un error real de la request, es el estado
+ * "pre-migración" descrito en CLAUDE.md: degradar sin romper la página. */
+const UNDEFINED_COLUMN = "42703";
+
 type InventoryItemRow = {
   id: string;
   name: string;
@@ -57,6 +66,7 @@ type InventoryItemRow = {
   notes: string | null;
   is_active: boolean;
   created_at: string;
+  branch_id?: string | null;
 };
 
 function mapInventoryItemRow(row: InventoryItemRow): InventoryItem {
@@ -71,26 +81,50 @@ function mapInventoryItemRow(row: InventoryItemRow): InventoryItem {
     isActive: row.is_active,
     createdAt: row.created_at,
     belowMinStock: row.min_stock != null && row.current_stock <= row.min_stock,
+    branchId: row.branch_id ?? null,
   };
 }
 
 /** Listado de ítems de inventario de la clínica. RLS: todos los roles
  * clínicos con acceso operativo (incluye reception, es información
  * operativa no clínica sensible). Incluye inactivos — la UI decide si
- * los muestra u oculta. */
+ * los muestra u oculta.
+ *
+ * `branchId` (product-2, auditoría 360): filtra por sucursal cuando la
+ * clínica tiene más de una activa — la UI solo lo manda en ese caso, ver
+ * inventario.tsx. Si la migración de branch_id todavía no corrió contra el
+ * Supabase real, degrada solo (sin filtro, `branchId: null` en cada ítem)
+ * en vez de romper la página. */
 export const listInventoryItems = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) =>
+    z.object({ clinicId: z.string().uuid(), branchId: z.string().uuid().nullish() }).parse(input),
+  )
   .handler(async ({ data, context }): Promise<{ items: InventoryItem[] }> => {
-    const { data: rows, error } = await context.supabase
+    let query = context.supabase
       .from("inventory_items")
-      .select(INVENTORY_ITEM_COLUMNS)
-      .eq("clinic_id", data.clinicId)
-      .order("name", { ascending: true });
+      .select(`${INVENTORY_ITEM_COLUMNS}, branch_id`)
+      .eq("clinic_id", data.clinicId);
+    if (data.branchId) query = query.eq("branch_id", data.branchId);
 
+    const first = await query.order("name", { ascending: true });
+    let rows: InventoryItemRow[] | null = first.data as InventoryItemRow[] | null;
+    let error = first.error;
+
+    if (error?.code === UNDEFINED_COLUMN) {
+      // Pre-migración: reintentar sin branch_id, ignorando el filtro (no
+      // hay columna que filtrar todavía).
+      const fallback = await context.supabase
+        .from("inventory_items")
+        .select(INVENTORY_ITEM_COLUMNS)
+        .eq("clinic_id", data.clinicId)
+        .order("name", { ascending: true });
+      rows = fallback.data as InventoryItemRow[] | null;
+      error = fallback.error;
+    }
     if (error) throw new Error(error.message);
 
-    return { items: (rows ?? []).map((r) => mapInventoryItemRow(r as InventoryItemRow)) };
+    return { items: (rows ?? []).map((r) => mapInventoryItemRow(r)) };
   });
 
 /** Crea un ítem de inventario. RLS (`inventory_items_insert_managers`) ya
@@ -107,6 +141,9 @@ export const createInventoryItem = createServerFn({ method: "POST" })
         minStock: z.number().min(0).nullable().optional(),
         costCents: z.number().int().min(0).nullable().optional(),
         notes: z.string().trim().max(1000).optional(),
+        // product-2: solo lo manda la UI cuando la clínica tiene >1 sucursal
+        // activa. null = sin sucursal asignada (compartido).
+        branchId: z.string().uuid().nullable().optional(),
       })
       .parse(input),
   )
@@ -120,11 +157,19 @@ export const createInventoryItem = createServerFn({ method: "POST" })
         min_stock: data.minStock ?? null,
         cost_cents: data.costCents ?? null,
         notes: data.notes || null,
+        branch_id: data.branchId ?? null,
       })
       .select("id")
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.code === UNDEFINED_COLUMN) {
+        throw new Error(
+          "No pudimos guardar la sucursal del ítem: la migración de sucursales en inventario todavía no se aplicó. Avisale a Walter.",
+        );
+      }
+      throw new Error(error.message);
+    }
     return { id: row.id };
   });
 
@@ -145,6 +190,9 @@ export const updateInventoryItem = createServerFn({ method: "POST" })
         costCents: z.number().int().min(0).nullable().optional(),
         notes: z.string().trim().max(1000).optional(),
         isActive: z.boolean(),
+        // product-2: solo lo manda la UI cuando la clínica tiene >1 sucursal
+        // activa. null = sin sucursal asignada (compartido).
+        branchId: z.string().uuid().nullable().optional(),
       })
       .parse(input),
   )
@@ -158,11 +206,19 @@ export const updateInventoryItem = createServerFn({ method: "POST" })
         cost_cents: data.costCents ?? null,
         notes: data.notes || null,
         is_active: data.isActive,
+        ...(data.branchId !== undefined ? { branch_id: data.branchId } : {}),
       })
       .eq("id", data.itemId)
       .eq("clinic_id", data.clinicId);
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.code === UNDEFINED_COLUMN) {
+        throw new Error(
+          "No pudimos guardar la sucursal del ítem: la migración de sucursales en inventario todavía no se aplicó. Avisale a Walter.",
+        );
+      }
+      throw new Error(error.message);
+    }
     return { ok: true };
   });
 

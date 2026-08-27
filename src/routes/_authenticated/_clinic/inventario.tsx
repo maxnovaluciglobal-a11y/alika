@@ -27,6 +27,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { hasPermission } from "@/lib/access";
+import { listBranches } from "@/lib/clinic-catalog.functions";
+import type { Sucursal } from "@/lib/clinic-data";
 import { formatMoney, fromCents, toCents } from "@/lib/finance";
 import {
   createInventoryItem,
@@ -55,13 +57,23 @@ function inputClass() {
   return "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
 }
 
-function CrearItemDialog({ clinicId, currency }: { clinicId: string; currency: string }) {
+function CrearItemDialog({
+  clinicId,
+  currency,
+  sucursales,
+}: {
+  clinicId: string;
+  currency: string;
+  /** Vacío o con 1 elemento = no se muestra el selector (caso común). */
+  sucursales: Sucursal[];
+}) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [unit, setUnit] = useState("");
   const [minStock, setMinStock] = useState("");
   const [costPesos, setCostPesos] = useState("");
   const [notes, setNotes] = useState("");
+  const [branchId, setBranchId] = useState("");
 
   const queryClient = useQueryClient();
   const createFn = useServerFn(createInventoryItem);
@@ -76,6 +88,7 @@ function CrearItemDialog({ clinicId, currency }: { clinicId: string; currency: s
           minStock: minStock.trim() === "" ? null : Number(minStock),
           costCents: costPesos.trim() === "" ? null : toCents(Number(costPesos), currency),
           notes: notes.trim() || undefined,
+          branchId: sucursales.length > 1 ? branchId || null : undefined,
         },
       }),
     onSuccess: () => {
@@ -87,6 +100,7 @@ function CrearItemDialog({ clinicId, currency }: { clinicId: string; currency: s
       setMinStock("");
       setCostPesos("");
       setNotes("");
+      setBranchId("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -162,6 +176,24 @@ function CrearItemDialog({ clinicId, currency }: { clinicId: string; currency: s
               className={inputClass()}
             />
           </div>
+          {sucursales.length > 1 && (
+            <div className="space-y-1.5">
+              <Label htmlFor="inv-sucursal">Sucursal (opcional)</Label>
+              <select
+                id="inv-sucursal"
+                value={branchId}
+                onChange={(e) => setBranchId(e.target.value)}
+                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                <option value="">Sin sucursal asignada (compartido)</option>
+                {sucursales.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button
@@ -181,10 +213,12 @@ function EditarItemDialog({
   clinicId,
   item,
   currency,
+  sucursales,
 }: {
   clinicId: string;
   item: InventoryItem;
   currency: string;
+  sucursales: Sucursal[];
 }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(item.name);
@@ -195,6 +229,7 @@ function EditarItemDialog({
   );
   const [notes, setNotes] = useState(item.notes ?? "");
   const [isActive, setIsActive] = useState(item.isActive);
+  const [branchId, setBranchId] = useState(item.branchId ?? "");
 
   const queryClient = useQueryClient();
   const updateFn = useServerFn(updateInventoryItem);
@@ -211,6 +246,7 @@ function EditarItemDialog({
           costCents: costPesos.trim() === "" ? null : toCents(Number(costPesos), currency),
           notes: notes.trim() || undefined,
           isActive,
+          branchId: sucursales.length > 1 ? branchId || null : undefined,
         },
       }),
     onSuccess: () => {
@@ -290,6 +326,24 @@ function EditarItemDialog({
               className={inputClass()}
             />
           </div>
+          {sucursales.length > 1 && (
+            <div className="space-y-1.5">
+              <Label htmlFor={`ei-sucursal-${item.id}`}>Sucursal</Label>
+              <select
+                id={`ei-sucursal-${item.id}`}
+                value={branchId}
+                onChange={(e) => setBranchId(e.target.value)}
+                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                <option value="">Sin sucursal asignada (compartido)</option>
+                {sucursales.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -567,10 +621,27 @@ function InventarioPage() {
   const puedeGestionar = hasPermission(access.role, "inventory:manage");
   const puedeRegistrarMovimiento = access.role != null && MOVEMENT_ROLES.has(access.role);
 
+  // product-2 (auditoría 360): filtro por sucursal. Solo tiene sentido
+  // cuando la clínica tiene más de una sucursal ACTIVA — con 0-1 sucursales
+  // (el caso común hoy) no se muestra ni el selector ni la columna, para no
+  // agregar fricción a la UI de la mayoría de las clínicas.
+  const fetchBranches = useServerFn(listBranches);
+  const branchesQuery = useQuery({
+    queryKey: ["branches", clinicId],
+    queryFn: () => fetchBranches({ data: { clinicId } }),
+  });
+  const sucursales = branchesQuery.data ?? [];
+  const multiSucursal = sucursales.length > 1;
+  const [branchFilter, setBranchFilter] = useState("");
+  const branchNameById = new Map(sucursales.map((s) => [s.id, s.nombre]));
+
   const fetchItems = useServerFn(listInventoryItems);
   const itemsQuery = useQuery({
-    queryKey: ["inventory-items", clinicId],
-    queryFn: () => fetchItems({ data: { clinicId } }),
+    queryKey: ["inventory-items", clinicId, multiSucursal ? branchFilter : ""],
+    queryFn: () =>
+      fetchItems({
+        data: { clinicId, branchId: multiSucursal && branchFilter ? branchFilter : undefined },
+      }),
   });
 
   const fetchExpiring = useServerFn(listExpiringLots);
@@ -600,7 +671,29 @@ function InventarioPage() {
                 : "Todo el stock está sobre el mínimo configurado."}
             </p>
           </div>
-          {puedeGestionar && <CrearItemDialog clinicId={clinicId} currency={currency} />}
+          <div className="flex flex-wrap items-center gap-2">
+            {multiSucursal && (
+              <label className="block">
+                <span className="sr-only">Sucursal</span>
+                <select
+                  value={branchFilter}
+                  onChange={(e) => setBranchFilter(e.target.value)}
+                  aria-label="Filtrar por sucursal"
+                  className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                  <option value="">Todas las sucursales</option>
+                  {sucursales.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {puedeGestionar && (
+              <CrearItemDialog clinicId={clinicId} currency={currency} sucursales={sucursales} />
+            )}
+          </div>
         </div>
 
         {expiringLots.length > 0 && (
@@ -661,6 +754,7 @@ function InventarioPage() {
                   <TableHead>Stock actual</TableHead>
                   <TableHead>Mínimo</TableHead>
                   <TableHead>Costo unitario</TableHead>
+                  {multiSucursal && <TableHead>Sucursal</TableHead>}
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -697,6 +791,13 @@ function InventarioPage() {
                         ? "Sin costo cargado"
                         : formatMoney(item.costCents, currency)}
                     </TableCell>
+                    {multiSucursal && (
+                      <TableCell className="text-muted-foreground">
+                        {item.branchId == null
+                          ? "Sin asignar"
+                          : (branchNameById.get(item.branchId) ?? "Sin asignar")}
+                      </TableCell>
+                    )}
                     <TableCell>
                       <div className="flex flex-wrap justify-end gap-2">
                         <HistorialMovimientosDialog clinicId={clinicId} item={item} />
@@ -704,7 +805,12 @@ function InventarioPage() {
                           <RegistrarMovimientoDialog clinicId={clinicId} item={item} />
                         )}
                         {puedeGestionar && (
-                          <EditarItemDialog clinicId={clinicId} item={item} currency={currency} />
+                          <EditarItemDialog
+                            clinicId={clinicId}
+                            item={item}
+                            currency={currency}
+                            sucursales={sucursales}
+                          />
                         )}
                       </div>
                     </TableCell>
@@ -739,7 +845,12 @@ function InventarioPage() {
                       <TableCell>
                         <div className="flex flex-wrap justify-end gap-2">
                           <HistorialMovimientosDialog clinicId={clinicId} item={item} />
-                          <EditarItemDialog clinicId={clinicId} item={item} currency={currency} />
+                          <EditarItemDialog
+                            clinicId={clinicId}
+                            item={item}
+                            currency={currency}
+                            sucursales={sucursales}
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
