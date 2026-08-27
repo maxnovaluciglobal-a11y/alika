@@ -88,13 +88,32 @@ export type CommissionLine = {
   /** Comisión calculada con la regla vigente. null = sin regla configurada. */
   commissionCents: number | null;
   ruleLabel: string;
+  /** true = este período ya fue cerrado, el monto es un snapshot congelado
+   * (no se recalcula aunque cambie commission_rules después). */
+  closed: boolean;
+  /** Solo tiene sentido si closed=true. */
+  paidAt: string | null;
+  /** id de `commission_settlements`. Solo tiene sentido si closed=true —
+   * lo necesita `markCommissionSettlementPaid`. */
+  settlementId: string | null;
 };
+
+/** 42P01 = undefined_table (Postgres). La migración de commission_settlements
+ * (auditoría 360 v2, 26-ago) puede no estar aplicada todavía — degradar a
+ * "sin períodos cerrados" en vez de romper el reporte completo. */
+function isUndefinedTableError(error: { code?: string } | null): boolean {
+  return error?.code === "42P01" || error?.code === "PGRST205";
+}
 
 /**
  * Liquidación de comisiones por profesional en un rango [from, to] (fechas
- * civiles YYYY-MM-DD, inclusive). Se basa en treatment_items completados con
- * completed_at dentro del rango. La comisión se calcula con la regla vigente
- * de cada profesional al momento de correr el reporte.
+ * civiles YYYY-MM-DD, inclusive). Si el período [from,to] para un profesional
+ * ya fue cerrado (`commission_settlements`), devuelve el snapshot congelado
+ * en vez de recalcular — así una regla editada después de cerrar no altera
+ * lo ya liquidado/comunicado (auditoría 360 v2, arq-1/arq-8/ops-9). Para
+ * cualquier rango sin cierre, sigue calculando en vivo con la regla vigente.
+ * `professionalId` opcional filtra a un solo profesional — ux-3: el propio
+ * profesional solo debe ver su línea, nunca la de sus colegas.
  */
 export const getCommissionReport = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -104,6 +123,7 @@ export const getCommissionReport = createServerFn({ method: "GET" })
         clinicId: z.string().uuid(),
         from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
         to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        professionalId: z.string().uuid().optional(),
       })
       .parse(input),
   )
@@ -112,27 +132,50 @@ export const getCommissionReport = createServerFn({ method: "GET" })
     const fromIso = `${data.from}T00:00:00Z`;
     const toIso = `${data.to}T23:59:59.999Z`;
 
+    let itemsQuery = context.supabase
+      .from("treatment_items")
+      .select("professional_id, price_cents, completed_at, status")
+      .eq("clinic_id", data.clinicId)
+      .eq("status", "completed")
+      .gte("completed_at", fromIso)
+      .lte("completed_at", toIso);
+    let prosQuery = context.supabase
+      .from("professionals")
+      .select("id, full_name")
+      .eq("clinic_id", data.clinicId);
+    if (data.professionalId) {
+      itemsQuery = itemsQuery.eq("professional_id", data.professionalId);
+      prosQuery = prosQuery.eq("id", data.professionalId);
+    }
+
     const [
       { data: items, error: itemsErr },
       { data: pros, error: prosErr },
       { data: rules, error: rulesErr },
+      settlementsRes,
     ] = await Promise.all([
-      context.supabase
-        .from("treatment_items")
-        .select("professional_id, price_cents, completed_at, status")
-        .eq("clinic_id", data.clinicId)
-        .eq("status", "completed")
-        .gte("completed_at", fromIso)
-        .lte("completed_at", toIso),
-      context.supabase.from("professionals").select("id, full_name").eq("clinic_id", data.clinicId),
+      itemsQuery,
+      prosQuery,
       context.supabase
         .from("commission_rules")
         .select("professional_id, kind, percent_bps, fixed_cents")
         .eq("clinic_id", data.clinicId),
+      context.supabase
+        .from("commission_settlements")
+        .select(
+          "id, professional_id, rule_kind, rule_percent_bps, rule_fixed_cents, production_cents, procedure_count, commission_cents, paid_at",
+        )
+        .eq("clinic_id", data.clinicId)
+        .eq("period_from", data.from)
+        .eq("period_to", data.to),
     ]);
     if (itemsErr) throw new Error(itemsErr.message);
     if (prosErr) throw new Error(prosErr.message);
     if (rulesErr) throw new Error(rulesErr.message);
+    if (settlementsRes.error && !isUndefinedTableError(settlementsRes.error)) {
+      throw new Error(settlementsRes.error.message);
+    }
+    const settlementByPro = new Map((settlementsRes.data ?? []).map((s) => [s.professional_id, s]));
 
     const ruleByPro = new Map(
       (rules ?? []).map((r) => [
@@ -152,6 +195,27 @@ export const getCommissionReport = createServerFn({ method: "GET" })
     }
 
     const lines: CommissionLine[] = (pros ?? []).map((pro) => {
+      const settlement = settlementByPro.get(pro.id);
+      if (settlement) {
+        // Período cerrado: el monto es el snapshot congelado, no se recalcula.
+        const ruleLabel =
+          settlement.rule_kind === "percent"
+            ? `${(settlement.rule_percent_bps / 100).toFixed(2)}% sobre producción (cerrado)`
+            : "Fijo por procedimiento (cerrado)";
+        return {
+          professionalId: pro.id,
+          professionalName: pro.full_name,
+          kind: settlement.rule_kind as CommissionKind,
+          productionCents: settlement.production_cents,
+          procedureCount: settlement.procedure_count,
+          commissionCents: settlement.commission_cents,
+          ruleLabel,
+          closed: true,
+          paidAt: settlement.paid_at,
+          settlementId: settlement.id,
+        };
+      }
+
       const acc = accByPro.get(pro.id) ?? { production: 0, count: 0 };
       const rule = ruleByPro.get(pro.id) ?? null;
       let commission: number | null = null;
@@ -173,6 +237,9 @@ export const getCommissionReport = createServerFn({ method: "GET" })
         procedureCount: acc.count,
         commissionCents: commission,
         ruleLabel,
+        closed: false,
+        paidAt: null,
+        settlementId: null,
       };
     });
 
@@ -182,4 +249,75 @@ export const getCommissionReport = createServerFn({ method: "GET" })
         (b.commissionCents ?? -1) - (a.commissionCents ?? -1) ||
         b.productionCents - a.productionCents,
     );
+  });
+
+/**
+ * Cierra el período [from,to] para todos los profesionales con producción o
+ * regla configurada: congela un snapshot en `commission_settlements` con la
+ * regla y los montos vigentes AHORA. Solo owner/admin (RLS ya lo exige).
+ * Si ya existe un cierre para ese rango+profesional, no lo duplica (UNIQUE
+ * constraint) — devuelve error claro en vez del error crudo de Postgres.
+ */
+export const closeCommissionPeriod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ closed: number }> => {
+    const lines = await getCommissionReport({
+      data: { clinicId: data.clinicId, from: data.from, to: data.to },
+    });
+    const toClose = lines.filter((l) => !l.closed && l.kind !== null);
+    if (toClose.length === 0) return { closed: 0 };
+
+    const rows = toClose.map((l) => ({
+      clinic_id: data.clinicId,
+      professional_id: l.professionalId,
+      period_from: data.from,
+      period_to: data.to,
+      rule_kind: l.kind!,
+      rule_percent_bps:
+        l.kind === "percent"
+          ? Math.round(((l.commissionCents ?? 0) * 10000) / (l.productionCents || 1))
+          : 0,
+      rule_fixed_cents:
+        l.kind === "fixed" && l.procedureCount > 0
+          ? Math.round((l.commissionCents ?? 0) / l.procedureCount)
+          : 0,
+      production_cents: l.productionCents,
+      procedure_count: l.procedureCount,
+      commission_cents: l.commissionCents ?? 0,
+      closed_by: context.userId,
+    }));
+
+    const { error } = await context.supabase.from("commission_settlements").insert(rows);
+    if (error) {
+      if (error.code === "23505") {
+        throw new Error("Este período ya fue cerrado para uno o más profesionales.");
+      }
+      throw new Error(error.message);
+    }
+    return { closed: rows.length };
+  });
+
+/** Marca un cierre existente como pagado. Solo owner/admin (RLS). */
+export const markCommissionSettlementPaid = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ clinicId: z.string().uuid(), settlementId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { error } = await context.supabase
+      .from("commission_settlements")
+      .update({ paid_at: new Date().toISOString(), paid_by: context.userId })
+      .eq("id", data.settlementId)
+      .eq("clinic_id", data.clinicId);
+    if (error) throw new Error("No tienes permisos para marcar esta liquidación como pagada.");
+    return { ok: true };
   });

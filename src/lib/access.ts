@@ -42,6 +42,10 @@ export const PERMISSIONS = [
   "team:view",
   "team:manage",
   "settings:manage",
+  /** Ver la propia liquidación de comisiones (no la de otros profesionales).
+   * ux-3 de la auditoría 360 v2: un dentist no tiene `finance:view`, pero
+   * debe poder ver su propia comisión en /comisiones. */
+  "commission:view-own",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -60,6 +64,7 @@ const ROLE_PERMISSIONS: Record<ClinicRole, Permission[]> = {
     "treatments:view",
     "inventory:view",
     "team:view",
+    "commission:view-own",
   ],
   assistant: [
     "dashboard:view",
@@ -118,6 +123,10 @@ export type ClinicAccess = {
   realRole?: ClinicRole | null;
   /** Rol simulado activo (solo interfaz). */
   simulatedRole?: ClinicRole | null;
+  /** `professionals.id` vinculado a este usuario en la clínica activa, si
+   * existe (via `professionals.user_id`). null = el usuario no tiene ficha
+   * de profesional (ej. reception/accounting) o no está vinculada todavía. */
+  myProfessionalId?: string | null;
 };
 
 export type ClinicMember = {

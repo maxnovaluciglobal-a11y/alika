@@ -993,6 +993,60 @@ export type Database = {
           },
         ];
       };
+      patient_medical_history_audit: {
+        Row: {
+          allergies: string[];
+          change_kind: string;
+          changed_by: string | null;
+          chronic_medications: string[];
+          clinic_id: string;
+          conditions: string[];
+          id: string;
+          notes: string | null;
+          patient_id: string;
+          recorded_at: string;
+        };
+        Insert: {
+          allergies: string[];
+          change_kind: string;
+          changed_by?: string | null;
+          chronic_medications: string[];
+          clinic_id: string;
+          conditions: string[];
+          id?: string;
+          notes?: string | null;
+          patient_id: string;
+          recorded_at?: string;
+        };
+        Update: {
+          allergies?: string[];
+          change_kind?: string;
+          changed_by?: string | null;
+          chronic_medications?: string[];
+          clinic_id?: string;
+          conditions?: string[];
+          id?: string;
+          notes?: string | null;
+          patient_id?: string;
+          recorded_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "patient_medical_history_audit_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "patient_medical_history_audit_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       patient_documents: {
         Row: {
           archived_at: string | null;
@@ -1094,6 +1148,75 @@ export type Database = {
           },
           {
             foreignKeyName: "commission_rules_professional_id_fkey";
+            columns: ["professional_id"];
+            isOneToOne: false;
+            referencedRelation: "professionals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      commission_settlements: {
+        Row: {
+          id: string;
+          clinic_id: string;
+          professional_id: string;
+          period_from: string;
+          period_to: string;
+          rule_kind: string;
+          rule_percent_bps: number;
+          rule_fixed_cents: number;
+          production_cents: number;
+          procedure_count: number;
+          commission_cents: number;
+          closed_at: string;
+          closed_by: string;
+          paid_at: string | null;
+          paid_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          clinic_id: string;
+          professional_id: string;
+          period_from: string;
+          period_to: string;
+          rule_kind: string;
+          rule_percent_bps?: number;
+          rule_fixed_cents?: number;
+          production_cents: number;
+          procedure_count: number;
+          commission_cents: number;
+          closed_at?: string;
+          closed_by: string;
+          paid_at?: string | null;
+          paid_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          clinic_id?: string;
+          professional_id?: string;
+          period_from?: string;
+          period_to?: string;
+          rule_kind?: string;
+          rule_percent_bps?: number;
+          rule_fixed_cents?: number;
+          production_cents?: number;
+          procedure_count?: number;
+          commission_cents?: number;
+          closed_at?: string;
+          closed_by?: string;
+          paid_at?: string | null;
+          paid_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commission_settlements_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "commission_settlements_professional_id_fkey";
             columns: ["professional_id"];
             isOneToOne: false;
             referencedRelation: "professionals";
@@ -2310,6 +2433,7 @@ export type Database = {
       };
       inventory_items: {
         Row: {
+          branch_id: string | null;
           clinic_id: string;
           cost_cents: number | null;
           created_at: string;
@@ -2323,6 +2447,7 @@ export type Database = {
           unit: string;
         };
         Insert: {
+          branch_id?: string | null;
           clinic_id: string;
           cost_cents?: number | null;
           created_at?: string;
@@ -2336,6 +2461,7 @@ export type Database = {
           unit: string;
         };
         Update: {
+          branch_id?: string | null;
           clinic_id?: string;
           cost_cents?: number | null;
           created_at?: string;
@@ -2349,6 +2475,13 @@ export type Database = {
           unit?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "inventory_items_branch_id_fkey";
+            columns: ["branch_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "inventory_items_clinic_id_fkey";
             columns: ["clinic_id"];

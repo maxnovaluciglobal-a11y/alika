@@ -33,6 +33,7 @@ const PERMISSION_LABELS: Record<Permission, string> = {
   "team:view": "Ver equipo",
   "team:manage": "Gestionar equipo",
   "settings:manage": "Configuración de la clínica",
+  "commission:view-own": "Ver mi propia comisión",
 };
 
 function Marca({ ok }: { ok: boolean }) {

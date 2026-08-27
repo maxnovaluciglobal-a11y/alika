@@ -37,6 +37,21 @@ export const getMyAccess = createServerFn({ method: "GET" })
     const role =
       membership && isClinicRole(membership.role) ? (membership.role as ClinicRole) : null;
 
+    // ux-3: si el usuario tiene ficha de profesional en la clínica activa
+    // (ej. es dentist), resolvemos su professional_id acá una sola vez —
+    // así /comisiones (y cualquier otra pantalla "ver lo mío") no tiene que
+    // hacer esta query por su cuenta.
+    let myProfessionalId: string | null = null;
+    if (membership?.clinics) {
+      const { data: myPro } = await supabase
+        .from("professionals")
+        .select("id")
+        .eq("clinic_id", membership.clinics.id)
+        .eq("user_id", userId)
+        .maybeSingle();
+      myProfessionalId = myPro?.id ?? null;
+    }
+
     return {
       userId,
       fullName: profile?.full_name ?? null,

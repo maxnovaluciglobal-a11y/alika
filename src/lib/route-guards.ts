@@ -14,3 +14,17 @@ export function requirePermission(permission: Permission) {
     }
   };
 }
+
+/**
+ * Igual que `requirePermission`, pero pasa si el rol tiene AL MENOS UNO de
+ * los permisos dados. Útil para pantallas con dos audiencias distintas (ej.
+ * `/comisiones`: `finance:view` ve a todos, `commission:view-own` solo ve lo
+ * propio) donde exigir un único permiso dejaría afuera a la segunda.
+ */
+export function requireAnyPermission(...permissions: Permission[]) {
+  return ({ context }: { context: { access: ClinicAccess } }) => {
+    if (!permissions.some((p) => hasPermission(context.access.role, p))) {
+      throw redirect({ to: "/sin-acceso" });
+    }
+  };
+}
