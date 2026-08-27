@@ -6,16 +6,19 @@ import {
   PIXELES_POR_MINUTO,
   etiquetaEstado,
   type Cita,
+  type Profesional,
 } from "@/lib/clinic-data";
 import { esMismoMesISO, monthGridISO, nroDiaISO, weekDaysISO } from "@/lib/agenda-fechas";
 import { cn } from "@/lib/utils";
 
+// El borde izquierdo identifica al profesional (color guardado en
+// /profesionales); acá solo queda fondo + texto según el estado de la cita.
 const estadoClases: Record<Cita["estado"], string> = {
-  confirmada: "bg-brand/10 border-l-brand text-brand",
-  "en-sala": "bg-warning-soft border-l-warning text-warning",
-  ausente: "bg-secondary border-l-border text-muted-foreground",
-  finalizada: "bg-secondary/60 border-l-border text-muted-foreground",
-  tentativa: "bg-ai-soft border-l-ai text-ai",
+  confirmada: "bg-brand/10 text-brand",
+  "en-sala": "bg-warning-soft text-warning",
+  ausente: "bg-secondary text-muted-foreground",
+  finalizada: "bg-secondary/60 text-muted-foreground",
+  tentativa: "bg-ai-soft text-ai",
 };
 
 const DOW_CORTO = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
@@ -24,10 +27,30 @@ function horaLabel(i: number) {
   return `${String(HORA_INICIO + i).padStart(2, "0")}:00`;
 }
 
+/** id → color de profesional, para pintar el borde de cada cita. */
+type ColorPorProfesional = Map<string, string>;
+
+function colorPorProfesional(
+  profesionales: Pick<Profesional, "id" | "color">[],
+): ColorPorProfesional {
+  return new Map(profesionales.map((p) => [p.id, p.color]));
+}
+
 // ── Vista semana: horas × 7 días ─────────────────────────────────────────
-export function AgendaWeek({ citas, fecha, hoy }: { citas: Cita[]; fecha: string; hoy: string }) {
+export function AgendaWeek({
+  citas,
+  fecha,
+  hoy,
+  profesionales,
+}: {
+  citas: Cita[];
+  fecha: string;
+  hoy: string;
+  profesionales: Pick<Profesional, "id" | "color">[];
+}) {
   const dias = weekDaysISO(fecha);
   const alto = HORAS_VISIBLES * 60 * PIXELES_POR_MINUTO;
+  const colores = colorPorProfesional(profesionales);
 
   return (
     <div className="card-clinical overflow-x-auto">
@@ -94,6 +117,7 @@ export function AgendaWeek({ citas, fecha, hoy }: { citas: Cita[]; fecha: string
                     style={{
                       top: c.inicio * PIXELES_POR_MINUTO,
                       height: Math.max(c.duracion * PIXELES_POR_MINUTO - 2, 12),
+                      borderLeftColor: colores.get(c.profesionalId),
                     }}
                   >
                     <span className="block truncate font-semibold">{c.paciente}</span>
@@ -114,11 +138,13 @@ export function AgendaMonth({
   fecha,
   hoy,
   onSelectDay,
+  profesionales,
 }: {
   citas: Cita[];
   fecha: string;
   hoy: string;
   onSelectDay: (dia: string) => void;
+  profesionales: Pick<Profesional, "id" | "color">[];
 }) {
   const celdas = monthGridISO(fecha);
   const porDia = new Map<string, Cita[]>();
@@ -127,6 +153,7 @@ export function AgendaMonth({
     lista.push(c);
     porDia.set(c.fecha, lista);
   }
+  const colores = colorPorProfesional(profesionales);
 
   return (
     <div className="card-clinical overflow-hidden">
@@ -167,6 +194,7 @@ export function AgendaMonth({
                     "truncate rounded border-l-2 px-1 text-[9px] leading-tight",
                     estadoClases[c.estado],
                   )}
+                  style={{ borderLeftColor: colores.get(c.profesionalId) }}
                   title={`${c.paciente} · ${etiquetaEstado[c.estado]}`}
                 >
                   {c.paciente}

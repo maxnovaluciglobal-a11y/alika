@@ -35,6 +35,8 @@ export interface Profesional {
   box: string;
   especialidad: string;
   sucursalId: string;
+  /** Hex guardado por el profesional en /profesionales — identifica sus citas en la agenda. */
+  color: string;
 }
 
 export interface EventoClinico {
@@ -99,14 +101,23 @@ export const profesionales: Profesional[] = [
     box: "Box 1",
     especialidad: "Rehabilitación",
     sucursalId: "s1",
+    color: "#2563eb",
   },
-  { id: "p2", nombre: "Dra. Luna", box: "Box 2", especialidad: "Endodoncia", sucursalId: "s1" },
+  {
+    id: "p2",
+    nombre: "Dra. Luna",
+    box: "Box 2",
+    especialidad: "Endodoncia",
+    sucursalId: "s1",
+    color: "#7c3aed",
+  },
   {
     id: "p3",
     nombre: "Dra. Rivas",
     box: "Box 3",
     especialidad: "Odontopediatría",
     sucursalId: "s2",
+    color: "#0d9488",
   },
 ];
 

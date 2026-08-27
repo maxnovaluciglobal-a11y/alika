@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  AlertTriangle,
   Check,
   ChevronDown,
   ChevronUp,
@@ -15,6 +16,7 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { captureMessage } from "@/lib/sentry";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import {
   Dialog,
@@ -687,6 +689,11 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
   const queryClient = useQueryClient();
   const [expandedQuote, setExpandedQuote] = useState<string | null>(null);
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
+  // Presupuestos aceptados donde la firma del paciente SÍ se capturó pero
+  // falló la subida a Storage — distinto de "no firmó". Se muestra como
+  // banner visible hasta que el staff lo descarta, no como un toast que
+  // puede pasar desapercibido.
+  const [signatureUploadFailedFor, setSignatureUploadFailedFor] = useState<string | null>(null);
 
   const fetchQuotes = useServerFn(listQuotes);
   const fetchPlans = useServerFn(listTreatmentPlans);
@@ -735,10 +742,28 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
           signatureDataUrl: v.signatureDataUrl,
         },
       }),
-    onSuccess: async () => {
+    onSuccess: async (result, variables) => {
       await queryClient.invalidateQueries({ queryKey: ["quotes", clinicId, patientId] });
       await queryClient.invalidateQueries({ queryKey: ["treatment-plans", clinicId, patientId] });
-      toast.success("Presupuesto aceptado y convertido en plan de tratamiento");
+      if (result.signatureUploadFailed) {
+        // El paciente sí firmó, pero no pudimos guardar la imagen — el
+        // presupuesto queda aceptado igual (evidencia de IP + nombre), pero
+        // esto NO puede pasar como un success silencioso: el staff necesita
+        // saber que la firma no quedó guardada para volver a intentarlo.
+        setSignatureUploadFailedFor(variables.quoteId);
+        console.error("Falló la subida de la firma del presupuesto", {
+          quoteId: variables.quoteId,
+        });
+        captureMessage("quote signature upload failed", {
+          level: "error",
+          extra: { quoteId: variables.quoteId },
+        });
+        toast.error(
+          "Presupuesto aceptado, pero no pudimos guardar la firma del paciente. Volvé a intentarlo.",
+        );
+      } else {
+        toast.success("Presupuesto aceptado y convertido en plan de tratamiento");
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -927,6 +952,23 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
                       )}
                     </div>
                   </button>
+                  {signatureUploadFailedFor === quote.id && (
+                    <div className="flex items-start gap-2 border-t border-warning/40 bg-warning/10 px-4 py-2 text-xs text-warning">
+                      <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                      <p>
+                        El paciente firmó, pero no pudimos guardar la imagen de la firma. El
+                        presupuesto quedó aceptado igual; volvé a intentar guardar la firma o
+                        registrala aparte.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setSignatureUploadFailedFor(null)}
+                        className="ml-auto shrink-0 text-warning/70 underline-offset-2 hover:underline"
+                      >
+                        Descartar
+                      </button>
+                    </div>
+                  )}
                   {isOpen && (
                     <>
                       <div className="divide-y divide-hairline border-t border-hairline">

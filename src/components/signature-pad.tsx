@@ -22,8 +22,14 @@ export function SignaturePad({
   }
 
   function pointerPos(e: React.PointerEvent<HTMLCanvasElement>) {
-    const rect = canvasRef.current!.getBoundingClientRect();
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
   }
 
   function start(e: React.PointerEvent<HTMLCanvasElement>) {
@@ -42,7 +48,10 @@ export function SignaturePad({
     const { x, y } = pointerPos(e);
     c.lineWidth = 2;
     c.lineCap = "round";
-    c.strokeStyle = "#16211D";
+    // "currentColor" resuelve contra el `color` computado del <canvas>
+    // (clase `text-foreground` abajo) — sigue el token --foreground del
+    // sistema de diseño y no queda invisible en dark mode.
+    c.strokeStyle = "currentColor";
     c.lineTo(x, y);
     c.stroke();
     onChange(canvasRef.current!.toDataURL("image/png"));
@@ -80,7 +89,7 @@ export function SignaturePad({
         onPointerMove={move}
         onPointerUp={end}
         onPointerLeave={end}
-        className="w-full touch-none rounded-lg border border-hairline bg-secondary/20"
+        className="w-full touch-none rounded-lg border border-hairline bg-secondary/20 text-foreground"
       />
       <p className="text-[11px] text-muted-foreground">Firmá con el dedo o el mouse.</p>
     </div>

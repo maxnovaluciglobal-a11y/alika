@@ -17,6 +17,7 @@ import {
   LogOut,
   Moon,
   Sun,
+  LifeBuoy,
   MessageCircleMore,
   MessageCircle,
   Landmark,
@@ -87,17 +88,57 @@ const nav = [
   permission: Permission;
 }[];
 
+// Mismo destino de contacto que usan las páginas públicas (nosotros/privacidad/
+// términos/faq): no hay número de WhatsApp de soporte, solo este mailto.
+const SUPPORT_EMAIL = "maxnovaluciglobal@gmail.com";
+
+function SupportLink() {
+  return (
+    <a
+      href={`mailto:${SUPPORT_EMAIL}`}
+      title="Reportar un problema"
+      aria-label="Reportar un problema o pedir soporte"
+      className="grid size-9 place-items-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+    >
+      <LifeBuoy className="size-4" />
+    </a>
+  );
+}
+
+const THEME_STORAGE_KEY = "alika:theme";
+
 function ThemeToggle() {
+  // Arranca en "claro" para que el primer render coincida con el del server
+  // (TanStack Start SSR no tiene window/localStorage) y no rompa la
+  // hidratación. La preferencia real (guardada, o si no la del SO) se aplica
+  // recién en el efecto de montaje, que solo corre en el cliente.
   const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    const guardado = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (guardado === "dark" || guardado === "light") {
+      setDark(guardado === "dark");
+    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      setDark(true);
+    }
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
 
+  function alternar() {
+    setDark((d) => {
+      const next = !d;
+      window.localStorage.setItem(THEME_STORAGE_KEY, next ? "dark" : "light");
+      return next;
+    });
+  }
+
   return (
     <button
       type="button"
-      onClick={() => setDark((d) => !d)}
+      onClick={alternar}
       aria-label={dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
       className="grid size-9 place-items-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
@@ -227,6 +268,7 @@ export function AppShell({
           <div className="flex items-center gap-3">
             <GlobalSearch />
             <NotificationsBell userId={access.userId} />
+            <SupportLink />
             <ThemeToggle />
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium">

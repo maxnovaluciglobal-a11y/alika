@@ -84,7 +84,7 @@ export const listProfessionals = createServerFn({ method: "GET" })
 
     const { data: rows, error } = await supabase
       .from("professionals")
-      .select("id, full_name, branch_id, specialty_id, default_operatory_id")
+      .select("id, full_name, branch_id, specialty_id, default_operatory_id, color")
       .eq("clinic_id", data.clinicId)
       .eq("is_active", true)
       .order("full_name", { ascending: true });
@@ -125,6 +125,7 @@ export const listProfessionals = createServerFn({ method: "GET" })
         (r.default_operatory_id && operatoryById.get(r.default_operatory_id)) || "Sin box asignado",
       especialidad: (r.specialty_id && specialtyById.get(r.specialty_id)) || "Sin especialidad",
       sucursalId: r.branch_id ?? "",
+      color: r.color,
     }));
   });
 

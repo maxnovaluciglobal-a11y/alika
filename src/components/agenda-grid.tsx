@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Sparkles } from "lucide-react";
 
+import { AllergyAlertIcon } from "@/components/medical-history-card";
 import {
   etiquetaEstado,
   HORAS_VISIBLES,
@@ -11,12 +12,15 @@ import {
 } from "@/lib/clinic-data";
 import { cn } from "@/lib/utils";
 
+// El borde izquierdo identifica al profesional (color guardado en
+// /profesionales, ver AgendaGrid más abajo); acá solo queda fondo + texto
+// según el estado de la cita.
 const estadoClases: Record<Cita["estado"], string> = {
-  confirmada: "bg-brand/10 border-l-brand text-brand",
-  "en-sala": "bg-warning-soft border-l-warning text-warning",
-  ausente: "bg-secondary border-l-border text-muted-foreground",
-  finalizada: "bg-secondary/60 border-l-border text-muted-foreground",
-  tentativa: "bg-ai-soft border-l-ai text-ai",
+  confirmada: "bg-brand/10 text-brand",
+  "en-sala": "bg-warning-soft text-warning",
+  ausente: "bg-secondary text-muted-foreground",
+  finalizada: "bg-secondary/60 text-muted-foreground",
+  tentativa: "bg-ai-soft text-ai",
 };
 
 function horaLabel(i: number) {
@@ -27,10 +31,14 @@ export function AgendaGrid({
   compacta = false,
   citas,
   profesionales,
+  allergyAlerts,
 }: {
   compacta?: boolean;
   citas: Cita[];
   profesionales: Profesional[];
+  /** patientId -> alergias. Ausente/vacío = sin aviso (ver
+   * listAllergyAlerts en medical-history.functions.ts). */
+  allergyAlerts?: Record<string, string[]>;
 }) {
   const alto = HORAS_VISIBLES * 60 * PIXELES_POR_MINUTO;
 
@@ -96,7 +104,7 @@ export function AgendaGrid({
                   to="/pacientes/$pacienteId"
                   params={{ pacienteId: c.pacienteId }}
                   className={cn(
-                    "absolute left-2 right-2 cursor-grab overflow-hidden rounded-md border-l-4 p-2.5 transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                    "absolute left-2 right-2 cursor-grab overflow-hidden rounded-md border p-2.5 transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                     estadoClases[c.estado],
                     c.estado === "ausente" && "opacity-70",
                   )}
@@ -106,7 +114,15 @@ export function AgendaGrid({
                   }}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="truncate text-xs font-semibold">{c.paciente}</p>
+                    <p className="flex min-w-0 items-center gap-1.5 truncate text-xs font-semibold">
+                      <span
+                        aria-hidden="true"
+                        className="size-1.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: p.color }}
+                      />
+                      <span className="truncate">{c.paciente}</span>
+                      <AllergyAlertIcon allergies={allergyAlerts?.[c.pacienteId]} />
+                    </p>
                     <span className="shrink-0 rounded bg-card/70 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-tight">
                       {etiquetaEstado[c.estado]}
                     </span>

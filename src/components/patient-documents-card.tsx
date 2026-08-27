@@ -6,6 +6,16 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   archivePatientDocument,
   listPatientDocuments,
   uploadPatientDocument,
@@ -44,6 +54,7 @@ export function PatientDocumentsCard({
   const archiveDocument = useServerFn(archivePatientDocument);
   const inputRef = useRef<HTMLInputElement>(null);
   const [kind, setKind] = useState<"image" | "radiograph">("image");
+  const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null);
   const queryKey = ["patient-documents", clinicId, patientId];
 
   const documentsQuery = useQuery({
@@ -77,6 +88,7 @@ export function PatientDocumentsCard({
     },
     onError: (error) =>
       toast.error(error instanceof Error ? error.message : "No se pudo archivar."),
+    onSettled: () => setConfirmArchiveId(null),
   });
 
   async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
@@ -176,8 +188,9 @@ export function PatientDocumentsCard({
                   <button
                     type="button"
                     title="Archivar"
-                    onClick={() => archiveMutation.mutate(doc.id)}
-                    className="opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
+                    aria-label={`Archivar documento ${doc.filename}`}
+                    onClick={() => setConfirmArchiveId(doc.id)}
+                    className="opacity-100 transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
                   >
                     <Archive className="size-3.5" />
                   </button>
@@ -187,6 +200,36 @@ export function PatientDocumentsCard({
           ))}
         </div>
       )}
+
+      <AlertDialog
+        open={confirmArchiveId !== null}
+        onOpenChange={(next) => {
+          if (!next) setConfirmArchiveId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archivar documento</AlertDialogTitle>
+            <AlertDialogDescription>
+              El documento deja de verse en esta ficha. No se elimina, pero dejá de tenerlo a la
+              vista para el trabajo diario. ¿Confirmás archivarlo?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={archiveMutation.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={archiveMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (confirmArchiveId) archiveMutation.mutate(confirmArchiveId);
+              }}
+            >
+              {archiveMutation.isPending && <Loader2 className="size-3.5 animate-spin" />}
+              Archivar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

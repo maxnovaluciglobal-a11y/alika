@@ -57,7 +57,11 @@ export const CONDITION_COLORS: Record<ToothCondition, string> = {
   endodoncia: "#7c3aed",
   corona: "#f59e0b",
   implante: "#0d9488",
-  ausente: "#525252",
+  // #525252 original medía ~2.1:1 contra el fondo de tarjeta en modo oscuro
+  // (oklch(0.235 0.022 252)) — bajo el mínimo WCAG 1.4.11 de 3:1 para
+  // elementos gráficos no textuales. Este gris más claro da ~4.7:1 en claro
+  // y ~3.5:1 en oscuro, sin perder la lectura de "ausente" (gris neutro).
+  ausente: "#737373",
   sellante: "#22c55e",
   fractura: "#ea580c",
   protesis: "#a855f7",

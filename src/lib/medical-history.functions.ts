@@ -46,6 +46,35 @@ export const getMedicalHistory = createServerFn({ method: "GET" })
     };
   });
 
+/**
+ * Alergias por paciente para toda la clínica, en 1 query — pensado para
+ * agenda.tsx (producto-1/ux-1: el dato clínico de mayor riesgo no llegaba
+ * al punto de atención, recepción/dentista tenían que abrir la ficha
+ * completa para enterarse). Solo trae `patient_id` + `allergies`, no el
+ * resto de la anamnesis — es un aviso liviano para un banner/badge, no el
+ * detalle completo. Un solo `.eq("clinic_id", …)` + Map en el cliente
+ * (nunca N+1 por cita, ver CLAUDE.md).
+ *
+ * Mismo gate de RLS que `getMedicalHistory` (owner/admin/dentist/assistant,
+ * ver migración 20260826180000): reception/accounting reciben `{}` siempre,
+ * es el comportamiento esperado de esa policy, no un bug de este query.
+ */
+export const listAllergyAlerts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<Record<string, string[]>> => {
+    const { data: rows, error } = await context.supabase
+      .from("patient_medical_history")
+      .select("patient_id, allergies")
+      .eq("clinic_id", data.clinicId);
+    if (error) throw new Error(error.message);
+    const byPatient: Record<string, string[]> = {};
+    for (const row of rows ?? []) {
+      if (row.allergies && row.allergies.length > 0) byPatient[row.patient_id] = row.allergies;
+    }
+    return byPatient;
+  });
+
 const listField = z.array(z.string().trim().min(1).max(80)).max(30);
 
 /** Upsert por patient_id (UNIQUE) — perfil editable, no un historial de

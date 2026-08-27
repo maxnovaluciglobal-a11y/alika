@@ -6,6 +6,16 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -62,6 +72,7 @@ export function PatientConsentsCard({
   const [body, setBody] = useState("");
   const [signedByName, setSignedByName] = useState(patientName);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+  const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
 
   const templatesQuery = useQuery({
     queryKey: ["consent-templates", clinicId],
@@ -108,6 +119,7 @@ export function PatientConsentsCard({
       queryClient.invalidateQueries({ queryKey: consentsQueryKey });
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "No se pudo revocar."),
+    onSettled: () => setConfirmRevokeId(null),
   });
 
   function aplicarTemplate(id: string) {
@@ -251,8 +263,9 @@ export function PatientConsentsCard({
               {puedeGestionar && !c.revokedAt && (
                 <button
                   type="button"
-                  onClick={() => revokeMutation.mutate(c.id)}
-                  className="shrink-0 text-xs text-muted-foreground hover:text-destructive"
+                  aria-label={`Revocar consentimiento ${c.titleSnapshot}`}
+                  onClick={() => setConfirmRevokeId(c.id)}
+                  className="shrink-0 text-xs text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
                 >
                   Revocar
                 </button>
@@ -261,6 +274,36 @@ export function PatientConsentsCard({
           ))}
         </div>
       )}
+
+      <AlertDialog
+        open={confirmRevokeId !== null}
+        onOpenChange={(next) => {
+          if (!next) setConfirmRevokeId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revocar consentimiento</AlertDialogTitle>
+            <AlertDialogDescription>
+              El consentimiento queda marcado como revocado. La firma original y el texto que firmó
+              el paciente se conservan como historial, no se borran. ¿Confirmás revocarlo?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={revokeMutation.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={revokeMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (confirmRevokeId) revokeMutation.mutate(confirmRevokeId);
+              }}
+            >
+              {revokeMutation.isPending && <Loader2 className="size-3.5 animate-spin" />}
+              Revocar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

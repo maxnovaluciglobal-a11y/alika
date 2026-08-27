@@ -225,3 +225,20 @@ export function AllergyAlertBanner({ allergies }: { allergies: string[] }) {
     </div>
   );
 }
+
+/** Ícono + tooltip nativo (`title`) para listas densas (agenda) donde un
+ * banner de línea completa no entra — mismo dato que `AllergyAlertBanner`,
+ * solo que en el espacio de un ícono. `null` si no hay alergias cargadas,
+ * igual que el banner: la ausencia de ícono no implica "sin alergias
+ * confirmadas", solo que no hay antecedentes cargados (regla #11). */
+export function AllergyAlertIcon({ allergies }: { allergies: string[] | undefined }) {
+  if (!allergies || allergies.length === 0) return null;
+  return (
+    <span
+      className="inline-flex shrink-0 items-center text-destructive"
+      title={`Alergias: ${allergies.join(", ")}`}
+    >
+      <AlertTriangle className="size-3.5" />
+    </span>
+  );
+}

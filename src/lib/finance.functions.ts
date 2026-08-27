@@ -370,7 +370,14 @@ export const setQuoteStatus = createServerFn({ method: "POST" })
 
     // Firma manuscrita al aceptar: se sube al bucket privado clinical-documents
     // bajo {clinic_id}/{patient_id}/quote-signatures/. Path en accepted_signature_path.
+    //
+    // Si la subida falla, el presupuesto igual se marca "accepted" (aceptar
+    // sigue siendo válido sin firma — queda IP + nombre como evidencia), pero
+    // NO podemos dejar que falle en silencio: `signatureUploadFailed` distingue
+    // "el paciente no firmó" de "el paciente firmó y no pudimos guardarlo", y
+    // el cliente lo usa para mostrar un error visible en vez de un success mudo.
     let signaturePath: string | null = null;
+    let signatureUploadFailed = false;
     if (data.status === "accepted" && data.signatureDataUrl) {
       const match = /^data:(image\/[^;]+);base64,(.+)$/.exec(data.signatureDataUrl);
       if (match) {
@@ -385,8 +392,26 @@ export const setQuoteStatus = createServerFn({ method: "POST" })
           const { error: upErr } = await context.supabase.storage
             .from("clinical-documents")
             .upload(path, bytes, { contentType: match[1], upsert: false });
-          if (!upErr) signaturePath = path;
+          if (upErr) {
+            signatureUploadFailed = true;
+            console.error("[setQuoteStatus] Falló la subida de la firma a Storage", {
+              quoteId: data.quoteId,
+              message: upErr.message,
+            });
+          } else {
+            signaturePath = path;
+          }
+        } else {
+          signatureUploadFailed = true;
+          console.error("[setQuoteStatus] No se encontró el presupuesto al subir la firma", {
+            quoteId: data.quoteId,
+          });
         }
+      } else {
+        signatureUploadFailed = true;
+        console.error("[setQuoteStatus] Data URL de la firma con formato inesperado", {
+          quoteId: data.quoteId,
+        });
       }
     }
 
@@ -404,7 +429,7 @@ export const setQuoteStatus = createServerFn({ method: "POST" })
 
     const { error } = await context.supabase.from("quotes").update(patch).eq("id", data.quoteId);
     if (error) throw new Error("No tienes permisos para cambiar este presupuesto.");
-    return { ok: true };
+    return { ok: true, signatureUploadFailed };
   });
 
 // ─── TREATMENT PLANS ─────────────────────────────────────────────────────

@@ -146,7 +146,8 @@ export function resolveEmailRecipient(
       recipient: redirect,
       original,
       subjectPrefix: prefix,
-      reason: "Sandbox activo: el email se desvía a la dirección de pruebas.",
+      reason:
+        "Esta clínica todavía no tiene el email activado para pacientes reales: este mensaje se mandó a una dirección de prueba en su lugar.",
     };
   }
 
@@ -154,8 +155,8 @@ export function resolveEmailRecipient(
     action: "block",
     original,
     reason: config.redirectEnabled
-      ? "Sandbox activo y sin dirección de redirección válida: envío bloqueado."
-      : "Sandbox activo con redirección desactivada: envío bloqueado.",
+      ? "Esta clínica todavía no tiene el email activado y no hay una dirección de prueba configurada. Avísale a soporte."
+      : "Esta clínica todavía no tiene el email activado. Avísale a soporte.",
   };
 }
 

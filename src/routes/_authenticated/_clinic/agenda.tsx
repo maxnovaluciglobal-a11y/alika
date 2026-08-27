@@ -19,6 +19,7 @@ import { AppShell } from "@/components/app-shell";
 import { DateField, FilterBar, Paginacion, SearchField, SelectField } from "@/components/filters";
 import { AgendaGrid } from "@/components/agenda-grid";
 import { AgendaMonth, AgendaWeek } from "@/components/agenda-views";
+import { AllergyAlertBanner, AllergyAlertIcon } from "@/components/medical-history-card";
 import { addDaysISO, addMonthsISO, rangoDeVista } from "@/lib/agenda-fechas";
 import { Button } from "@/components/ui/button";
 import { HolidayNotice } from "@/components/holiday-notice";
@@ -58,6 +59,7 @@ const HOY = hoyISO();
 import { listBranches, listProfessionals } from "@/lib/clinic-catalog.functions";
 import { listProcedures } from "@/lib/finance.functions";
 import { listPatients } from "@/lib/patients.functions";
+import { listAllergyAlerts } from "@/lib/medical-history.functions";
 import {
   createAppointment,
   listAppointments,
@@ -286,6 +288,7 @@ function NuevaCitaDialog({
   sucursales,
   profesionales,
   pacientes,
+  allergyAlerts,
 }: {
   clinicId: string;
   userId: string;
@@ -293,6 +296,10 @@ function NuevaCitaDialog({
   sucursales: { id: string; nombre: string }[];
   profesionales: { id: string; nombre: string; sucursalId: string | null }[];
   pacientes: { id: string; nombre: string }[];
+  /** patientId -> alergias, ver listAllergyAlerts. Ausente/vacío = sin
+   * aviso (RLS restringe a owner/admin/dentist/assistant, o el rol no
+   * tiene clinical:view — ver agenda.tsx). */
+  allergyAlerts?: Record<string, string[]>;
 }) {
   const [open, setOpen] = useState(false);
   const [pacienteId, setPacienteId] = useState("");
@@ -393,6 +400,7 @@ function NuevaCitaDialog({
                 </option>
               ))}
             </select>
+            {pacienteId && <AllergyAlertBanner allergies={allergyAlerts?.[pacienteId] ?? []} />}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -735,6 +743,7 @@ function AgendaPage() {
   const fetchProfessionals = useServerFn(listProfessionals);
   const fetchPatients = useServerFn(listPatients);
   const fetchWaitlist = useServerFn(listWaitlist);
+  const fetchAllergyAlerts = useServerFn(listAllergyAlerts);
 
   const { data: appointmentsRes, isLoading } = useQuery({
     queryKey: ["appointments", clinicId],
@@ -742,6 +751,16 @@ function AgendaPage() {
     queryFn: () => fetchAppointments({ data: { clinicId: clinicId! } }),
   });
   const citas = useMemo(() => appointmentsRes?.items ?? [], [appointmentsRes]);
+  // producto-1/ux-1: alergias por paciente para toda la clínica en 1 query
+  // (no una por cita — ver listAllergyAlerts). Mismo gate que la ficha del
+  // paciente (clinical:view): reception/accounting no ven este aviso, es
+  // la misma restricción de RLS que ya rige patient_medical_history
+  // (migración 20260826180000), no algo nuevo introducido acá.
+  const { data: allergyAlerts = {} } = useQuery({
+    queryKey: ["allergy-alerts", clinicId],
+    enabled: Boolean(clinicId) && hasPermission(access.role, "clinical:view"),
+    queryFn: () => fetchAllergyAlerts({ data: { clinicId: clinicId! } }),
+  });
   const { data: sucursales = [] } = useQuery({
     queryKey: ["branches", clinicId],
     enabled: Boolean(clinicId),
@@ -862,6 +881,7 @@ function AgendaPage() {
               sucursales={sucursales}
               profesionales={profesionales}
               pacientes={pacientes}
+              allergyAlerts={allergyAlerts}
             />
           )}
         </div>
@@ -978,9 +998,20 @@ function AgendaPage() {
               </div>
             </div>
 
-            {search.vista === "dia" && <AgendaGrid citas={filtradas} profesionales={columnas} />}
+            {search.vista === "dia" && (
+              <AgendaGrid
+                citas={filtradas}
+                profesionales={columnas}
+                allergyAlerts={allergyAlerts}
+              />
+            )}
             {search.vista === "semana" && (
-              <AgendaWeek citas={filtradas} fecha={search.fecha} hoy={hoy} />
+              <AgendaWeek
+                citas={filtradas}
+                fecha={search.fecha}
+                hoy={hoy}
+                profesionales={profesionales}
+              />
             )}
             {search.vista === "mes" && (
               <AgendaMonth
@@ -988,6 +1019,7 @@ function AgendaPage() {
                 fecha={search.fecha}
                 hoy={hoy}
                 onSelectDay={(dia) => set({ fecha: dia, vista: "dia" })}
+                profesionales={profesionales}
               />
             )}
 
@@ -1012,7 +1044,10 @@ function AgendaPage() {
                         {horaDeCita(c.inicio)}
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{c.paciente}</p>
+                        <p className="flex items-center gap-1 truncate text-sm font-medium">
+                          <span className="truncate">{c.paciente}</span>
+                          <AllergyAlertIcon allergies={allergyAlerts[c.pacienteId]} />
+                        </p>
                         <p className="truncate text-xs text-muted-foreground">{c.tratamiento}</p>
                       </div>
                       <span className="text-xs text-muted-foreground">
