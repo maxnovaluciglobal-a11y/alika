@@ -13,6 +13,7 @@
     "build:vercel": "NITRO_PRESET=vercel vite build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "types:gen": "supabase gen types typescript --project-id hvfkygoguxvpmwslrccb > src/integrations/supabase/types.ts",
     "prepare": "husky"
   },
   "lint-staged": {

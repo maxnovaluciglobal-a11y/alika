@@ -442,7 +442,8 @@ export const restoreNoteVersion = createServerFn({ method: "POST" })
       const { error: reopenError } = await supabase
         .from("clinical_notes")
         .update({ status: "draft", updated_by: userId })
-        .eq("id", version.note_id);
+        .eq("id", version.note_id)
+        .eq("clinic_id", version.clinic_id);
       if (reopenError)
         throw new Error(mensajeDb(reopenError, "No tienes permisos para reabrir esta nota."));
 
@@ -466,7 +467,8 @@ export const restoreNoteVersion = createServerFn({ method: "POST" })
         review_status: "none",
         updated_by: userId,
       })
-      .eq("id", version.note_id);
+      .eq("id", version.note_id)
+      .eq("clinic_id", version.clinic_id);
     if (updateError)
       throw new Error(mensajeDb(updateError, "No tienes permisos para revertir esta nota."));
 
@@ -543,7 +545,8 @@ export const setNoteStatus = createServerFn({ method: "POST" })
             }
           : {}),
       })
-      .eq("id", data.noteId);
+      .eq("id", data.noteId)
+      .eq("clinic_id", note.clinic_id);
     if (error)
       throw new Error(mensajeDb(error, "No tienes permisos para cambiar el estado de la nota."));
 
@@ -982,7 +985,8 @@ export const requestNoteReview = createServerFn({ method: "POST" })
         reviewed_at: null,
         updated_by: userId,
       })
-      .eq("id", data.noteId);
+      .eq("id", data.noteId)
+      .eq("clinic_id", note.clinic_id);
     if (error)
       throw new Error(mensajeDb(error, "No tienes permisos para enviar esta nota a revisión."));
 
@@ -1104,7 +1108,11 @@ export const resolveNoteReview = createServerFn({ method: "POST" })
     }
 
     if (Object.keys(patch).length > 1) {
-      const { error } = await supabase.from("clinical_notes").update(patch).eq("id", data.noteId);
+      const { error } = await supabase
+        .from("clinical_notes")
+        .update(patch)
+        .eq("id", data.noteId)
+        .eq("clinic_id", note.clinic_id);
       if (error)
         throw new Error(mensajeDb(error, "No tienes permisos para actualizar esta revisión."));
     }

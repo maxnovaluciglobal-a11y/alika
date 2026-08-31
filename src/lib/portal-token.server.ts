@@ -17,6 +17,14 @@ const DEFAULT_TTL_DAYS = 7;
 const ISSUER = "alika:portal";
 const AUDIENCE = "alika:portal:patient";
 
+// Generado una vez por proceso — nunca hardcodeado ni committeado. Un valor
+// fijo en el repo (como el que había antes) sería un secret público conocido
+// que cualquiera podría usar para firmar tokens del portal en cualquier
+// deploy que no tenga PORTAL_TOKEN_SECRET seteada. Este fallback solo cubre
+// dev local: los tokens no sobreviven un restart del proceso (aceptable,
+// nadie depende de un portal link entre reinicios de `npm run dev`).
+let devSecret: Uint8Array | null = null;
+
 function getSecret(): Uint8Array {
   // Nunca cae a SUPABASE_SERVICE_ROLE_KEY: ese secret abre la DB entera con
   // service_role; reusarlo como HMAC de un token público-facing multiplica
@@ -29,12 +37,13 @@ function getSecret(): Uint8Array {
   // Último recurso — DEV LOCAL ONLY. Producción DEBE tener
   // PORTAL_TOKEN_SECRET seteado (32+ bytes random).
   if (process.env.NODE_ENV !== "production") {
-    console.warn(
-      "[portal-token] Usando secret de desarrollo. Setear PORTAL_TOKEN_SECRET en producción.",
-    );
-    return new TextEncoder().encode(
-      "dev-only-portal-secret-do-not-use-in-production-alika-2026-xxxxxxxx",
-    );
+    if (!devSecret) {
+      console.warn(
+        "[portal-token] Usando secret de desarrollo generado al azar (no persiste entre restarts). Setear PORTAL_TOKEN_SECRET en producción.",
+      );
+      devSecret = crypto.getRandomValues(new Uint8Array(32));
+    }
+    return devSecret;
   }
 
   throw new Error(

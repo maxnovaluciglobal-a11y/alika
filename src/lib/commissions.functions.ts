@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { permissionsForRole, type ClinicRole } from "@/lib/access";
 import { formatMoney } from "@/lib/finance";
 import { renderTemplate } from "@/lib/messaging";
 import { loadEmailSandboxConfig } from "@/lib/messaging.functions";
@@ -134,6 +135,35 @@ export const getCommissionReport = createServerFn({ method: "GET" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<CommissionLine[]> => {
+    const { supabase, userId } = context;
+
+    // El permiso `commission:view-own` (auditoría de seguridad, 30-ago) es
+    // insuficiente si solo se aplica en la UI: `treatment_items_select_members`
+    // deja leer producción/conteo de CUALQUIER profesional a cualquier miembro
+    // de la clínica. Reforzamos acá: sin `finance:view`, el rango se acota por
+    // la fuerza al propio `professional_id` sin importar qué pidió el cliente.
+    const { data: membership } = await supabase
+      .from("clinic_members")
+      .select("role")
+      .eq("clinic_id", data.clinicId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    const canViewAll = membership?.role
+      ? permissionsForRole(membership.role as ClinicRole).includes("finance:view")
+      : false;
+
+    let professionalId = data.professionalId;
+    if (!canViewAll) {
+      const { data: own } = await supabase
+        .from("professionals")
+        .select("id")
+        .eq("clinic_id", data.clinicId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!own) return [];
+      professionalId = own.id;
+    }
+
     // completed_at es timestamptz; el rango civil [from 00:00, to 24:00).
     const fromIso = `${data.from}T00:00:00Z`;
     const toIso = `${data.to}T23:59:59.999Z`;
@@ -149,9 +179,9 @@ export const getCommissionReport = createServerFn({ method: "GET" })
       .from("professionals")
       .select("id, full_name")
       .eq("clinic_id", data.clinicId);
-    if (data.professionalId) {
-      itemsQuery = itemsQuery.eq("professional_id", data.professionalId);
-      prosQuery = prosQuery.eq("id", data.professionalId);
+    if (professionalId) {
+      itemsQuery = itemsQuery.eq("professional_id", professionalId);
+      prosQuery = prosQuery.eq("id", professionalId);
     }
 
     const [

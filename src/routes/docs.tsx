@@ -36,7 +36,10 @@ function DocsLayout() {
   return (
     <div className="min-h-screen bg-background text-ink">
       <SiteHeader />
-      <main className="mx-auto grid max-w-5xl gap-10 px-6 py-12 sm:py-16 lg:grid-cols-[200px_1fr]">
+      <main
+        id="main-content"
+        className="mx-auto grid max-w-5xl gap-10 px-6 py-12 sm:py-16 lg:grid-cols-[200px_1fr]"
+      >
         <nav className="lg:sticky lg:top-20 lg:self-start">
           <p className="text-xs font-semibold uppercase tracking-wider text-mint-strong">
             Documentación

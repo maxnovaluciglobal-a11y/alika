@@ -284,7 +284,7 @@ function Landing() {
     <div className="min-h-screen bg-background text-ink">
       <SiteHeader />
 
-      <main>
+      <main id="main-content">
         {/* Hero */}
         <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-16 sm:py-20 lg:grid-cols-[1fr_0.92fr] lg:gap-14">
           <div className="animate-rise-in">

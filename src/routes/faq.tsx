@@ -135,7 +135,7 @@ function Faq() {
   return (
     <div className="min-h-screen bg-background text-ink">
       <SiteHeader />
-      <main className="mx-auto max-w-2xl px-6 py-16 sm:py-20">
+      <main id="main-content" className="mx-auto max-w-2xl px-6 py-16 sm:py-20">
         <p className="text-xs font-semibold uppercase tracking-wider text-mint-strong">Recursos</p>
         <h1 className="font-precise mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
           Preguntas frecuentes
