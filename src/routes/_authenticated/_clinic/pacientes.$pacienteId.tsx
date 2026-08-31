@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Mail, Phone, ShieldAlert, Sparkles } from "lucide-react";
+import { ArrowLeft, CalendarClock, Mail, Phone, ShieldAlert, Tag } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/route-guards";
@@ -356,11 +356,45 @@ function PacienteDetalle() {
           </div>
 
           <aside className="space-y-4 xl:col-span-4">
-            <div className="rounded-2xl border border-ai/15 bg-ai-soft p-5">
-              <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-ai">
-                <Sparkles className="size-3" /> Resumen IA
+            {/* Antes era "Resumen IA" — una tarjeta con `ai_summary` siempre
+                null (auditoría de UI, 30-ago), en la posición más prominente
+                de la ficha. `ai_summary` sigue sin generarse (no hay pipeline
+                de IA todavía); mientras tanto esta tarjeta muestra un
+                resumen real con datos que ya existen, en vez de una promesa
+                vacía. */}
+            <div className="card-clinical space-y-3 p-5">
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Resumen
+              </h3>
+              <div className="flex items-start gap-2 text-xs">
+                <CalendarClock className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                <div>
+                  <p className="text-muted-foreground">Última visita</p>
+                  <p className="font-medium">
+                    {paciente.ultimaVisita || "Sin visitas registradas"}
+                  </p>
+                </div>
+              </div>
+              {paciente.etiquetas.length > 0 && (
+                <div className="flex items-start gap-2 text-xs">
+                  <Tag className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                  <div className="flex flex-wrap gap-1">
+                    {paciente.etiquetas.map((t) => (
+                      <span
+                        key={t}
+                        className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <p className="text-[10px] text-muted-foreground">
+                {paciente.waOptIn
+                  ? "Acepta mensajes de seguimiento por WhatsApp (recordatorios, reseñas)."
+                  : "No acepta mensajes de seguimiento por WhatsApp — solo recordatorios de cita."}
               </p>
-              <p className="text-xs leading-relaxed text-muted-foreground">{paciente.resumenIA}</p>
             </div>
           </aside>
         </div>

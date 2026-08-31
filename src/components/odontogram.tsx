@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState, type KeyboardEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { History, Info, Loader2, RotateCcw, X } from "lucide-react";
+import { History, Info, List, LayoutGrid, Loader2, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { useOfflineMutation } from "@/hooks/use-offline-mutation";
@@ -19,8 +19,10 @@ import {
   FDI_UPPER_RIGHT_PRIMARY,
   SURFACE_LABELS,
   TOOTH_CONDITIONS,
+  TOOTH_SURFACES,
   WHOLE_TOOTH_CONDITIONS,
   marksByTooth,
+  toothCommonName,
   type OdontogramMark,
   type ToothCondition,
   type ToothSurface,
@@ -80,14 +82,17 @@ function ToothCell({
     }
   }
 
+  const nombreComun = toothCommonName(tooth);
+  const piezaLabel = nombreComun ? `Diente ${tooth} (${nombreComun})` : `Diente ${tooth}`;
+
   function surfaceLabel(surface: Exclude<ToothSurface, "whole">) {
     const condition = surfaces[surface]?.condition ?? "sano";
-    return `Diente ${tooth}, superficie ${SURFACE_LABELS[surface]}, ${CONDITION_LABELS[condition]}`;
+    return `${piezaLabel}, superficie ${SURFACE_LABELS[surface]}, ${CONDITION_LABELS[condition]}`;
   }
 
   const wholeLabel = wholeColor
-    ? `Diente ${tooth}, pieza completa, ${CONDITION_LABELS[wholeCondition as ToothCondition]}`
-    : `Diente ${tooth}, marcar condición de la pieza completa`;
+    ? `${piezaLabel}, pieza completa, ${CONDITION_LABELS[wholeCondition as ToothCondition]}`
+    : `${piezaLabel}, marcar condición de la pieza completa`;
 
   const zones: {
     surface: ToothSurface;
@@ -128,14 +133,19 @@ function ToothCell({
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <span className="font-mono text-[10px] text-muted-foreground">{tooth}</span>
+      <span
+        className="font-mono text-[10px] text-muted-foreground"
+        title={nombreComun ? `${tooth} · ${nombreComun}` : undefined}
+      >
+        {tooth}
+      </span>
       <svg
         width={s}
         height={s}
         viewBox={`0 0 ${s} ${s}`}
         className="cursor-pointer overflow-visible rounded-sm border border-hairline transition-colors hover:border-brand"
         role="group"
-        aria-label={`Pieza ${tooth}`}
+        aria-label={piezaLabel}
       >
         {wholeColor && (
           <rect
@@ -230,6 +240,88 @@ function ToothCell({
   );
 }
 
+/**
+ * Equivalente textual/tabular del diagrama FDI (WCAG 1.3.1/2.4.6 — el
+ * gráfico no tenía ninguna alternativa de resumen: la única forma de saber
+ * qué piezas tienen algo marcado era pasar foco por las 160 celdas
+ * individuales del SVG, una por una). Una fila por pieza CON al menos una
+ * marca distinta de "sano"; las piezas sanas no suman filas — sería puro
+ * ruido para escanear.
+ */
+function TablaOdontograma({
+  teeth,
+  byTooth,
+}: {
+  teeth: readonly number[];
+  byTooth: Map<number, Partial<Record<ToothSurface, OdontogramMark>>>;
+}) {
+  const filas = teeth
+    .map((tooth) => {
+      const marcas = byTooth.get(tooth) ?? {};
+      const condiciones = TOOTH_SURFACES.filter(
+        (s) => marcas[s] && marcas[s]!.condition !== "sano",
+      );
+      return { tooth, marcas, condiciones };
+    })
+    .filter((f) => f.condiciones.length > 0);
+
+  if (filas.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        Sin condiciones registradas todavía — todas las piezas figuran sanas.
+      </p>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-xs">
+        <caption className="sr-only">
+          Piezas con al menos una condición distinta de sano, con su superficie y diagnóstico
+        </caption>
+        <thead>
+          <tr className="border-b border-hairline text-[10px] uppercase tracking-wider text-muted-foreground">
+            <th scope="col" className="py-2 pr-3 font-semibold">
+              Pieza
+            </th>
+            <th scope="col" className="py-2 pr-3 font-semibold">
+              Nombre común
+            </th>
+            <th scope="col" className="py-2 font-semibold">
+              Condiciones
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-hairline">
+          {filas.map(({ tooth, marcas, condiciones }) => (
+            <tr key={tooth}>
+              <th scope="row" className="py-2 pr-3 font-mono font-medium">
+                {tooth}
+              </th>
+              <td className="py-2 pr-3 text-muted-foreground">{toothCommonName(tooth) ?? "—"}</td>
+              <td className="py-2">
+                <ul className="flex flex-wrap gap-x-3 gap-y-1">
+                  {condiciones.map((s) => (
+                    <li key={s} className="inline-flex items-center gap-1">
+                      <span
+                        aria-hidden
+                        className="size-2.5 rounded-sm border border-hairline"
+                        style={{ backgroundColor: CONDITION_COLORS[marcas[s]!.condition] }}
+                      />
+                      <span className="text-muted-foreground">{SURFACE_LABELS[s]}:</span>{" "}
+                      <span className="font-medium">{CONDITION_LABELS[marcas[s]!.condition]}</span>
+                    </li>
+                  ))}
+                </ul>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function ToothRow({
   teeth,
   byTooth,
@@ -267,6 +359,7 @@ export function Odontogram({ clinicId, patientId, puedeEditar, userId }: Props) 
   const [selection, setSelection] = useState<ToothClick | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [denticion, setDenticion] = useState<"permanente" | "temporal">("permanente");
+  const [vista, setVista] = useState<"grafico" | "tabla">("grafico");
 
   const marksKey = ["odontogram-marks", clinicId, patientId];
   const historyKey = ["odontogram-history", clinicId, patientId];
@@ -338,7 +431,7 @@ export function Odontogram({ clinicId, patientId, puedeEditar, userId }: Props) 
             entera.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex rounded-lg border border-hairline p-0.5 text-xs">
             <button
               onClick={() => setDenticion("permanente")}
@@ -363,6 +456,34 @@ export function Odontogram({ clinicId, patientId, puedeEditar, userId }: Props) 
               Temporal
             </button>
           </div>
+          <div className="flex rounded-lg border border-hairline p-0.5 text-xs">
+            <button
+              onClick={() => setVista("grafico")}
+              aria-pressed={vista === "grafico"}
+              title="Diagrama visual"
+              className={cn(
+                "inline-flex items-center gap-1 rounded-md px-2.5 py-1 font-medium",
+                vista === "grafico"
+                  ? "bg-secondary text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <LayoutGrid className="size-3" /> Diagrama
+            </button>
+            <button
+              onClick={() => setVista("tabla")}
+              aria-pressed={vista === "tabla"}
+              title="Lista de condiciones registradas — alternativa accesible al diagrama"
+              className={cn(
+                "inline-flex items-center gap-1 rounded-md px-2.5 py-1 font-medium",
+                vista === "tabla"
+                  ? "bg-secondary text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <List className="size-3" /> Tabla
+            </button>
+          </div>
           <button
             onClick={() => setShowHistory((v) => !v)}
             className="inline-flex items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium hover:bg-secondary/60"
@@ -374,7 +495,23 @@ export function Odontogram({ clinicId, patientId, puedeEditar, userId }: Props) 
 
       {isLoading && <p className="text-xs text-muted-foreground">Cargando odontograma…</p>}
 
-      {!isLoading && (
+      {!isLoading && vista === "tabla" && (
+        <TablaOdontograma
+          teeth={
+            denticion === "permanente"
+              ? [...FDI_UPPER_RIGHT, ...FDI_UPPER_LEFT, ...FDI_LOWER_RIGHT, ...FDI_LOWER_LEFT]
+              : [
+                  ...FDI_UPPER_RIGHT_PRIMARY,
+                  ...FDI_UPPER_LEFT_PRIMARY,
+                  ...FDI_LOWER_RIGHT_PRIMARY,
+                  ...FDI_LOWER_LEFT_PRIMARY,
+                ]
+          }
+          byTooth={byTooth}
+        />
+      )}
+
+      {!isLoading && vista === "grafico" && (
         <div className="space-y-4 overflow-x-auto">
           <div className="flex flex-col items-center gap-3">
             {denticion === "permanente" ? (
@@ -410,7 +547,8 @@ export function Odontogram({ clinicId, patientId, puedeEditar, userId }: Props) 
             <Info className="size-3" />
             {denticion === "permanente"
               ? "Arriba: piezas 18→11 · 21→28. Abajo: 48→41 · 31→38."
-              : "Arriba: piezas 55→51 · 61→65. Abajo: 85→81 · 71→75 (cuadrantes 5-8, notación FDI)."}
+              : "Arriba: piezas 55→51 · 61→65. Abajo: 85→81 · 71→75 (cuadrantes 5-8, notación FDI)."}{" "}
+            Pasá el mouse sobre el número, o abrí una pieza, para ver su nombre común.
           </p>
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1 text-[10px] text-muted-foreground">
@@ -438,6 +576,7 @@ export function Odontogram({ clinicId, patientId, puedeEditar, userId }: Props) 
               <div>
                 <p className="text-sm font-medium">Pieza {selection.tooth}</p>
                 <p className="text-[11px] text-muted-foreground">
+                  {toothCommonName(selection.tooth) ? `${toothCommonName(selection.tooth)} · ` : ""}
                   {SURFACE_LABELS[selection.surface]}
                 </p>
               </div>
@@ -509,6 +648,9 @@ export function Odontogram({ clinicId, patientId, puedeEditar, userId }: Props) 
                   style={{ backgroundColor: CONDITION_COLORS[h.condition] }}
                 />
                 <span className="font-mono">{h.toothNumber}</span>
+                {toothCommonName(h.toothNumber) && (
+                  <span className="text-muted-foreground">{toothCommonName(h.toothNumber)}</span>
+                )}
                 <span className="text-muted-foreground">{SURFACE_LABELS[h.surface]}</span>
                 <span className="font-medium">{CONDITION_LABELS[h.condition]}</span>
                 {h.supersededAt && (

@@ -26,6 +26,8 @@ import {
   Building2,
   FileSignature,
   UserRound,
+  ChevronDown,
+  Wrench,
 } from "lucide-react";
 
 import { AlikaLogo } from "@/components/alika-logo";
@@ -44,49 +46,85 @@ import { hasPermission, ROLE_LABELS, type ClinicAccess, type Permission } from "
 import { listPendingOutreach, listPendingReminders } from "@/lib/messaging.functions";
 import { cn } from "@/lib/utils";
 
-const nav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard:view" },
-  { to: "/agenda", label: "Agenda", icon: CalendarDays, permission: "agenda:view" },
+type NavItem = { to: string; label: string; icon: typeof Users; permission: Permission };
+
+/**
+ * Agrupado por sección (antes era una lista plana de 20 ítems sin
+ * jerarquía — auditoría de UI, 30-ago). Los grupos son de presentación
+ * only: el filtro real de qué se ve sigue siendo `hasPermission` por ítem,
+ * esto solo decide bajo qué título cae cada uno.
+ */
+const navGroups: { section: string; items: readonly NavItem[] }[] = [
   {
-    to: "/recordatorios",
-    label: "Recordatorios",
-    icon: MessageCircleMore,
-    permission: "agenda:manage",
-  },
-  { to: "/pacientes", label: "Pacientes", icon: Users, permission: "patients:view" },
-  { to: "/tratamientos", label: "Tratamientos", icon: Stethoscope, permission: "treatments:view" },
-  { to: "/finanzas", label: "Finanzas", icon: Landmark, permission: "finance:view" },
-  { to: "/comisiones", label: "Comisiones", icon: Percent, permission: "finance:view" },
-  { to: "/inventario", label: "Inventario", icon: Boxes, permission: "inventory:view" },
-  { to: "/equipo", label: "Equipo", icon: UsersRound, permission: "team:view" },
-  { to: "/whatsapp", label: "WhatsApp", icon: MessageCircle, permission: "team:manage" },
-  { to: "/permisos", label: "Permisos", icon: ShieldCheck, permission: "team:manage" },
-  { to: "/compliance", label: "Compliance", icon: FileSearch, permission: "team:manage" },
-  { to: "/preferencias", label: "Preferencias", icon: BellRing, permission: "dashboard:view" },
-  { to: "/sucursales", label: "Sucursales", icon: Building2, permission: "settings:manage" },
-  {
-    to: "/profesionales",
-    label: "Profesionales",
-    icon: UserRound,
-    permission: "settings:manage",
+    section: "Clínica",
+    items: [
+      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard:view" },
+      { to: "/agenda", label: "Agenda", icon: CalendarDays, permission: "agenda:view" },
+      {
+        to: "/recordatorios",
+        label: "Recordatorios",
+        icon: MessageCircleMore,
+        permission: "agenda:manage",
+      },
+      { to: "/pacientes", label: "Pacientes", icon: Users, permission: "patients:view" },
+      {
+        to: "/tratamientos",
+        label: "Tratamientos",
+        icon: Stethoscope,
+        permission: "treatments:view",
+      },
+    ],
   },
   {
-    to: "/consentimientos",
-    label: "Consentimientos",
-    icon: FileSignature,
-    permission: "settings:manage",
+    section: "Finanzas",
+    items: [
+      { to: "/finanzas", label: "Finanzas", icon: Landmark, permission: "finance:view" },
+      { to: "/comisiones", label: "Comisiones", icon: Percent, permission: "finance:view" },
+      { to: "/inventario", label: "Inventario", icon: Boxes, permission: "inventory:view" },
+    ],
   },
+  {
+    section: "Equipo",
+    items: [
+      { to: "/equipo", label: "Equipo", icon: UsersRound, permission: "team:view" },
+      { to: "/whatsapp", label: "WhatsApp", icon: MessageCircle, permission: "team:manage" },
+      { to: "/permisos", label: "Permisos", icon: ShieldCheck, permission: "team:manage" },
+      { to: "/compliance", label: "Compliance", icon: FileSearch, permission: "team:manage" },
+    ],
+  },
+  {
+    section: "Configuración",
+    items: [
+      { to: "/sucursales", label: "Sucursales", icon: Building2, permission: "settings:manage" },
+      {
+        to: "/profesionales",
+        label: "Profesionales",
+        icon: UserRound,
+        permission: "settings:manage",
+      },
+      {
+        to: "/consentimientos",
+        label: "Consentimientos",
+        icon: FileSignature,
+        permission: "settings:manage",
+      },
+      { to: "/preferencias", label: "Preferencias", icon: BellRing, permission: "dashboard:view" },
+      { to: "/onboarding", label: "Configuración", icon: Settings, permission: "settings:manage" },
+    ],
+  },
+];
+
+/**
+ * Herramientas internas de diagnóstico de email — no son algo que el staff
+ * de una clínica (ni siquiera un admin) necesite ver nunca; antes vivían
+ * mezcladas en el nav plano y quedaban expuestas a cualquier rol con
+ * `team:manage` (auditoría de UI, 30-ago). Colapsadas y solo para `owner`.
+ */
+const advancedNav: readonly NavItem[] = [
   { to: "/sandbox-email", label: "Sandbox email", icon: FlaskConical, permission: "team:manage" },
   { to: "/dominio-email", label: "Dominio de email", icon: ShieldCheck, permission: "team:manage" },
   { to: "/pruebas-email", label: "Pruebas de email", icon: MailCheck, permission: "team:manage" },
-
-  { to: "/onboarding", label: "Configuración", icon: Settings, permission: "settings:manage" },
-] as const satisfies readonly {
-  to: string;
-  label: string;
-  icon: typeof Users;
-  permission: Permission;
-}[];
+];
 
 // Mismo destino de contacto que usan las páginas públicas (nosotros/privacidad/
 // términos/faq): no hay número de WhatsApp de soporte, solo este mailto.
@@ -166,12 +204,22 @@ export function AppShell({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [signingOut, setSigningOut] = useState(false);
+  const [avanzadoAbierto, setAvanzadoAbierto] = useState(false);
 
   // Una sola vez para toda la app: si cada pantalla lo montara, varias
   // sincronizaciones competirían por la misma cola.
   useSincronizacionAutomatica(access.userId);
 
-  const visibleNav = nav.filter((item) => hasPermission(access.role, item.permission));
+  const visibleGroups = navGroups
+    .map((g) => ({
+      ...g,
+      items: g.items.filter((item) => hasPermission(access.role, item.permission)),
+    }))
+    .filter((g) => g.items.length > 0);
+  // `team:manage` ya lo tienen owner y admin por igual — estas 3 son
+  // exclusivamente del dueño de la cuenta, ni siquiera un admin de clínica
+  // las necesita (ver comentario en `advancedNav`).
+  const visibleAdvanced = access.role === "owner" ? advancedNav : [];
 
   // Badge de "Recordatorios": sin recepción, un dentista solo puede olvidarse
   // de entrar a despachar la cola a mano. Solo se calcula si el rol puede
@@ -235,30 +283,78 @@ export function AppShell({
           )}
         </div>
 
-        <nav className="flex-1 space-y-1 px-4">
-          {visibleNav.map(({ to, label, icon: Icon }) => {
-            const active = pathname.startsWith(to);
-            return (
-              <Link
-                key={to}
-                to={to}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                  active
-                    ? "bg-accent font-medium text-accent-foreground"
-                    : "text-muted-foreground hover:bg-secondary",
-                )}
+        <nav className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
+          {visibleGroups.map((group) => (
+            <div key={group.section}>
+              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                {group.section}
+              </p>
+              <div className="space-y-1">
+                {group.items.map(({ to, label, icon: Icon }) => {
+                  const active = pathname.startsWith(to);
+                  return (
+                    <Link
+                      key={to}
+                      to={to}
+                      className={cn(
+                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                        active
+                          ? "bg-accent font-medium text-accent-foreground"
+                          : "text-muted-foreground hover:bg-secondary",
+                      )}
+                    >
+                      <Icon className="size-4" />
+                      <span>{label}</span>
+                      {to === "/recordatorios" && recordatoriosBadge > 0 && (
+                        <span className="ml-auto min-w-4 rounded-full bg-brand px-1 text-[10px] font-semibold leading-4 text-brand-foreground">
+                          {recordatoriosBadge > 9 ? "9+" : recordatoriosBadge}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+
+          {visibleAdvanced.length > 0 && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setAvanzadoAbierto((v) => !v)}
+                className="flex w-full items-center gap-1.5 px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 transition-colors hover:text-muted-foreground"
+                aria-expanded={avanzadoAbierto}
               >
-                <Icon className="size-4" />
-                <span>{label}</span>
-                {to === "/recordatorios" && recordatoriosBadge > 0 && (
-                  <span className="ml-auto min-w-4 rounded-full bg-brand px-1 text-[10px] font-semibold leading-4 text-brand-foreground">
-                    {recordatoriosBadge > 9 ? "9+" : recordatoriosBadge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+                <Wrench className="size-3" />
+                Avanzado
+                <ChevronDown
+                  className={cn("size-3 transition-transform", avanzadoAbierto && "rotate-180")}
+                />
+              </button>
+              {avanzadoAbierto && (
+                <div className="space-y-1">
+                  {visibleAdvanced.map(({ to, label, icon: Icon }) => {
+                    const active = pathname.startsWith(to);
+                    return (
+                      <Link
+                        key={to}
+                        to={to}
+                        className={cn(
+                          "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                          active
+                            ? "bg-accent font-medium text-accent-foreground"
+                            : "text-muted-foreground hover:bg-secondary",
+                        )}
+                      >
+                        <Icon className="size-4" />
+                        <span>{label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
       </aside>
 
@@ -315,7 +411,7 @@ export function AppShell({
         )}
 
         <nav className="flex gap-1 overflow-x-auto border-b border-border bg-card px-5 py-2 lg:hidden">
-          {visibleNav.map(({ to, label }) => {
+          {[...visibleGroups.flatMap((g) => g.items), ...visibleAdvanced].map(({ to, label }) => {
             const active = pathname.startsWith(to);
             return (
               <Link

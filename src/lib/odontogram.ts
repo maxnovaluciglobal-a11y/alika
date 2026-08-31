@@ -115,6 +115,56 @@ export const FDI_ALL_PRIMARY = [
   ...FDI_LOWER_LEFT_PRIMARY,
 ] as const;
 
+/**
+ * Nombre común de la pieza a partir de su número FDI — la notación FDI
+ * ("18→11", "26→28") nunca se traducía a algo que un paciente reconozca,
+ * y se usa en vivo delante suyo durante la consulta (riesgo clínico-legal,
+ * auditoría de UI, 30-ago). El último dígito da la posición en el
+ * cuadrante (1-8 en dentición permanente, 1-5 en temporal); el primer
+ * dígito da cuadrante → arcada + lado.
+ */
+const POSICION_PERMANENTE: Record<number, string> = {
+  1: "incisivo central",
+  2: "incisivo lateral",
+  3: "canino",
+  4: "primer premolar",
+  5: "segundo premolar",
+  6: "primer molar",
+  7: "segundo molar",
+  8: "tercer molar (muela del juicio)",
+};
+
+const POSICION_TEMPORAL: Record<number, string> = {
+  1: "incisivo central temporal",
+  2: "incisivo lateral temporal",
+  3: "canino temporal",
+  4: "primer molar temporal",
+  5: "segundo molar temporal",
+};
+
+const CUADRANTE_ARCADA_LADO: Record<number, string> = {
+  1: "superior derecho",
+  2: "superior izquierdo",
+  3: "inferior izquierdo",
+  4: "inferior derecho",
+  5: "superior derecho",
+  6: "superior izquierdo",
+  7: "inferior izquierdo",
+  8: "inferior derecho",
+};
+
+/** "16" → "primer molar superior derecho". Devuelve `null` si no es un número FDI válido (2 dígitos, cuadrante 1-8, posición 1-8/1-5 según dentición). */
+export function toothCommonName(tooth: number): string | null {
+  if (tooth < 11 || tooth > 85) return null;
+  const cuadrante = Math.floor(tooth / 10);
+  const posicion = tooth % 10;
+  const lado = CUADRANTE_ARCADA_LADO[cuadrante];
+  if (!lado) return null;
+  const nombre = cuadrante <= 4 ? POSICION_PERMANENTE[posicion] : POSICION_TEMPORAL[posicion];
+  if (!nombre) return null;
+  return `${nombre} ${lado}`;
+}
+
 export interface OdontogramMark {
   id: string;
   toothNumber: number;

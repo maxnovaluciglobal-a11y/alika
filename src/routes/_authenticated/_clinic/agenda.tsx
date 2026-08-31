@@ -6,12 +6,12 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  CircleAlert,
   Clock,
   Inbox,
   Loader2,
   Pencil,
   Plus,
-  Sparkles,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -947,6 +947,16 @@ function AgendaPage() {
     queryFn: () => fetchAppointments({ data: { clinicId: clinicId! } }),
   });
   const citas = useMemo(() => appointmentsRes?.items ?? [], [appointmentsRes]);
+
+  // Reemplaza la tarjeta "Optimización IA" (siempre vacía, "Próximamente" —
+  // auditoría de UI, 30-ago) por un dato real: citas de las próximas 48h que
+  // nadie confirmó todavía. Mismo criterio que el dashboard.
+  const sinConfirmar48h = useMemo(() => {
+    const limite = new Date(hoy);
+    limite.setDate(limite.getDate() + 2);
+    const limiteISO = limite.toISOString().slice(0, 10);
+    return citas.filter((c) => c.fecha >= hoy && c.fecha <= limiteISO && c.estado === "tentativa");
+  }, [citas, hoy]);
   // producto-1/ux-1: alergias por paciente para toda la clínica en 1 query
   // (no una por cita — ver listAllergyAlerts). Mismo gate que la ficha del
   // paciente (clinical:view): reception/accounting no ven este aviso, es
@@ -1432,14 +1442,29 @@ function AgendaPage() {
               ))}
             </div>
 
-            <div className="rounded-2xl border border-ai/15 bg-ai-soft p-5">
-              <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-ai">
-                <Sparkles className="size-3" /> Optimización IA
+            <div className="rounded-2xl border border-warning/20 bg-warning-soft p-5">
+              <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-warning">
+                <CircleAlert className="size-3" /> Sin confirmar (48h)
               </p>
-              <p className="text-xs text-muted-foreground">
-                Próximamente: predicción de ausencias y sugerencias automáticas de reagendamiento,
-                una vez que haya suficiente historial de citas reales.
-              </p>
+              {sinConfirmar48h.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Todo confirmado en las próximas 48h.
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  <p className="text-xs text-muted-foreground">
+                    {sinConfirmar48h.length} cita{sinConfirmar48h.length === 1 ? "" : "s"} sin
+                    confirmar todavía:
+                  </p>
+                  <ul className="space-y-1">
+                    {sinConfirmar48h.slice(0, 4).map((c) => (
+                      <li key={c.id} className="truncate text-xs font-medium">
+                        {c.paciente} · {formatoFechaLarga(c.fecha)} {horaDeCita(c.inicio)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </aside>
         </div>

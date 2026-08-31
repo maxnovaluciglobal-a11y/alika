@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarClock, Sparkles } from "lucide-react";
+import { CalendarClock, CircleAlert } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/route-guards";
@@ -86,6 +86,18 @@ function Dashboard() {
         .slice(0, 6),
     [citas, hoy],
   );
+
+  // Reemplaza la tarjeta "Análisis predictivo IA" (siempre vacía, "Próximamente" —
+  // auditoría de UI, 30-ago) por un dato real y accionable de hoy mismo: citas de
+  // las próximas 48h que siguen en "tentativa" (nadie las confirmó todavía), la
+  // fricción #1 del negocio según la propia landing ("el paciente no vino y nadie
+  // lo llamó"). Sale de los mismos `citas` ya cargados, sin queries nuevas.
+  const sinConfirmar48h = useMemo(() => {
+    const limite = new Date(hoy);
+    limite.setDate(limite.getDate() + 2);
+    const limiteISO = limite.toISOString().slice(0, 10);
+    return citas.filter((c) => c.fecha >= hoy && c.fecha <= limiteISO && c.estado === "tentativa");
+  }, [citas, hoy]);
 
   const kpis = [
     { label: "Pacientes totales", valor: pacientes.length, nota: "Clínica completa" },
@@ -172,13 +184,27 @@ function Dashboard() {
             </div>
 
             <div className="card-clinical space-y-2 p-4">
-              <p className="flex items-center gap-1.5 text-xs font-semibold text-ai">
-                <Sparkles className="size-3" /> Análisis predictivo IA
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-warning">
+                <CircleAlert className="size-3" /> Sin confirmar (próximas 48h)
               </p>
-              <p className="text-xs italic text-muted-foreground">
-                Próximamente: lectura automática de lo que está pasando en la clínica, una vez que
-                haya suficiente actividad real registrada.
-              </p>
+              {sinConfirmar48h.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Todo confirmado — no hay citas sueltas en las próximas 48h.
+                </p>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    {sinConfirmar48h.length} cita{sinConfirmar48h.length === 1 ? "" : "s"} sin
+                    confirmar. Cada una es un hueco que se puede evitar con un recordatorio.
+                  </p>
+                  <Link
+                    to="/recordatorios"
+                    className="inline-block text-xs font-medium text-brand hover:underline"
+                  >
+                    Ir a recordatorios →
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

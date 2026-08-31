@@ -286,74 +286,104 @@ function Landing() {
 
       <main id="main-content">
         {/* Hero */}
-        <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-16 sm:py-20 lg:grid-cols-[1fr_0.92fr] lg:gap-14">
-          <div className="animate-rise-in">
-            <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-mint/30 bg-mint-soft px-3 py-1 text-xs font-semibold text-mint-strong">
-              <span className="size-1.5 rounded-full bg-mint" />
-              Software de gestión dental · Latinoamérica
-            </span>
-            <h1 className="font-precise text-[2.9rem] font-extrabold leading-[0.95] text-balance sm:text-6xl lg:text-[4.25rem]">
-              Menos ausencias.
-              <br />
-              <span className="text-mint-strong">Cobras mejor.</span>
-              <br />
-              Sin planillas.
-            </h1>
-            <p className="mt-6 max-w-md text-lg leading-relaxed text-muted-foreground">
-              Agenda, historia clínica, odontograma y cobranza en un solo lugar. Con recordatorios
-              por WhatsApp automáticos.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <a
-                href="/demo"
-                className="group flex items-center gap-2 rounded-xl bg-ink px-5 py-3.5 text-sm font-semibold text-ink-foreground shadow-lg shadow-ink/20 transition-all hover:-translate-y-0.5 hover:shadow-xl"
-              >
-                Prueba la demo ahora
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-              </a>
-              <Link
-                to="/auth"
-                className="rounded-xl border border-border bg-card px-5 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
-              >
-                Empieza gratis
-              </Link>
-            </div>
-            <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Check className="size-3.5 text-mint-strong" /> Sin registro
+        <section className="relative isolate overflow-hidden">
+          {/* Malla aurora + grano — definidos en styles.css, sin usar hasta
+              ahora (auditoría de UI, 30-ago): la identidad visual más
+              trabajada del sistema de diseño no llegaba a renderizarse
+              nunca. Necesitan `relative overflow-hidden` para que su
+              `position: absolute` se recorte contra el hero, Y `isolate`
+              para crear un stacking context propio — si no, su z-index
+              negativo escapa hasta el fondo de TODA la página (detrás del
+              bg-background opaco del layout) y queda invisible aunque el
+              elemento exista y tenga los colores correctos en el DOM. */}
+          <div className="hero-aurora" aria-hidden="true" />
+          <div className="hero-grain" aria-hidden="true" />
+          <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-16 sm:py-20 lg:grid-cols-[1fr_0.92fr] lg:gap-14">
+            <div className="animate-rise-in">
+              <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-mint/30 bg-mint-soft px-3 py-1 text-xs font-semibold text-mint-strong">
+                <span className="size-1.5 rounded-full bg-mint" />
+                Software de gestión dental · Latinoamérica
               </span>
-              <span className="flex items-center gap-1.5">
-                <Check className="size-3.5 text-mint-strong" /> Sin tarjeta
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Check className="size-3.5 text-mint-strong" /> Tus datos son tuyos
-              </span>
-            </p>
-          </div>
-
-          {/* Foto + producto flotante (hero híbrido) */}
-          <div className="relative animate-rise-in [animation-delay:120ms]">
-            <div className="overflow-hidden rounded-2xl border border-border shadow-2xl shadow-ink/15">
-              <img
-                src="/landing/dentist.jpg"
-                alt="Dentista atendiendo a un paciente en su consultorio"
-                width={1280}
-                height={853}
-                className="aspect-[4/3] w-full object-cover"
-                loading="eager"
-              />
-            </div>
-            <div className="absolute -bottom-6 -left-6 w-52 rotate-[-2deg]">
-              <MiniCaja />
-            </div>
-            <div className="absolute -right-4 -top-4 hidden rounded-xl border border-hairline bg-card px-3 py-2 shadow-xl shadow-ink/10 sm:block">
-              <div className="flex items-center gap-2">
-                <span className="grid size-7 place-items-center rounded-full bg-mint-soft text-mint-strong">
-                  <MessageCircle className="size-3.5" />
+              <h1 className="font-precise text-[2.9rem] font-extrabold leading-[0.95] text-balance sm:text-6xl lg:text-[4.25rem]">
+                Menos ausencias.
+                <br />
+                <span className="relative inline-block text-mint-strong">
+                  Cobras mejor.
+                  <svg
+                    viewBox="0 0 220 18"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                    className="absolute -bottom-1.5 left-0 h-3 w-full"
+                  >
+                    <path
+                      d="M2 12C40 2 90 2 110 8C130 14 180 16 218 6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      className="animate-swash"
+                    />
+                  </svg>
                 </span>
-                <div>
-                  <p className="text-[11px] font-semibold leading-tight">Recordatorio enviado</p>
-                  <p className="text-[10px] text-muted-foreground">Rocío · mañana 10:30</p>
+                <br />
+                Sin planillas.
+              </h1>
+              <p className="mt-6 max-w-md text-lg leading-relaxed text-muted-foreground">
+                Agenda, historia clínica, odontograma y cobranza en un solo lugar. Con recordatorios
+                por WhatsApp automáticos.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <a
+                  href="/demo"
+                  className="group flex items-center gap-2 rounded-xl bg-ink px-5 py-3.5 text-sm font-semibold text-ink-foreground shadow-lg shadow-ink/20 transition-all hover:-translate-y-0.5 hover:shadow-xl"
+                >
+                  Prueba la demo ahora
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                </a>
+                <Link
+                  to="/auth"
+                  className="rounded-xl border border-border bg-card px-5 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
+                >
+                  Empieza gratis
+                </Link>
+              </div>
+              <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <Check className="size-3.5 text-mint-strong" /> Sin registro
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="size-3.5 text-mint-strong" /> Sin tarjeta
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="size-3.5 text-mint-strong" /> Tus datos son tuyos
+                </span>
+              </p>
+            </div>
+
+            {/* Foto + producto flotante (hero híbrido) */}
+            <div className="relative animate-rise-in [animation-delay:120ms]">
+              <div className="overflow-hidden rounded-2xl border border-border shadow-2xl shadow-ink/15">
+                <img
+                  src="/landing/dentist.jpg"
+                  alt="Dentista atendiendo a un paciente en su consultorio"
+                  width={1280}
+                  height={853}
+                  className="aspect-[4/3] w-full object-cover"
+                  loading="eager"
+                />
+              </div>
+              <div className="absolute -bottom-6 -left-6 w-52 rotate-[-2deg]">
+                <MiniCaja />
+              </div>
+              <div className="absolute -right-4 -top-4 hidden rounded-xl border border-hairline bg-card px-3 py-2 shadow-xl shadow-ink/10 sm:block">
+                <div className="flex items-center gap-2">
+                  <span className="grid size-7 place-items-center rounded-full bg-mint-soft text-mint-strong">
+                    <MessageCircle className="size-3.5" />
+                  </span>
+                  <div>
+                    <p className="text-[11px] font-semibold leading-tight">Recordatorio enviado</p>
+                    <p className="text-[10px] text-muted-foreground">Rocío · mañana 10:30</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -507,7 +537,12 @@ function Landing() {
               ocupes de atender.
             </p>
             <div className="mt-6 rounded-xl border border-mint/25 bg-mint-soft p-4">
-              <p className="text-sm leading-relaxed text-ink">
+              {/* Newsreader (font-serif-display) — definida en el sistema de
+                  diseño desde el rebrand pero sin ningún uso real todavía
+                  (auditoría de UI, 30-ago). Un pull-quote es el lugar
+                  clásico para un serif editorial: contraste tipográfico
+                  sobre el grotesco del resto de la página. */}
+              <p className="font-serif-display text-base italic leading-relaxed text-ink">
                 “Control de ortodoncia. Ajuste de arco superior, sin molestias referidas. Próximo
                 control en 4 semanas.”
               </p>
@@ -531,7 +566,10 @@ function Landing() {
             </p>
 
             <div className="mx-auto mt-10 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-border bg-card p-6 text-left">
+              <div className="relative rounded-2xl border border-border bg-card p-6 pt-8 text-left">
+                <span className="absolute -top-3 left-6 rounded-full bg-ink px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-ink-foreground">
+                  Precio de por vida
+                </span>
                 <p className="text-sm font-semibold">Alika Solo</p>
                 <p className="text-xs text-muted-foreground">1 profesional / 1 sillón</p>
                 <p className="mt-3 text-3xl font-bold">
@@ -543,7 +581,10 @@ function Landing() {
                   <span className="italic">(referencial, el cobro es en USD)</span>
                 </p>
               </div>
-              <div className="rounded-2xl border-2 border-mint-strong bg-mint-soft p-6 text-left">
+              <div className="relative rounded-2xl border-2 border-mint-strong bg-mint-soft p-6 pt-8 text-left">
+                <span className="absolute -top-3 left-6 rounded-full bg-mint-strong px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-mint-soft">
+                  Precio de por vida
+                </span>
                 <p className="text-sm font-semibold">Alika Clínica</p>
                 {/* text-ink/70 en vez de text-muted-foreground: sobre bg-mint-soft el
                     muted-foreground estándar caía a 4.29:1, debajo del 4.5:1 de WCAG AA. */}
@@ -558,6 +599,10 @@ function Landing() {
                 </p>
               </div>
             </div>
+            <p className="mx-auto mt-5 max-w-lg text-xs text-muted-foreground">
+              No es un descuento por tiempo limitado — es el precio que pagás mientras seas cliente.
+              Quienes se sumen después de esta etapa pagan el precio de lista.
+            </p>
 
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
