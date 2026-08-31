@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { siteJsonLdScripts } from "@/lib/seo";
 import { supabase } from "@/integrations/supabase/client";
 import { captureException, initSentry } from "@/lib/sentry";
 import { attachOfflineCache, resetOfflineCache } from "@/lib/offline-cache";
@@ -113,10 +114,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Agenda, pacientes, historia clínica e IA para clínicas dentales de LatAm.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Alika" },
+      { property: "og:locale", content: "es_LA" },
       { property: "og:image", content: SOCIAL_IMAGE_URL },
       { property: "og:image:width", content: "1280" },
       { property: "og:image:height", content: "853" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Alika · Software de gestión dental" },
+      {
+        name: "twitter:description",
+        content: "Agenda, pacientes, historia clínica e IA para clínicas dentales de LatAm.",
+      },
       { name: "twitter:image", content: SOCIAL_IMAGE_URL },
       // Pinta la barra del navegador con el teal de marca cuando la app corre
       // instalada (display: standalone).
@@ -139,6 +147,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
+    // Organization + WebSite + SoftwareApplication: no dependen de la ruta,
+    // por eso van acá y no repetidos por página (mayor impacto GEO, ver
+    // memoria alika_seo_geo_pendiente).
+    scripts: siteJsonLdScripts(),
   }),
 
   shellComponent: RootShell,

@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalendarDays, MessageCircle, Shield, Sparkles } from "lucide-react";
+import { canonicalHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/docs/")({
+  head: () => canonicalHead("/docs"),
   component: DocsIndex,
 });
 

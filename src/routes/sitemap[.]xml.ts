@@ -20,10 +20,19 @@ export const Route = createFileRoute("/sitemap.xml")({
           (typeof process !== "undefined" && process.env.PUBLIC_APP_URL) ||
           new URL(request.url).origin;
 
-        // Solo rutas públicas: la app clínica está detrás de autenticación y no se indexa.
+        // Solo rutas públicas indexables: /auth tiene robots:noindex (ver auth.tsx) —
+        // no tiene sentido listarla acá, generaba una contradicción con el meta tag.
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
-          { path: "/auth", changefreq: "monthly", priority: "0.5" },
+          { path: "/faq", changefreq: "monthly", priority: "0.6" },
+          { path: "/nosotros", changefreq: "monthly", priority: "0.4" },
+          { path: "/docs", changefreq: "monthly", priority: "0.5" },
+          { path: "/docs/primeros-pasos", changefreq: "monthly", priority: "0.4" },
+          { path: "/docs/whatsapp", changefreq: "monthly", priority: "0.4" },
+          { path: "/docs/portal-pacientes", changefreq: "monthly", priority: "0.4" },
+          { path: "/docs/datos-y-seguridad", changefreq: "monthly", priority: "0.4" },
+          { path: "/privacidad", changefreq: "yearly", priority: "0.3" },
+          { path: "/terminos", changefreq: "yearly", priority: "0.3" },
         ];
 
         const urls = entries.map((e) =>

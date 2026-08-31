@@ -1,17 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, LegalH2, LegalP, LegalUl, LegalLi, LegalNotice } from "@/components/legal-page";
+import { canonicalHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/terminos")({
-  head: () => ({
-    meta: [
-      { title: "Términos de servicio · Alika" },
-      {
-        name: "description",
-        content: "Términos de servicio de Alika, software de gestión para clínicas dentales.",
-      },
-      { name: "robots", content: "index,follow" },
-    ],
-  }),
+  head: () => {
+    const canonical = canonicalHead("/terminos");
+    return {
+      meta: [
+        { title: "Términos de servicio · Alika" },
+        {
+          name: "description",
+          content: "Términos de servicio de Alika, software de gestión para clínicas dentales.",
+        },
+        { name: "robots", content: "index,follow" },
+        ...canonical.meta,
+      ],
+      links: canonical.links,
+    };
+  },
   component: Terminos,
 });
 

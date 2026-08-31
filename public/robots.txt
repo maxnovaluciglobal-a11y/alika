@@ -1,6 +1,9 @@
 User-agent: *
 Allow: /
-Allow: /auth
+
+# /auth ya tiene robots:noindex a nivel de página (ver src/routes/auth.tsx) — no
+# hace falta permitirla ni listarla acá; Disallow evita que un crawler la rastree igual.
+Disallow: /auth
 
 # La app clínica y el portal del paciente NO se indexan
 Disallow: /dashboard

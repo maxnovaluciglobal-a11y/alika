@@ -2,7 +2,13 @@ import { Outlet, Link, createFileRoute, useLocation } from "@tanstack/react-rout
 import { cn } from "@/lib/utils";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 
-/** Layout de /docs: header + nav lateral + Outlet + footer, compartido por todas las subpáginas. */
+/**
+ * Layout de /docs: header + nav lateral + Outlet + footer, compartido por todas las subpáginas.
+ * Sin canonical/og:url propios a propósito: TanStack Router dedupe los `<meta>` por
+ * name/property (el hijo gana), pero NO dedupe `<link>` — un canonical acá se sumaría
+ * al de la subpágina en vez de reemplazarlo. Cada ruta hija (docs.index.tsx,
+ * docs.primeros-pasos.tsx, etc.) ya declara el suyo con canonicalHead().
+ */
 export const Route = createFileRoute("/docs")({
   head: () => ({
     meta: [

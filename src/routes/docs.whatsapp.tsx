@@ -1,10 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalH2, LegalP, LegalNotice } from "@/components/legal-page";
+import { canonicalHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/docs/whatsapp")({
-  head: () => ({
-    meta: [{ title: "Conectar WhatsApp · Documentación · Alika" }],
-  }),
+  head: () => {
+    const canonical = canonicalHead("/docs/whatsapp");
+    return {
+      meta: [{ title: "Conectar WhatsApp · Documentación · Alika" }, ...canonical.meta],
+      links: canonical.links,
+    };
+  },
   component: DocsWhatsapp,
 });
 

@@ -13,26 +13,32 @@ import {
 import { cn } from "@/lib/utils";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { approxLocalPricesLabel } from "@/lib/pricing-display";
+import { canonicalHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Alika · Software de gestión dental para LatAm" },
-      {
-        name: "description",
-        content:
-          "Menos ausencias, cobras mejor, sin planillas. Agenda, ficha clínica, odontograma y cobranza con recordatorios por WhatsApp. Prueba la demo sin registrarte.",
-      },
-      { property: "og:title", content: "Alika · La clínica dental entera, bajo control" },
-      {
-        property: "og:description",
-        content:
-          "Agenda, historia clínica, presupuestos y cobranza en un solo lugar. Hecho para clínicas de Latinoamérica. Prueba la demo sin registrarte.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () => {
+    const canonical = canonicalHead("/");
+    return {
+      meta: [
+        { title: "Alika · Software de gestión dental para LatAm" },
+        {
+          name: "description",
+          content:
+            "Menos ausencias, cobras mejor, sin planillas. Agenda, ficha clínica, odontograma y cobranza con recordatorios por WhatsApp. Prueba la demo sin registrarte.",
+        },
+        { property: "og:title", content: "Alika · La clínica dental entera, bajo control" },
+        {
+          property: "og:description",
+          content:
+            "Agenda, historia clínica, presupuestos y cobranza en un solo lugar. Hecho para clínicas de Latinoamérica. Prueba la demo sin registrarte.",
+        },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+        ...canonical.meta,
+      ],
+      links: canonical.links,
+    };
+  },
   component: Landing,
 });
 

@@ -1,10 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalH2, LegalP } from "@/components/legal-page";
+import { canonicalHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/docs/portal-pacientes")({
-  head: () => ({
-    meta: [{ title: "Portal de pacientes · Documentación · Alika" }],
-  }),
+  head: () => {
+    const canonical = canonicalHead("/docs/portal-pacientes");
+    return {
+      meta: [{ title: "Portal de pacientes · Documentación · Alika" }, ...canonical.meta],
+      links: canonical.links,
+    };
+  },
   component: DocsPortal,
 });
 

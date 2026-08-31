@@ -1,18 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, LegalH2, LegalP, LegalUl, LegalLi, LegalNotice } from "@/components/legal-page";
+import { canonicalHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/privacidad")({
-  head: () => ({
-    meta: [
-      { title: "Política de privacidad · Alika" },
-      {
-        name: "description",
-        content:
-          "Cómo Alika trata los datos de tu clínica y de tus pacientes: qué guardamos, dónde y con quién lo compartimos.",
-      },
-      { name: "robots", content: "index,follow" },
-    ],
-  }),
+  head: () => {
+    const canonical = canonicalHead("/privacidad");
+    return {
+      meta: [
+        { title: "Política de privacidad · Alika" },
+        {
+          name: "description",
+          content:
+            "Cómo Alika trata los datos de tu clínica y de tus pacientes: qué guardamos, dónde y con quién lo compartimos.",
+        },
+        { name: "robots", content: "index,follow" },
+        ...canonical.meta,
+      ],
+      links: canonical.links,
+    };
+  },
   component: Privacidad,
 });
 

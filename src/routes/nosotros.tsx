@@ -1,17 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, LegalH2, LegalP } from "@/components/legal-page";
+import { canonicalHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/nosotros")({
-  head: () => ({
-    meta: [
-      { title: "Quiénes somos · Alika" },
-      {
-        name: "description",
-        content:
-          "Alika es un proyecto chico hecho por una sola persona para clínicas dentales de Latinoamérica. Por qué existe y cómo se construye.",
-      },
-    ],
-  }),
+  head: () => {
+    const canonical = canonicalHead("/nosotros");
+    return {
+      meta: [
+        { title: "Quiénes somos · Alika" },
+        {
+          name: "description",
+          content:
+            "Alika es un proyecto chico hecho por una sola persona para clínicas dentales de Latinoamérica. Por qué existe y cómo se construye.",
+        },
+        ...canonical.meta,
+      ],
+      links: canonical.links,
+    };
+  },
   component: Nosotros,
 });
 

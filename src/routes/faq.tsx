@@ -6,20 +6,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
-
-export const Route = createFileRoute("/faq")({
-  head: () => ({
-    meta: [
-      { title: "Preguntas frecuentes · Alika" },
-      {
-        name: "description",
-        content:
-          "Respuestas sobre cómo funciona Alika: empezar, WhatsApp, portal de pacientes, tus datos y precio.",
-      },
-    ],
-  }),
-  component: Faq,
-});
+import { canonicalHead, faqJsonLdScript } from "@/lib/seo";
 
 const grupos: { t: string; items: { q: string; a: string }[] }[] = [
   {
@@ -116,6 +103,33 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
     ],
   },
 ];
+
+export const Route = createFileRoute("/faq")({
+  head: () => {
+    const canonical = canonicalHead("/faq");
+    return {
+      meta: [
+        { title: "Preguntas frecuentes · Alika" },
+        {
+          name: "description",
+          content:
+            "Respuestas sobre cómo funciona Alika: empezar, WhatsApp, portal de pacientes, tus datos y precio.",
+        },
+        { property: "og:title", content: "Preguntas frecuentes · Alika" },
+        {
+          property: "og:description",
+          content:
+            "Respuestas sobre cómo funciona Alika: empezar, WhatsApp, portal de pacientes, tus datos y precio.",
+        },
+        { property: "og:type", content: "website" },
+        ...canonical.meta,
+      ],
+      links: canonical.links,
+      scripts: faqJsonLdScript(grupos.flatMap((g) => g.items)),
+    };
+  },
+  component: Faq,
+});
 
 function Faq() {
   return (
