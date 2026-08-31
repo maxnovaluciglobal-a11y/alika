@@ -343,6 +343,107 @@ export const createAppointment = createServerFn({ method: "POST" })
     return { id: inserted.id, solapamiento };
   });
 
+/**
+ * Reprograma una cita existente (profesional, tratamiento, fecha/hora,
+ * duración) sin pasar por cancelar+recrear. Antes la única forma de mover
+ * una cita era cancelarla y agendar una nueva desde cero, perdiendo el
+ * historial de mensajes/WhatsApp ligados al `appointmentId` original
+ * (auditoría UX, 30-ago). Reusa las mismas validaciones de `createAppointment`
+ * (horario declarado del profesional, aviso soft de solapamiento) contra el
+ * nuevo horario propuesto.
+ */
+export const updateAppointment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        appointmentId: z.string().uuid(),
+        clinicId: z.string().uuid(),
+        branchId: z.string().uuid(),
+        professionalId: z.string().uuid(),
+        tratamiento: z.string().trim().min(1, "Indica el tratamiento o motivo."),
+        procedureId: z.string().uuid().optional(),
+        startsAt: z.string().min(1, "Falta la fecha y hora de inicio."),
+        duracionMin: z.number().int().min(5).max(480),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true; solapamiento?: Solapamiento }> => {
+    const { data: branch, error: branchErr } = await context.supabase
+      .from("branches")
+      .select("timezone")
+      .eq("clinic_id", data.clinicId)
+      .eq("id", data.branchId)
+      .maybeSingle();
+    if (branchErr) throw new Error(branchErr.message);
+    if (!branch) throw new Error("La sucursal no existe o no es tuya.");
+    const timeZone = branch.timezone || DEFAULT_TIMEZONE;
+
+    const startsAt = wallTimeInTzToUtc(data.startsAt, timeZone);
+    if (Number.isNaN(startsAt.getTime())) throw new Error("Fecha/hora de inicio inválida.");
+    const endsAt = new Date(startsAt.getTime() + data.duracionMin * 60_000);
+
+    const { data: horarios, error: horariosErr } = await context.supabase
+      .from("professional_schedules")
+      .select("day_of_week, start_time, end_time")
+      .eq("clinic_id", data.clinicId)
+      .eq("professional_id", data.professionalId);
+    if (horariosErr) throw new Error(horariosErr.message);
+
+    if (horarios && horarios.length > 0) {
+      const dia = diaSemanaLocal(startsAt, timeZone);
+      const bloqueDia = horarios.find((h) => h.day_of_week === dia);
+      if (!bloqueDia) {
+        throw new Error(`El profesional no atiende los ${DIA_SEMANA_LABEL[dia]}.`);
+      }
+      const horaInicio = horaLocalHHMM(startsAt, timeZone);
+      const horaFin = horaLocalHHMM(endsAt, timeZone);
+      const inicioOk = horaInicio >= bloqueDia.start_time.slice(0, 5);
+      const finOk = horaFin <= bloqueDia.end_time.slice(0, 5);
+      if (!inicioOk || !finOk) {
+        throw new Error(
+          `Fuera del horario del profesional los ${DIA_SEMANA_LABEL[dia]} ` +
+            `(${bloqueDia.start_time.slice(0, 5)}–${bloqueDia.end_time.slice(0, 5)}).`,
+        );
+      }
+    }
+
+    const { data: choques, error: choquesErr } = await context.supabase
+      .from("appointments")
+      .select("treatment_label, starts_at, ends_at")
+      .eq("clinic_id", data.clinicId)
+      .eq("professional_id", data.professionalId)
+      .neq("status", "cancelada")
+      .neq("id", data.appointmentId)
+      .lt("starts_at", endsAt.toISOString())
+      .gt("ends_at", startsAt.toISOString())
+      .limit(1);
+    if (choquesErr) throw new Error(choquesErr.message);
+    const choque = choques?.[0];
+    const solapamiento: Solapamiento | undefined = choque
+      ? {
+          treatmentLabel: choque.treatment_label || "Consulta",
+          startsAt: choque.starts_at,
+          endsAt: choque.ends_at,
+        }
+      : undefined;
+
+    const { error } = await context.supabase
+      .from("appointments")
+      .update({
+        branch_id: data.branchId,
+        professional_id: data.professionalId,
+        treatment_label: data.tratamiento,
+        procedure_id: data.procedureId ?? null,
+        starts_at: startsAt.toISOString(),
+        ends_at: endsAt.toISOString(),
+      })
+      .eq("id", data.appointmentId)
+      .eq("clinic_id", data.clinicId);
+    if (error) throw new Error("No tienes permisos para editar esta cita.");
+    return { ok: true, solapamiento };
+  });
+
 export const setAppointmentStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>

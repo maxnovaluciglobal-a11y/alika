@@ -336,6 +336,95 @@ export const createQuote = createServerFn({ method: "POST" })
   });
 
 /**
+ * Corrige un presupuesto ya enviado sin pasar por rechazar+recrear (antes la
+ * única forma de arreglar un ítem mal cargado era esa, perdiendo el número
+ * correlativo y el historial — auditoría UX, 30-ago). Solo permitido en
+ * 'draft'/'sent': una vez 'accepted' el trigger de base ya generó un plan de
+ * tratamiento a partir de estos ítems, y 'rejected'/'expired'/'converted' son
+ * estados terminales — corregirlos ahí sería reescribir un hecho ya cerrado.
+ * Reemplaza los ítems (borrar + reinsertar, mismo patrón simple que
+ * createQuote) y recalcula subtotal/total; conserva el número correlativo.
+ */
+export const updateQuote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        quoteId: z.string().uuid(),
+        clinicId: z.string().uuid(),
+        notes: z.string().trim().max(1000).optional(),
+        validUntil: z.string().optional(),
+        globalDiscountCents: z.number().int().min(0).default(0),
+        items: z.array(QuoteItemInput).min(1, "Agrega al menos un ítem."),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { supabase } = context;
+
+    const { data: quote, error: qErr } = await supabase
+      .from("quotes")
+      .select("status")
+      .eq("id", data.quoteId)
+      .eq("clinic_id", data.clinicId)
+      .maybeSingle();
+    if (qErr) throw new Error(qErr.message);
+    if (!quote) throw new Error("No encontramos ese presupuesto.");
+    if (quote.status !== "draft" && quote.status !== "sent") {
+      throw new Error(
+        "Solo puedes corregir un presupuesto en borrador o enviado — este ya fue aceptado, rechazado o venció.",
+      );
+    }
+
+    const itemsWithTotals = data.items.map((it, i) => {
+      const total = Math.max(0, it.quantity * it.unitPriceCents - it.discountCents);
+      return { ...it, position: i, total };
+    });
+    const subtotal = itemsWithTotals.reduce((s, it) => s + it.total, 0);
+    const total = Math.max(0, subtotal - data.globalDiscountCents);
+
+    const { error: delErr } = await supabase
+      .from("quote_items")
+      .delete()
+      .eq("quote_id", data.quoteId);
+    if (delErr)
+      throw new Error("No pudimos actualizar los ítems del presupuesto. " + delErr.message);
+
+    const { error: insErr } = await supabase.from("quote_items").insert(
+      itemsWithTotals.map((it) => ({
+        clinic_id: data.clinicId,
+        quote_id: data.quoteId,
+        procedure_id: it.procedureId ?? null,
+        name_snapshot: it.nameSnapshot,
+        tooth_number: it.toothNumber ?? null,
+        surface: it.surface ?? null,
+        quantity: it.quantity,
+        unit_price_cents: it.unitPriceCents,
+        discount_cents: it.discountCents,
+        total_cents: it.total,
+        position: it.position,
+        notes: it.notes || null,
+      })),
+    );
+    if (insErr) throw new Error("No pudimos guardar los ítems del presupuesto. " + insErr.message);
+
+    const { error: updErr } = await supabase
+      .from("quotes")
+      .update({
+        notes: data.notes || null,
+        valid_until: data.validUntil || null,
+        subtotal_cents: subtotal,
+        discount_cents: data.globalDiscountCents,
+        total_cents: total,
+      })
+      .eq("id", data.quoteId)
+      .eq("clinic_id", data.clinicId);
+    if (updErr) throw new Error("No pudimos guardar el presupuesto. " + updErr.message);
+
+    return { ok: true };
+  });
+
+/**
  * Cambia el estado de un presupuesto. Cuando se marca como 'accepted', el
  * trigger de base convierte el quote en un plan de tratamiento con sus ítems.
  */

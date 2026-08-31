@@ -9,6 +9,7 @@ import {
   Clock,
   Inbox,
   Loader2,
+  Pencil,
   Plus,
   Sparkles,
   X,
@@ -49,6 +50,7 @@ import {
   formatoFechaLarga,
   HORA_INICIO,
   hoyISO,
+  type Cita,
   type EstadoCita,
 } from "@/lib/clinic-data";
 
@@ -64,6 +66,7 @@ import {
   createAppointment,
   listAppointments,
   setAppointmentStatus,
+  updateAppointment,
   type Solapamiento,
 } from "@/lib/appointments.functions";
 import { createWaitlistEntry, listWaitlist, removeWaitlistEntry } from "@/lib/waitlist.functions";
@@ -491,6 +494,199 @@ function NuevaCitaDialog({
           <Button onClick={agendar} disabled={crear.enCurso || !puedeCrear}>
             {crear.enCurso && <Loader2 className="size-3.5 animate-spin" />}
             Agendar cita
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Reprograma una cita existente en el mismo diálogo de "Nueva cita" pero
+ * precargado — antes la única forma de mover una cita era cancelarla y
+ * volver a agendar desde cero, perdiendo el historial de WhatsApp ligado a
+ * ese `appointmentId` (auditoría UX, 30-ago).
+ */
+function EditarCitaDialog({
+  clinicId,
+  userId,
+  country,
+  cita,
+  sucursales,
+  profesionales,
+  pacientes,
+}: {
+  clinicId: string;
+  userId: string;
+  country: string | undefined;
+  cita: Cita;
+  sucursales: { id: string; nombre: string }[];
+  profesionales: { id: string; nombre: string; sucursalId: string | null }[];
+  pacientes: { id: string; nombre: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [sucursalId, setSucursalId] = useState(cita.sucursalId);
+  const [profesionalId, setProfesionalId] = useState(cita.profesionalId);
+  const [tratamiento, setTratamiento] = useState(cita.tratamiento);
+  const [startsAt, setStartsAt] = useState(`${cita.fecha}T${horaDeCita(cita.inicio)}`);
+  const [duracion, setDuracion] = useState(cita.duracion);
+
+  function reabrirConValoresActuales(next: boolean) {
+    if (next) {
+      setSucursalId(cita.sucursalId);
+      setProfesionalId(cita.profesionalId);
+      setTratamiento(cita.tratamiento);
+      setStartsAt(`${cita.fecha}T${horaDeCita(cita.inicio)}`);
+      setDuracion(cita.duracion);
+    }
+    setOpen(next);
+  }
+
+  const updateFn = useServerFn(updateAppointment);
+  const fetchProcedures = useServerFn(listProcedures);
+  const proceduresQuery = useQuery({
+    queryKey: ["procedures", clinicId],
+    queryFn: () => fetchProcedures({ data: { clinicId } }),
+    enabled: open,
+  });
+  const procedimientoSeleccionado = proceduresQuery.data?.find(
+    (p) => p.name.trim().toLowerCase() === tratamiento.trim().toLowerCase(),
+  );
+
+  const startsYear = startsAt ? Number(startsAt.slice(0, 4)) : new Date().getFullYear();
+  const { holidaysByDate } = usePublicHolidays(country, [startsYear]);
+  const feriadoSeleccionado = startsAt ? (holidaysByDate.get(startsAt.slice(0, 10)) ?? null) : null;
+
+  const disponibles = profesionales.filter((p) => !sucursalId || p.sucursalId === sucursalId);
+
+  const editar = useMutation({
+    mutationFn: () =>
+      updateFn({
+        data: {
+          appointmentId: cita.id,
+          clinicId,
+          branchId: sucursalId,
+          professionalId: profesionalId,
+          tratamiento: tratamiento.trim(),
+          procedureId: procedimientoSeleccionado?.id,
+          startsAt,
+          duracionMin: duracion,
+        },
+      }),
+    onSuccess: (resultado) => {
+      avisarSiSolapa(resultado);
+      toast.success("Cita actualizada.");
+      setOpen(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const puedeGuardar = sucursalId && profesionalId && tratamiento.trim() && startsAt;
+
+  return (
+    <Dialog open={open} onOpenChange={reabrirConValoresActuales}>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          title="Editar cita"
+          aria-label="Editar cita"
+          className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-ink"
+        >
+          <Pencil className="size-3.5" />
+        </button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar cita</DialogTitle>
+          <DialogDescription>
+            {cita.paciente} · la hora se interpreta en el huso horario de la sucursal seleccionada.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="ec-sucursal">Sucursal</Label>
+              <select
+                id="ec-sucursal"
+                value={sucursalId}
+                onChange={(e) => {
+                  setSucursalId(e.target.value);
+                  setProfesionalId("");
+                }}
+                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              >
+                <option value="">Elegir sucursal…</option>
+                {sucursales.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="ec-profesional">Profesional</Label>
+              <select
+                id="ec-profesional"
+                value={profesionalId}
+                onChange={(e) => setProfesionalId(e.target.value)}
+                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              >
+                <option value="">Elegir profesional…</option>
+                {disponibles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ec-tratamiento">Tratamiento / motivo</Label>
+            <input
+              id="ec-tratamiento"
+              value={tratamiento}
+              onChange={(e) => setTratamiento(e.target.value)}
+              placeholder="Ej: Control, limpieza…"
+              list="ec-procedimientos"
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+            />
+            <datalist id="ec-procedimientos">
+              {(proceduresQuery.data ?? []).map((p) => (
+                <option key={p.id} value={p.name} />
+              ))}
+            </datalist>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="ec-inicio">Fecha y hora</Label>
+              <input
+                id="ec-inicio"
+                type="datetime-local"
+                value={startsAt}
+                onChange={(e) => setStartsAt(e.target.value)}
+                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="ec-duracion">Duración (min)</Label>
+              <input
+                id="ec-duracion"
+                type="number"
+                min={5}
+                max={480}
+                step={5}
+                value={duracion}
+                onChange={(e) => setDuracion(Number(e.target.value))}
+                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              />
+            </div>
+          </div>
+          {feriadoSeleccionado && <HolidayNotice name={feriadoSeleccionado} />}
+        </div>
+        <DialogFooter>
+          <Button onClick={() => editar.mutate()} disabled={editar.isPending || !puedeGuardar}>
+            {editar.isPending && <Loader2 className="size-3.5 animate-spin" />}
+            Guardar cambios
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1055,12 +1251,28 @@ function AgendaPage() {
                       </span>
                       <span className="text-xs text-muted-foreground">{c.duracion} min</span>
                       {clinicId && hasPermission(access.role, "agenda:manage") ? (
-                        <CambiarEstadoMenu
-                          clinicId={clinicId}
-                          userId={access.userId}
-                          appointmentId={c.id}
-                          estadoActual={c.estado}
-                        />
+                        <span className="flex items-center gap-1">
+                          <CambiarEstadoMenu
+                            clinicId={clinicId}
+                            userId={access.userId}
+                            appointmentId={c.id}
+                            estadoActual={c.estado}
+                          />
+                          <span
+                            onClick={(e) => e.preventDefault()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                          >
+                            <EditarCitaDialog
+                              clinicId={clinicId}
+                              userId={access.userId}
+                              country={access.clinic?.country}
+                              cita={c}
+                              sucursales={sucursales}
+                              profesionales={profesionales}
+                              pacientes={pacientes}
+                            />
+                          </span>
+                        </span>
                       ) : (
                         <span className={claseEstadoBadge(c.estado)}>
                           {etiquetaEstado[c.estado]}

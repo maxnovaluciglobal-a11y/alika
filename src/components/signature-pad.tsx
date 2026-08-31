@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { Label } from "@/components/ui/label";
 
@@ -16,6 +16,7 @@ export function SignaturePad({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
+  const [capturada, setCapturada] = useState(false);
 
   function ctx() {
     return canvasRef.current?.getContext("2d") ?? null;
@@ -55,6 +56,7 @@ export function SignaturePad({
     c.lineTo(x, y);
     c.stroke();
     onChange(canvasRef.current!.toDataURL("image/png"));
+    if (!capturada) setCapturada(true);
   }
 
   function end() {
@@ -67,6 +69,7 @@ export function SignaturePad({
     if (!c || !canvas) return;
     c.clearRect(0, 0, canvas.width, canvas.height);
     onChange(null);
+    setCapturada(false);
   }
 
   return (
@@ -89,9 +92,13 @@ export function SignaturePad({
         onPointerMove={move}
         onPointerUp={end}
         onPointerLeave={end}
+        aria-label="Área de firma manuscrita — dibujá con el mouse, el trackpad o el dedo"
         className="w-full touch-none rounded-lg border border-hairline bg-secondary/20 text-foreground"
       />
       <p className="text-[11px] text-muted-foreground">Firmá con el dedo o el mouse.</p>
+      <p role="status" className="sr-only">
+        {capturada ? "Firma capturada." : ""}
+      </p>
     </div>
   );
 }

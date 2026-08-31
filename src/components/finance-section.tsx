@@ -9,6 +9,7 @@ import {
   CircleDollarSign,
   FileText,
   Loader2,
+  Pencil,
   Plus,
   Trash2,
   X,
@@ -39,6 +40,7 @@ import {
   formatMoney,
   type PaymentMethod,
   type Procedure,
+  type Quote,
   type QuoteStatus,
   type TreatmentItemStatus,
   type TreatmentPlan,
@@ -53,6 +55,7 @@ import {
   registerPayment,
   setQuoteStatus,
   setTreatmentItemStatus,
+  updateQuote,
 } from "@/lib/finance.functions";
 import { cn } from "@/lib/utils";
 import { useOfflineMutation } from "@/hooks/use-offline-mutation";
@@ -458,6 +461,247 @@ function NuevoPresupuestoDialog({
           <Button onClick={() => create.mutate()} disabled={!puedeCrear}>
             {create.isPending && <Loader2 className="size-3.5 animate-spin" />}
             Crear presupuesto
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Corrige un presupuesto ya enviado sin rechazarlo y recrearlo desde cero
+ * (antes la única forma de arreglar un ítem mal cargado era esa, perdiendo
+ * el número correlativo — auditoría UX, 30-ago). Mismo formulario que
+ * "Nuevo presupuesto", precargado con los ítems actuales; solo disponible
+ * mientras el presupuesto sigue en 'draft'/'sent' (ver `canAccept` en
+ * `FinanceSection` y el guard server-side en `updateQuote`).
+ */
+function EditarPresupuestoDialog({
+  clinicId,
+  patientId,
+  quote,
+  procedures,
+}: {
+  clinicId: string;
+  patientId: string;
+  quote: Quote;
+  procedures: Procedure[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [notes, setNotes] = useState(quote.notes ?? "");
+  const [items, setItems] = useState<DraftItem[]>(
+    quote.items.map((it) => ({
+      procedureId: it.procedureId,
+      nameSnapshot: it.nameSnapshot,
+      quantity: it.quantity,
+      unitPrice: it.unitPriceCents,
+      discount: it.discountCents,
+      notes: it.notes ?? "",
+    })),
+  );
+  const queryClient = useQueryClient();
+  const updateFn = useServerFn(updateQuote);
+
+  function reabrirConValoresActuales(next: boolean) {
+    if (next) {
+      setNotes(quote.notes ?? "");
+      setItems(
+        quote.items.map((it) => ({
+          procedureId: it.procedureId,
+          nameSnapshot: it.nameSnapshot,
+          quantity: it.quantity,
+          unitPrice: it.unitPriceCents,
+          discount: it.discountCents,
+          notes: it.notes ?? "",
+        })),
+      );
+    }
+    setOpen(next);
+  }
+
+  const totals = useMemo(() => {
+    const subtotal = items.reduce(
+      (s, it) => s + Math.max(0, it.quantity * it.unitPrice - it.discount),
+      0,
+    );
+    return { subtotal, total: subtotal };
+  }, [items]);
+
+  const update = useMutation({
+    mutationFn: () =>
+      updateFn({
+        data: {
+          quoteId: quote.id,
+          clinicId,
+          notes: notes.trim() || undefined,
+          validUntil: quote.validUntil ?? undefined,
+          items: items
+            .filter((it) => it.nameSnapshot.trim())
+            .map((it) => ({
+              procedureId: it.procedureId ?? undefined,
+              nameSnapshot: it.nameSnapshot.trim(),
+              quantity: it.quantity,
+              unitPriceCents: it.unitPrice,
+              discountCents: it.discount,
+              notes: it.notes.trim() || undefined,
+            })),
+        },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quotes", clinicId, patientId] });
+      toast.success(`Presupuesto ${quote.number} actualizado`);
+      setOpen(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const pickProcedure = (idx: number, procId: string) => {
+    const p = procedures.find((x) => x.id === procId);
+    if (!p) return;
+    setItems((arr) =>
+      arr.map((it, i) =>
+        i === idx
+          ? { ...it, procedureId: p.id, nameSnapshot: p.name, unitPrice: p.defaultPriceCents }
+          : it,
+      ),
+    );
+  };
+
+  const puedeGuardar = items.some((it) => it.nameSnapshot.trim()) && !update.isPending;
+
+  return (
+    <Dialog open={open} onOpenChange={reabrirConValoresActuales}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm">
+          <Pencil className="size-3.5" /> Editar
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Editar presupuesto {quote.number}</DialogTitle>
+          <DialogDescription>
+            Los cambios se guardan sobre el mismo presupuesto — no se crea uno nuevo.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <div className="space-y-2">
+            {items.map((it, i) => (
+              <div
+                key={i}
+                className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 rounded-lg border border-hairline p-2"
+              >
+                <div className="min-w-0 space-y-1">
+                  <select
+                    value={it.procedureId ?? ""}
+                    onChange={(e) =>
+                      e.target.value
+                        ? pickProcedure(i, e.target.value)
+                        : setItems((arr) =>
+                            arr.map((x, j) => (j === i ? { ...x, procedureId: null } : x)),
+                          )
+                    }
+                    className="w-full rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
+                  >
+                    <option value="">— Elegir del catálogo o escribir libre —</option>
+                    {procedures.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} · {formatMoney(p.defaultPriceCents, p.currency)}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    value={it.nameSnapshot}
+                    onChange={(e) =>
+                      setItems((arr) =>
+                        arr.map((x, j) => (j === i ? { ...x, nameSnapshot: e.target.value } : x)),
+                      )
+                    }
+                    placeholder="Descripción del ítem"
+                    className="w-full rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
+                  />
+                </div>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={it.quantity}
+                  onChange={(e) =>
+                    setItems((arr) =>
+                      arr.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) } : x)),
+                    )
+                  }
+                  title="Cantidad"
+                  className="w-14 rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
+                />
+                <input
+                  type="number"
+                  min={0}
+                  value={it.unitPrice}
+                  onChange={(e) =>
+                    setItems((arr) =>
+                      arr.map((x, j) =>
+                        j === i ? { ...x, unitPrice: Number(e.target.value) } : x,
+                      ),
+                    )
+                  }
+                  title="Precio unitario"
+                  className="w-24 rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
+                />
+                <input
+                  type="number"
+                  min={0}
+                  value={it.discount}
+                  onChange={(e) =>
+                    setItems((arr) =>
+                      arr.map((x, j) => (j === i ? { ...x, discount: Number(e.target.value) } : x)),
+                    )
+                  }
+                  title="Descuento"
+                  placeholder="Desc."
+                  className="w-20 rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
+                />
+                <button
+                  onClick={() => setItems((arr) => arr.filter((_, j) => j !== i))}
+                  disabled={items.length === 1}
+                  aria-label="Quitar"
+                  className="rounded-md p-1 text-muted-foreground hover:bg-secondary disabled:opacity-30"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setItems((arr) => [...arr, emptyItem()])}
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-brand hover:underline"
+          >
+            <Plus className="size-3" /> Agregar otro ítem
+          </button>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="eq-notes">Notas</Label>
+            <textarea
+              id="eq-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              placeholder="Observaciones o condiciones del presupuesto"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-4 border-t border-hairline pt-3 text-sm">
+            <span className="text-muted-foreground">Total</span>
+            <span className="font-display text-lg font-semibold">{formatMoney(totals.total)}</span>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button onClick={() => update.mutate()} disabled={!puedeGuardar}>
+            {update.isPending && <Loader2 className="size-3.5 animate-spin" />}
+            Guardar cambios
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1004,6 +1248,12 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
                                   signatureDataUrl,
                                 })
                               }
+                            />
+                            <EditarPresupuestoDialog
+                              clinicId={clinicId}
+                              patientId={patientId}
+                              quote={quote}
+                              procedures={procedures}
                             />
                             <Button
                               variant="ghost"

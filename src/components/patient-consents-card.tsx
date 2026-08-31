@@ -72,6 +72,15 @@ export function PatientConsentsCard({
   const [body, setBody] = useState("");
   const [signedByName, setSignedByName] = useState(patientName);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+  // El canvas de firma es un widget de puntero puro — no hay forma
+  // significativa de "dibujar" por teclado. Sin esta alternativa, un
+  // paciente o miembro del staff que usa teclado o lector de pantalla no
+  // podía completar el flujo de consentimiento (auditoría de
+  // accesibilidad, 30-ago): "Guardar firma" quedaba deshabilitado para
+  // siempre. Mismo criterio que ya usa la aceptación de presupuestos
+  // (setQuoteStatus): firmar sin trazo sigue siendo válido, el nombre
+  // tipeado es la evidencia.
+  const [firmaElectronica, setFirmaElectronica] = useState(false);
   const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
 
   const templatesQuery = useQuery({
@@ -96,7 +105,7 @@ export function PatientConsentsCard({
           titleSnapshot: title,
           bodySnapshot: body,
           signedByName,
-          signatureDataUrl: signatureDataUrl!,
+          signatureDataUrl: firmaElectronica ? undefined : (signatureDataUrl ?? undefined),
         },
       }),
     onSuccess: () => {
@@ -107,6 +116,7 @@ export function PatientConsentsCard({
       setTitle("");
       setBody("");
       setSignatureDataUrl(null);
+      setFirmaElectronica(false);
     },
     onError: (error) =>
       toast.error(error instanceof Error ? error.message : "No se pudo guardar la firma."),
@@ -204,7 +214,21 @@ export function PatientConsentsCard({
                     className={inputClass()}
                   />
                 </div>
-                <SignaturePad onChange={setSignatureDataUrl} />
+                {!firmaElectronica && <SignaturePad onChange={setSignatureDataUrl} />}
+                <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={firmaElectronica}
+                    onChange={(e) => {
+                      setFirmaElectronica(e.target.checked);
+                      if (e.target.checked) setSignatureDataUrl(null);
+                    }}
+                    className="mt-0.5"
+                  />
+                  Firmar electrónicamente con el nombre de arriba, sin trazo manuscrito — usar
+                  cuando quien firma no puede dibujar con mouse, dedo o trackpad (teclado, lector de
+                  pantalla, etc).
+                </label>
               </div>
               <DialogFooter>
                 <Button
@@ -214,7 +238,7 @@ export function PatientConsentsCard({
                     !title.trim() ||
                     body.trim().length < 10 ||
                     !signedByName.trim() ||
-                    !signatureDataUrl
+                    (!firmaElectronica && !signatureDataUrl)
                   }
                 >
                   {signMutation.isPending && <Loader2 className="size-3.5 animate-spin" />}

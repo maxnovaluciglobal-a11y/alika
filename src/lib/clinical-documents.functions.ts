@@ -18,6 +18,21 @@ function safeFilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-100);
 }
 
+// PNG 1x1 transparente — placeholder de `signature_storage_path` cuando el
+// consentimiento se firma electrónicamente (nombre tipeado) en vez de con
+// trazo manuscrito, ver `signPatientConsent`. `signed_by_name` es la
+// evidencia real en ese caso; esta imagen solo cumple el NOT NULL de la
+// columna sin fingir un trazo que nunca existió.
+const ELECTRONIC_SIGNATURE_PLACEHOLDER = {
+  bytes: Uint8Array.from(
+    Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+      "base64",
+    ),
+  ),
+  mimeType: "image/png",
+};
+
 // ---------------------------------------------------------------
 // Documentos: imágenes y radiografías
 // ---------------------------------------------------------------
@@ -248,15 +263,29 @@ export const signPatientConsent = createServerFn({ method: "POST" })
         titleSnapshot: z.string().trim().min(2).max(120),
         bodySnapshot: z.string().trim().min(10).max(8000),
         signedByName: z.string().trim().min(2).max(120),
-        // PNG del canvas de firma, data URL.
-        signatureDataUrl: z.string().min(1).max(2_000_000),
+        // PNG del canvas de firma, data URL. Opcional a propósito: el canvas
+        // es un widget de puntero puro (no hay forma significativa de
+        // "dibujar" por teclado), así que un paciente/staff que usa teclado o
+        // lector de pantalla no puede completarlo — sin esta alternativa el
+        // flujo entero de consentimiento quedaba inalcanzable para esos
+        // usuarios (auditoría de accesibilidad, 30-ago). Sin trazo, se sube
+        // un placeholder y `signedByName` (ya obligatorio) queda como la
+        // evidencia de quién firmó — mismo criterio que ya usa
+        // `setQuoteStatus` al aceptar un presupuesto sin firma.
+        signatureDataUrl: z.string().max(2_000_000).optional(),
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { bytes, mimeType } = decodeDataUrl(data.signatureDataUrl);
-    if (!mimeType.startsWith("image/")) {
-      throw new Error("La firma debe ser una imagen.");
+    let bytes: Uint8Array;
+    let mimeType: string;
+    if (data.signatureDataUrl) {
+      ({ bytes, mimeType } = decodeDataUrl(data.signatureDataUrl));
+      if (!mimeType.startsWith("image/")) {
+        throw new Error("La firma debe ser una imagen.");
+      }
+    } else {
+      ({ bytes, mimeType } = ELECTRONIC_SIGNATURE_PLACEHOLDER);
     }
     const path = `${data.clinicId}/${data.patientId}/consent-signatures/${crypto.randomUUID()}.png`;
 
