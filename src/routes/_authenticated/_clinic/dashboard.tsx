@@ -52,10 +52,22 @@ function Dashboard() {
     queryFn: () => fetchPatients({ data: { clinicId: clinicId! } }),
     select: (res) => res.items,
   });
+  const hoy = hoyISO(clinicTz);
+  // Auditoría de código 01-sep-2026: el dashboard nunca mira hacia atrás
+  // (citasHoy/en7Dias/sinConfirmar48h/proximasCitas son todas hoy en
+  // adelante) — antes traía la clínica entera sin filtro. 30 días alcanza
+  // de sobra para las 4 tarjetas de acá; ventana en la queryKey para que
+  // no quede pegada al cruzar la medianoche.
+  const ventanaHasta = useMemo(() => {
+    const limite = new Date(hoy);
+    limite.setDate(limite.getDate() + 30);
+    return limite.toISOString().slice(0, 10);
+  }, [hoy]);
   const { data: citas = [], isLoading } = useQuery({
-    queryKey: ["appointments", clinicId],
+    queryKey: ["appointments", clinicId, hoy, ventanaHasta],
     enabled: Boolean(clinicId),
-    queryFn: () => fetchAppointments({ data: { clinicId: clinicId! } }),
+    queryFn: () =>
+      fetchAppointments({ data: { clinicId: clinicId!, desde: hoy, hasta: ventanaHasta } }),
     select: (res) => res.items,
   });
   const { data: profesionales = [] } = useQuery({
@@ -63,8 +75,6 @@ function Dashboard() {
     enabled: Boolean(clinicId),
     queryFn: () => fetchProfessionals({ data: { clinicId: clinicId! } }),
   });
-
-  const hoy = hoyISO(clinicTz);
 
   const citasHoy = useMemo(() => citas.filter((c) => c.fecha === hoy), [citas, hoy]);
   const en7Dias = useMemo(() => {

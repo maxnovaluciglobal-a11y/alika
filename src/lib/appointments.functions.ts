@@ -114,18 +114,70 @@ const APPOINTMENT_COLUMNS =
  */
 const APPOINTMENTS_ROW_LIMIT = 10_000;
 
-/** Citas de la clínica (excluye canceladas). */
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Convierte un rango de fechas calendario (opcional en cada punta) en los
+ * límites UTC para filtrar `starts_at`, con 1 día de padding a cada lado.
+ * Separado de `listAppointments` para poder testear el padding sin
+ * necesitar Supabase real — es la parte con más riesgo de un off-by-one.
+ */
+export function appointmentDateRangeToUtcBounds(
+  desde?: string,
+  hasta?: string,
+): { gte?: string; lt?: string } {
+  const bounds: { gte?: string; lt?: string } = {};
+  if (desde) {
+    const desdeUtc = new Date(`${desde}T00:00:00Z`);
+    desdeUtc.setUTCDate(desdeUtc.getUTCDate() - 1);
+    bounds.gte = desdeUtc.toISOString();
+  }
+  if (hasta) {
+    const hastaUtc = new Date(`${hasta}T00:00:00Z`);
+    hastaUtc.setUTCDate(hastaUtc.getUTCDate() + 2);
+    bounds.lt = hastaUtc.toISOString();
+  }
+  return bounds;
+}
+
+/**
+ * Citas de la clínica (excluye canceladas).
+ *
+ * Auditoría de código 01-sep-2026: `desde`/`hasta` son OPCIONALES a
+ * propósito — sin ellos el comportamiento es idéntico al de siempre (fetch
+ * completo, mismo tope de `APPOINTMENTS_ROW_LIMIT`). agenda.tsx tiene un
+ * modo "todas las fechas" que necesita de verdad el fetch sin acotar, así
+ * que NO se le cambió el call site; solo dashboard.tsx (que siempre quiere
+ * una ventana corta) pasa el filtro. El padding de 1 día a cada lado en UTC
+ * es a propósito generoso (cubre cualquier offset real de timezone, hasta
+ * ±14h): esto filtra ANTES de saber a qué sucursal pertenece cada fila, y
+ * una clínica puede tener sucursales en timezones distintas — mejor traer
+ * un puñado de filas de más que cortar mal el borde para alguna sucursal.
+ */
 export const listAppointments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        desde: z.string().regex(ISO_DATE, "Formato de fecha inválido.").optional(),
+        hasta: z.string().regex(ISO_DATE, "Formato de fecha inválido.").optional(),
+      })
+      .parse(input),
+  )
   .handler(async ({ data, context }): Promise<{ items: Cita[]; truncated: boolean }> => {
     const { supabase } = context;
 
-    const { data: rows, error } = await supabase
+    let query = supabase
       .from("appointments")
       .select(APPOINTMENT_COLUMNS)
       .eq("clinic_id", data.clinicId)
-      .neq("status", "cancelada")
+      .neq("status", "cancelada");
+    const bounds = appointmentDateRangeToUtcBounds(data.desde, data.hasta);
+    if (bounds.gte) query = query.gte("starts_at", bounds.gte);
+    if (bounds.lt) query = query.lt("starts_at", bounds.lt);
+
+    const { data: rows, error } = await query
       // Descendente a propósito: si el tope de fila corta la lista, que se
       // pierda historial viejo y no la agenda futura (ver auditoría
       // architecture-6). Los consumidores (agenda.tsx, dashboard.tsx)
