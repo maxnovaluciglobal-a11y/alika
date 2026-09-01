@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2 } from "lucide-react";
+import { Loader2, MessageCircle } from "lucide-react";
 
-import { openPortalSession } from "@/lib/portal.functions";
+import { getExpiredPortalContact, openPortalSession } from "@/lib/portal.functions";
 
 /**
  * Entrada del portal: `alika.com/portal/<jwt>`.
@@ -26,7 +26,9 @@ function PortalTokenExchange() {
   const { token } = Route.useParams();
   const navigate = useNavigate();
   const open = useServerFn(openPortalSession);
+  const fetchContact = useServerFn(getExpiredPortalContact);
   const [error, setError] = useState<string | null>(null);
+  const [contact, setContact] = useState<{ clinicName: string; waUrl: string | null } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,20 +37,39 @@ function PortalTokenExchange() {
         if (!cancelled) navigate({ to: "/portal/inicio", replace: true });
       })
       .catch((e: Error) => {
-        if (!cancelled) setError(e.message || "Link inválido o vencido.");
+        if (cancelled) return;
+        setError(e.message || "Link inválido o vencido.");
+        // Best-effort: si el token venció (firma válida, solo pasado de
+        // fecha) esto trae el WhatsApp real de la clínica en vez de dejar
+        // al paciente con un "contactá a tu clínica" sin ningún dato.
+        void fetchContact({ data: { token } })
+          .then((c) => !cancelled && setContact(c))
+          .catch(() => {});
       });
     return () => {
       cancelled = true;
     };
-  }, [token, open, navigate]);
+  }, [token, open, fetchContact, navigate]);
 
   if (error) {
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
         <p className="text-sm font-medium">Tu enlace no es válido o ya venció.</p>
-        <p className="text-xs text-muted-foreground">
-          Pídele a tu clínica un enlace nuevo por WhatsApp.
-        </p>
+        {contact?.waUrl ? (
+          <a
+            href={contact.waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-medium text-brand-foreground"
+          >
+            <MessageCircle className="size-4" />
+            Escribir a {contact.clinicName} por WhatsApp
+          </a>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Pídele a tu clínica un enlace nuevo por WhatsApp.
+          </p>
+        )}
       </div>
     );
   }

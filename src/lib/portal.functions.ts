@@ -8,6 +8,7 @@ import { buildWaMeUrl } from "@/lib/messaging";
 import {
   PORTAL_COOKIE_MAX_AGE_SECONDS,
   PORTAL_COOKIE_NAME,
+  clinicIdFromExpiredToken,
   signPortalToken,
   verifyPortalToken,
   type PortalTokenPayload,
@@ -226,6 +227,47 @@ async function logPortalAccess(
     console.error("[portal] no se pudo registrar el acceso", err);
   }
 }
+
+/**
+ * Contacto de la clínica para mostrar en las pantallas de "tu link venció" —
+ * antes las 3 (entrada por token, portal sin token, overview con sesión
+ * vencida) mostraban "contactá a tu clínica" en texto plano, sin poder saber
+ * cuál era la clínica (auditoría UX, 30-ago). Acepta un `token` explícito
+ * (para /portal/$token, donde la cookie puede no existir todavía) o lo lee
+ * de la cookie de sesión si no se pasa uno (para /portal/inicio). Nunca
+ * lanza — si no hay nada que mostrar, el cliente se queda con el mensaje
+ * genérico de siempre.
+ */
+export const getExpiredPortalContact = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ token: z.string().min(1).optional() }).parse(input),
+  )
+  .handler(async ({ data }): Promise<{ clinicName: string; waUrl: string | null } | null> => {
+    const token = data.token ?? readPortalCookie();
+    if (!token) return null;
+    const clinicId = await clinicIdFromExpiredToken(token);
+    if (!clinicId) return null;
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: clinic }, { data: branch }] = await Promise.all([
+      supabaseAdmin.from("clinics").select("name").eq("id", clinicId).maybeSingle(),
+      supabaseAdmin
+        .from("branches")
+        .select("phone")
+        .eq("clinic_id", clinicId)
+        .eq("is_active", true)
+        .not("phone", "is", null)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    if (!clinic) return null;
+
+    const waUrl = branch?.phone
+      ? buildWaMeUrl(branch.phone, "Hola, mi link del portal venció — ¿me pueden mandar uno nuevo?")
+      : null;
+    return { clinicName: clinic.name, waUrl };
+  });
 
 /** Consume el token de la URL, valida, setea cookie. Se llama una vez al abrir /portal/[token]. */
 export const openPortalSession = createServerFn({ method: "POST" })

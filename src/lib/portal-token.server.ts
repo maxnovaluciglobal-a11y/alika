@@ -1,4 +1,4 @@
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT, jwtVerify, errors } from "jose";
 
 /**
  * Tokens del portal del paciente (Opción C: URL firmada por wa.me, sin
@@ -88,6 +88,31 @@ export async function verifyPortalToken(token: string): Promise<PortalTokenPaylo
     throw new Error("Token de portal inválido: faltan claims.");
   }
   return { patientId, clinicId, issuedAt: new Date(payload.iat * 1000) };
+}
+
+/**
+ * Extrae el `clinic_id` de un token VENCIDO (firma válida, solo pasado de
+ * `exp`) — nunca de un token inválido/manipulado/con firma equivocada. Sirve
+ * únicamente para mostrarle al paciente el WhatsApp de SU clínica en la
+ * pantalla de "tu link venció" en vez de un mensaje genérico sin ninguna
+ * salida (auditoría UX, 30-ago: las 3 pantallas de error del portal
+ * mostraban "contactá a tu clínica" en texto plano, sin poder saber cuál
+ * era la clínica). No otorga ningún acceso — la firma sigue siendo la
+ * única fuente de verdad de que el token lo emitió Alika de verdad para esa
+ * clínica; `jose` expone el payload en `JWTExpired.payload` para
+ * exactamente este caso de uso.
+ */
+export async function clinicIdFromExpiredToken(token: string): Promise<string | null> {
+  try {
+    await jwtVerify(token, getSecret(), { issuer: ISSUER, audience: AUDIENCE });
+    return null; // no estaba vencido — no es el caso que cubre esta función
+  } catch (err) {
+    if (err instanceof errors.JWTExpired) {
+      const clinicId = err.payload.clinic_id;
+      return typeof clinicId === "string" ? clinicId : null;
+    }
+    return null; // firma inválida, manipulado, emisor/audiencia distintos, etc.
+  }
 }
 
 export const PORTAL_COOKIE_NAME = "alika_portal_session";

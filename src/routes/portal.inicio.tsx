@@ -1,8 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarClock, CalendarDays, CheckCircle2, Clock, Loader2, Send } from "lucide-react";
+import {
+  CalendarClock,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  Loader2,
+  MessageCircle,
+  Send,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Calendar } from "@/components/ui/calendar";
@@ -11,7 +19,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { usePublicHolidays } from "@/hooks/use-public-holidays";
 import { fechaAISO, formatoFechaLarga, hoyISO, parseIsoDate } from "@/lib/clinic-data";
 import { formatMoney } from "@/lib/finance";
-import { getMyPortalOverview, requestPortalAppointment } from "@/lib/portal.functions";
+import {
+  getExpiredPortalContact,
+  getMyPortalOverview,
+  requestPortalAppointment,
+} from "@/lib/portal.functions";
 
 export const Route = createFileRoute("/portal/inicio")({
   head: () => ({
@@ -23,6 +35,7 @@ export const Route = createFileRoute("/portal/inicio")({
 function PortalInicio() {
   const fetchOverview = useServerFn(getMyPortalOverview);
   const requestFn = useServerFn(requestPortalAppointment);
+  const fetchContact = useServerFn(getExpiredPortalContact);
   const queryClient = useQueryClient();
 
   const overview = useQuery({
@@ -30,6 +43,22 @@ function PortalInicio() {
     queryFn: () => fetchOverview({}),
     retry: false,
   });
+
+  // Mismo criterio que /portal/$token: si la sesión venció, intenta traer el
+  // WhatsApp real de la clínica (lee la cookie del token, que sigue en el
+  // navegador aunque haya expirado) en vez de dejar al paciente con un
+  // "contactá a tu clínica" sin ningún dato (auditoría UX, 30-ago).
+  const [contact, setContact] = useState<{ clinicName: string; waUrl: string | null } | null>(null);
+  useEffect(() => {
+    if (!overview.isError) return;
+    let cancelled = false;
+    void fetchContact({ data: {} })
+      .then((c) => !cancelled && setContact(c))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [overview.isError, fetchContact]);
 
   const [preferredDate, setPreferredDate] = useState(hoyISO());
   const [reason, setReason] = useState("");
@@ -62,11 +91,22 @@ function PortalInicio() {
 
   if (overview.isError) {
     return (
-      <div className="mx-auto max-w-md p-6 text-center">
+      <div className="mx-auto flex max-w-md flex-col items-center gap-4 p-6 text-center">
         <p className="text-sm text-muted-foreground">
           Tu enlace del portal venció o no es válido. Contacta a tu clínica para que te envíe uno
           nuevo.
         </p>
+        {contact?.waUrl && (
+          <a
+            href={contact.waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-medium text-brand-foreground"
+          >
+            <MessageCircle className="size-4" />
+            Escribir a {contact.clinicName} por WhatsApp
+          </a>
+        )}
       </div>
     );
   }
