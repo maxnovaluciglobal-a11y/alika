@@ -4,7 +4,7 @@
 
 ## Contexto para el equipo
 
-**Qué es Alika**: SaaS de gestión odontológica para clínicas LatAm (target CL/MX/CO/PE). Stack: TanStack Start (SSR) + React 19 + Vite 8 + TS + Tailwind 4 + shadcn/ui + Supabase propio (`hvfkygoguxvpmwslrccb`, sa-east-1) + AI Gateway (Lovable → Gemini → OpenAI fallback). Repo: `github.com/walterlamadriz-ai/aurora-dental-os` (público). Prod: `alika-omega.vercel.app`. Piloto real: clínica "Patricia" (Chile).
+**Qué es Alika**: SaaS de gestión odontológica para clínicas LatAm (target CL/MX/CO/PE). Stack: TanStack Start (SSR) + React 19 + Vite 8 + TS + Tailwind 4 + shadcn/ui + Supabase propio (`hvfkygoguxvpmwslrccb`, sa-east-1) + AI Gateway (Lovable → Gemini → OpenAI fallback). Repo: `github.com/walterlamadriz-ai/alika` (público). Prod: `alika-omega.vercel.app`. Piloto real: clínica "Patricia" (Chile).
 
 **Estado al 2026-08-21**: Fases 0 a 6 (pacientes, agenda, odontograma, presupuestos/planes, pagos, WhatsApp) completas. Desde la última auditoría (15-ago) se sumó: offline-first completo (4 tandas, lectura+escritura con resolución de conflictos), WhatsApp Fase 1-4 completas (outreach aprobado por staff, lista de espera, captación de leads, comunidad/referidos), backups a B2 cifrados con age (falta que Walter cree el bucket), billing skeleton Stripe (tabla + webhook, sin gate duro todavía), isotipo/logo definitivo ("Cúspide"), naming reabierto (Alika vs Alik, sin decidir).
 

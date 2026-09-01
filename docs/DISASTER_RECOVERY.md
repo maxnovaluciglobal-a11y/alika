@@ -114,7 +114,7 @@ Runbook para escenarios de falla operacional. Autoridad: Walter (`walterlamadriz
 
 - **Owner del proyecto:** Walter — `walterlamadriz@gmail.com`
 - **Lovable:** editor `https://lovable.dev/projects/9f5bde21-41b4-43c0-bc81-ea2215cab660`
-- **GitHub:** `walterlamadriz-ai/aurora-dental-os` (rama `main`)
+- **GitHub:** `walterlamadriz-ai/alika` (rama `main`)
 - **Supabase (via Lovable):** proyecto `9f5bde21-41b4-43c0-bc81-ea2215cab660`
 - **Login owner de la clínica "clinica Patricia":** `walterlamadriz@gmail.com` / password reseteada via SQL directo en Fase 1
 - **VPS fallback:** `91.99.204.162` (mismo host que GastroCore, ver memoria de proyectos)

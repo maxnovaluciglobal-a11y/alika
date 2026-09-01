@@ -19,7 +19,7 @@ También se puede disparar a mano desde GitHub → Actions → "Backup diario" �
 
 1. **Crear el bucket en Backblaze B2**: `alika-backups`, privado. Sugerido: regla de lifecycle que borre objetos de más de 90 días (retención automática, sin script aparte).
 2. **Crear una Application Key** de B2 restringida a ese bucket (no la master key de la cuenta).
-3. **Cargar 4 secrets** en GitHub → Settings → Secrets and variables → Actions del repo `aurora-dental-os` (los valores de Supabase ya los tenés en tu `.env` local, cópialos de ahí):
+3. **Cargar 4 secrets** en GitHub → Settings → Secrets and variables → Actions del repo `alika` (los valores de Supabase ya los tenés en tu `.env` local, cópialos de ahí):
    ```
    gh secret set SUPABASE_URL
    gh secret set SUPABASE_SERVICE_ROLE_KEY

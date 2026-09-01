@@ -40,7 +40,7 @@ Estas cosas requieren decisión y firma de Walter antes de tocar código product
 ### 2.2 Vercel
 
 - [ ] Cuenta Vercel Pro (~US$20/mes) — necesario para custom domain productivo y multiples envs.
-- [ ] Conectar el repo `walterlamadriz-ai/aurora-dental-os` al proyecto Vercel.
+- [ ] Conectar el repo `walterlamadriz-ai/alika` al proyecto Vercel.
 - [ ] Configurar dominio productivo → apuntar `alika.com` a Vercel (CNAME o A record).
 - [ ] Environment Variables en Vercel (copiar de `.env.example`):
   - `SUPABASE_URL`
