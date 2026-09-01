@@ -514,7 +514,12 @@ export const updatePatient = createServerFn({ method: "POST" })
     if (rest.documento !== undefined) {
       const { error: encError } = await supabase.rpc("set_patient_document_id", {
         p_patient_id: patientId,
-        p_document_id: rest.documento || null,
+        // El tipo generado marca este parámetro como no-nullable, pero la
+        // función SQL sí acepta NULL a propósito (limpia el documento
+        // cifrado) — ver supabase/migrations/20260822160000_*. Limitación
+        // conocida del generador con parámetros de funciones RPC, no un
+        // cambio real de la firma.
+        p_document_id: (rest.documento || null) as string,
       });
       if (encError) {
         console.error(
