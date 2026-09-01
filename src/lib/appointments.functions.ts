@@ -1,10 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { HORA_INICIO, type Cita, type EstadoCita } from "@/lib/clinic-data";
 import { mensajeDb } from "@/lib/db-errors";
 import { filaYaCreada } from "@/lib/idempotency";
+import type { Database } from "@/integrations/supabase/types";
 
 const DEFAULT_TIMEZONE = "America/Santiago";
 
@@ -210,6 +212,111 @@ export function wallTimeInTzToUtc(localIso: string, timeZone: string): Date {
 /** Aviso de doble-booking devuelto al front — no bloquea, solo informa. */
 export type Solapamiento = { treatmentLabel: string; startsAt: string; endsAt: string };
 
+/**
+ * Auditoría de código 01-sep-2026: createAppointment y updateAppointment
+ * traían este bloque duplicado casi carácter por carácter (timezone de la
+ * sucursal, bloqueo duro contra professional_schedules, aviso soft de
+ * solapamiento). Único diff real entre las dos copias: updateAppointment
+ * excluye la propia cita del choque de solapamiento (no puede "chocar
+ * consigo misma" al reprogramarse) — de ahí `excludeAppointmentId`.
+ */
+async function validarHorarioYSolapamiento(
+  supabase: SupabaseClient<Database>,
+  params: {
+    clinicId: string;
+    branchId: string;
+    professionalId: string;
+    /** Valor crudo del <input type="datetime-local">, wall-clock de la sucursal. */
+    startsAtRaw: string;
+    duracionMin: number;
+    /** Al reprogramar, la cita no debe chocar consigo misma. */
+    excludeAppointmentId?: string;
+  },
+): Promise<{ startsAt: Date; endsAt: Date; solapamiento?: Solapamiento }> {
+  const { data: branch, error: branchErr } = await supabase
+    .from("branches")
+    .select("timezone")
+    .eq("clinic_id", params.clinicId)
+    .eq("id", params.branchId)
+    .maybeSingle();
+  if (branchErr) throw new Error(mensajeDb(branchErr, "No pudimos verificar la sucursal."));
+  if (!branch) throw new Error("La sucursal no existe o no es tuya.");
+  const timeZone = branch.timezone || DEFAULT_TIMEZONE;
+
+  const startsAt = wallTimeInTzToUtc(params.startsAtRaw, timeZone);
+  if (Number.isNaN(startsAt.getTime())) throw new Error("Fecha/hora de inicio inválida.");
+  const endsAt = new Date(startsAt.getTime() + params.duracionMin * 60_000);
+
+  // Bloqueo DURO (a diferencia del aviso soft de solapamiento de más abajo)
+  // contra el horario declarado del profesional en /profesionales. Un
+  // profesional SIN ninguna fila en professional_schedules no tiene
+  // restricción declarada — no cambia nada para las clínicas que todavía no
+  // cargaron horarios (compatibilidad hacia atrás total). Si SÍ tiene al
+  // menos un día declarado, agendar fuera de eso es un error de operador
+  // prevenible, no una decisión legítima de clínica como sí puede serlo un
+  // doble-booking (cubrir un turno, urgencia).
+  const { data: horarios, error: horariosErr } = await supabase
+    .from("professional_schedules")
+    .select("day_of_week, start_time, end_time")
+    .eq("clinic_id", params.clinicId)
+    .eq("professional_id", params.professionalId);
+  if (horariosErr)
+    throw new Error(mensajeDb(horariosErr, "No pudimos verificar el horario del profesional."));
+
+  if (horarios && horarios.length > 0) {
+    const dia = diaSemanaLocal(startsAt, timeZone);
+    const bloqueDia = horarios.find((h) => h.day_of_week === dia);
+    if (!bloqueDia) {
+      throw new Error(`El profesional no atiende los ${DIA_SEMANA_LABEL[dia]}.`);
+    }
+    const horaInicio = horaLocalHHMM(startsAt, timeZone);
+    const horaFin = horaLocalHHMM(endsAt, timeZone);
+    const inicioOk = horaInicio >= bloqueDia.start_time.slice(0, 5);
+    const finOk = horaFin <= bloqueDia.end_time.slice(0, 5);
+    if (!inicioOk || !finOk) {
+      throw new Error(
+        `Fuera del horario del profesional los ${DIA_SEMANA_LABEL[dia]} ` +
+          `(${bloqueDia.start_time.slice(0, 5)}–${bloqueDia.end_time.slice(0, 5)}).`,
+      );
+    }
+  }
+
+  // Aviso SOFT de doble-booking, no bloqueo duro (mismo criterio que Open
+  // Dental): dos citas del mismo profesional cuyos rangos se cruzan. No
+  // usamos operatory_id como unidad de colisión porque createAppointment
+  // nunca lo setea todavía (siempre null) — professional_id es la unidad
+  // real hoy. Corre ANTES del insert para no tener que revertir nada.
+  // Importa más ahora que la app es offline-first: dos recepcionistas
+  // pueden estar cargando en paralelo sin verse.
+  // `starts_at < endsAt AND ends_at > startsAt` es la condición estándar de
+  // solapamiento de intervalos — la evalúa la propia query, no hace falta
+  // traer candidatas y filtrar en JS.
+  let choqueQuery = supabase
+    .from("appointments")
+    .select("treatment_label, starts_at, ends_at")
+    .eq("clinic_id", params.clinicId)
+    .eq("professional_id", params.professionalId)
+    .neq("status", "cancelada")
+    .lt("starts_at", endsAt.toISOString())
+    .gt("ends_at", startsAt.toISOString());
+  if (params.excludeAppointmentId) {
+    choqueQuery = choqueQuery.neq("id", params.excludeAppointmentId);
+  }
+  const { data: choques, error: choquesErr } = await choqueQuery.limit(1);
+  if (choquesErr)
+    throw new Error(mensajeDb(choquesErr, "No pudimos verificar si hay otra cita en ese horario."));
+  const choque = choques?.[0];
+  const solapamiento: Solapamiento | undefined = choque
+    ? {
+        treatmentLabel: choque.treatment_label || "Consulta",
+        startsAt: choque.starts_at,
+        endsAt: choque.ends_at,
+      }
+    : undefined;
+
+  return { startsAt, endsAt, solapamiento };
+}
+
 export const createAppointment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -239,85 +346,13 @@ export const createAppointment = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<{ id: string; solapamiento?: Solapamiento }> => {
-    const { data: branch, error: branchErr } = await context.supabase
-      .from("branches")
-      .select("timezone")
-      .eq("clinic_id", data.clinicId)
-      .eq("id", data.branchId)
-      .maybeSingle();
-    if (branchErr) throw new Error(mensajeDb(branchErr, "No pudimos verificar la sucursal."));
-    if (!branch) throw new Error("La sucursal no existe o no es tuya.");
-    const timeZone = branch.timezone || DEFAULT_TIMEZONE;
-
-    const startsAt = wallTimeInTzToUtc(data.startsAt, timeZone);
-    if (Number.isNaN(startsAt.getTime())) throw new Error("Fecha/hora de inicio inválida.");
-    const endsAt = new Date(startsAt.getTime() + data.duracionMin * 60_000);
-
-    // Bloqueo DURO (a diferencia del aviso soft de solapamiento de más
-    // abajo) contra el horario declarado del profesional en /profesionales.
-    // Un profesional SIN ninguna fila en professional_schedules no tiene
-    // restricción declarada — no cambia nada para las clínicas que todavía
-    // no cargaron horarios (compatibilidad hacia atrás total). Si SÍ tiene
-    // al menos un día declarado, agendar fuera de eso es un error de
-    // operador prevenible, no una decisión legítima de clínica como sí
-    // puede serlo un doble-booking (cubrir un turno, urgencia).
-    const { data: horarios, error: horariosErr } = await context.supabase
-      .from("professional_schedules")
-      .select("day_of_week, start_time, end_time")
-      .eq("clinic_id", data.clinicId)
-      .eq("professional_id", data.professionalId);
-    if (horariosErr)
-      throw new Error(mensajeDb(horariosErr, "No pudimos verificar el horario del profesional."));
-
-    if (horarios && horarios.length > 0) {
-      const dia = diaSemanaLocal(startsAt, timeZone);
-      const bloqueDia = horarios.find((h) => h.day_of_week === dia);
-      if (!bloqueDia) {
-        throw new Error(`El profesional no atiende los ${DIA_SEMANA_LABEL[dia]}.`);
-      }
-      const horaInicio = horaLocalHHMM(startsAt, timeZone);
-      const horaFin = horaLocalHHMM(endsAt, timeZone);
-      const inicioOk = horaInicio >= bloqueDia.start_time.slice(0, 5);
-      const finOk = horaFin <= bloqueDia.end_time.slice(0, 5);
-      if (!inicioOk || !finOk) {
-        throw new Error(
-          `Fuera del horario del profesional los ${DIA_SEMANA_LABEL[dia]} ` +
-            `(${bloqueDia.start_time.slice(0, 5)}–${bloqueDia.end_time.slice(0, 5)}).`,
-        );
-      }
-    }
-
-    // Aviso SOFT de doble-booking, no bloqueo duro (mismo criterio que Open
-    // Dental): dos citas del mismo profesional cuyos rangos se cruzan. No
-    // usamos operatory_id como unidad de colisión porque createAppointment
-    // nunca lo setea todavía (siempre null) — professional_id es la unidad
-    // real hoy. Corre ANTES del insert para no tener que revertir nada.
-    // Importa más ahora que la app es offline-first: dos recepcionistas
-    // pueden estar cargando en paralelo sin verse.
-    // `starts_at < endsAt AND ends_at > startsAt` es la condición estándar de
-    // solapamiento de intervalos — la evalúa la propia query, no hace falta
-    // traer candidatas y filtrar en JS.
-    const { data: choques, error: choquesErr } = await context.supabase
-      .from("appointments")
-      .select("treatment_label, starts_at, ends_at")
-      .eq("clinic_id", data.clinicId)
-      .eq("professional_id", data.professionalId)
-      .neq("status", "cancelada")
-      .lt("starts_at", endsAt.toISOString())
-      .gt("ends_at", startsAt.toISOString())
-      .limit(1);
-    if (choquesErr)
-      throw new Error(
-        mensajeDb(choquesErr, "No pudimos verificar si hay otra cita en ese horario."),
-      );
-    const choque = choques?.[0];
-    const solapamiento: Solapamiento | undefined = choque
-      ? {
-          treatmentLabel: choque.treatment_label || "Consulta",
-          startsAt: choque.starts_at,
-          endsAt: choque.ends_at,
-        }
-      : undefined;
+    const { startsAt, endsAt, solapamiento } = await validarHorarioYSolapamiento(context.supabase, {
+      clinicId: data.clinicId,
+      branchId: data.branchId,
+      professionalId: data.professionalId,
+      startsAtRaw: data.startsAt,
+      duracionMin: data.duracionMin,
+    });
 
     const { data: inserted, error } = await context.supabase
       .from("appointments")
@@ -376,68 +411,14 @@ export const updateAppointment = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<{ ok: true; solapamiento?: Solapamiento }> => {
-    const { data: branch, error: branchErr } = await context.supabase
-      .from("branches")
-      .select("timezone")
-      .eq("clinic_id", data.clinicId)
-      .eq("id", data.branchId)
-      .maybeSingle();
-    if (branchErr) throw new Error(mensajeDb(branchErr, "No pudimos verificar la sucursal."));
-    if (!branch) throw new Error("La sucursal no existe o no es tuya.");
-    const timeZone = branch.timezone || DEFAULT_TIMEZONE;
-
-    const startsAt = wallTimeInTzToUtc(data.startsAt, timeZone);
-    if (Number.isNaN(startsAt.getTime())) throw new Error("Fecha/hora de inicio inválida.");
-    const endsAt = new Date(startsAt.getTime() + data.duracionMin * 60_000);
-
-    const { data: horarios, error: horariosErr } = await context.supabase
-      .from("professional_schedules")
-      .select("day_of_week, start_time, end_time")
-      .eq("clinic_id", data.clinicId)
-      .eq("professional_id", data.professionalId);
-    if (horariosErr)
-      throw new Error(mensajeDb(horariosErr, "No pudimos verificar el horario del profesional."));
-
-    if (horarios && horarios.length > 0) {
-      const dia = diaSemanaLocal(startsAt, timeZone);
-      const bloqueDia = horarios.find((h) => h.day_of_week === dia);
-      if (!bloqueDia) {
-        throw new Error(`El profesional no atiende los ${DIA_SEMANA_LABEL[dia]}.`);
-      }
-      const horaInicio = horaLocalHHMM(startsAt, timeZone);
-      const horaFin = horaLocalHHMM(endsAt, timeZone);
-      const inicioOk = horaInicio >= bloqueDia.start_time.slice(0, 5);
-      const finOk = horaFin <= bloqueDia.end_time.slice(0, 5);
-      if (!inicioOk || !finOk) {
-        throw new Error(
-          `Fuera del horario del profesional los ${DIA_SEMANA_LABEL[dia]} ` +
-            `(${bloqueDia.start_time.slice(0, 5)}–${bloqueDia.end_time.slice(0, 5)}).`,
-        );
-      }
-    }
-
-    const { data: choques, error: choquesErr } = await context.supabase
-      .from("appointments")
-      .select("treatment_label, starts_at, ends_at")
-      .eq("clinic_id", data.clinicId)
-      .eq("professional_id", data.professionalId)
-      .neq("status", "cancelada")
-      .neq("id", data.appointmentId)
-      .lt("starts_at", endsAt.toISOString())
-      .gt("ends_at", startsAt.toISOString())
-      .limit(1);
-    if (choquesErr)
-      throw new Error(
-        mensajeDb(choquesErr, "No pudimos verificar si hay otra cita en ese horario."),
-      );
-    const choque = choques?.[0];
-    const solapamiento: Solapamiento | undefined = choque
-      ? {
-          treatmentLabel: choque.treatment_label || "Consulta",
-          startsAt: choque.starts_at,
-          endsAt: choque.ends_at,
-        }
-      : undefined;
+    const { startsAt, endsAt, solapamiento } = await validarHorarioYSolapamiento(context.supabase, {
+      clinicId: data.clinicId,
+      branchId: data.branchId,
+      professionalId: data.professionalId,
+      startsAtRaw: data.startsAt,
+      duracionMin: data.duracionMin,
+      excludeAppointmentId: data.appointmentId,
+    });
 
     const { error } = await context.supabase
       .from("appointments")
