@@ -14,6 +14,8 @@ import type { Json } from "@/integrations/supabase/types";
  *   - customer.subscription.updated
  *   - customer.subscription.deleted
  *   - invoice.payment_failed
+ *   - charge.refunded
+ *   - charge.dispute.created
  *
  * Idempotencia: guardamos `event.id` en `stripe_events` primero. Si ya
  * existe (retry de Stripe) devolvemos 200 sin re-procesar.
@@ -129,6 +131,55 @@ export const Route = createFileRoute("/api/stripe/webhook")({
                   await supabaseAdmin
                     .from("subscriptions")
                     .update({ status: "past_due" })
+                    .eq("clinic_id", clinicId);
+                }
+              }
+              break;
+            }
+            case "charge.refunded": {
+              const charge = event.data.object as Stripe.Charge;
+              // `refunded` es true solo cuando el charge quedó reembolsado
+              // por completo — un reembolso parcial no debe tumbar el acceso.
+              if (charge.refunded) {
+                const customerId =
+                  typeof charge.customer === "string" ? charge.customer : charge.customer?.id;
+                if (customerId) {
+                  const { data: row } = await supabaseAdmin
+                    .from("subscriptions")
+                    .select("clinic_id")
+                    .eq("stripe_customer_id", customerId)
+                    .maybeSingle();
+                  clinicId = row?.clinic_id ?? null;
+                  if (clinicId) {
+                    await supabaseAdmin
+                      .from("subscriptions")
+                      .update({ status: "canceled" })
+                      .eq("clinic_id", clinicId);
+                  }
+                }
+              }
+              break;
+            }
+            case "charge.dispute.created": {
+              const dispute = event.data.object as Stripe.Dispute;
+              const chargeId =
+                typeof dispute.charge === "string" ? dispute.charge : dispute.charge.id;
+              const disputedCharge = await stripe.charges.retrieve(chargeId);
+              const customerId =
+                typeof disputedCharge.customer === "string"
+                  ? disputedCharge.customer
+                  : disputedCharge.customer?.id;
+              if (customerId) {
+                const { data: row } = await supabaseAdmin
+                  .from("subscriptions")
+                  .select("clinic_id")
+                  .eq("stripe_customer_id", customerId)
+                  .maybeSingle();
+                clinicId = row?.clinic_id ?? null;
+                if (clinicId) {
+                  await supabaseAdmin
+                    .from("subscriptions")
+                    .update({ status: "canceled" })
                     .eq("clinic_id", clinicId);
                 }
               }
