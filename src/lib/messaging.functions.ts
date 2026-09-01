@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { mensajeDb } from "@/lib/db-errors";
+import { fetchPatientBalances } from "@/lib/patients.functions";
 import {
   MESSAGE_CHANNELS,
   MESSAGE_TEMPLATE_KINDS,
@@ -636,8 +637,7 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
       { data: finalizadas, error: apptErr },
       { data: futuras, error: futErr },
       { data: recentOutreach, error: msgErr },
-      { data: billedRows, error: billErr },
-      { data: paidRows, error: paidErr },
+      balances,
       { data: clinic, error: clinicErr },
       { data: sentQuotes, error: quoteErr },
       { data: completedItems, error: completedErr },
@@ -669,12 +669,10 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
         .in("template_kind", [...OUTREACH_TEMPLATE_KINDS])
         .order("created_at", { ascending: false })
         .limit(3000),
-      supabase
-        .from("treatment_items")
-        .select("price_cents, treatment_plans!inner(patient_id, clinic_id, status)")
-        .eq("clinic_id", clinicId)
-        .neq("treatment_plans.status", "cancelled"),
-      supabase.from("payments").select("patient_id, amount_cents").eq("clinic_id", clinicId),
+      // Auditoría de código 01-sep-2026: antes reimplementaba acá mismo el
+      // cálculo de saldo que también hace getPatient — ver el comentario de
+      // fetchPatientBalances (patients.functions.ts) sobre por qué se unificó.
+      fetchPatientBalances(supabase, clinicId),
       supabase.from("clinics").select("currency").eq("id", clinicId).single(),
       supabase
         .from("quotes")
@@ -704,16 +702,8 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
       throw new Error(
         mensajeDb(msgErr, "No pudimos revisar los mensajes de seguimiento ya enviados."),
       );
-    if (billErr)
-      throw new Error(
-        mensajeDb(billErr, "No pudimos calcular el saldo pendiente de los pacientes."),
-      );
     if (completedErr)
       throw new Error(mensajeDb(completedErr, "No pudimos cargar los tratamientos completados."));
-    if (paidErr)
-      throw new Error(
-        mensajeDb(paidErr, "No pudimos calcular el saldo pendiente de los pacientes."),
-      );
     if (clinicErr)
       throw new Error(mensajeDb(clinicErr, "No pudimos obtener los datos de la clínica."));
     if (quoteErr)
@@ -817,21 +807,9 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
     }
 
     // ── payment_due ──
-    const balanceByPatient = new Map<string, number>();
-    for (const r of billedRows ?? []) {
-      const patientId = (r as unknown as { treatment_plans: { patient_id: string } })
-        .treatment_plans.patient_id;
-      const priceCents = (r as { price_cents: number }).price_cents ?? 0;
-      balanceByPatient.set(patientId, (balanceByPatient.get(patientId) ?? 0) + priceCents);
-    }
-    for (const r of paidRows ?? []) {
-      balanceByPatient.set(
-        r.patient_id,
-        (balanceByPatient.get(r.patient_id) ?? 0) - (r.amount_cents ?? 0),
-      );
-    }
     const currency = clinic?.currency ?? "CLP";
-    for (const [patientId, balanceCents] of balanceByPatient) {
+    for (const [patientId, { billedCents, paidCents }] of balances) {
+      const balanceCents = billedCents - paidCents;
       if (balanceCents <= 0) continue;
       const patient = patientById.get(patientId);
       if (!patient) continue;

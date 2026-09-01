@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -10,6 +11,7 @@ import {
 } from "@/lib/clinic-data";
 import { mensajeDb } from "@/lib/db-errors";
 import { validatePhoneNumber } from "@/lib/phoneValidation";
+import type { Database } from "@/integrations/supabase/types";
 
 const DB_STATUS_TO_UI: Record<string, EstadoPaciente> = {
   active: "activo",
@@ -168,6 +170,58 @@ export const listPatients = createServerFn({ method: "GET" })
     return { items, truncated };
   });
 
+/**
+ * Auditoría de código 01-sep-2026: esta regla (total facturado en
+ * treatment_items, excluyendo planes cancelled, menos total pagado en
+ * payments) estaba reimplementada por separado acá y en
+ * `listPendingOutreach` (messaging.functions.ts) — confirmado que hoy
+ * coinciden exactamente (mismos filtros) antes de unificar, no había bug
+ * activo, pero cualquier cambio futuro a la regla tenía que acordarse de
+ * tocar los dos lugares. Sin `patientId` trae la clínica entera agrupada
+ * por paciente (para el aviso de payment_due); con `patientId` la acota a
+ * uno solo.
+ */
+export async function fetchPatientBalances(
+  supabase: SupabaseClient<Database>,
+  clinicId: string,
+  patientId?: string,
+): Promise<Map<string, { billedCents: number; paidCents: number }>> {
+  let billedQuery = supabase
+    .from("treatment_items")
+    .select("price_cents, treatment_plans!inner(patient_id, clinic_id, status)")
+    .eq("clinic_id", clinicId)
+    .neq("treatment_plans.status", "cancelled");
+  let paidQuery = supabase
+    .from("payments")
+    .select("patient_id, amount_cents")
+    .eq("clinic_id", clinicId);
+  if (patientId) {
+    billedQuery = billedQuery.eq("treatment_plans.patient_id", patientId);
+    paidQuery = paidQuery.eq("patient_id", patientId);
+  }
+
+  const [{ data: billedRows, error: billedErr }, { data: paidRows, error: paidErr }] =
+    await Promise.all([billedQuery, paidQuery]);
+  if (billedErr)
+    throw new Error(mensajeDb(billedErr, "No pudimos calcular el saldo del paciente."));
+  if (paidErr) throw new Error(mensajeDb(paidErr, "No pudimos calcular el saldo del paciente."));
+
+  const byPatient = new Map<string, { billedCents: number; paidCents: number }>();
+  for (const r of billedRows ?? []) {
+    const pid = (r as unknown as { treatment_plans: { patient_id: string } }).treatment_plans
+      .patient_id;
+    const cur = byPatient.get(pid) ?? { billedCents: 0, paidCents: 0 };
+    cur.billedCents += (r as { price_cents: number }).price_cents ?? 0;
+    byPatient.set(pid, cur);
+  }
+  for (const r of paidRows ?? []) {
+    const cur = byPatient.get(r.patient_id) ?? { billedCents: 0, paidCents: 0 };
+    cur.paidCents += r.amount_cents ?? 0;
+    byPatient.set(r.patient_id, cur);
+  }
+  return byPatient;
+}
+
 /** Ficha de un paciente, con timeline construido desde citas reales. */
 export const getPatient = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -188,11 +242,7 @@ export const getPatient = createServerFn({ method: "GET" })
     // las queries de appointments/billing — ruta rara (solo bookmark viejo o
     // paciente borrado), y esta es la pantalla más visitada del repo
     // (`/pacientes/:id`, "el hub" según CLAUDE.md) para el caso común.
-    const [
-      { data: row, error },
-      { data: appts, error: apptError },
-      [{ data: billedRows, error: billedErr }, { data: paidRows, error: paidErr }],
-    ] = await Promise.all([
+    const [{ data: row, error }, { data: appts, error: apptError }, balances] = await Promise.all([
       supabase
         .from("patients")
         .select(PATIENT_COLUMNS)
@@ -206,23 +256,9 @@ export const getPatient = createServerFn({ method: "GET" })
         .eq("patient_id", data.patientId)
         .order("starts_at", { ascending: false })
         .limit(50),
-      // Saldo calculado en runtime: total facturado en treatment_items vs
-      // total pagado en payments. Sobrescribe row.balance_cents (que se dejó
-      // nullable en Fase 1 y ahora se ignora — la fuente de verdad es la
-      // agregación).
-      Promise.all([
-        supabase
-          .from("treatment_items")
-          .select("price_cents, treatment_plans!inner(patient_id, clinic_id, status)")
-          .eq("clinic_id", data.clinicId)
-          .eq("treatment_plans.patient_id", data.patientId)
-          .neq("treatment_plans.status", "cancelled"),
-        supabase
-          .from("payments")
-          .select("amount_cents")
-          .eq("clinic_id", data.clinicId)
-          .eq("patient_id", data.patientId),
-      ]),
+      // Sobrescribe row.balance_cents (se dejó nullable en Fase 1 y ahora se
+      // ignora — la fuente de verdad es la agregación de fetchPatientBalances).
+      fetchPatientBalances(supabase, data.clinicId, data.patientId),
     ]);
 
     if (error) throw new Error(mensajeDb(error, "No pudimos cargar la ficha del paciente."));
@@ -231,12 +267,6 @@ export const getPatient = createServerFn({ method: "GET" })
       throw new Error(
         mensajeDb(apptError, "No pudimos cargar el historial de citas del paciente."),
       );
-    // Antes esta pareja no chequeaba error — una falla silenciosa acá
-    // computaba un saldo de $0 en vez de avisar, justo en la única pantalla
-    // donde el equipo mira cuánto debe un paciente.
-    if (billedErr)
-      throw new Error(mensajeDb(billedErr, "No pudimos calcular el saldo del paciente."));
-    if (paidErr) throw new Error(mensajeDb(paidErr, "No pudimos calcular el saldo del paciente."));
 
     const appointments = (appts ?? []) as (AppointmentSlim & {
       professional_id: string;
@@ -264,11 +294,8 @@ export const getPatient = createServerFn({ method: "GET" })
         actual: i === 0,
       }));
 
-    const totalBilled = (billedRows ?? []).reduce(
-      (s, r) => s + ((r as { price_cents: number }).price_cents ?? 0),
-      0,
-    );
-    const totalPaid = (paidRows ?? []).reduce((s, r) => s + (r.amount_cents ?? 0), 0);
+    const { billedCents: totalBilled = 0, paidCents: totalPaid = 0 } =
+      balances.get(data.patientId) ?? {};
     const balance = totalBilled - totalPaid;
 
     return {
