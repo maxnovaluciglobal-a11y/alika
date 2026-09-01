@@ -156,7 +156,7 @@ export function ComplianceExport({ clinicId, clinicName }: Props) {
             <Button
               type="button"
               disabled={!eventos.length}
-              onClick={() => exportarCompliancePdf(eventos, ctx)}
+              onClick={() => void exportarCompliancePdf(eventos, ctx)}
             >
               <FileText className="size-4" aria-hidden />
               Exportar PDF

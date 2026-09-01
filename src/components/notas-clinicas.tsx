@@ -169,13 +169,13 @@ export function NotasClinicas({
     });
   };
 
-  function exportarPdf() {
+  async function exportarPdf() {
     if (!notaActual) {
       toast.error("Guarda la nota antes de exportarla.");
       return;
     }
     try {
-      exportarNotaPdf({
+      await exportarNotaPdf({
         clinicaNombre,
         pacienteNombre: paciente.nombre,
         pacienteDocumento: paciente.documento,

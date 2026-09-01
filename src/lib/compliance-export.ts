@@ -1,5 +1,3 @@
-import { jsPDF } from "jspdf";
-
 import { AUDIT_LABELS, REVIEW_ACTION_LABELS, formatoFechaHora } from "@/lib/clinical-notes";
 import type { ComplianceEvent } from "@/lib/compliance.functions";
 
@@ -82,8 +80,16 @@ const MARGEN = 40;
 const ANCHO = 841.89; // A4 apaisado
 const ALTO = 595.28;
 
-/** Descarga el historial filtrado como PDF apaisado con tabla de eventos. */
-export function exportarCompliancePdf(eventos: ComplianceEvent[], ctx: ExportContexto) {
+/**
+ * Descarga el historial filtrado como PDF apaisado con tabla de eventos.
+ * jsPDF se carga recién acá — mismo criterio que exportarNotaPdf en
+ * note-pdf.ts (auditoría de deuda técnica, 30-ago).
+ */
+export async function exportarCompliancePdf(
+  eventos: ComplianceEvent[],
+  ctx: ExportContexto,
+): Promise<void> {
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "pt", format: "a4", orientation: "landscape" });
   const cols = [
     { titulo: "Fecha", ancho: 108 },

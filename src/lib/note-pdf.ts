@@ -1,5 +1,3 @@
-import { jsPDF } from "jspdf";
-
 import {
   AUDIT_LABELS,
   ENTITY_KIND_LABELS,
@@ -26,8 +24,15 @@ const ANCHO = 595.28; // A4 pt
 const ALTO = 841.89;
 const UTIL = ANCHO - MARGEN * 2;
 
-/** Genera y descarga un PDF con la nota, sus versiones y la auditoría. */
-export function exportarNotaPdf(args: ExportArgs) {
+/**
+ * Genera y descarga un PDF con la nota, sus versiones y la auditoría.
+ * jsPDF (+ html2canvas/canvg, que trae adentro) se carga recién acá —
+ * antes era un import estático que sumaba ~600KB al chunk de la ficha del
+ * paciente en TODA visita, aunque nadie exportara nunca un PDF (auditoría
+ * de deuda técnica, 30-ago).
+ */
+export async function exportarNotaPdf(args: ExportArgs): Promise<void> {
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   let y = MARGEN;
 
