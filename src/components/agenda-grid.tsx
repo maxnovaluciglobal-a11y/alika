@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { Sparkles } from "lucide-react";
 
@@ -41,6 +42,19 @@ export function AgendaGrid({
   allergyAlerts?: Record<string, string[]>;
 }) {
   const alto = HORAS_VISIBLES * 60 * PIXELES_POR_MINUTO;
+  // rendimiento 01-sep: antes .filter() por profesional adentro del .map()
+  // de profesionales — O(profesionales × citas) en vez de agrupar una sola
+  // vez. Se combina con que `citas` hoy llega sin acotar por fecha (ver
+  // listAppointments), así que este loop corre sobre el historial completo.
+  const citasPorProfesional = useMemo(() => {
+    const map = new Map<string, Cita[]>();
+    for (const c of citas) {
+      const grupo = map.get(c.profesionalId);
+      if (grupo) grupo.push(c);
+      else map.set(c.profesionalId, [c]);
+    }
+    return map;
+  }, [citas]);
 
   if (profesionales.length === 0) {
     return (
@@ -96,47 +110,45 @@ export function AgendaGrid({
               />
             ))}
 
-            {citas
-              .filter((c) => c.profesionalId === p.id)
-              .map((c) => (
-                <Link
-                  key={c.id}
-                  to="/pacientes/$pacienteId"
-                  params={{ pacienteId: c.pacienteId }}
-                  className={cn(
-                    "absolute left-2 right-2 cursor-grab overflow-hidden rounded-md border p-2.5 transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                    estadoClases[c.estado],
-                    c.estado === "ausente" && "opacity-70",
-                  )}
-                  style={{
-                    top: c.inicio * PIXELES_POR_MINUTO,
-                    height: c.duracion * PIXELES_POR_MINUTO - 6,
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="flex min-w-0 items-center gap-1.5 truncate text-xs font-semibold">
-                      <span
-                        aria-hidden="true"
-                        className="size-1.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: p.color }}
-                      />
-                      <span className="truncate">{c.paciente}</span>
-                      <AllergyAlertIcon allergies={allergyAlerts?.[c.pacienteId]} />
-                    </p>
-                    <span className="shrink-0 rounded bg-card/70 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-tight">
-                      {etiquetaEstado[c.estado]}
-                    </span>
-                  </div>
-                  {c.duracion >= 45 && (
-                    <p className="truncate text-[10px] opacity-75">{c.tratamiento}</p>
-                  )}
-                  {c.prioridad && (
-                    <span className="mt-2 inline-flex items-center gap-1 rounded bg-ai/15 px-1.5 py-0.5 text-[9px] uppercase text-ai">
-                      <Sparkles className="size-2.5" /> Prioridad
-                    </span>
-                  )}
-                </Link>
-              ))}
+            {(citasPorProfesional.get(p.id) ?? []).map((c) => (
+              <Link
+                key={c.id}
+                to="/pacientes/$pacienteId"
+                params={{ pacienteId: c.pacienteId }}
+                className={cn(
+                  "absolute left-2 right-2 cursor-grab overflow-hidden rounded-md border p-2.5 transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  estadoClases[c.estado],
+                  c.estado === "ausente" && "opacity-70",
+                )}
+                style={{
+                  top: c.inicio * PIXELES_POR_MINUTO,
+                  height: c.duracion * PIXELES_POR_MINUTO - 6,
+                }}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="flex min-w-0 items-center gap-1.5 truncate text-xs font-semibold">
+                    <span
+                      aria-hidden="true"
+                      className="size-1.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: p.color }}
+                    />
+                    <span className="truncate">{c.paciente}</span>
+                    <AllergyAlertIcon allergies={allergyAlerts?.[c.pacienteId]} />
+                  </p>
+                  <span className="shrink-0 rounded bg-card/70 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-tight">
+                    {etiquetaEstado[c.estado]}
+                  </span>
+                </div>
+                {c.duracion >= 45 && (
+                  <p className="truncate text-[10px] opacity-75">{c.tratamiento}</p>
+                )}
+                {c.prioridad && (
+                  <span className="mt-2 inline-flex items-center gap-1 rounded bg-ai/15 px-1.5 py-0.5 text-[9px] uppercase text-ai">
+                    <Sparkles className="size-2.5" /> Prioridad
+                  </span>
+                )}
+              </Link>
+            ))}
           </div>
         ))}
       </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -31,7 +31,12 @@ export function PatientCombobox({
   placeholder?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const seleccionado = pacientes.find((p) => p.id === value);
+  // rendimiento 01-sep: antes .find() en cada render + de nuevo dentro del
+  // `filter` de cmdk en cada tecla tipeada (O(n²) total con cientos de
+  // pacientes, el motivo por el que este combobox existe). Memoizado + el
+  // filtro custom se saca (ver value={p.nombre} abajo, cmdk ya filtra por
+  // substring sobre ese value nativo, sin re-buscar por id en cada llamada).
+  const seleccionado = useMemo(() => pacientes.find((p) => p.id === value), [pacientes, value]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -51,12 +56,7 @@ export function PatientCombobox({
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command
-          filter={(itemId, search) => {
-            const nombre = pacientes.find((p) => p.id === itemId)?.nombre ?? "";
-            return nombre.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
-          }}
-        >
+        <Command>
           <CommandInput placeholder="Buscar paciente…" />
           <CommandList>
             <CommandEmpty>Sin resultados.</CommandEmpty>
@@ -64,7 +64,7 @@ export function PatientCombobox({
               {pacientes.map((p) => (
                 <CommandItem
                   key={p.id}
-                  value={p.id}
+                  value={p.nombre}
                   onSelect={() => {
                     onChange(p.id);
                     setOpen(false);

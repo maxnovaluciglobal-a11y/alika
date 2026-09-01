@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, FileUp, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
-import Papa from "papaparse";
 
 import { AppShell } from "@/components/app-shell";
 import { DateField, FilterBar, Paginacion, SearchField, SelectField } from "@/components/filters";
@@ -237,8 +236,13 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
     setResultado(null);
   };
 
-  const onFile = (file: File) => {
+  const onFile = async (file: File) => {
     reset();
+    // Import dinámico: papaparse solo hace falta en esta acción puntual de
+    // onboarding (una vez por clínica), pero se cargaba estático y era la
+    // mayor parte del peso de /pacientes — la ruta que el staff abre más
+    // veces por día de toda la app (auditoría de rendimiento, 01-sep).
+    const { default: Papa } = await import("papaparse");
     Papa.parse<Record<string, string>>(file, {
       header: true,
       skipEmptyLines: true,
@@ -304,7 +308,7 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
               accept=".csv,text/csv"
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) onFile(file);
+                if (file) void onFile(file);
               }}
               className="w-full rounded-lg border border-dashed border-hairline px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium"
             />
