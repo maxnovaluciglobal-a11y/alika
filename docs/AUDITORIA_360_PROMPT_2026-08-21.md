@@ -50,7 +50,7 @@ Cada dimensión la lleva el especialista más calificado disponible para esa ár
 - Distinguir explícitamente "bloqueante para pilotos pagados ya" vs. "importa cuando haya escala real" — la auditoría del 15-ago mezcló ambos una vez, no repetir el error.
 - Toda recomendación de "sacar/simplificar" debe decir explícitamente qué se pierde al sacarlo, no solo qué se gana.
 - Reporte final en español rioplatense, directo, sin relleno.
-- No tocar `10 - Personal/` ni nada fuera de `05 - Aurora Dental OS/`.
+- No tocar `10 - Personal/` ni nada fuera de `05 - Alika/`.
 - No commitear ni deployar nada — es solo diagnóstico.
 
 ## Entregable
