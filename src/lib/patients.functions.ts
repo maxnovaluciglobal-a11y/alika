@@ -177,28 +177,66 @@ export const getPatient = createServerFn({ method: "GET" })
   .handler(async ({ data, context }): Promise<Paciente | null> => {
     const { supabase } = context;
 
-    const { data: row, error } = await supabase
-      .from("patients")
-      .select(PATIENT_COLUMNS)
-      .eq("clinic_id", data.clinicId)
-      .eq("id", data.patientId)
-      .maybeSingle();
+    // Auditoría de código 01-sep-2026: patients/appointments/billing no
+    // dependen entre sí (todas filtran solo por clinicId/patientId de la
+    // request) — antes iban en 4 round-trips secuenciales a Supabase
+    // (Vercel EE.UU. ↔ Supabase São Paulo, no es gratis: ver el comentario
+    // de _clinic/route.tsx sobre el mismo cruce). Solo `professionals`
+    // depende de verdad de un resultado previo (qué profesionales aparecen
+    // en `appts`), así que ese sigue siendo un segundo paso obligado.
+    // Trade-off aceptado: si el paciente no existe, este batch igual gasta
+    // las queries de appointments/billing — ruta rara (solo bookmark viejo o
+    // paciente borrado), y esta es la pantalla más visitada del repo
+    // (`/pacientes/:id`, "el hub" según CLAUDE.md) para el caso común.
+    const [
+      { data: row, error },
+      { data: appts, error: apptError },
+      [{ data: billedRows, error: billedErr }, { data: paidRows, error: paidErr }],
+    ] = await Promise.all([
+      supabase
+        .from("patients")
+        .select(PATIENT_COLUMNS)
+        .eq("clinic_id", data.clinicId)
+        .eq("id", data.patientId)
+        .maybeSingle(),
+      supabase
+        .from("appointments")
+        .select("patient_id, professional_id, treatment_label, starts_at, status")
+        .eq("clinic_id", data.clinicId)
+        .eq("patient_id", data.patientId)
+        .order("starts_at", { ascending: false })
+        .limit(50),
+      // Saldo calculado en runtime: total facturado en treatment_items vs
+      // total pagado en payments. Sobrescribe row.balance_cents (que se dejó
+      // nullable en Fase 1 y ahora se ignora — la fuente de verdad es la
+      // agregación).
+      Promise.all([
+        supabase
+          .from("treatment_items")
+          .select("price_cents, treatment_plans!inner(patient_id, clinic_id, status)")
+          .eq("clinic_id", data.clinicId)
+          .eq("treatment_plans.patient_id", data.patientId)
+          .neq("treatment_plans.status", "cancelled"),
+        supabase
+          .from("payments")
+          .select("amount_cents")
+          .eq("clinic_id", data.clinicId)
+          .eq("patient_id", data.patientId),
+      ]),
+    ]);
 
     if (error) throw new Error(mensajeDb(error, "No pudimos cargar la ficha del paciente."));
     if (!row) return null;
-
-    const { data: appts, error: apptError } = await supabase
-      .from("appointments")
-      .select("patient_id, professional_id, treatment_label, starts_at, status")
-      .eq("clinic_id", data.clinicId)
-      .eq("patient_id", data.patientId)
-      .order("starts_at", { ascending: false })
-      .limit(50);
-
     if (apptError)
       throw new Error(
         mensajeDb(apptError, "No pudimos cargar el historial de citas del paciente."),
       );
+    // Antes esta pareja no chequeaba error — una falla silenciosa acá
+    // computaba un saldo de $0 en vez de avisar, justo en la única pantalla
+    // donde el equipo mira cuánto debe un paciente.
+    if (billedErr)
+      throw new Error(mensajeDb(billedErr, "No pudimos calcular el saldo del paciente."));
+    if (paidErr) throw new Error(mensajeDb(paidErr, "No pudimos calcular el saldo del paciente."));
 
     const appointments = (appts ?? []) as (AppointmentSlim & {
       professional_id: string;
@@ -226,22 +264,6 @@ export const getPatient = createServerFn({ method: "GET" })
         actual: i === 0,
       }));
 
-    // Saldo calculado en runtime: total facturado en treatment_items vs total
-    // pagado en payments. Sobrescribe row.balance_cents (que se dejó nullable
-    // en Fase 1 y ahora se ignora — la fuente de verdad es la agregación).
-    const [{ data: billedRows }, { data: paidRows }] = await Promise.all([
-      supabase
-        .from("treatment_items")
-        .select("price_cents, treatment_plans!inner(patient_id, clinic_id, status)")
-        .eq("clinic_id", data.clinicId)
-        .eq("treatment_plans.patient_id", data.patientId)
-        .neq("treatment_plans.status", "cancelled"),
-      supabase
-        .from("payments")
-        .select("amount_cents")
-        .eq("clinic_id", data.clinicId)
-        .eq("patient_id", data.patientId),
-    ]);
     const totalBilled = (billedRows ?? []).reduce(
       (s, r) => s + ((r as { price_cents: number }).price_cents ?? 0),
       0,
