@@ -7,7 +7,7 @@
 /*
  * Oralia — sistema de diseño "Precision clinical mint".
  * Marca: teal clínico (#0d9488). Acento IA: violeta (#8b5cf6).
- * Tipografía: Outfit (display) + Inter (texto).
+ * Tipografía: Outfit (display) + Schibsted Grotesk (texto).
  * Todos los colores en oklch. Nunca escribir colores literales en componentes.
  */
 
@@ -90,7 +90,7 @@
 :root {
   --radius: 0.75rem;
   --font-heading: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-landing-display: "Newsreader", ui-serif, Georgia, serif;
 
   /* Acento cálido solo para la landing pública — arcilla/terracota, no
@@ -393,7 +393,8 @@
 }
 
 /* Tipografía suiza precisa para los titulares de la landing "Nácar":
-   grotesca neutra (Inter) con tracking ajustado y gran contraste de tamaño. */
+   grotesca de texto (Schibsted Grotesk, corregido 01-sep — antes Inter,
+   demasiado genérica) con tracking ajustado y gran contraste de tamaño. */
 @utility font-precise {
   font-family: var(--font-body);
   letter-spacing: -0.035em;
