@@ -21,6 +21,22 @@ import type { Json } from "@/integrations/supabase/types";
  * existe (retry de Stripe) devolvemos 200 sin re-procesar.
  */
 
+// Auditoría de código 01-sep-2026: con apiVersion "2026-07-29.dahlia" (ver
+// stripe.server.ts) Stripe ya no manda `current_period_end` en el objeto
+// Subscription top-level — se movió a cada subscription item (confirmado
+// contra los .d.ts del SDK instalado: SubscriptionItems sí lo tiene,
+// Subscriptions ya no). El `as unknown` de acá tapaba el error de tipos en
+// vez de arreglar el acceso, así que en producción esto quedaba siempre
+// `undefined` y `current_period_end` se guardaba NULL para TODA suscripción
+// real — rompe la fecha de renovación/vencimiento en /suscripcion y el
+// self-healing check de billing.ts (isSubscriptionActive), no solo un tipo.
+// Mismo patrón que `priceId` en la línea de abajo: un solo item por sub
+// (modelo v1, sin per-seat/add-ons — ver comentario de la tabla).
+export function extractCurrentPeriodEndIso(sub: Stripe.Subscription): string | null {
+  const ts = sub.items.data[0]?.current_period_end;
+  return ts ? new Date(ts * 1000).toISOString() : null;
+}
+
 async function upsertSubscription(
   admin: Awaited<
     ReturnType<typeof import("@/integrations/supabase/client.server").supabaseAdmin.from>
@@ -31,7 +47,6 @@ async function upsertSubscription(
   sub: Stripe.Subscription,
 ) {
   const priceId = sub.items.data[0]?.price?.id ?? null;
-  const currentPeriodEndTs = (sub as unknown as { current_period_end?: number }).current_period_end;
   await admin.from("subscriptions").upsert(
     {
       clinic_id: clinicId,
@@ -40,9 +55,7 @@ async function upsertSubscription(
       stripe_price_id: priceId,
       status: sub.status,
       trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
-      current_period_end: currentPeriodEndTs
-        ? new Date(currentPeriodEndTs * 1000).toISOString()
-        : null,
+      current_period_end: extractCurrentPeriodEndIso(sub),
       cancel_at_period_end: sub.cancel_at_period_end,
     },
     { onConflict: "clinic_id" },

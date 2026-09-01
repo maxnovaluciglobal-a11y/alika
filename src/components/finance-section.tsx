@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
   AlertTriangle,
@@ -741,6 +742,7 @@ function NuevoPagoDialog({
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
   const payFn = useServerFn(registerPayment);
+  const router = useRouter();
 
   const create = useOfflineMutation({
     kind: "registrar-pago",
@@ -748,11 +750,16 @@ function NuevoPagoDialog({
     ejecutar: (payload) => payFn({ data: payload }),
     invalidar: [
       ["payments", clinicId, patientId],
-      ["patient", clinicId, patientId],
       ["patients", clinicId],
     ],
     resumen: (p) => `Cobro de ${formatMoney(p.amountCents as number, currency)}`,
     onDone: () => {
+      // "Saldo fantasma" (auditoría de rendimiento/prácticas, 01-sep): el
+      // Saldo del header de la ficha viene del loader de la ruta, no de
+      // React Query — invalidateQueries no lo toca. La queryKey ["patient",
+      // clinicId, patientId] de acá nunca tuvo ningún useQuery suscrito
+      // (confirmado por grep); router.invalidate() es el fix real.
+      void router.invalidate();
       setOpen(false);
       setAmount(0);
       setMethod("cash");
@@ -941,6 +948,7 @@ function AceptarPresupuestoDialog({
 
 export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar, userId }: Props) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [expandedQuote, setExpandedQuote] = useState<string | null>(null);
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
   // Presupuestos aceptados donde la firma del paciente SÍ se capturó pero
@@ -1003,6 +1011,10 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
     onSuccess: async (result, variables) => {
       await queryClient.invalidateQueries({ queryKey: ["quotes", clinicId, patientId] });
       await queryClient.invalidateQueries({ queryKey: ["treatment-plans", clinicId, patientId] });
+      // Mismo "saldo fantasma" que NuevoPagoDialog: aceptar un presupuesto
+      // cambia "facturado" (se crea el plan de tratamiento), y el header de
+      // saldo viene del loader de la ruta, no de React Query.
+      void router.invalidate();
       if (result.signatureUploadFailed) {
         // El paciente sí firmó, pero no pudimos guardar la imagen — el
         // presupuesto queda aceptado igual (evidencia de IP + nombre), pero
