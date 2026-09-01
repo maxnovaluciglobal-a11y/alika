@@ -1012,7 +1012,7 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
         console.error("Falló la subida de la firma del presupuesto", {
           quoteId: variables.quoteId,
         });
-        captureMessage("quote signature upload failed", {
+        void captureMessage("quote signature upload failed", {
           level: "error",
           extra: { quoteId: variables.quoteId },
         });

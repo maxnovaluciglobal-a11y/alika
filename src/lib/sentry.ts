@@ -1,15 +1,28 @@
-import * as Sentry from "@sentry/react";
+import type * as SentryReact from "@sentry/react";
 
 /**
  * Init de Sentry seguro y lazy. Si no hay DSN configurado (ni en Vite env
- * ni en process.env), no se inicializa nada — la app corre igual y las
- * llamadas a `captureException` de más abajo son no-ops.
+ * ni en process.env), `@sentry/react` ni se descarga — el import es dinámico
+ * y solo se dispara la primera vez que hace falta de verdad.
+ *
+ * Antes de este cambio (corregido 01-sep-2026, ver auditoría externa —
+ * hallazgo "JS inicial ~1MB del chunk raíz") el import era estático a nivel
+ * de módulo: aunque `initSentry()` era un no-op sin DSN, el bundler igual
+ * empaquetaba el SDK entero en el chunk que carga hasta un visitante anónimo
+ * de la landing pública. Con import dinámico, sin DSN el chunk de Sentry ni
+ * se genera en el grafo de carga real del navegador.
  *
  * Configurar SENTRY_DSN en Vercel Env Vars antes del launch productivo.
  * En dev local: opcional (más ruido que valor).
  */
 
+let sentryPromise: Promise<typeof SentryReact> | null = null;
 let inited = false;
+
+function loadSentry(): Promise<typeof SentryReact> {
+  sentryPromise ??= import("@sentry/react");
+  return sentryPromise;
+}
 
 function readDsn(): string | undefined {
   // Vite inyecta VITE_* en el bundle del cliente.
@@ -51,7 +64,7 @@ function redactPostgresLiteralsInString(message: string): string {
   );
 }
 
-function redactPostgresLiterals(event: Sentry.Event): void {
+function redactPostgresLiterals(event: SentryReact.Event): void {
   if (event.message) {
     event.message = redactPostgresLiteralsInString(event.message);
   }
@@ -62,10 +75,13 @@ function redactPostgresLiterals(event: Sentry.Event): void {
   }
 }
 
-export function initSentry() {
+export async function initSentry(): Promise<void> {
   if (inited) return;
   const dsn = readDsn();
   if (!dsn) return;
+
+  const Sentry = await loadSentry();
+  if (inited) return; // otra llamada concurrente ya lo hizo mientras esperábamos el import
 
   Sentry.init({
     dsn,
@@ -99,4 +115,30 @@ export function initSentry() {
   inited = true;
 }
 
-export const { captureException, captureMessage, withScope, setUser } = Sentry;
+export async function captureException(
+  ...args: Parameters<typeof SentryReact.captureException>
+): Promise<ReturnType<typeof SentryReact.captureException> | undefined> {
+  if (!readDsn()) return undefined;
+  const Sentry = await loadSentry();
+  return Sentry.captureException(...args);
+}
+
+export async function captureMessage(
+  ...args: Parameters<typeof SentryReact.captureMessage>
+): Promise<ReturnType<typeof SentryReact.captureMessage> | undefined> {
+  if (!readDsn()) return undefined;
+  const Sentry = await loadSentry();
+  return Sentry.captureMessage(...args);
+}
+
+export async function withScope(...args: Parameters<typeof SentryReact.withScope>): Promise<void> {
+  if (!readDsn()) return;
+  const Sentry = await loadSentry();
+  Sentry.withScope(...args);
+}
+
+export async function setUser(...args: Parameters<typeof SentryReact.setUser>): Promise<void> {
+  if (!readDsn()) return;
+  const Sentry = await loadSentry();
+  Sentry.setUser(...args);
+}

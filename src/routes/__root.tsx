@@ -18,8 +18,9 @@ import { attachOfflineCache, resetOfflineCache } from "@/lib/offline-cache";
 import { registerServiceWorker } from "@/lib/register-sw";
 import { Toaster } from "@/components/ui/sonner";
 
-// Se ejecuta una sola vez al importar el módulo raíz. No-op si no hay DSN.
-initSentry();
+// Se ejecuta una sola vez al importar el módulo raíz. No-op (y sin descargar
+// @sentry/react) si no hay DSN — ver src/lib/sentry.ts.
+void initSentry();
 // Idem: no-op en dev y si el navegador no soporta service workers.
 registerServiceWorker();
 
@@ -92,9 +93,11 @@ const SITE_URL =
   (typeof process !== "undefined" && process.env.PUBLIC_APP_URL) ||
   "https://alika-omega.vercel.app";
 
-// Reusa la foto del hero de la landing (src/routes/index.tsx) como preview de
-// WhatsApp/redes — no hay todavía un asset dedicado para social share.
-const SOCIAL_IMAGE_URL = `${SITE_URL}/landing/dentist.jpg`;
+// Recorte dedicado 1200×630 (ratio estándar OG) de la misma foto del hero —
+// hasta 01-sep-2026 reusaba dentist.jpg tal cual (1280×853, ratio ~1.5:1),
+// que Facebook/WhatsApp recortan mal al no ser 1.91:1. dentist.jpg se queda
+// intacto para el hero de la landing (src/routes/index.tsx).
+const SOCIAL_IMAGE_URL = `${SITE_URL}/landing/dentist-og.jpg`;
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -117,8 +120,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:site_name", content: "Alika" },
       { property: "og:locale", content: "es_LA" },
       { property: "og:image", content: SOCIAL_IMAGE_URL },
-      { property: "og:image:width", content: "1280" },
-      { property: "og:image:height", content: "853" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Alika · Software de gestión dental" },
       {

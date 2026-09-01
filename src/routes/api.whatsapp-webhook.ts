@@ -342,7 +342,7 @@ async function handleUnknownSender(
     // que nadie se entere. La UI de /whatsapp también marca el lead como
     // "sin auto-respuesta" si pasan varios minutos sin `auto_replied_at`.
     console.error("[whatsapp-webhook] auto-respuesta a lead falló:", (err as Error).message);
-    captureException(err, {
+    void captureException(err, {
       tags: { boundary: "whatsapp_webhook_lead_auto_reply" },
       extra: { clinicId, leadId: inserted.id },
     });
