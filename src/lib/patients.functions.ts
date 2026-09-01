@@ -264,7 +264,11 @@ export const createPatient = createServerFn({ method: "POST" })
     z
       .object({
         clinicId: z.string().uuid(),
-        nombre: z.string().trim().min(1, "El nombre es obligatorio."),
+        nombre: z
+          .string()
+          .trim()
+          .min(1, "El nombre es obligatorio.")
+          .max(200, "El nombre es demasiado largo."),
         documento: z.string().trim().optional(),
         fechaNacimiento: z
           .string()
@@ -368,7 +372,7 @@ export const importPatients = createServerFn({ method: "POST" })
         rows: z
           .array(
             z.object({
-              nombre: z.string().trim().min(1),
+              nombre: z.string().trim().min(1).max(200),
               documento: z.string().trim().optional(),
               fechaNacimiento: z.string().trim().optional(),
               telefono: z.string().trim().optional(),
@@ -493,7 +497,7 @@ export const updatePatient = createServerFn({ method: "POST" })
     z
       .object({
         patientId: z.string().uuid(),
-        nombre: z.string().trim().min(1).optional(),
+        nombre: z.string().trim().min(1).max(200).optional(),
         documento: z.string().trim().optional(),
         telefono: z.string().trim().optional(),
         email: z.string().trim().email().optional().or(z.literal("")),

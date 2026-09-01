@@ -6,7 +6,7 @@ import { permissionsForRole, type ClinicRole } from "@/lib/access";
 import { mensajeDb } from "@/lib/db-errors";
 import { calcularComision, type CommissionKind } from "@/lib/commissions";
 import { formatMoney } from "@/lib/finance";
-import { renderTemplate } from "@/lib/messaging";
+import { renderTemplate, renderTemplateHtml } from "@/lib/messaging";
 import { loadEmailSandboxConfig } from "@/lib/messaging.functions";
 import { sendEmail } from "@/lib/email.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -423,7 +423,9 @@ async function notifyCommissionSettled(params: {
         clinica: clinic?.name ?? "",
       };
       const subject = renderTemplate(template.subject ?? "", vars);
-      const html = renderTemplate(template.body, vars);
+      // renderTemplateHtml: profesional/clinica vienen de nombres editables,
+      // este HTML se manda tal cual a Resend (security-review 01-sep).
+      const html = renderTemplateHtml(template.body, vars);
       const result = await sendEmail({ to: recipient, subject, html }, sandboxConfig);
       if (!result.ok) {
         console.error(

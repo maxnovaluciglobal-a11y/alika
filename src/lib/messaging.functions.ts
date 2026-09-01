@@ -9,6 +9,7 @@ import {
   OUTREACH_TEMPLATE_KINDS,
   buildWaMeUrl,
   renderTemplate,
+  renderTemplateHtml,
   type Message,
   type MessageTemplate,
   type OutreachTemplateKind,
@@ -352,7 +353,10 @@ export const sendEmailFromTemplate = createServerFn({ method: "POST" })
 
       const vars = { ...data.variables, paciente: patient.full_name, clinica: clinic?.name ?? "" };
       const subject = renderTemplate(template.subject ?? "", vars);
-      const html = renderTemplate(template.body, vars);
+      // renderTemplateHtml (no renderTemplate): esto es HTML real que Resend
+      // manda sin sanitizar — `paciente`/`clinica` vienen de campos que
+      // recepción puede editar libremente (security-review 01-sep).
+      const html = renderTemplateHtml(template.body, vars);
 
       const sandboxConfig = await loadEmailSandboxConfig(supabase, data.clinicId);
       const result = await sendEmail({ to: recipient, subject, html }, sandboxConfig);

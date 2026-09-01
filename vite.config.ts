@@ -35,10 +35,14 @@ export default defineConfig(async ({ command, mode }) => {
 
   plugins.push(
     tanstackStart({
-      importProtection: {
-        behavior: "error",
-        client: { files: ["**/server/**"], specifiers: ["server-only"] },
-      },
+      // security-review 01-sep: acá había un `client: { files: ["**/server/**"] }`
+      // custom — el glob no matchea nada real (los archivos server-only del
+      // repo son `*.server.ts` sueltos, no viven en un directorio `server/`)
+      // y, peor, el plugin REEMPLAZA (no extiende) el default `files` cuando
+      // el usuario define uno propio — así que esto anulaba la protección
+      // real de TanStack Start contra bundlear `*.server.ts` en el cliente.
+      // Sacado por completo: el default ya cubre exactamente ese patrón.
+      importProtection: { behavior: "error" },
       // Redirige el server entry de TanStack Start a src/server.ts (wrapper de errores SSR).
       server: { entry: "server" },
     }),

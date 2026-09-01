@@ -127,6 +127,31 @@ export function renderTemplate(body: string, vars: Record<string, string>): stri
   });
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * security-review 01-sep: variante de renderTemplate() para cuando `body` es
+ * el HTML real de un email (Resend lo manda tal cual, sin sanitizar). Escapa
+ * el VALOR sustituido, no el template — el `body` sigue siendo HTML de
+ * verdad (`<p>`, `<br>`, etc.), solo lo que viene de `vars` (nombre de
+ * paciente/clínica, editable por recepción) no puede inyectar markup.
+ * `renderTemplate` (sin escapar) sigue siendo correcta para WhatsApp/SMS —
+ * texto plano, nunca se interpreta como HTML.
+ */
+export function renderTemplateHtml(body: string, vars: Record<string, string>): string {
+  return body.replace(/\{(\w+)\}/g, (match, key) => {
+    const v = vars[key as keyof typeof vars];
+    return v == null ? match : escapeHtml(String(v));
+  });
+}
+
 /**
  * Convierte un teléfono a formato E.164 apto para wa.me — solo dígitos, sin
  * signo + ni espacios. Chile por defecto (asume 56 si el número parece local).
