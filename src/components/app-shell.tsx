@@ -224,6 +224,13 @@ export function AppShell({
   // Badge de "Recordatorios": sin recepción, un dentista solo puede olvidarse
   // de entrar a despachar la cola a mano. Solo se calcula si el rol puede
   // ver esa sección — mismo queryKey que /recordatorios para compartir cache.
+  // Auditoría de código 01-sep-2026: esto relanza ~10 queries a la vez (la
+  // cuenta real vive en listPendingReminders/listPendingOutreach) en TODA
+  // pestaña abierta con este permiso — decisión de Walter (01-sep): 5 min de
+  // atraso es imperceptible para una cola de "encargarse cuando puedas", a
+  // cambio de ~5x menos carga. Se deja el poll (no se reemplaza por Realtime
+  // puro) porque varios de los candidatos vencen por TIEMPO, no por una
+  // escritura nueva en la DB (ej. cooldown de hygiene_recall a los 90 días).
   const clinicId = access.clinic?.id;
   const puedeVerRecordatorios = hasPermission(access.role, "agenda:manage") && Boolean(clinicId);
   const fetchReminders = useServerFn(listPendingReminders);
@@ -231,14 +238,14 @@ export function AppShell({
     queryKey: ["pending-reminders", clinicId],
     enabled: puedeVerRecordatorios,
     queryFn: () => fetchReminders({ data: { clinicId: clinicId! } }),
-    refetchInterval: 60_000,
+    refetchInterval: 5 * 60_000,
   });
   const fetchOutreach = useServerFn(listPendingOutreach);
   const { data: outreachPendiente = [] } = useQuery({
     queryKey: ["pending-outreach", clinicId],
     enabled: puedeVerRecordatorios,
     queryFn: () => fetchOutreach({ data: { clinicId: clinicId! } }),
-    refetchInterval: 60_000,
+    refetchInterval: 5 * 60_000,
   });
   const recordatoriosBadge = recordatoriosPendientes.length + outreachPendiente.length;
 
