@@ -51,6 +51,17 @@ O sea que `generateNoteText` y `extractNoteEntities` (notas clínicas) ya venía
 fallando antes de este cambio. Sacar Lovable **no rompió nada que funcionara**:
 para encender la IA hay que cargar `GEMINI_API_KEY` o `OPENAI_API_KEY` en Vercel.
 
+## Ojo 2: Sentry está en el código pero apagado
+
+`src/lib/sentry.ts` hace `if (!dsn) return;` antes de `Sentry.init()`, y en
+producción **no existe ni `VITE_SENTRY_DSN` ni `SENTRY_DSN`**. Verificado en vivo:
+`window.__SENTRY__` es `undefined` en `alika-omega.vercel.app`.
+
+O sea que hoy Alika **no tiene ningún reporte de errores activo en producción**.
+Esto no lo causó el desacople — el reporting de Lovable tampoco funcionaba fuera
+del editor, así que el estado es el mismo de antes. Pero conviene saberlo: para
+tener reporte real hay que cargar `VITE_SENTRY_DSN` en Vercel.
+
 ## Qué queda
 
 - `.env.lovable-backup.1786756349` sigue en el disco local, **gitignored**. No se
