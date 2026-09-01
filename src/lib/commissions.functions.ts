@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { permissionsForRole, type ClinicRole } from "@/lib/access";
 import { mensajeDb } from "@/lib/db-errors";
+import { calcularComision, type CommissionKind } from "@/lib/commissions";
 import { formatMoney } from "@/lib/finance";
 import { renderTemplate } from "@/lib/messaging";
 import { loadEmailSandboxConfig } from "@/lib/messaging.functions";
@@ -11,7 +12,7 @@ import { sendEmail } from "@/lib/email.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-export type CommissionKind = "percent" | "fixed";
+export type { CommissionKind };
 
 export type CommissionRule = {
   professionalId: string;
@@ -259,17 +260,11 @@ export const getCommissionReport = createServerFn({ method: "GET" })
 
       const acc = accByPro.get(pro.id) ?? { production: 0, count: 0 };
       const rule = ruleByPro.get(pro.id) ?? null;
-      let commission: number | null = null;
-      let ruleLabel = "Sin regla configurada";
-      if (rule) {
-        if (rule.kind === "percent") {
-          commission = Math.round((acc.production * rule.percentBps) / 10000);
-          ruleLabel = `${(rule.percentBps / 100).toFixed(2)}% sobre producción`;
-        } else {
-          commission = rule.fixedCents * acc.count;
-          ruleLabel = `Fijo por procedimiento`;
-        }
-      }
+      const { commissionCents: commission, ruleLabel } = calcularComision(
+        rule,
+        acc.production,
+        acc.count,
+      );
       return {
         professionalId: pro.id,
         professionalName: pro.full_name,

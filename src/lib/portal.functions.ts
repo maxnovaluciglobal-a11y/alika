@@ -118,17 +118,20 @@ export const generatePortalLink = createServerFn({ method: "POST" })
         },
       });
 
+      // "sent" solo si Meta lo confirmó de verdad — mismo criterio que
+      // sendWhatsAppFromTemplate (messaging.functions.ts): el fallback wa.me
+      // solo arma el link, no confirma que alguien lo mandó todavía.
       const { error: insertErr } = await supabase.from("messages").insert({
         clinic_id: data.clinicId,
         patient_id: data.patientId,
         channel: "whatsapp",
         direction: "outbound",
-        status: "sent",
+        status: attempt.viaApi ? "sent" : "queued",
         template_kind: "portal_invite",
         recipient: patient.phone,
         body: historyBody,
         external_id: attempt.externalId,
-        sent_at: new Date().toISOString(),
+        sent_at: attempt.viaApi ? new Date().toISOString() : null,
         sent_by: userId,
       });
       if (insertErr) throw new Error("No pudimos registrar el envío. " + insertErr.message);

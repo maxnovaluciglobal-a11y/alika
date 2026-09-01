@@ -255,6 +255,13 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
       const { viaApi, externalId } = attempt;
 
       const nowIso = new Date().toISOString();
+      // "sent" solo cuando la Cloud API de Meta lo confirmó de verdad. El
+      // fallback wa.me arma el link y devuelve la URL para que el cliente
+      // haga window.open — hasta ahí solo sabemos que existe un link, no que
+      // alguien lo mandó (auditoría UX, 30-ago: marcar "sent" acá era
+      // engañoso, el staff podía creer que el paciente ya fue notificado sin
+      // que nadie hubiera tocado "Enviar" en WhatsApp todavía). "queued" ya
+      // existe en el enum desde el diseño original de la tabla.
       const { data: inserted, error: insertErr } = await supabase
         .from("messages")
         .insert({
@@ -266,11 +273,11 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
           template_kind: templateKind,
           channel: "whatsapp",
           direction: "outbound",
-          status: "sent",
+          status: viaApi ? "sent" : "queued",
           recipient,
           body,
           external_id: externalId,
-          sent_at: nowIso,
+          sent_at: viaApi ? nowIso : null,
           sent_by: userId,
         })
         .select("id")
@@ -476,7 +483,11 @@ export const listPendingReminders = createServerFn({ method: "GET" })
       .eq("clinic_id", data.clinicId)
       .in("appointment_id", appointmentIds)
       .in("template_kind", ["appointment_reminder", "appointment_checkin"])
-      .eq("status", "sent");
+      // "queued" cuenta como ya despachado para este dedupe — es el estado
+      // real del fallback wa.me desde que dejó de marcarse "sent" a ciegas
+      // (ver sendWhatsAppFromTemplate). Si no se incluyera, un recordatorio
+      // ya mandado por wa.me volvería a ofrecerse como pendiente.
+      .in("status", ["sent", "queued"]);
     if (msgError)
       throw new Error(mensajeDb(msgError, "No pudimos revisar los recordatorios ya enviados."));
 
