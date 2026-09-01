@@ -1,19 +1,15 @@
 /**
- * Capa de IA del servidor.
+ * Capa de IA del servidor. Requiere una API key propia:
  *
- * Dentro de Lovable usa el AI Gateway con `LOVABLE_API_KEY` (no requiere clave
- * del usuario). Fuera de Lovable (VPS, Docker, Vercel) esa clave no existe, así
- * que se recurre a una API key propia:
+ *   1. GEMINI_API_KEY   → Google AI (endpoint compatible con OpenAI)
+ *   2. OPENAI_API_KEY   → OpenAI
  *
- *   1. LOVABLE_API_KEY  → AI Gateway de Lovable
- *   2. GEMINI_API_KEY   → Google AI (endpoint compatible con OpenAI)
- *   3. OPENAI_API_KEY   → OpenAI
- *
- * Se puede forzar el proveedor con AI_PROVIDER=lovable|gemini|openai y el modelo
- * con AI_MODEL (o GEMINI_MODEL / OPENAI_MODEL).
+ * Se puede forzar el proveedor con AI_PROVIDER=gemini|openai y el modelo con
+ * AI_MODEL (o GEMINI_MODEL / OPENAI_MODEL). Si no hay ninguna clave cargada,
+ * `resolverProveedorIa()` devuelve null y las features de IA quedan apagadas.
  */
 
-export type AiProvider = "lovable" | "gemini" | "openai";
+export type AiProvider = "gemini" | "openai";
 
 type ProviderConfig = {
   provider: AiProvider;
@@ -24,12 +20,11 @@ type ProviderConfig = {
 };
 
 const DEFAULTS: Record<AiProvider, string> = {
-  lovable: "google/gemini-3.6-flash",
   gemini: "gemini-2.5-flash",
   openai: "gpt-4o-mini",
 };
 
-/** Normaliza un id del catálogo de Lovable (`vendor/modelo`) a un proveedor directo. */
+/** Normaliza un id con prefijo de vendor (`vendor/modelo`) a un modelo directo. */
 function sinPrefijo(model: string) {
   return model.includes("/") ? model.slice(model.indexOf("/") + 1) : model;
 }
@@ -37,21 +32,11 @@ function sinPrefijo(model: string) {
 /** Proveedor disponible según las variables de entorno (se lee en runtime). */
 export function resolverProveedorIa(modelSolicitado?: string): ProviderConfig | null {
   const forzado = process.env.AI_PROVIDER as AiProvider | undefined;
-  const lovableKey = process.env.LOVABLE_API_KEY;
   const geminiKey = process.env.GEMINI_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY;
   const modelEnv = process.env.AI_MODEL;
 
   const usar = (p: AiProvider): ProviderConfig | null => {
-    if (p === "lovable" && lovableKey) {
-      return {
-        provider: "lovable",
-        apiKey: lovableKey,
-        url: "https://ai.gateway.lovable.dev/v1/chat/completions",
-        headers: { "Lovable-API-Key": lovableKey, "X-Lovable-AIG-SDK": "fetch" },
-        model: modelSolicitado ?? modelEnv ?? DEFAULTS.lovable,
-      };
-    }
     if (p === "gemini" && geminiKey) {
       return {
         provider: "gemini",
@@ -76,7 +61,7 @@ export function resolverProveedorIa(modelSolicitado?: string): ProviderConfig | 
   };
 
   if (forzado) return usar(forzado);
-  return usar("lovable") ?? usar("gemini") ?? usar("openai");
+  return usar("gemini") ?? usar("openai");
 }
 
 /** Diagnóstico legible para la UI/configuración, sin exponer valores de claves. */
@@ -96,9 +81,7 @@ export async function gatewayChat(options: {
 }): Promise<string> {
   const cfg = resolverProveedorIa(options.model);
   if (!cfg) {
-    throw new Error(
-      "No hay IA configurada. Define LOVABLE_API_KEY (dentro de Lovable) o tu propia GEMINI_API_KEY / OPENAI_API_KEY.",
-    );
+    throw new Error("No hay IA configurada. Define GEMINI_API_KEY o OPENAI_API_KEY.");
   }
 
   const res = await fetch(cfg.url, {
@@ -127,11 +110,7 @@ export async function gatewayChat(options: {
     throw new Error("La IA está recibiendo muchas solicitudes. Intenta en unos segundos.");
   }
   if (res.status === 402) {
-    throw new Error(
-      cfg.provider === "lovable"
-        ? "Se agotaron los créditos de IA del espacio de trabajo."
-        : "Tu cuenta del proveedor de IA no tiene saldo disponible.",
-    );
+    throw new Error("Tu cuenta del proveedor de IA no tiene saldo disponible.");
   }
   if (!res.ok) {
     const detail = await res.text();

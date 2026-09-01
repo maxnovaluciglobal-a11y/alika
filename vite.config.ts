@@ -1,20 +1,88 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - TanStack devtools (dev-only, first), tanstackStart, viteReact, tailwindcss, tsConfigPaths,
-//     nitro (build-only using cloudflare as a default target), VITE_* env injection, @ path alias,
-//     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+// Config de Vite propia (sin `@lovable.dev/vite-tanstack-config`).
+// Replica lo que ese preset armaba FUERA del sandbox de Lovable: sus plugins de
+// sandbox, HMR gate, dev-server bridge y assets proxy sólo se activaban dentro
+// del editor, así que acá no hacen falta. Ver docs/DESACOPLE_LOVABLE.md.
+import { defineConfig, loadEnv, type PluginOption } from "vite";
+import tailwindcss from "@tailwindcss/vite";
+import tsConfigPaths from "vite-tsconfig-paths";
+import viteReact from "@vitejs/plugin-react";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 
-// Fuera de Lovable (p. ej. Vercel) el preset se toma de NITRO_PRESET; si no está
-// definido, Nitro autodetecta la plataforma (Vercel/Netlify/Cloudflare).
+// Fuera de Lovable (p. ej. Vercel) el preset de Nitro se toma de NITRO_PRESET;
+// si no está definido, Nitro autodetecta la plataforma (Vercel/Netlify/Cloudflare).
 const nitroPreset = process.env.NITRO_PRESET;
 
-export default defineConfig({
-  nitro: nitroPreset ? { preset: nitroPreset } : true,
-  tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
-    server: { entry: "server" },
-  },
+export default defineConfig(async ({ command, mode }) => {
+  const plugins: PluginOption[] = [];
+
+  // Devtools primero y sólo en dev, igual que hacía el preset.
+  if (mode === "development") {
+    const { devtools } = await import("@tanstack/devtools-vite");
+    plugins.push(
+      devtools({
+        logging: false,
+        eventBusConfig: { enabled: false },
+        enhancedLogs: { enabled: false },
+        consolePiping: { enabled: false },
+        removeDevtoolsOnBuild: false,
+        injectSource: { enabled: true },
+      }),
+    );
+  }
+
+  plugins.push(tailwindcss());
+  plugins.push(tsConfigPaths({ projects: ["./tsconfig.json"] }));
+
+  plugins.push(
+    tanstackStart({
+      importProtection: {
+        behavior: "error",
+        client: { files: ["**/server/**"], specifiers: ["server-only"] },
+      },
+      // Redirige el server entry de TanStack Start a src/server.ts (wrapper de errores SSR).
+      server: { entry: "server" },
+    }),
+  );
+
+  // Nitro sólo participa del build, nunca del dev server.
+  if (command === "build") {
+    const { nitro } = await import("nitro/vite");
+    plugins.push(nitro(nitroPreset ? { preset: nitroPreset } : {}));
+  }
+
+  plugins.push(viteReact());
+
+  // Inyección explícita de las VITE_* (el preset hacía esto para que lleguen al bundle SSR).
+  const envDefine: Record<string, string> = {};
+  for (const [key, value] of Object.entries(loadEnv(mode, process.cwd(), "VITE_"))) {
+    envDefine[`import.meta.env.${key}`] = JSON.stringify(value);
+  }
+
+  return {
+    define: envDefine,
+    css: { transformer: "lightningcss" as const },
+    resolve: {
+      alias: { "@": `${process.cwd()}/src` },
+      dedupe: [
+        "react",
+        "react-dom",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+        "@tanstack/react-query",
+        "@tanstack/query-core",
+      ],
+    },
+    optimizeDeps: {
+      include: [
+        "react",
+        "react-dom",
+        "react-dom/client",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+      ],
+      ignoreOutdatedRequests: true,
+    },
+    server: { host: "::", port: 8080 },
+    plugins,
+  };
 });
