@@ -633,14 +633,6 @@ export function getSucursal(id: string) {
   return sucursales.find((s) => s.id === id);
 }
 
-export function formatoMoneda(valor: number) {
-  return new Intl.NumberFormat("es-CL", {
-    style: "currency",
-    currency: "CLP",
-    maximumFractionDigits: 0,
-  }).format(valor);
-}
-
 /** Fecha real de hoy (YYYY-MM-DD) en la zona horaria por defecto de la clínica. */
 export function hoyISO(timeZone = "America/Santiago"): string {
   return new Intl.DateTimeFormat("en-CA", {

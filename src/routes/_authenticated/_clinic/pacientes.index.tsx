@@ -21,7 +21,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { requirePermission } from "@/lib/route-guards";
 import { hasPermission } from "@/lib/access";
-import { etiquetaEstadoPaciente, formatoMoneda, type EstadoPaciente } from "@/lib/clinic-data";
+import { etiquetaEstadoPaciente, type EstadoPaciente } from "@/lib/clinic-data";
+import { formatMoney } from "@/lib/finance";
 import { listBranches, listProfessionals } from "@/lib/clinic-catalog.functions";
 import {
   createPatient,
@@ -586,7 +587,7 @@ function PacientesPage() {
                       {p.saldo == null
                         ? "Sin datos"
                         : p.saldo > 0
-                          ? formatoMoneda(p.saldo)
+                          ? formatMoney(p.saldo, access.clinic?.currency)
                           : "Al día"}
                     </span>
                     <span

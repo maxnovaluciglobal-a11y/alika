@@ -16,9 +16,14 @@ interface FinanzasSearch {
   hasta: string;
 }
 
-/** Primer día del mes actual, en la timezone por defecto (mismo criterio simplificado que el resto del proyecto para filtros de rango). */
-function primerDiaDelMes(): string {
-  const hoy = hoyISO();
+// validateSearch corre antes del componente (sin Route.useRouteContext(),
+// mismo problema estructural que ya documenta agenda.tsx:HOY) — el default
+// de estas dos fechas cae a la timezone de Chile mientras no haya un valor
+// explícito en la URL. Impacto acotado: solo el rango por defecto del
+// reporte, unas horas al día, y solo si la clínica no es de Chile — dentro
+// del componente (onReset más abajo) sí usamos access.clinic?.timezone real.
+function primerDiaDelMes(timeZone?: string): string {
+  const hoy = hoyISO(timeZone);
   return `${hoy.slice(0, 7)}-01`;
 }
 
@@ -76,7 +81,15 @@ function FinanzasPage() {
   return (
     <AppShell title="Finanzas" access={access}>
       <div className="space-y-6">
-        <FilterBar activos={0} onReset={() => set({ desde: primerDiaDelMes(), hasta: hoyISO() })}>
+        <FilterBar
+          activos={0}
+          onReset={() =>
+            set({
+              desde: primerDiaDelMes(access.clinic?.timezone),
+              hasta: hoyISO(access.clinic?.timezone),
+            })
+          }
+        >
           <DateField label="Desde" value={search.desde} onChange={(desde) => set({ desde })} />
           <DateField label="Hasta" value={search.hasta} onChange={(hasta) => set({ hasta })} />
         </FilterBar>

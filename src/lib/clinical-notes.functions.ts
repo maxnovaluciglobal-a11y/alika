@@ -58,18 +58,22 @@ export const getPatientNotes = createServerFn({ method: "GET" })
     }> => {
       const { supabase } = context;
 
-      const [notesRes, versionsRes, auditRes, entitiesRes, reviewsRes] = await Promise.all([
+      // security-review 01-sep: clinical_note_versions no tiene columna
+      // patient_ref (solo note_id) — antes se traía TODA la tabla de la
+      // clínica (todos los pacientes) y se filtraba acá en JS con noteIds.
+      // Costoso (escaneo completo en cada visita a la ficha, es la tabla de
+      // mayor tráfico de la app) y frágil: la única barrera contra que un
+      // paciente vea versiones de notas de otro era este filtro en memoria,
+      // no una policy de RLS a nivel de paciente. Ahora: notes primero, y
+      // versions solo por los note_id que ya sabemos que son de este
+      // paciente — mismo patrón .in()+Map que ya pide CLAUDE.md.
+      const [notesRes, auditRes, entitiesRes, reviewsRes] = await Promise.all([
         supabase
           .from("clinical_notes")
           .select("*")
           .eq("clinic_id", data.clinicId)
           .eq("patient_ref", data.patientRef)
           .order("updated_at", { ascending: false }),
-        supabase
-          .from("clinical_note_versions")
-          .select("*")
-          .eq("clinic_id", data.clinicId)
-          .order("created_at", { ascending: false }),
         supabase
           .from("clinical_note_audit")
           .select("*")
@@ -98,8 +102,21 @@ export const getPatientNotes = createServerFn({ method: "GET" })
         );
 
       const notes = notesRes.data ?? [];
-      const noteIds = new Set(notes.map((n) => n.id));
-      const versions = (versionsRes.data ?? []).filter((v) => noteIds.has(v.note_id));
+      const noteIds = notes.map((n) => n.id);
+      const versionsRes = noteIds.length
+        ? await supabase
+            .from("clinical_note_versions")
+            .select("*")
+            .eq("clinic_id", data.clinicId)
+            .in("note_id", noteIds)
+            .order("created_at", { ascending: false })
+        : { data: [], error: null };
+      if (versionsRes.error)
+        throw new Error(
+          mensajeDb(versionsRes.error, "No pudimos cargar las versiones de las notas clínicas."),
+        );
+
+      const versions = versionsRes.data ?? [];
       const audit = auditRes.data ?? [];
       const entities = entitiesRes.data ?? [];
       const reviews = reviewsRes.data ?? [];

@@ -43,8 +43,13 @@ interface ComisionesSearch {
   hasta: string;
 }
 
-function primerDiaDelMes(): string {
-  const hoy = hoyISO();
+// validateSearch corre antes del componente (sin Route.useRouteContext(),
+// mismo problema estructural que ya documenta agenda.tsx:HOY) — impacto
+// acotado al rango por defecto del reporte mientras la URL no traiga fecha
+// explícita. Dentro del componente (onReset más abajo) sí usamos
+// access.clinic?.timezone real.
+function primerDiaDelMes(timeZone?: string): string {
+  const hoy = hoyISO(timeZone);
   return `${hoy.slice(0, 7)}-01`;
 }
 
@@ -176,7 +181,15 @@ function ComisionesPage() {
           )}
         </div>
 
-        <FilterBar activos={0} onReset={() => set({ desde: primerDiaDelMes(), hasta: hoyISO() })}>
+        <FilterBar
+          activos={0}
+          onReset={() =>
+            set({
+              desde: primerDiaDelMes(access.clinic?.timezone),
+              hasta: hoyISO(access.clinic?.timezone),
+            })
+          }
+        >
           <DateField label="Desde" value={search.desde} onChange={(desde) => set({ desde })} />
           <DateField label="Hasta" value={search.hasta} onChange={(hasta) => set({ hasta })} />
         </FilterBar>

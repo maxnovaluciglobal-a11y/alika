@@ -19,11 +19,24 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { usePublicHolidays } from "@/hooks/use-public-holidays";
 import { fechaAISO, formatoFechaLarga, hoyISO, parseIsoDate } from "@/lib/clinic-data";
 import { formatMoney } from "@/lib/finance";
+import { COUNTRIES } from "@/lib/onboarding-types";
 import {
   getExpiredPortalContact,
   getMyPortalOverview,
   requestPortalAppointment,
 } from "@/lib/portal.functions";
+
+/**
+ * El portal no tiene sesión de Supabase (sin `access.clinic?.timezone`
+ * disponible) — `getMyPortalOverview` sí devuelve `clinic.country`, del que
+ * derivamos la timezone real reusando el mapeo ya existente de `COUNTRIES`
+ * (mismo que usa el onboarding). Sin `country` todavía (mientras `overview`
+ * carga), cae al default de Chile de `hoyISO()` — igual que antes, pero
+ * ahora se corrige solo apenas la clínica real carga (ver useEffect abajo).
+ */
+function timezoneFromCountry(country: string | undefined): string | undefined {
+  return COUNTRIES.find((c) => c.code === country)?.timezone;
+}
 
 export const Route = createFileRoute("/portal/inicio")({
   head: () => ({
@@ -60,11 +73,21 @@ function PortalInicio() {
     };
   }, [overview.isError, fetchContact]);
 
+  // Sin country todavía (primer render, overview sin cargar) cae al default
+  // de Chile de hoyISO() — se corrige solo en el efecto de abajo apenas la
+  // clínica real carga, sin pisar una fecha que el paciente ya haya elegido.
   const [preferredDate, setPreferredDate] = useState(hoyISO());
+  const [preferredDateTouched, setPreferredDateTouched] = useState(false);
   const [reason, setReason] = useState("");
   const [priority, setPriority] = useState<"baja" | "media" | "alta">("media");
   const [enviado, setEnviado] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const clinicTimezone = timezoneFromCountry(overview.data?.clinic.country);
+
+  useEffect(() => {
+    if (preferredDateTouched || !clinicTimezone) return;
+    setPreferredDate(hoyISO(clinicTimezone));
+  }, [clinicTimezone, preferredDateTouched]);
 
   // Feriados (Nager.Date) del país de la clínica, para marcar el calendario
   // de "Pedir una hora". Cubre el año de la fecha elegida + el siguiente,
@@ -205,9 +228,10 @@ function PortalInicio() {
                     onSelect={(date) => {
                       if (!date) return;
                       setPreferredDate(fechaAISO(date));
+                      setPreferredDateTouched(true);
                       setCalendarOpen(false);
                     }}
-                    disabled={{ before: parseIsoDate(hoyISO()) ?? new Date() }}
+                    disabled={{ before: parseIsoDate(hoyISO(clinicTimezone)) ?? new Date() }}
                     modifiers={{ feriado: holidayDates }}
                     modifiersClassNames={{
                       feriado: "bg-warning-soft text-warning font-semibold",

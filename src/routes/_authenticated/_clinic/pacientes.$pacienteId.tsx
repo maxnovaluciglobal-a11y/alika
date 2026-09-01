@@ -19,7 +19,8 @@ import { WhatsAppOptInToggle } from "@/components/whatsapp-opt-in-toggle";
 import { PortalLinkButton, RevokePortalAccessButton } from "@/components/portal-link-button";
 import { ReferralCodeCard } from "@/components/referral-code-card";
 import { hasPermission } from "@/lib/access";
-import { formatoMoneda, type Paciente } from "@/lib/clinic-data";
+import type { Paciente } from "@/lib/clinic-data";
+import { formatMoney } from "@/lib/finance";
 import { getPatient } from "@/lib/patients.functions";
 
 export const Route = createFileRoute("/_authenticated/_clinic/pacientes/$pacienteId")({
@@ -215,9 +216,9 @@ function PacienteDetalle() {
                     {paciente.saldo == null
                       ? "Sin datos"
                       : paciente.saldo > 0
-                        ? formatoMoneda(paciente.saldo)
+                        ? formatMoney(paciente.saldo, access.clinic?.currency)
                         : paciente.saldo < 0
-                          ? `${formatoMoneda(-paciente.saldo)} a favor`
+                          ? `${formatMoney(-paciente.saldo, access.clinic?.currency)} a favor`
                           : "Al día"}
                   </p>
                 </div>
