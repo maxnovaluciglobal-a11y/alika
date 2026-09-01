@@ -14,12 +14,15 @@ export const Route = createFileRoute("/_authenticated/_clinic")({
   beforeLoad: async ({ location, context }): Promise<{ access: ClinicAccess }> => {
     const { queryClient, user } = context;
 
-    // Trae del disco lo que se guardó en visitas anteriores. Tiene que pasar
-    // ACÁ y no en un efecto de React: al abrir la app en frío sin conexión
-    // (el service worker sirve el shell), `beforeLoad` corre antes del primer
-    // render, y si el cache todavía no está cargado el guard no encuentra al
-    // usuario y manda al login.
-    await ensureOfflineCacheHydrated(queryClient, user.id);
+    // Restaura del disco lo que se guardó en visitas anteriores. Antes esto
+    // se esperaba ANTES de arrancar `getMyAccess`, en serie — sumaba una
+    // vuelta completa al round-trip de red que ya de por sí cruza de Vercel
+    // (EE.UU.) a Supabase (São Paulo). No hace falta esperarlo para *iniciar*
+    // el pedido de red: arranca en paralelo, y solo se espera explícitamente
+    // más abajo, en el catch, para el caso offline (auditoría de
+    // performance, 31-ago — medido en producción: ~6-13s de hueco antes de
+    // esto).
+    const hydratePromise = ensureOfflineCacheHydrated(queryClient, user.id);
 
     // Va por el cache de React Query en vez de llamar directo: durante un
     // corte, este `await` era lo que tumbaba toda la app de clínica de una,
@@ -34,6 +37,10 @@ export const Route = createFileRoute("/_authenticated/_clinic")({
     } catch (err) {
       // Si ya sabíamos quién es, seguimos con eso: perder internet no debería
       // sacar a la clínica de la aplicación. La primera carga sí necesita red.
+      // Hay que esperar la restauración acá (no antes): si todavía está en
+      // vuelo, `getQueryData` daría un falso "no hay nada" y mandaría al
+      // login a alguien con una sesión offline perfectamente válida.
+      await hydratePromise;
       const conocido = queryClient.getQueryData<ClinicAccess>(ACCESS_KEY);
       if (!conocido) throw err;
       access = conocido;
