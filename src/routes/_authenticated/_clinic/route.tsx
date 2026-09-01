@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
 
 import { getMyAccess } from "@/lib/access.functions";
 import type { ClinicAccess } from "@/lib/access";
@@ -6,6 +7,9 @@ import { getMySubscription } from "@/lib/billing.functions";
 import { isSubscriptionActive } from "@/lib/billing";
 import { leerRolSimulado, puedeSimular } from "@/lib/role-simulation";
 import { ensureOfflineCacheHydrated } from "@/lib/offline-cache";
+import { AppShell } from "@/components/app-shell";
+import { reportBoundaryError } from "@/lib/error-reporting";
+import { captureException } from "@/lib/sentry";
 
 /** Quién soy y en qué clínica: cambia poquísimo, y sin esto no se abre ninguna pantalla. */
 const ACCESS_KEY = ["my-access"] as const;
@@ -85,4 +89,51 @@ export const Route = createFileRoute("/_authenticated/_clinic")({
     };
   },
   component: () => <Outlet />,
+  errorComponent: ClinicSectionError,
 });
+
+// Auditoría de código 01-sep-2026: ninguna ruta hija de /_clinic define su
+// propio `errorComponent`, y esta ruta y `_authenticated` solo renderizan
+// `<Outlet/>` — sin este boundary, un error en CUALQUIER pantalla (agenda,
+// finanzas, etc.) escapaba hasta el de __root.tsx, que no tiene forma de
+// armar el AppShell (nav lateral) porque esta rama del árbol nunca la monta
+// arriba del Outlet. El usuario perdía la navegación entera por un error de
+// una sola sección. Puesto acá (no en cada ruta hija) cubre todas de una.
+function ClinicSectionError({ error, reset }: { error: Error; reset: () => void }) {
+  const router = useRouter();
+  const { access } = Route.useRouteContext();
+
+  useEffect(() => {
+    reportBoundaryError(error, { boundary: "clinic_section_error_component" });
+    captureException(error, { tags: { boundary: "clinic_section_error_component" } });
+  }, [error]);
+
+  const mensaje = (
+    <div className="flex flex-col items-start gap-3">
+      <p className="text-sm text-muted-foreground">
+        No pudimos cargar esta sección. Puede ser un corte de conexión momentáneo.
+      </p>
+      <button
+        type="button"
+        onClick={() => {
+          router.invalidate();
+          reset();
+        }}
+        className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+      >
+        Reintentar
+      </button>
+    </div>
+  );
+
+  // El beforeLoad de esta misma ruta puede fallar antes de resolver `access`
+  // (sin cache offline y sin red) — ahí no hay con qué armar el AppShell.
+  if (!access) {
+    return <div className="p-6">{mensaje}</div>;
+  }
+  return (
+    <AppShell title="No se pudo cargar" access={access}>
+      {mensaje}
+    </AppShell>
+  );
+}
