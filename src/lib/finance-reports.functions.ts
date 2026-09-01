@@ -2,9 +2,38 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { permissionsForRole, type ClinicRole } from "@/lib/access";
 import { mensajeDb } from "@/lib/db-errors";
+import type { Database } from "@/integrations/supabase/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const SIN_ASIGNAR = "sin_asignar";
+
+/**
+ * security-review 01-sep: `treatment_items_select_members`/`payments_select_finance_roles`
+ * dejan leer a cualquier miembro de la clínica (incluida `reception`, que no
+ * tiene `finance:view`) — RLS por sí sola no alcanza acá. Mismo criterio que
+ * ya usa `getCommissionReport` para el mismo tipo de gap. A diferencia de
+ * comisiones (que sí tiene sentido acotar a "lo propio"), un reporte de caja
+ * no tiene una versión "propia" con sentido para un rol sin `finance:view` —
+ * la respuesta correcta es negar, no degradar en silencio.
+ */
+export async function requireFinanceView(
+  supabase: SupabaseClient<Database>,
+  clinicId: string,
+  userId: string,
+) {
+  const { data: membership } = await supabase
+    .from("clinic_members")
+    .select("role")
+    .eq("clinic_id", clinicId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  const canView = membership?.role
+    ? permissionsForRole(membership.role as ClinicRole).includes("finance:view")
+    : false;
+  if (!canView) throw new Error("No tienes permisos para ver los reportes financieros.");
+}
 
 export interface FinanceSummary {
   currency: string;
@@ -47,7 +76,8 @@ export const getFinanceSummary = createServerFn({ method: "GET" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<FinanceSummary> => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
+    await requireFinanceView(supabase, data.clinicId, userId);
     const desdeIso = `${data.desde}T00:00:00.000Z`;
     const hastaIso = `${data.hasta}T23:59:59.999Z`;
 
@@ -169,6 +199,7 @@ export const getQuoteConversionReport = createServerFn({ method: "GET" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<QuoteConversionReport> => {
+    await requireFinanceView(context.supabase, data.clinicId, context.userId);
     const desdeIso = `${data.desde}T00:00:00.000Z`;
     const hastaIso = `${data.hasta}T23:59:59.999Z`;
 
