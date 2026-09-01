@@ -3,6 +3,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { mensajeDb } from "@/lib/db-errors";
 import { TOOTH_SURFACES } from "@/lib/odontogram";
 import { filaYaCreada } from "@/lib/idempotency";
 import {
@@ -75,7 +76,8 @@ export const listProcedures = createServerFn({ method: "GET" })
       .eq("is_active", true)
       .order("name", { ascending: true });
 
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(mensajeDb(error, "No pudimos cargar el catálogo de procedimientos."));
     return (rows ?? []).map((r) => mapProcedure(r as ProcedureRow));
   });
 
@@ -203,7 +205,8 @@ export const listQuotes = createServerFn({ method: "GET" })
       .eq("patient_id", data.patientId)
       .order("created_at", { ascending: false });
 
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(mensajeDb(error, "No pudimos cargar los presupuestos del paciente."));
     const quotes = (quoteRows ?? []) as QuoteRow[];
     if (!quotes.length) return [];
 
@@ -216,7 +219,8 @@ export const listQuotes = createServerFn({ method: "GET" })
       )
       .order("position", { ascending: true });
 
-    if (itemsError) throw new Error(itemsError.message);
+    if (itemsError)
+      throw new Error(mensajeDb(itemsError, "No pudimos cargar los ítems de los presupuestos."));
 
     const itemsByQuote = new Map<string, QuoteItem[]>();
     for (const it of (itemRows ?? []) as QuoteItemRow[]) {
@@ -368,7 +372,7 @@ export const updateQuote = createServerFn({ method: "POST" })
       .eq("id", data.quoteId)
       .eq("clinic_id", data.clinicId)
       .maybeSingle();
-    if (qErr) throw new Error(qErr.message);
+    if (qErr) throw new Error(mensajeDb(qErr, "No pudimos verificar el estado del presupuesto."));
     if (!quote) throw new Error("No encontramos ese presupuesto.");
     if (quote.status !== "draft" && quote.status !== "sent") {
       throw new Error(
@@ -606,7 +610,10 @@ export const listTreatmentPlans = createServerFn({ method: "GET" })
       .eq("patient_id", data.patientId)
       .order("created_at", { ascending: false });
 
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(error, "No pudimos cargar los planes de tratamiento del paciente."),
+      );
     const plans = (planRows ?? []) as PlanRow[];
     if (!plans.length) return [];
 
@@ -619,7 +626,10 @@ export const listTreatmentPlans = createServerFn({ method: "GET" })
       )
       .order("position", { ascending: true });
 
-    if (itemsError) throw new Error(itemsError.message);
+    if (itemsError)
+      throw new Error(
+        mensajeDb(itemsError, "No pudimos cargar los ítems de los planes de tratamiento."),
+      );
 
     const itemsByPlan = new Map<string, TreatmentItem[]>();
     for (const it of (itemRows ?? []) as unknown as (PlanItemRow & { plan_id: string })[]) {
@@ -672,7 +682,10 @@ export const listClinicTreatmentPlans = createServerFn({ method: "GET" })
         .order("created_at", { ascending: false })
         .limit(500);
 
-      if (error) throw new Error(error.message);
+      if (error)
+        throw new Error(
+          mensajeDb(error, "No pudimos cargar los planes de tratamiento de la clínica."),
+        );
       const plans = planRows ?? [];
       if (!plans.length) return [];
 
@@ -691,8 +704,11 @@ export const listClinicTreatmentPlans = createServerFn({ method: "GET" })
           .eq("clinic_id", data.clinicId)
           .in("plan_id", planIds),
       ]);
-      if (pErr) throw new Error(pErr.message);
-      if (iErr) throw new Error(iErr.message);
+      if (pErr) throw new Error(mensajeDb(pErr, "No pudimos cargar los datos de los pacientes."));
+      if (iErr)
+        throw new Error(
+          mensajeDb(iErr, "No pudimos cargar el avance de los planes de tratamiento."),
+        );
 
       const patientById = new Map((patients ?? []).map((p) => [p.id, p]));
 
@@ -811,7 +827,7 @@ export const listPayments = createServerFn({ method: "GET" })
       .eq("patient_id", data.patientId)
       .order("paid_at", { ascending: false });
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar los pagos del paciente."));
     return (rows ?? []).map((r) => mapPayment(r as PaymentRow));
   });
 

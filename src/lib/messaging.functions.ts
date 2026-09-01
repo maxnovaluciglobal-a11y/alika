@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { mensajeDb } from "@/lib/db-errors";
 import {
   MESSAGE_CHANNELS,
   MESSAGE_TEMPLATE_KINDS,
@@ -114,7 +115,7 @@ export const listMessageTemplates = createServerFn({ method: "GET" })
       .order("kind", { ascending: true })
       .order("name", { ascending: true });
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar las plantillas de mensajes."));
     return (rows ?? []).map((r) => mapTemplate(r as TemplateRow));
   });
 
@@ -133,7 +134,7 @@ export const listMessages = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(200);
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar el historial de mensajes."));
     return (rows ?? []).map((r) => mapMessage(r as MessageRow));
   });
 
@@ -188,7 +189,8 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
         .eq("clinic_id", data.clinicId)
         .eq("id", data.patientId)
         .maybeSingle();
-      if (patientErr) throw new Error(patientErr.message);
+      if (patientErr)
+        throw new Error(mensajeDb(patientErr, "No pudimos obtener los datos del paciente."));
       if (!patient) throw new Error("Paciente no encontrado.");
 
       const recipient = (data.recipientOverride ?? patient.phone ?? "").trim();
@@ -223,7 +225,8 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
           templateQuery = templateQuery.eq("kind", data.templateKind);
         }
         const { data: template, error: templateErr } = await templateQuery.maybeSingle();
-        if (templateErr) throw new Error(templateErr.message);
+        if (templateErr)
+          throw new Error(mensajeDb(templateErr, "No pudimos cargar la plantilla de WhatsApp."));
         if (!template) throw new Error("Template no encontrado o inactivo.");
         templateId = template.id;
         templateKind = template.kind as (typeof MESSAGE_TEMPLATE_KINDS)[number];
@@ -316,8 +319,10 @@ export const sendEmailFromTemplate = createServerFn({ method: "POST" })
             .maybeSingle(),
           supabase.from("clinics").select("name").eq("id", data.clinicId).maybeSingle(),
         ]);
-      if (patientErr) throw new Error(patientErr.message);
-      if (clinicErr) throw new Error(clinicErr.message);
+      if (patientErr)
+        throw new Error(mensajeDb(patientErr, "No pudimos obtener los datos del paciente."));
+      if (clinicErr)
+        throw new Error(mensajeDb(clinicErr, "No pudimos obtener los datos de la clínica."));
       if (!patient) throw new Error("Paciente no encontrado.");
 
       const recipient = (patient.email ?? "").trim();
@@ -334,7 +339,8 @@ export const sendEmailFromTemplate = createServerFn({ method: "POST" })
         .eq("is_active", true)
         .limit(1)
         .maybeSingle();
-      if (templateErr) throw new Error(templateErr.message);
+      if (templateErr)
+        throw new Error(mensajeDb(templateErr, "No pudimos cargar la plantilla de email."));
       if (!template) throw new Error("No hay plantilla de email activa para este tipo de aviso.");
 
       const vars = { ...data.variables, paciente: patient.full_name, clinica: clinic?.name ?? "" };
@@ -439,7 +445,7 @@ export const listPendingReminders = createServerFn({ method: "GET" })
       .gte("starts_at", desde3h)
       .lte("starts_at", hasta48h)
       .order("starts_at", { ascending: true });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar las citas próximas."));
 
     const candidatas = (appts ?? [])
       .map((a) => {
@@ -471,7 +477,8 @@ export const listPendingReminders = createServerFn({ method: "GET" })
       .in("appointment_id", appointmentIds)
       .in("template_kind", ["appointment_reminder", "appointment_checkin"])
       .eq("status", "sent");
-    if (msgError) throw new Error(msgError.message);
+    if (msgError)
+      throw new Error(mensajeDb(msgError, "No pudimos revisar los recordatorios ya enviados."));
 
     const enviadoPorCanal = new Set(
       (enviados ?? []).map((m) => `${m.appointment_id}:${m.template_kind}:${m.channel}`),
@@ -507,9 +514,11 @@ export const listPendingReminders = createServerFn({ method: "GET" })
         .select("id, timezone")
         .in("id", branchIds.length ? branchIds : [""]),
     ]);
-    if (pErr) throw new Error(pErr.message);
-    if (profErr) throw new Error(profErr.message);
-    if (branchErr) throw new Error(branchErr.message);
+    if (pErr) throw new Error(mensajeDb(pErr, "No pudimos cargar los datos de los pacientes."));
+    if (profErr)
+      throw new Error(mensajeDb(profErr, "No pudimos cargar los datos de los profesionales."));
+    if (branchErr)
+      throw new Error(mensajeDb(branchErr, "No pudimos cargar los datos de las sucursales."));
 
     const patientById = new Map((patients ?? []).map((p) => [p.id, p]));
     const profNameById = new Map((professionals ?? []).map((p) => [p.id, p.full_name]));
@@ -668,16 +677,34 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
         .limit(2000),
       supabase.from("branches").select("id, google_review_url").eq("clinic_id", clinicId),
     ]);
-    if (patErr) throw new Error(patErr.message);
-    if (apptErr) throw new Error(apptErr.message);
-    if (futErr) throw new Error(futErr.message);
-    if (msgErr) throw new Error(msgErr.message);
-    if (billErr) throw new Error(billErr.message);
-    if (completedErr) throw new Error(completedErr.message);
-    if (paidErr) throw new Error(paidErr.message);
-    if (clinicErr) throw new Error(clinicErr.message);
-    if (quoteErr) throw new Error(quoteErr.message);
-    if (branchErr) throw new Error(branchErr.message);
+    if (patErr)
+      throw new Error(
+        mensajeDb(patErr, "No pudimos cargar los pacientes con WhatsApp habilitado."),
+      );
+    if (apptErr)
+      throw new Error(mensajeDb(apptErr, "No pudimos cargar el historial de citas finalizadas."));
+    if (futErr)
+      throw new Error(mensajeDb(futErr, "No pudimos revisar las citas futuras de los pacientes."));
+    if (msgErr)
+      throw new Error(
+        mensajeDb(msgErr, "No pudimos revisar los mensajes de seguimiento ya enviados."),
+      );
+    if (billErr)
+      throw new Error(
+        mensajeDb(billErr, "No pudimos calcular el saldo pendiente de los pacientes."),
+      );
+    if (completedErr)
+      throw new Error(mensajeDb(completedErr, "No pudimos cargar los tratamientos completados."));
+    if (paidErr)
+      throw new Error(
+        mensajeDb(paidErr, "No pudimos calcular el saldo pendiente de los pacientes."),
+      );
+    if (clinicErr)
+      throw new Error(mensajeDb(clinicErr, "No pudimos obtener los datos de la clínica."));
+    if (quoteErr)
+      throw new Error(mensajeDb(quoteErr, "No pudimos cargar los presupuestos enviados."));
+    if (branchErr)
+      throw new Error(mensajeDb(branchErr, "No pudimos cargar los datos de las sucursales."));
 
     const patientById = new Map((optedInPatients ?? []).map((p) => [p.id, p]));
     const patientsWithFuture = new Set((futuras ?? []).map((f) => f.patient_id));
@@ -939,7 +966,10 @@ export const setPatientWhatsAppOptIn = createServerFn({ method: "POST" })
       )
       .eq("clinic_id", data.clinicId)
       .eq("id", data.patientId);
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(error, "No pudimos actualizar el consentimiento de WhatsApp del paciente."),
+      );
   });
 
 // Re-export para consumidores que solo importan de este módulo

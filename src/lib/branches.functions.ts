@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { mensajeDb } from "@/lib/db-errors";
 
 export type BranchDetail = {
   id: string;
@@ -37,7 +38,7 @@ export const listBranchesDetailed = createServerFn({ method: "GET" })
       .select("id, name, address, city, phone, opens_at, closes_at, is_active")
       .eq("clinic_id", data.clinicId)
       .order("name", { ascending: true });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar las sucursales."));
 
     const branchIds = (branches ?? []).map((b) => b.id);
     const { data: operatories, error: opError } = await context.supabase
@@ -46,7 +47,8 @@ export const listBranchesDetailed = createServerFn({ method: "GET" })
       .in("branch_id", branchIds.length ? branchIds : [""])
       .eq("is_active", true)
       .order("name", { ascending: true });
-    if (opError) throw new Error(opError.message);
+    if (opError)
+      throw new Error(mensajeDb(opError, "No pudimos cargar los boxes de las sucursales."));
 
     const opsByBranch = new Map<string, { id: string; name: string }[]>();
     for (const op of operatories ?? []) {
@@ -102,7 +104,7 @@ export const createBranch = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (branchError || !branch)
-      throw new Error(branchError?.message ?? "No se pudo crear la sucursal.");
+      throw new Error(mensajeDb(branchError, "No se pudo crear la sucursal."));
 
     const { error: opError } = await supabase.from("operatories").insert(
       data.branch.operatories.map((name) => ({
@@ -111,7 +113,7 @@ export const createBranch = createServerFn({ method: "POST" })
         name: name.trim(),
       })),
     );
-    if (opError) throw new Error(opError.message);
+    if (opError) throw new Error(mensajeDb(opError, "No pudimos crear los boxes de la sucursal."));
 
     return { branchId: branch.id };
   });

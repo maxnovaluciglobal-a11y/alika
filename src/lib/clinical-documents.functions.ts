@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { mensajeDb } from "@/lib/db-errors";
 
 const BUCKET = "clinical-documents";
 const SIGNED_URL_TTL_SECONDS = 60 * 10;
@@ -60,7 +61,7 @@ export const listPatientDocuments = createServerFn({ method: "GET" })
       .eq("clinic_id", data.clinicId)
       .eq("patient_id", data.patientId)
       .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar los documentos del paciente."));
 
     const documents: PatientDocument[] = [];
     for (const row of rows ?? []) {
@@ -110,7 +111,8 @@ export const uploadPatientDocument = createServerFn({ method: "POST" })
     const { error: uploadError } = await context.supabase.storage
       .from(BUCKET)
       .upload(path, bytes, { contentType: mimeType, upsert: false });
-    if (uploadError) throw new Error(uploadError.message);
+    if (uploadError)
+      throw new Error(mensajeDb(uploadError, "No pudimos subir el documento clínico."));
 
     const { error: insertError } = await context.supabase.from("patient_documents").insert({
       clinic_id: data.clinicId,
@@ -165,7 +167,8 @@ export const listConsentTemplates = createServerFn({ method: "GET" })
       .select("id, title, body, active")
       .eq("clinic_id", data.clinicId)
       .order("title", { ascending: true });
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(mensajeDb(error, "No pudimos cargar las plantillas de consentimiento."));
     return rows ?? [];
   });
 
@@ -232,7 +235,8 @@ export const listPatientConsents = createServerFn({ method: "GET" })
       .eq("clinic_id", data.clinicId)
       .eq("patient_id", data.patientId)
       .order("signed_at", { ascending: false });
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(mensajeDb(error, "No pudimos cargar los consentimientos del paciente."));
 
     const consents: PatientConsent[] = [];
     for (const row of rows ?? []) {
@@ -292,7 +296,8 @@ export const signPatientConsent = createServerFn({ method: "POST" })
     const { error: uploadError } = await context.supabase.storage
       .from(BUCKET)
       .upload(path, bytes, { contentType: mimeType, upsert: false });
-    if (uploadError) throw new Error(uploadError.message);
+    if (uploadError)
+      throw new Error(mensajeDb(uploadError, "No pudimos subir la firma del consentimiento."));
 
     const { error: insertError } = await context.supabase.from("patient_consents").insert({
       clinic_id: data.clinicId,

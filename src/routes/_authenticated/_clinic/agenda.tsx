@@ -21,6 +21,7 @@ import { DateField, FilterBar, Paginacion, SearchField, SelectField } from "@/co
 import { AgendaGrid } from "@/components/agenda-grid";
 import { AgendaMonth, AgendaWeek } from "@/components/agenda-views";
 import { AllergyAlertBanner, AllergyAlertIcon } from "@/components/medical-history-card";
+import { PatientCombobox } from "@/components/patient-combobox";
 import { addDaysISO, addMonthsISO, rangoDeVista } from "@/lib/agenda-fechas";
 import { Button } from "@/components/ui/button";
 import { HolidayNotice } from "@/components/holiday-notice";
@@ -390,19 +391,12 @@ function NuevaCitaDialog({
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="nc-paciente">Paciente</Label>
-            <select
+            <PatientCombobox
               id="nc-paciente"
               value={pacienteId}
-              onChange={(e) => setPacienteId(e.target.value)}
-              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
-            >
-              <option value="">Elegir paciente…</option>
-              {pacientes.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nombre}
-                </option>
-              ))}
-            </select>
+              onChange={setPacienteId}
+              pacientes={pacientes}
+            />
             {pacienteId && <AllergyAlertBanner allergies={allergyAlerts?.[pacienteId] ?? []} />}
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -891,19 +885,12 @@ function AgregarListaEsperaDialog({
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="le-paciente">Paciente</Label>
-            <select
+            <PatientCombobox
               id="le-paciente"
               value={pacienteId}
-              onChange={(e) => setPacienteId(e.target.value)}
-              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
-            >
-              <option value="">Elegir paciente…</option>
-              {pacientes.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nombre}
-                </option>
-              ))}
-            </select>
+              onChange={setPacienteId}
+              pacientes={pacientes}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="le-motivo">Motivo (opcional)</Label>

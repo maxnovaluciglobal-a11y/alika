@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { mensajeDb } from "@/lib/db-errors";
 import {
   PERIODONTAL_POINTS,
   type PeriodontalChart,
@@ -104,7 +105,10 @@ export const listPeriodontalCharts = createServerFn({ method: "GET" })
       .eq("patient_id", data.patientId)
       .order("recorded_at", { ascending: false });
 
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(error, "No pudimos cargar el historial de sondajes periodontales del paciente."),
+      );
 
     const chartRows = (charts ?? []) as ChartRow[];
     if (chartRows.length === 0) return [];
@@ -114,7 +118,13 @@ export const listPeriodontalCharts = createServerFn({ method: "GET" })
       .from("periodontal_measurements")
       .select("chart_id, tooth_number, point, pocket_depth_mm, bleeding")
       .in("chart_id", chartIds);
-    if (mErr) throw new Error(mErr.message);
+    if (mErr)
+      throw new Error(
+        mensajeDb(
+          mErr,
+          "No pudimos cargar las mediciones del historial de sondajes periodontales.",
+        ),
+      );
 
     const userIds = [...new Set(chartRows.map((c) => c.recorded_by))];
     const { data: profiles } = userIds.length
@@ -158,7 +168,10 @@ export const getLatestPeriodontalChart = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
 
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(error, "No pudimos cargar el último sondaje periodontal del paciente."),
+      );
     if (!chart) return null;
 
     return getPeriodontalChartById({
@@ -181,7 +194,7 @@ export const getPeriodontalChartById = createServerFn({ method: "GET" })
       .eq("clinic_id", data.clinicId)
       .eq("id", data.chartId)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar el sondaje periodontal."));
     if (!chart) return null;
 
     const chartRow = chart as ChartRow;
@@ -193,7 +206,8 @@ export const getPeriodontalChartById = createServerFn({ method: "GET" })
       )
       .eq("chart_id", chartRow.id)
       .order("tooth_number", { ascending: true });
-    if (mErr) throw new Error(mErr.message);
+    if (mErr)
+      throw new Error(mensajeDb(mErr, "No pudimos cargar las mediciones del sondaje periodontal."));
 
     const { data: profiles } = await supabase
       .from("profiles")

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { mensajeDb } from "@/lib/db-errors";
 
 export type InventoryMovementKind = "entrada" | "salida" | "ajuste";
 
@@ -122,7 +123,7 @@ export const listInventoryItems = createServerFn({ method: "GET" })
       rows = fallback.data as InventoryItemRow[] | null;
       error = fallback.error;
     }
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar el inventario."));
 
     return { items: (rows ?? []).map((r) => mapInventoryItemRow(r)) };
   });
@@ -168,7 +169,7 @@ export const createInventoryItem = createServerFn({ method: "POST" })
           "No pudimos guardar la sucursal del ítem: la migración de sucursales en inventario todavía no se aplicó. Avisale a Walter.",
         );
       }
-      throw new Error(error.message);
+      throw new Error(mensajeDb(error, "No pudimos crear el ítem de inventario."));
     }
     return { id: row.id };
   });
@@ -217,7 +218,7 @@ export const updateInventoryItem = createServerFn({ method: "POST" })
           "No pudimos guardar la sucursal del ítem: la migración de sucursales en inventario todavía no se aplicó. Avisale a Walter.",
         );
       }
-      throw new Error(error.message);
+      throw new Error(mensajeDb(error, "No pudimos actualizar el ítem de inventario."));
     }
     return { ok: true };
   });
@@ -274,7 +275,7 @@ export const registerInventoryMovement = createServerFn({ method: "POST" })
           "Esa salida deja el stock en negativo — revisá la cantidad o registrá antes un ajuste con el conteo real.",
         );
       }
-      throw new Error(error.message);
+      throw new Error(mensajeDb(error, "No pudimos registrar el movimiento de inventario."));
     }
     return { id: row.id };
   });
@@ -306,7 +307,8 @@ export const listInventoryMovements = createServerFn({ method: "GET" })
         .order("recorded_at", { ascending: false })
         .limit(INVENTORY_MOVEMENTS_ROW_LIMIT);
 
-      if (error) throw new Error(error.message);
+      if (error)
+        throw new Error(mensajeDb(error, "No pudimos cargar el historial de movimientos."));
       const truncated = (rows ?? []).length >= INVENTORY_MOVEMENTS_ROW_LIMIT;
 
       const items: InventoryMovement[] = (rows ?? []).map((r) => ({
@@ -351,7 +353,7 @@ export const listExpiringLots = createServerFn({ method: "GET" })
       .not("expiration_date", "is", null)
       .lte("expiration_date", limitDate)
       .order("expiration_date", { ascending: true });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar los lotes por vencer."));
     if (!movements || movements.length === 0) return [];
 
     const itemIds = [...new Set(movements.map((m) => m.item_id))];
@@ -360,7 +362,8 @@ export const listExpiringLots = createServerFn({ method: "GET" })
       .select("id, name, unit")
       .eq("clinic_id", data.clinicId)
       .in("id", itemIds);
-    if (itemsError) throw new Error(itemsError.message);
+    if (itemsError)
+      throw new Error(mensajeDb(itemsError, "No pudimos cargar los lotes por vencer."));
     const itemById = new Map((items ?? []).map((i) => [i.id, i]));
 
     return movements

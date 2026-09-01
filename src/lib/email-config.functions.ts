@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { mensajeDb } from "@/lib/db-errors";
 import {
   DEFAULT_EMAIL_SANDBOX,
   clampMinEntregas,
@@ -43,7 +44,10 @@ export const getEmailSandboxConfig = createServerFn({ method: "GET" })
       )
       .eq("clinic_id", data.clinicId)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(error, "No pudimos cargar la configuración de email de la clínica."),
+      );
     if (!row) return DEFAULT_EMAIL_SANDBOX;
     return rowToConfig(row as EmailSandboxRow);
   });

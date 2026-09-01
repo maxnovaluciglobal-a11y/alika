@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { HORA_INICIO, type Cita, type EstadoCita } from "@/lib/clinic-data";
+import { mensajeDb } from "@/lib/db-errors";
 import { filaYaCreada } from "@/lib/idempotency";
 
 const DEFAULT_TIMEZONE = "America/Santiago";
@@ -131,7 +132,7 @@ export const listAppointments = createServerFn({ method: "GET" })
       .order("starts_at", { ascending: false })
       .limit(APPOINTMENTS_ROW_LIMIT);
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar las citas de la clínica."));
     const truncated = (rows ?? []).length >= APPOINTMENTS_ROW_LIMIT;
 
     const appointments = (rows ?? []) as AppointmentRow[];
@@ -149,8 +150,10 @@ export const listAppointments = createServerFn({ method: "GET" })
           .select("id, timezone")
           .in("id", branchIds.length ? branchIds : [""]),
       ]);
-    if (patError) throw new Error(patError.message);
-    if (branchError) throw new Error(branchError.message);
+    if (patError)
+      throw new Error(mensajeDb(patError, "No pudimos cargar los datos de los pacientes."));
+    if (branchError)
+      throw new Error(mensajeDb(branchError, "No pudimos cargar los datos de las sucursales."));
 
     const nameByPatient = new Map((patients ?? []).map((p) => [p.id, p.full_name]));
     const tzByBranch = new Map((branches ?? []).map((b) => [b.id, b.timezone]));
@@ -242,7 +245,7 @@ export const createAppointment = createServerFn({ method: "POST" })
       .eq("clinic_id", data.clinicId)
       .eq("id", data.branchId)
       .maybeSingle();
-    if (branchErr) throw new Error(branchErr.message);
+    if (branchErr) throw new Error(mensajeDb(branchErr, "No pudimos verificar la sucursal."));
     if (!branch) throw new Error("La sucursal no existe o no es tuya.");
     const timeZone = branch.timezone || DEFAULT_TIMEZONE;
 
@@ -263,7 +266,8 @@ export const createAppointment = createServerFn({ method: "POST" })
       .select("day_of_week, start_time, end_time")
       .eq("clinic_id", data.clinicId)
       .eq("professional_id", data.professionalId);
-    if (horariosErr) throw new Error(horariosErr.message);
+    if (horariosErr)
+      throw new Error(mensajeDb(horariosErr, "No pudimos verificar el horario del profesional."));
 
     if (horarios && horarios.length > 0) {
       const dia = diaSemanaLocal(startsAt, timeZone);
@@ -302,7 +306,10 @@ export const createAppointment = createServerFn({ method: "POST" })
       .lt("starts_at", endsAt.toISOString())
       .gt("ends_at", startsAt.toISOString())
       .limit(1);
-    if (choquesErr) throw new Error(choquesErr.message);
+    if (choquesErr)
+      throw new Error(
+        mensajeDb(choquesErr, "No pudimos verificar si hay otra cita en ese horario."),
+      );
     const choque = choques?.[0];
     const solapamiento: Solapamiento | undefined = choque
       ? {
@@ -375,7 +382,7 @@ export const updateAppointment = createServerFn({ method: "POST" })
       .eq("clinic_id", data.clinicId)
       .eq("id", data.branchId)
       .maybeSingle();
-    if (branchErr) throw new Error(branchErr.message);
+    if (branchErr) throw new Error(mensajeDb(branchErr, "No pudimos verificar la sucursal."));
     if (!branch) throw new Error("La sucursal no existe o no es tuya.");
     const timeZone = branch.timezone || DEFAULT_TIMEZONE;
 
@@ -388,7 +395,8 @@ export const updateAppointment = createServerFn({ method: "POST" })
       .select("day_of_week, start_time, end_time")
       .eq("clinic_id", data.clinicId)
       .eq("professional_id", data.professionalId);
-    if (horariosErr) throw new Error(horariosErr.message);
+    if (horariosErr)
+      throw new Error(mensajeDb(horariosErr, "No pudimos verificar el horario del profesional."));
 
     if (horarios && horarios.length > 0) {
       const dia = diaSemanaLocal(startsAt, timeZone);
@@ -418,7 +426,10 @@ export const updateAppointment = createServerFn({ method: "POST" })
       .lt("starts_at", endsAt.toISOString())
       .gt("ends_at", startsAt.toISOString())
       .limit(1);
-    if (choquesErr) throw new Error(choquesErr.message);
+    if (choquesErr)
+      throw new Error(
+        mensajeDb(choquesErr, "No pudimos verificar si hay otra cita en ese horario."),
+      );
     const choque = choques?.[0];
     const solapamiento: Solapamiento | undefined = choque
       ? {

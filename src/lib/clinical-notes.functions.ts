@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { filaYaCreada } from "@/lib/idempotency";
+import { mensajeDb } from "@/lib/db-errors";
 import type { Database } from "@/integrations/supabase/types";
 
 type SupabaseCtx = SupabaseClient<Database>;
@@ -21,13 +22,6 @@ import type {
 } from "@/lib/clinical-notes";
 
 /** Devuelve el mensaje de la base de datos (reglas de permisos) o un texto por defecto. */
-function mensajeDb(error: { message?: string } | null, fallback: string): string {
-  const m = error?.message ?? "";
-  // Los triggers de reglas clínicas devuelven mensajes en español listos para el usuario.
-  if (m && !/permission denied|row-level security|violates/i.test(m)) return m;
-  return fallback;
-}
-
 const clinicPatient = z.object({
   clinicId: z.string().uuid(),
   patientRef: z.string().min(1).max(64),
@@ -98,7 +92,10 @@ export const getPatientNotes = createServerFn({ method: "GET" })
           .limit(60),
       ]);
 
-      if (notesRes.error) throw new Error(notesRes.error.message);
+      if (notesRes.error)
+        throw new Error(
+          mensajeDb(notesRes.error, "No pudimos cargar las notas clínicas de este paciente."),
+        );
 
       const notes = notesRes.data ?? [];
       const noteIds = new Set(notes.map((n) => n.id));
@@ -425,7 +422,7 @@ export const restoreNoteVersion = createServerFn({ method: "POST" })
       .select("*")
       .eq("id", data.versionId)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar esa versión de la nota."));
     if (!version) throw new Error("No encontramos esa versión.");
 
     const { data: note } = await supabase

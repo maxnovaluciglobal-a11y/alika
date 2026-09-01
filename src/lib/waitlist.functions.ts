@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { mensajeDb } from "@/lib/db-errors";
 
 export interface EntradaEspera {
   id: string;
@@ -34,7 +35,7 @@ export const listWaitlist = createServerFn({ method: "GET" })
       .order("wait_since", { ascending: true })
       .limit(100);
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar la lista de espera."));
     const entries = rows ?? [];
     if (entries.length === 0) return [];
 
@@ -49,7 +50,7 @@ export const listWaitlist = createServerFn({ method: "GET" })
             .select("id, phone")
             .eq("clinic_id", data.clinicId)
             .in("id", patientIds);
-    if (patErr) throw new Error(patErr.message);
+    if (patErr) throw new Error(mensajeDb(patErr, "No pudimos cargar la lista de espera."));
     const phoneById = new Map((patients ?? []).map((p) => [p.id, p.phone]));
 
     return entries.map((r) => ({
@@ -95,7 +96,10 @@ export const createWaitlistEntry = createServerFn({ method: "POST" })
         .eq("clinic_id", data.clinicId)
         .eq("id", data.patientId)
         .maybeSingle();
-      if (error) throw new Error(error.message);
+      if (error)
+        throw new Error(
+          mensajeDb(error, "No pudimos buscar el paciente para agregarlo a la lista de espera."),
+        );
       if (!patient) throw new Error("Paciente no encontrado.");
       fullName = patient.full_name;
     }
@@ -131,5 +135,6 @@ export const removeWaitlistEntry = createServerFn({ method: "POST" })
       .update({ status: "cancelled" })
       .eq("clinic_id", data.clinicId)
       .eq("id", data.id);
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(mensajeDb(error, "No pudimos sacar a este paciente de la lista de espera."));
   });

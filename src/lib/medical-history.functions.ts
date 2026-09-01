@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { mensajeDb } from "@/lib/db-errors";
 
 export type MedicalHistory = {
   allergies: string[];
@@ -35,7 +36,8 @@ export const getMedicalHistory = createServerFn({ method: "GET" })
       .eq("clinic_id", data.clinicId)
       .eq("patient_id", data.patientId)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(mensajeDb(error, "No pudimos cargar los antecedentes médicos del paciente."));
     if (!row) return EMPTY_HISTORY;
     return {
       allergies: row.allergies ?? [],
@@ -67,7 +69,8 @@ export const listAllergyAlerts = createServerFn({ method: "GET" })
       .from("patient_medical_history")
       .select("patient_id, allergies")
       .eq("clinic_id", data.clinicId);
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(mensajeDb(error, "No pudimos cargar las alertas de alergias de la clínica."));
     const byPatient: Record<string, string[]> = {};
     for (const row of rows ?? []) {
       if (row.allergies && row.allergies.length > 0) byPatient[row.patient_id] = row.allergies;

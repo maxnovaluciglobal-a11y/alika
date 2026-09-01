@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { mensajeDb } from "@/lib/db-errors";
 
 const SIN_ASIGNAR = "sin_asignar";
 
@@ -56,7 +57,7 @@ export const getFinanceSummary = createServerFn({ method: "GET" })
       .eq("clinic_id", data.clinicId)
       .gte("paid_at", desdeIso)
       .lte("paid_at", hastaIso);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar los pagos del período."));
 
     const rows = pagos ?? [];
     const currency = rows[0]?.currency ?? "CLP";
@@ -91,7 +92,8 @@ export const getFinanceSummary = createServerFn({ method: "GET" })
       .eq("status", "completed")
       .gte("completed_at", desdeIso)
       .lte("completed_at", hastaIso);
-    if (itemsError) throw new Error(itemsError.message);
+    if (itemsError)
+      throw new Error(mensajeDb(itemsError, "No pudimos cargar la producción del período."));
 
     const professionalIds = [
       ...new Set(
@@ -102,7 +104,8 @@ export const getFinanceSummary = createServerFn({ method: "GET" })
       .from("professionals")
       .select("id, full_name")
       .in("id", professionalIds.length ? professionalIds : [""]);
-    if (profError) throw new Error(profError.message);
+    if (profError)
+      throw new Error(mensajeDb(profError, "No pudimos cargar los datos de los profesionales."));
     const nameById = new Map((professionals ?? []).map((p) => [p.id, p.full_name]));
 
     const byProfMap = new Map<string, { totalCents: number; itemsCount: number }>();
@@ -175,7 +178,7 @@ export const getQuoteConversionReport = createServerFn({ method: "GET" })
       .eq("clinic_id", data.clinicId)
       .gte("created_at", desdeIso)
       .lte("created_at", hastaIso);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar los presupuestos del período."));
 
     const rows = quotes ?? [];
     const currency = rows[0]?.currency ?? "CLP";

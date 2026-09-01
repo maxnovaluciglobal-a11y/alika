@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { SUBSCRIPTION_STATUSES, type Subscription } from "@/lib/billing";
+import { mensajeDb } from "@/lib/db-errors";
 import { planPriceId, getStripe, type BillingPlan } from "@/lib/stripe.server";
 
 type SubscriptionRow = {
@@ -44,7 +45,7 @@ export const getMySubscription = createServerFn({ method: "GET" })
       )
       .eq("clinic_id", data.clinicId)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar la suscripción de la clínica."));
     if (!row) return null;
     return mapSubscription(row as SubscriptionRow);
   });
@@ -83,7 +84,13 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       .select("id, name")
       .eq("id", data.clinicId)
       .maybeSingle();
-    if (clinicErr) throw new Error(clinicErr.message);
+    if (clinicErr)
+      throw new Error(
+        mensajeDb(
+          clinicErr,
+          "No pudimos cargar los datos de la clínica para iniciar la suscripción.",
+        ),
+      );
     if (!clinic) throw new Error("Clínica no encontrada o no tienes permisos.");
 
     const { data: profile } = await supabase
@@ -146,7 +153,10 @@ export const createBillingPortalSession = createServerFn({ method: "POST" })
       .select("stripe_customer_id")
       .eq("clinic_id", data.clinicId)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(error, "No pudimos acceder al portal de facturación de la clínica."),
+      );
     if (!sub?.stripe_customer_id) {
       throw new Error("La clínica aún no tiene una suscripción activa.");
     }

@@ -8,6 +8,7 @@ import {
   type EventoClinico,
   type Paciente,
 } from "@/lib/clinic-data";
+import { mensajeDb } from "@/lib/db-errors";
 import { validatePhoneNumber } from "@/lib/phoneValidation";
 
 const DB_STATUS_TO_UI: Record<string, EstadoPaciente> = {
@@ -136,8 +137,11 @@ export const listPatients = createServerFn({ method: "GET" })
       }),
     ]);
 
-    if (error) throw new Error(error.message);
-    if (apptError) throw new Error(apptError.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar la lista de pacientes."));
+    if (apptError)
+      throw new Error(
+        mensajeDb(apptError, "No pudimos cargar la información de citas de los pacientes."),
+      );
     const truncated = (rows ?? []).length >= PATIENTS_ROW_LIMIT;
 
     type ApptSummary = {
@@ -180,7 +184,7 @@ export const getPatient = createServerFn({ method: "GET" })
       .eq("id", data.patientId)
       .maybeSingle();
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar la ficha del paciente."));
     if (!row) return null;
 
     const { data: appts, error: apptError } = await supabase
@@ -191,7 +195,10 @@ export const getPatient = createServerFn({ method: "GET" })
       .order("starts_at", { ascending: false })
       .limit(50);
 
-    if (apptError) throw new Error(apptError.message);
+    if (apptError)
+      throw new Error(
+        mensajeDb(apptError, "No pudimos cargar el historial de citas del paciente."),
+      );
 
     const appointments = (appts ?? []) as (AppointmentSlim & {
       professional_id: string;
@@ -203,7 +210,8 @@ export const getPatient = createServerFn({ method: "GET" })
       .from("professionals")
       .select("id, full_name")
       .in("id", professionalIds.length ? professionalIds : [""]);
-    if (profError) throw new Error(profError.message);
+    if (profError)
+      throw new Error(mensajeDb(profError, "No pudimos cargar los datos de los profesionales."));
     const nameByProfessional = new Map((professionals ?? []).map((p) => [p.id, p.full_name]));
 
     const ahora = Date.now();
@@ -383,7 +391,10 @@ export const importPatients = createServerFn({ method: "POST" })
       .select("document_id")
       .eq("clinic_id", data.clinicId)
       .in("document_id", documentos.length ? documentos : [""]);
-    if (exError) throw new Error(exError.message);
+    if (exError)
+      throw new Error(
+        mensajeDb(exError, "No pudimos verificar los pacientes existentes antes de importar."),
+      );
     const yaExisten = new Set((existentes ?? []).map((e) => e.document_id));
 
     const warnings: ImportPatientsResult["warnings"] = [];

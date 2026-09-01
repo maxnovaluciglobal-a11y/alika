@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { mensajeDb } from "@/lib/db-errors";
 import { clinicSetupSchema, type ClinicSummary } from "@/lib/onboarding-types";
 
 export const getMyClinics = createServerFn({ method: "GET" })
@@ -10,7 +11,7 @@ export const getMyClinics = createServerFn({ method: "GET" })
       .select("role, clinics(id, name, onboarding_completed)")
       .eq("user_id", context.userId);
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar tus clínicas."));
 
     return (data ?? [])
       .filter((row) => row.clinics)
@@ -43,7 +44,7 @@ export const completeClinicSetup = createServerFn({ method: "POST" })
       .single();
 
     if (clinicError || !clinic)
-      throw new Error(clinicError?.message ?? "No se pudo crear la clínica");
+      throw new Error(mensajeDb(clinicError, "No pudimos crear la clínica."));
     const clinicId = clinic.id;
 
     const { data: branch, error: branchError } = await supabase
@@ -62,7 +63,7 @@ export const completeClinicSetup = createServerFn({ method: "POST" })
       .single();
 
     if (branchError || !branch)
-      throw new Error(branchError?.message ?? "No se pudo crear la sucursal");
+      throw new Error(mensajeDb(branchError, "No pudimos crear la sucursal."));
 
     const { error: opError } = await supabase.from("operatories").insert(
       data.branch.operatories.map((name) => ({
@@ -71,7 +72,8 @@ export const completeClinicSetup = createServerFn({ method: "POST" })
         name,
       })),
     );
-    if (opError) throw new Error(opError.message);
+    if (opError)
+      throw new Error(mensajeDb(opError, "No pudimos guardar los consultorios de la sucursal."));
 
     const { data: specialties, error: specError } = await supabase
       .from("specialties")
@@ -84,7 +86,7 @@ export const completeClinicSetup = createServerFn({ method: "POST" })
         })),
       )
       .select("id, name");
-    if (specError) throw new Error(specError.message);
+    if (specError) throw new Error(mensajeDb(specError, "No pudimos guardar las especialidades."));
 
     const specialtyByName = new Map((specialties ?? []).map((s) => [s.name, s.id]));
 
@@ -99,13 +101,14 @@ export const completeClinicSetup = createServerFn({ method: "POST" })
         color: p.color,
       })),
     );
-    if (proError) throw new Error(proError.message);
+    if (proError) throw new Error(mensajeDb(proError, "No pudimos guardar los profesionales."));
 
     const { error: doneError } = await supabase
       .from("clinics")
       .update({ onboarding_completed: true })
       .eq("id", clinicId);
-    if (doneError) throw new Error(doneError.message);
+    if (doneError)
+      throw new Error(mensajeDb(doneError, "No pudimos finalizar la configuración de la clínica."));
 
     return { clinicId, branchId: branch.id };
   });

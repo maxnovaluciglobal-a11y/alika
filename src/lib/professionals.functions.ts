@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { mensajeDb } from "@/lib/db-errors";
 
 export type ProfessionalDetail = {
   id: string;
@@ -39,7 +40,7 @@ export const listProfessionalsDetailed = createServerFn({ method: "GET" })
       )
       .eq("clinic_id", data.clinicId)
       .order("full_name", { ascending: true });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar los profesionales."));
 
     const branchIds = [
       ...new Set((rows ?? []).map((r) => r.branch_id).filter(Boolean)),
@@ -59,8 +60,8 @@ export const listProfessionalsDetailed = createServerFn({ method: "GET" })
           .select("id, name")
           .in("id", specialtyIds.length ? specialtyIds : [""]),
       ]);
-    if (branchErr) throw new Error(branchErr.message);
-    if (specErr) throw new Error(specErr.message);
+    if (branchErr) throw new Error(mensajeDb(branchErr, "No pudimos cargar las sucursales."));
+    if (specErr) throw new Error(mensajeDb(specErr, "No pudimos cargar las especialidades."));
 
     const branchById = new Map((branches ?? []).map((b) => [b.id, b.name]));
     const specialtyById = new Map((specialties ?? []).map((s) => [s.id, s.name]));
@@ -158,7 +159,7 @@ export const getProfessionalSchedule = createServerFn({ method: "GET" })
       .eq("clinic_id", data.clinicId)
       .eq("professional_id", data.professionalId)
       .order("day_of_week", { ascending: true });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar el horario del profesional."));
     return (rows ?? []).map((r) => ({
       dayOfWeek: r.day_of_week,
       startTime: r.start_time.slice(0, 5),
@@ -210,7 +211,8 @@ export const setProfessionalSchedule = createServerFn({ method: "POST" })
           end_time: b.endTime,
         })),
       );
-      if (insertError) throw new Error(insertError.message);
+      if (insertError)
+        throw new Error(mensajeDb(insertError, "No pudimos guardar el horario del profesional."));
     }
 
     return { ok: true };

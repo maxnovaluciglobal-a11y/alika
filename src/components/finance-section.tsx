@@ -20,6 +20,16 @@ import { Button } from "@/components/ui/button";
 import { captureMessage } from "@/lib/sentry";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -938,6 +948,10 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
   // banner visible hasta que el staff lo descarta, no como un toast que
   // puede pasar desapercibido.
   const [signatureUploadFailedFor, setSignatureUploadFailedFor] = useState<string | null>(null);
+  // "Aceptar" ya pasa por un diálogo (captura nombre/firma) antes de
+  // confirmar — "Rechazar" era un solo click sin vuelta atrás, protección
+  // asimétrica para dos acciones igual de definitivas (auditoría UX, 30-ago).
+  const [confirmRejectId, setConfirmRejectId] = useState<string | null>(null);
 
   const fetchQuotes = useServerFn(listQuotes);
   const fetchPlans = useServerFn(listTreatmentPlans);
@@ -1014,7 +1028,10 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
 
   const reject = useMutation({
     mutationFn: (quoteId: string) => setStatusFn({ data: { quoteId, status: "rejected" } }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["quotes", clinicId, patientId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quotes", clinicId, patientId] });
+      setConfirmRejectId(null);
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -1258,7 +1275,7 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => reject.mutate(quote.id)}
+                              onClick={() => setConfirmRejectId(quote.id)}
                               disabled={reject.isPending}
                             >
                               <X className="size-3.5" /> Rechazar
@@ -1328,6 +1345,33 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
           </section>
         </div>
       )}
+
+      <AlertDialog
+        open={confirmRejectId !== null}
+        onOpenChange={(next) => {
+          if (!next) setConfirmRejectId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rechazar presupuesto</AlertDialogTitle>
+            <AlertDialogDescription>
+              El presupuesto queda marcado como rechazado — para retomarlo hay que corregirlo y
+              volver a enviarlo. ¿Confirmás que lo rechazás?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmRejectId && reject.mutate(confirmRejectId)}
+              disabled={reject.isPending}
+            >
+              {reject.isPending && <Loader2 className="size-3.5 animate-spin" />}
+              Rechazar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

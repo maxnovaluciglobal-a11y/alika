@@ -188,7 +188,7 @@ function PacienteDetalle() {
                     }
                     title={
                       paciente.telefono && paciente.telefonoValido === false
-                        ? "Numverify no pudo confirmar que este número tenga un formato válido"
+                        ? "No pudimos confirmar que este número tenga un formato válido"
                         : undefined
                     }
                   >

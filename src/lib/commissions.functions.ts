@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { permissionsForRole, type ClinicRole } from "@/lib/access";
+import { mensajeDb } from "@/lib/db-errors";
 import { formatMoney } from "@/lib/finance";
 import { renderTemplate } from "@/lib/messaging";
 import { loadEmailSandboxConfig } from "@/lib/messaging.functions";
@@ -31,7 +32,7 @@ export const listCommissionRules = createServerFn({ method: "GET" })
       .from("commission_rules")
       .select("professional_id, kind, percent_bps, fixed_cents")
       .eq("clinic_id", data.clinicId);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar las reglas de comisión."));
     return (rows ?? []).map((r) => ({
       professionalId: r.professional_id,
       kind: r.kind as CommissionKind,
@@ -205,11 +206,15 @@ export const getCommissionReport = createServerFn({ method: "GET" })
         .eq("period_from", data.from)
         .eq("period_to", data.to),
     ]);
-    if (itemsErr) throw new Error(itemsErr.message);
-    if (prosErr) throw new Error(prosErr.message);
-    if (rulesErr) throw new Error(rulesErr.message);
+    if (itemsErr)
+      throw new Error(mensajeDb(itemsErr, "No pudimos cargar la producción del período."));
+    if (prosErr)
+      throw new Error(mensajeDb(prosErr, "No pudimos cargar los profesionales de la clínica."));
+    if (rulesErr) throw new Error(mensajeDb(rulesErr, "No pudimos cargar las reglas de comisión."));
     if (settlementsRes.error && !isUndefinedTableError(settlementsRes.error)) {
-      throw new Error(settlementsRes.error.message);
+      throw new Error(
+        mensajeDb(settlementsRes.error, "No pudimos cargar los períodos de comisión ya cerrados."),
+      );
     }
     const settlementByPro = new Map((settlementsRes.data ?? []).map((s) => [s.professional_id, s]));
 
@@ -337,7 +342,7 @@ export const closeCommissionPeriod = createServerFn({ method: "POST" })
       if (error.code === "23505") {
         throw new Error("Este período ya fue cerrado para uno o más profesionales.");
       }
-      throw new Error(error.message);
+      throw new Error(mensajeDb(error, "No pudimos cerrar el período de comisiones."));
     }
 
     // Aviso al profesional (auditoría 360 v2, F2 comunicaciones) — best

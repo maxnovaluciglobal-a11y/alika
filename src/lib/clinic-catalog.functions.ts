@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Profesional, Sucursal } from "@/lib/clinic-data";
+import { mensajeDb } from "@/lib/db-errors";
 
 /** Sucursales de la clínica. RLS: solo las de clínicas donde el usuario es miembro. */
 export const listBranches = createServerFn({ method: "GET" })
@@ -16,7 +17,7 @@ export const listBranches = createServerFn({ method: "GET" })
       .eq("is_active", true)
       .order("name", { ascending: true });
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar las sucursales de la clínica."));
 
     return (rows ?? []).map((r) => ({ id: r.id, nombre: r.name, ciudad: r.city ?? "Sin ciudad" }));
   });
@@ -39,7 +40,10 @@ export const listBranchesForReviewLinks = createServerFn({ method: "GET" })
         .eq("is_active", true)
         .order("name", { ascending: true });
 
-      if (error) throw new Error(error.message);
+      if (error)
+        throw new Error(
+          mensajeDb(error, "No pudimos cargar las sucursales con su link de reseña."),
+        );
 
       return (rows ?? []).map((r) => ({
         id: r.id,
@@ -71,7 +75,7 @@ export const updateBranchGoogleReviewUrl = createServerFn({ method: "POST" })
       .eq("id", data.branchId)
       .eq("clinic_id", data.clinicId);
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos guardar el link de reseña de Google."));
     return { ok: true };
   });
 
@@ -89,7 +93,8 @@ export const listProfessionals = createServerFn({ method: "GET" })
       .eq("is_active", true)
       .order("full_name", { ascending: true });
 
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(mensajeDb(error, "No pudimos cargar los profesionales de la clínica."));
 
     const specialtyIds = [
       ...new Set((rows ?? []).map((r) => r.specialty_id).filter((v): v is string => Boolean(v))),
@@ -112,8 +117,8 @@ export const listProfessionals = createServerFn({ method: "GET" })
           .in("id", operatoryIds.length ? operatoryIds : [""]),
       ]);
 
-    if (specError) throw new Error(specError.message);
-    if (opError) throw new Error(opError.message);
+    if (specError) throw new Error(mensajeDb(specError, "No pudimos cargar las especialidades."));
+    if (opError) throw new Error(mensajeDb(opError, "No pudimos cargar los boxes."));
 
     const specialtyById = new Map((specialties ?? []).map((s) => [s.id, s.name]));
     const operatoryById = new Map((operatories ?? []).map((o) => [o.id, o.name]));
@@ -139,6 +144,7 @@ export const listSpecialties = createServerFn({ method: "GET" })
       .select("id, name")
       .eq("clinic_id", data.clinicId)
       .order("name", { ascending: true });
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(mensajeDb(error, "No pudimos cargar las especialidades de la clínica."));
     return rows ?? [];
   });

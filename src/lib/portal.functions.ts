@@ -3,6 +3,7 @@ import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { mensajeDb } from "@/lib/db-errors";
 import { buildWaMeUrl } from "@/lib/messaging";
 import {
   PORTAL_COOKIE_MAX_AGE_SECONDS,
@@ -52,7 +53,7 @@ export const generatePortalLink = createServerFn({ method: "POST" })
         .eq("clinic_id", data.clinicId)
         .eq("id", data.patientId)
         .maybeSingle();
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(mensajeDb(error, "No pudimos cargar los datos del paciente."));
       if (!patient) throw new Error("Paciente no encontrado o sin permisos.");
 
       const token = await signPortalToken(
@@ -285,10 +286,10 @@ export const getMyPortalOverview = createServerFn({ method: "GET" }).handler(asy
     // Solo para marcar feriados (Nager.Date) en "Pedir una hora" — no es PHI.
     supabaseAdmin.from("clinics").select("country").eq("id", clinicId).maybeSingle(),
   ]);
-  if (pErr) throw new Error(pErr.message);
-  if (aErr) throw new Error(aErr.message);
-  if (plErr) throw new Error(plErr.message);
-  if (cErr) throw new Error(cErr.message);
+  if (pErr) throw new Error(mensajeDb(pErr, "No pudimos cargar tus datos."));
+  if (aErr) throw new Error(mensajeDb(aErr, "No pudimos cargar tus próximas citas."));
+  if (plErr) throw new Error(mensajeDb(plErr, "No pudimos cargar tus planes de tratamiento."));
+  if (cErr) throw new Error(mensajeDb(cErr, "No pudimos cargar los datos de la clínica."));
   if (!patient) throw new Error("Paciente no encontrado.");
 
   return {
@@ -326,7 +327,8 @@ export const requestPortalAppointment = createServerFn({ method: "POST" })
       .eq("clinic_id", clinicId)
       .eq("patient_id", patientId)
       .gte("created_at", since);
-    if (countErr) throw new Error(countErr.message);
+    if (countErr)
+      throw new Error(mensajeDb(countErr, "No pudimos verificar tus solicitudes anteriores."));
     if ((count ?? 0) >= 3) {
       throw new Error(
         "Ya enviaste varias solicitudes hoy. La clínica te va a contactar pronto — evitá duplicarlas.",
@@ -374,7 +376,7 @@ export const listPendingAppointmentRequests = createServerFn({ method: "GET" })
       .eq("clinic_id", data.clinicId)
       .eq("status", "pending")
       .order("created_at", { ascending: true });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar las solicitudes pendientes."));
     if (!requests || requests.length === 0) return [];
 
     const patientIds = [...new Set(requests.map((r) => r.patient_id))];
@@ -383,7 +385,7 @@ export const listPendingAppointmentRequests = createServerFn({ method: "GET" })
       .select("id, full_name")
       .eq("clinic_id", data.clinicId)
       .in("id", patientIds);
-    if (pErr) throw new Error(pErr.message);
+    if (pErr) throw new Error(mensajeDb(pErr, "No pudimos cargar los datos de los pacientes."));
     const nameById = new Map((patients ?? []).map((p) => [p.id, p.full_name]));
 
     return requests.map((r) => ({
@@ -413,7 +415,7 @@ export const declineAppointmentRequest = createServerFn({ method: "POST" })
       })
       .eq("clinic_id", data.clinicId)
       .eq("id", data.requestId);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos rechazar la solicitud."));
     return { ok: true };
   });
 
@@ -447,7 +449,8 @@ export const listPortalAccessLog = createServerFn({ method: "GET" })
       .limit(data.limit);
     if (data.patientId) q = q.eq("patient_id", data.patientId);
     const { data: rows, error } = await q;
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(mensajeDb(error, "No pudimos cargar el historial de accesos al portal."));
     return (rows ?? []).map((r) => ({
       id: r.id,
       patientId: r.patient_id,
@@ -481,6 +484,6 @@ export const markAppointmentRequestScheduled = createServerFn({ method: "POST" }
       })
       .eq("clinic_id", data.clinicId)
       .eq("id", data.requestId);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos vincular la solicitud a la cita."));
     return { ok: true };
   });

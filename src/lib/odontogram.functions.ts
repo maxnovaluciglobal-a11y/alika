@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { mensajeDb } from "@/lib/db-errors";
 import { filaYaCreada } from "@/lib/idempotency";
 import {
   TOOTH_CONDITIONS,
@@ -76,7 +77,7 @@ export const listOdontogramMarks = createServerFn({ method: "GET" })
       .order("tooth_number", { ascending: true })
       .order("surface", { ascending: true });
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar el odontograma del paciente."));
 
     const marks = (rows ?? []) as MarkRow[];
     const userIds = [...new Set(marks.map((m) => m.recorded_by))];
@@ -115,7 +116,7 @@ export const listOdontogramHistory = createServerFn({ method: "GET" })
     }
 
     const { data: rows, error } = await query;
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar el historial del odontograma."));
 
     const marks = (rows ?? []) as MarkRow[];
     const userIds = [...new Set(marks.map((m) => m.recorded_by))];

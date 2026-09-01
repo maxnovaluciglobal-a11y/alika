@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
+import { mensajeDb } from "@/lib/db-errors";
 import { normalizeToWaMe } from "@/lib/messaging";
 import {
   buildMetaTemplateParams,
@@ -72,7 +73,8 @@ export const getWhatsAppAccountStatus = createServerFn({ method: "GET" })
       .select(ACCOUNT_COLUMNS)
       .eq("clinic_id", data.clinicId)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error)
+      throw new Error(mensajeDb(error, "No pudimos obtener el estado de la conexión de WhatsApp."));
     return row ? mapAccount(row as WhatsAppAccountRow) : null;
   });
 
@@ -174,7 +176,7 @@ export const disconnectWhatsAppAccount = createServerFn({ method: "POST" })
       .from("whatsapp_accounts")
       .update({ status: "disabled" })
       .eq("clinic_id", data.clinicId);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos desconectar el número de WhatsApp."));
   });
 
 export interface MetaSendResult {
@@ -384,7 +386,7 @@ export const listWhatsAppLeads = createServerFn({ method: "GET" })
       .eq("status", "new")
       .order("created_at", { ascending: false })
       .limit(100);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar los leads de WhatsApp."));
 
     const referrerIds = [
       ...new Set(
@@ -427,5 +429,5 @@ export const updateWhatsAppLeadStatus = createServerFn({ method: "POST" })
       .update({ status: data.status })
       .eq("clinic_id", data.clinicId)
       .eq("id", data.id);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos actualizar el estado del lead."));
   });

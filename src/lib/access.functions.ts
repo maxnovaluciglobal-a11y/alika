@@ -9,6 +9,7 @@ import {
   type ClinicMember,
   type ClinicRole,
 } from "@/lib/access";
+import { mensajeDb } from "@/lib/db-errors";
 
 /** Sesión + clínica activa + rol del usuario autenticado. */
 export const getMyAccess = createServerFn({ method: "GET" })
@@ -31,7 +32,7 @@ export const getMyAccess = createServerFn({ method: "GET" })
         .order("created_at", { ascending: true }),
     ]);
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar tu acceso a la clínica."));
 
     const membership = (memberships ?? []).find((m) => m.clinics) ?? null;
     const role =
@@ -83,7 +84,7 @@ export const listClinicMembers = createServerFn({ method: "GET" })
       .eq("clinic_id", data.clinicId)
       .order("created_at", { ascending: true });
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar el equipo de la clínica."));
 
     const userIds = (rows ?? []).map((row) => row.user_id);
     const { data: profiles } = userIds.length
@@ -128,7 +129,10 @@ export const updateMemberRole = createServerFn({ method: "POST" })
       .eq("id", data.memberId)
       .maybeSingle();
 
-    if (readError) throw new Error(readError.message);
+    if (readError)
+      throw new Error(
+        mensajeDb(readError, "No pudimos cargar los datos de ese integrante para cambiar su rol."),
+      );
     if (!member) throw new Error("No encontramos a ese integrante.");
     if (member.user_id === userId) throw new Error("No puedes cambiar tu propio rol.");
     if (member.role === "owner")
@@ -185,7 +189,10 @@ export const inviteMember = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (membershipError) throw new Error(membershipError.message);
+    if (membershipError)
+      throw new Error(
+        mensajeDb(membershipError, "No pudimos verificar tus permisos para invitar integrantes."),
+      );
     if (!membership || (membership.role !== "owner" && membership.role !== "admin")) {
       throw new Error("No tienes permisos para invitar integrantes en esta clínica.");
     }
@@ -259,7 +266,13 @@ export const removeMember = createServerFn({ method: "POST" })
       .eq("id", data.memberId)
       .maybeSingle();
 
-    if (readError) throw new Error(readError.message);
+    if (readError)
+      throw new Error(
+        mensajeDb(
+          readError,
+          "No pudimos cargar los datos de ese integrante para quitarlo del equipo.",
+        ),
+      );
     if (!member) throw new Error("No encontramos a ese integrante.");
     if (member.user_id === userId) throw new Error("No puedes quitarte a ti mismo del equipo.");
     if (member.role === "owner")
