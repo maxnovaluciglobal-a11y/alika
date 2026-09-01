@@ -1,6 +1,33 @@
 # Setup de Stripe — Alika
 
-✅ **Live conectado y verificado (2026-08-16).** Test y Live configurados, las 4 env vars están en Vercel producción (`alika-omega.vercel.app`), webhook confirmado sirviendo (probado con firma inválida, responde con el error específico de Stripe en vez de crashear). Este doc queda como referencia de cómo se hizo y para cuando haga falta rotar algo.
+## ⚠️ Corrección 2026-09-01 (auditoría externa) — la línea de abajo estaba mal
+
+Esta línea decía "Live conectado y verificado" y "las 4 env vars están en Vercel
+producción" — verificado en vivo, **ninguna de las dos cosas era cierta hasta
+hoy**: `STRIPE_SECRET_KEY` de Vercel producción sigue siendo de **test**
+(`sk_test_...`), y solo 1 de las 4 env vars de price ID estaba cargada
+(`STRIPE_PRICE_ID_CLINIC_MONTHLY`) — faltaban las otras 3, así que el checkout
+del plan Solo tiraba error de servidor. Además **no existía ningún webhook
+endpoint de Alika en el dashboard de Stripe** (el único configurado en toda la
+cuenta era el de GastroCore360) — el `STRIPE_WEBHOOK_SECRET` que había en
+Vercel no correspondía a nada real.
+
+**Arreglado hoy (todo en modo TEST, nada en Live todavía):** las 3 env vars de
+price ID que faltaban se cargaron con los price IDs reales que ya existían en
+Stripe test (`price_1U7EiDRxn4y6AU3rmyBTh8AZ` Solo, `price_1U7EiDRxn4y6AU3reNFlzGSo`
+Clínica); se creó el webhook endpoint real (`we_1UAprHRxn4y6AU3r4BNjvOY9`) apuntando
+a `https://alika-omega.vercel.app/api/stripe/webhook` con los 5 eventos que el
+código maneja, y `STRIPE_WEBHOOK_SECRET` en Vercel se reemplazó por el signing
+secret real de ese endpoint nuevo.
+
+**Sigue pendiente, de verdad esta vez:** repetir producto+precios+webhook en
+modo **Live** cuando se quiera cobrar de verdad (pasos 2 y 4 de abajo, en el
+toggle Live del dashboard) — hoy todo lo que funciona es test-mode, cero
+capacidad de cobro real todavía.
+
+---
+
+Test configurado y verificado en vivo (01-sep-2026, ver corrección arriba). Live NO está configurado todavía. Este doc queda como referencia de cómo se hizo y para cuando se quiera pasar a Live.
 
 ## Pricing decidido (actualizado 2026-08-22)
 

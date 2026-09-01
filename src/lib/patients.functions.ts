@@ -443,7 +443,10 @@ export const importPatients = createServerFn({ method: "POST" })
     const errors: ImportPatientsResult["errors"] = [];
     for (let i = 0; i < paraInsertar.length; i += IMPORT_CHUNK_SIZE) {
       const chunk = paraInsertar.slice(i, i + IMPORT_CHUNK_SIZE);
-      const { error: insError } = await supabase.from("patients").insert(chunk);
+      const { data: insertedRows, error: insError } = await supabase
+        .from("patients")
+        .insert(chunk)
+        .select("id, document_id");
       if (insError) {
         errors.push({
           chunkFrom: i + 1,
@@ -452,6 +455,32 @@ export const importPatients = createServerFn({ method: "POST" })
         });
       } else {
         created += chunk.length;
+        // security-6 Fase 1: mismo criterio que createPatient/updatePatient —
+        // escritura en paralelo del documento cifrado, no bloqueante (ver
+        // docs/SECURITY6_CIFRADO_PLAN.md). El importador es el único de los 3
+        // puntos de escritura que traía este gap: si un CSV cargaba 500
+        // pacientes con RUT, ninguno quedaba con document_id_enc/hash. Con
+        // concurrencia acotada (no 1 por 1, no las 100 del chunk a la vez)
+        // para no saturar el pooler de Supabase.
+        const conDocumento = (insertedRows ?? []).filter((r) => r.document_id);
+        const ENC_CONCURRENCY = 20;
+        for (let j = 0; j < conDocumento.length; j += ENC_CONCURRENCY) {
+          const lote = conDocumento.slice(j, j + ENC_CONCURRENCY);
+          await Promise.allSettled(
+            lote.map(async (row) => {
+              const { error: encError } = await supabase.rpc("set_patient_document_id", {
+                p_patient_id: row.id,
+                p_document_id: row.document_id as string,
+              });
+              if (encError) {
+                console.error(
+                  "[security-6 fase1] set_patient_document_id falló en importPatients (no bloqueante):",
+                  encError.message,
+                );
+              }
+            }),
+          );
+        }
       }
     }
 

@@ -5,8 +5,10 @@ import { getStripe, stripeWebhookSecret } from "@/lib/stripe.server";
 import type { Json } from "@/integrations/supabase/types";
 
 /**
- * Webhook de Stripe. Configurar en el dashboard de Stripe apuntando a
- * `https://alika.com/api/stripe/webhook` y elegir los eventos:
+ * Webhook de Stripe. Endpoint real creado en Stripe (test mode) el 01-sep-2026
+ * apuntando a `https://alika-omega.vercel.app/api/stripe/webhook` (`alika.com`
+ * es de un tercero, ver [[alika_naming_finalistas]] — no usar ese dominio acá
+ * hasta que exista uno propio de verdad). Eventos habilitados:
  *   - checkout.session.completed
  *   - customer.subscription.created
  *   - customer.subscription.updated

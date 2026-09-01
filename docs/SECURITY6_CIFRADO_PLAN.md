@@ -1,4 +1,53 @@
-# security-6 — Cifrado de columna para PII/PHI: plan, no implementación
+# security-6 — Cifrado de columna para PII/PHI
+
+## ⚠️ Estado real, corregido 2026-09-01 (auditoría externa) — este doc quedó desactualizado
+
+Este archivo decía "plan, no implementación" pero la migración de Fase 1
+(`supabase/migrations/20260822150000_security6_fase1_document_id_encryption.sql`)
+**se aplicó igual, 17 minutos después de escribirse este doc, el mismo día**
+(22-ago). El resto del plan de abajo sigue siendo la discusión real que llevó a
+esa decisión — solo el título y esta nota estaban mintiendo sobre si se había
+ejecutado o no.
+
+**Lo que hay hoy en la base real** (verificado con PostgREST, service_role,
+2026-09-01): las columnas `patients.document_id_enc`/`document_id_hash` y las
+funciones `set_patient_document_id`/`get_patient_document_id` existen. Pero
+**el 100% de los pacientes con `document_id` tienen ambas columnas en NULL** —
+la Fase 1 nunca llegó a poblar nada. Causa más probable: la clave
+`alika_document_id_key` nunca se creó en Supabase Vault (`set_patient_document_id`
+tira `RAISE EXCEPTION` si falta, y las 3 llamadas del código son "no
+bloqueantes" — el error queda en un `console.error` que nadie mira).
+
+**Único paso que falta, y que solo puede hacer Walter** (necesita acceso
+directo a Postgres — psql con la password real, o el SQL Editor del dashboard
+de Supabase; no hay forma de crearlo vía la `service_role` key ni por
+PostgREST, el schema `vault` no está expuesto en la API REST):
+
+```sql
+select vault.create_secret(encode(gen_random_bytes(32),'hex'), 'alika_document_id_key');
+```
+
+Y confirmar que quedó (mismo SQL Editor):
+
+```sql
+select name from vault.decrypted_secrets where name = 'alika_document_id_key';
+```
+
+**Con eso, la Fase 1 empieza a andar sola** para pacientes nuevos o editados —
+`createPatient`/`updatePatient`/`importPatients` (los 3 puntos de escritura, el
+gap de `importPatients` se cerró el 01-sep) ya llaman al RPC. Lo que **NO** se
+resuelve solo con crear la clave: los pacientes que ya existen hoy (creados
+antes de que la clave exista) quedan con `document_id_enc` NULL para siempre a
+menos que alguien corra un backfill — eso es la Fase 1b, deliberadamente no
+construida, ver el resto de este doc y `docs/PLAN_ACCION.md`.
+
+**Antes de avanzar a Fase 1b (cutover: leer solo del campo cifrado, backfill de
+pacientes existentes) sigue pendiente la confirmación legal** de si el cifrado
+en reposo de infraestructura alcanza para la Ley 21.719 o si hace falta cifrado
+de aplicación explícito — ver más abajo. No se avanzó en esto solo porque
+existiera el gap técnico.
+
+---
 
 **Por qué este doc y no un commit directo:** de los 41 hallazgos de la auditoría 360, este es el único que decidí NO implementar a ciegas hoy. Los otros 24 items ejecutados fueron cambios acotados y reversibles. Este toca cómo se guardan los datos de pacientes reales de la clínica piloto, con trade-offs de producto que no me corresponde decidir solo — y un fix apurado acá es peor que ningún fix.
 
