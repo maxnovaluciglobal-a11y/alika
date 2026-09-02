@@ -43,6 +43,7 @@ import { Route as AuthenticatedClinicDominioEmailRouteImport } from './routes/_a
 import { Route as AuthenticatedClinicEquipoRouteImport } from './routes/_authenticated/_clinic/equipo'
 import { Route as AuthenticatedClinicFinanzasRouteImport } from './routes/_authenticated/_clinic/finanzas'
 import { Route as AuthenticatedClinicInventarioRouteImport } from './routes/_authenticated/_clinic/inventario'
+import { Route as AuthenticatedClinicMiAgendaRouteImport } from './routes/_authenticated/_clinic/mi-agenda'
 import { Route as AuthenticatedClinicPermisosRouteImport } from './routes/_authenticated/_clinic/permisos'
 import { Route as AuthenticatedClinicPreferenciasRouteImport } from './routes/_authenticated/_clinic/preferencias'
 import { Route as AuthenticatedClinicProfesionalesRouteImport } from './routes/_authenticated/_clinic/profesionales'
@@ -235,6 +236,12 @@ const AuthenticatedClinicInventarioRoute =
     path: '/inventario',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
+const AuthenticatedClinicMiAgendaRoute =
+  AuthenticatedClinicMiAgendaRouteImport.update({
+    id: '/mi-agenda',
+    path: '/mi-agenda',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
 const AuthenticatedClinicPermisosRoute =
   AuthenticatedClinicPermisosRouteImport.update({
     id: '/permisos',
@@ -346,6 +353,7 @@ export interface FileRoutesByFullPath {
   '/equipo': typeof AuthenticatedClinicEquipoRoute
   '/finanzas': typeof AuthenticatedClinicFinanzasRoute
   '/inventario': typeof AuthenticatedClinicInventarioRoute
+  '/mi-agenda': typeof AuthenticatedClinicMiAgendaRoute
   '/permisos': typeof AuthenticatedClinicPermisosRoute
   '/preferencias': typeof AuthenticatedClinicPreferenciasRoute
   '/profesionales': typeof AuthenticatedClinicProfesionalesRoute
@@ -391,6 +399,7 @@ export interface FileRoutesByTo {
   '/equipo': typeof AuthenticatedClinicEquipoRoute
   '/finanzas': typeof AuthenticatedClinicFinanzasRoute
   '/inventario': typeof AuthenticatedClinicInventarioRoute
+  '/mi-agenda': typeof AuthenticatedClinicMiAgendaRoute
   '/permisos': typeof AuthenticatedClinicPermisosRoute
   '/preferencias': typeof AuthenticatedClinicPreferenciasRoute
   '/profesionales': typeof AuthenticatedClinicProfesionalesRoute
@@ -441,6 +450,7 @@ export interface FileRoutesById {
   '/_authenticated/_clinic/equipo': typeof AuthenticatedClinicEquipoRoute
   '/_authenticated/_clinic/finanzas': typeof AuthenticatedClinicFinanzasRoute
   '/_authenticated/_clinic/inventario': typeof AuthenticatedClinicInventarioRoute
+  '/_authenticated/_clinic/mi-agenda': typeof AuthenticatedClinicMiAgendaRoute
   '/_authenticated/_clinic/permisos': typeof AuthenticatedClinicPermisosRoute
   '/_authenticated/_clinic/preferencias': typeof AuthenticatedClinicPreferenciasRoute
   '/_authenticated/_clinic/profesionales': typeof AuthenticatedClinicProfesionalesRoute
@@ -490,6 +500,7 @@ export interface FileRouteTypes {
     | '/equipo'
     | '/finanzas'
     | '/inventario'
+    | '/mi-agenda'
     | '/permisos'
     | '/preferencias'
     | '/profesionales'
@@ -535,6 +546,7 @@ export interface FileRouteTypes {
     | '/equipo'
     | '/finanzas'
     | '/inventario'
+    | '/mi-agenda'
     | '/permisos'
     | '/preferencias'
     | '/profesionales'
@@ -584,6 +596,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_clinic/equipo'
     | '/_authenticated/_clinic/finanzas'
     | '/_authenticated/_clinic/inventario'
+    | '/_authenticated/_clinic/mi-agenda'
     | '/_authenticated/_clinic/permisos'
     | '/_authenticated/_clinic/preferencias'
     | '/_authenticated/_clinic/profesionales'
@@ -857,6 +870,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicInventarioRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
+    '/_authenticated/_clinic/mi-agenda': {
+      id: '/_authenticated/_clinic/mi-agenda'
+      path: '/mi-agenda'
+      fullPath: '/mi-agenda'
+      preLoaderRoute: typeof AuthenticatedClinicMiAgendaRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
     '/_authenticated/_clinic/permisos': {
       id: '/_authenticated/_clinic/permisos'
       path: '/permisos'
@@ -961,6 +981,7 @@ interface AuthenticatedClinicRouteRouteChildren {
   AuthenticatedClinicEquipoRoute: typeof AuthenticatedClinicEquipoRoute
   AuthenticatedClinicFinanzasRoute: typeof AuthenticatedClinicFinanzasRoute
   AuthenticatedClinicInventarioRoute: typeof AuthenticatedClinicInventarioRoute
+  AuthenticatedClinicMiAgendaRoute: typeof AuthenticatedClinicMiAgendaRoute
   AuthenticatedClinicPermisosRoute: typeof AuthenticatedClinicPermisosRoute
   AuthenticatedClinicPreferenciasRoute: typeof AuthenticatedClinicPreferenciasRoute
   AuthenticatedClinicProfesionalesRoute: typeof AuthenticatedClinicProfesionalesRoute
@@ -987,6 +1008,7 @@ const AuthenticatedClinicRouteRouteChildren: AuthenticatedClinicRouteRouteChildr
     AuthenticatedClinicEquipoRoute: AuthenticatedClinicEquipoRoute,
     AuthenticatedClinicFinanzasRoute: AuthenticatedClinicFinanzasRoute,
     AuthenticatedClinicInventarioRoute: AuthenticatedClinicInventarioRoute,
+    AuthenticatedClinicMiAgendaRoute: AuthenticatedClinicMiAgendaRoute,
     AuthenticatedClinicPermisosRoute: AuthenticatedClinicPermisosRoute,
     AuthenticatedClinicPreferenciasRoute: AuthenticatedClinicPreferenciasRoute,
     AuthenticatedClinicProfesionalesRoute:

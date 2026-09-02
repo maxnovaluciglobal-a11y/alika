@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { requirePermission } from "@/lib/route-guards";
-import { hasPermission } from "@/lib/access";
+import { hasPermission, type ClinicAccess } from "@/lib/access";
 import {
   etiquetaEstado,
   formatoFechaLarga,
@@ -195,6 +195,18 @@ const opcionesEstadoCita: { value: EstadoCita | "cancelada"; label: string }[] =
   { value: "cancelada", label: "Cancelada" },
 ];
 
+/**
+ * Confirmar una cita es acción exclusiva del profesional asignado a ella,
+ * o de owner/admin en su nombre (decisión de Walter: se permite para no
+ * trabar la agenda si el dentista no usa el sistema). El resto de roles de
+ * agenda (reception, assistant) puede ver y mover otros estados, pero no
+ * este — ver migración 20260901130000_appointment_dentist_confirmation.
+ */
+function puedeConfirmarCita(access: ClinicAccess, professionalId: string): boolean {
+  if (access.role === "owner" || access.role === "admin") return true;
+  return Boolean(access.myProfessionalId) && access.myProfessionalId === professionalId;
+}
+
 function claseEstadoBadge(estado: EstadoCita) {
   return cn(
     "w-fit rounded px-1.5 py-0.5 text-[10px] font-medium",
@@ -229,11 +241,18 @@ function CambiarEstadoMenu({
   userId,
   appointmentId,
   estadoActual,
+  puedeConfirmar,
 }: {
   clinicId: string;
   userId: string;
   appointmentId: string;
   estadoActual: EstadoCita;
+  /** Confirmar una cita está reservado al profesional asignado a ella (o
+   * admin/owner en su nombre) — ver migración
+   * 20260901130000_appointment_dentist_confirmation. El resto de estados
+   * (en-sala, ausente, finalizada, cancelada) sigue abierto a cualquier rol
+   * de agenda, esa restricción no cambia. */
+  puedeConfirmar: boolean;
 }) {
   const setEstadoFn = useServerFn(setAppointmentStatus);
 
@@ -271,6 +290,7 @@ function CambiarEstadoMenu({
         <DropdownMenuContent align="end">
           {opcionesEstadoCita
             .filter((o) => o.value !== estadoActual)
+            .filter((o) => o.value !== "confirmada" || puedeConfirmar)
             .map((o) => (
               <DropdownMenuItem
                 key={o.value}
@@ -1009,6 +1029,17 @@ function AgendaPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const setEstadoFn = useServerFn(setAppointmentStatus);
+  const aceptarCita = useMutation({
+    mutationFn: (appointmentId: string) =>
+      setEstadoFn({ data: { appointmentId, estado: "confirmada" } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointments", clinicId] });
+      toast.success("Cita confirmada");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const set = (patch: Partial<AgendaSearch>) =>
     navigate({ search: (prev: AgendaSearch) => ({ ...prev, ...patch, page: patch.page ?? 1 }) });
 
@@ -1254,6 +1285,7 @@ function AgendaPage() {
                             userId={access.userId}
                             appointmentId={c.id}
                             estadoActual={c.estado}
+                            puedeConfirmar={puedeConfirmarCita(access, c.profesionalId)}
                           />
                           <span
                             onClick={(e) => e.preventDefault()}
@@ -1443,10 +1475,22 @@ function AgendaPage() {
                     {sinConfirmar48h.length} cita{sinConfirmar48h.length === 1 ? "" : "s"} sin
                     confirmar todavía:
                   </p>
-                  <ul className="space-y-1">
+                  <ul className="space-y-1.5">
                     {sinConfirmar48h.slice(0, 4).map((c) => (
-                      <li key={c.id} className="truncate text-xs font-medium">
-                        {c.paciente} · {formatoFechaLarga(c.fecha)} {horaDeCita(c.inicio)}
+                      <li key={c.id} className="flex items-center justify-between gap-2">
+                        <span className="truncate text-xs font-medium">
+                          {c.paciente} · {formatoFechaLarga(c.fecha)} {horaDeCita(c.inicio)}
+                        </span>
+                        {puedeConfirmarCita(access, c.profesionalId) && (
+                          <button
+                            type="button"
+                            onClick={() => aceptarCita.mutate(c.id)}
+                            disabled={aceptarCita.isPending}
+                            className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold text-brand transition-colors hover:bg-brand-soft disabled:opacity-50"
+                          >
+                            Aceptar
+                          </button>
+                        )}
                       </li>
                     ))}
                   </ul>

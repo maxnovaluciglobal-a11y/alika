@@ -167,14 +167,15 @@ async function applyStatusUpdate(
 }
 
 const OPT_OUT_WORDS = new Set(["BAJA", "STOP", "CANCELAR", "UNSUBSCRIBE"]);
-const CONFIRM_WORDS = new Set(["SI", "SÍ", "YES", "CONFIRMO"]);
 
 /**
  * Mensaje entrante: se guarda siempre en el historial (así el staff lo ve en
- * la ficha del paciente, incluso "RE" — que hoy no dispara ningún cambio de
- * estado automático porque appointment_status no tiene un valor de
- * "a reagendar"; queda como aviso para que alguien lo gestione a mano).
- * "SÍ" confirma la próxima cita. "BAJA/STOP" corta el opt-in.
+ * la ficha del paciente, incluso "SÍ"/"RE" — ninguno dispara un cambio de
+ * estado automático). Confirmar una cita es acción exclusiva del profesional
+ * asignado (o admin/owner en su nombre) desde la agenda — ver migración
+ * 20260901130000_appointment_dentist_confirmation. Antes "SÍ" confirmaba la
+ * próxima cita solo, sin que nadie de la clínica la validara; se sacó a
+ * pedido de una clienta potencial. "BAJA/STOP" corta el opt-in.
  */
 async function applyInboundMessage(
   supabaseAdmin: SupabaseAdminClient,
@@ -217,25 +218,6 @@ async function applyInboundMessage(
       .from("patients")
       .update({ wa_opt_in: false, wa_opt_out_at: new Date().toISOString() })
       .eq("id", patient.id);
-    return;
-  }
-  if (CONFIRM_WORDS.has(normalized)) {
-    const { data: nextAppt } = await supabaseAdmin
-      .from("appointments")
-      .select("id")
-      .eq("clinic_id", clinicId)
-      .eq("patient_id", patient.id)
-      .in("status", ["tentativa", "confirmada"])
-      .gt("starts_at", new Date().toISOString())
-      .order("starts_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (nextAppt) {
-      await supabaseAdmin
-        .from("appointments")
-        .update({ status: "confirmada" })
-        .eq("id", nextAppt.id);
-    }
   }
 }
 

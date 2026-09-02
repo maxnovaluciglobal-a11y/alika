@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   LayoutDashboard,
   CalendarDays,
+  CalendarCheck,
   Users,
   Stethoscope,
   Settings,
@@ -60,6 +61,12 @@ const navGroups: { section: string; items: readonly NavItem[] }[] = [
     items: [
       { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard:view" },
       { to: "/agenda", label: "Agenda", icon: CalendarDays, permission: "agenda:view" },
+      {
+        to: "/mi-agenda",
+        label: "Mi agenda",
+        icon: CalendarCheck,
+        permission: "agenda:view",
+      },
       {
         to: "/recordatorios",
         label: "Recordatorios",

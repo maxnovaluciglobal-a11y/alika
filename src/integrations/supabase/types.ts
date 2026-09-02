@@ -110,6 +110,8 @@ export type Database = {
         Row: {
           branch_id: string;
           clinic_id: string;
+          confirmed_at: string | null;
+          confirmed_by: string | null;
           created_at: string;
           created_by: string;
           ends_at: string;
@@ -129,6 +131,8 @@ export type Database = {
         Insert: {
           branch_id: string;
           clinic_id: string;
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
           created_at?: string;
           created_by?: string;
           ends_at: string;
@@ -148,6 +152,8 @@ export type Database = {
         Update: {
           branch_id?: string;
           clinic_id?: string;
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
           created_at?: string;
           created_by?: string;
           ends_at?: string;
