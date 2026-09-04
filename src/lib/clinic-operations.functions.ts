@@ -195,7 +195,8 @@ export const createLabOrder = createServerFn({ method: "POST" })
           .regex(/^\d{4}-\d{2}-\d{2}$/)
           .nullish(),
         costCents: z.number().int().min(0).nullish(),
-        currency: z.string().length(3).default("CLP"),
+        // Sin `currency`: la fija el trigger `moneda_desde_la_clinica` desde
+        // `clinics.currency`. La moneda no la decide el cliente.
         notes: z.string().trim().max(1000).nullish(),
       })
       .parse(input),
@@ -230,7 +231,6 @@ export const createLabOrder = createServerFn({ method: "POST" })
         sent_on: data.sentOn,
         due_on: data.dueOn ?? null,
         cost_cents: data.costCents ?? null,
-        currency: data.currency,
         notes: data.notes?.trim() || null,
       })
       .select("id")

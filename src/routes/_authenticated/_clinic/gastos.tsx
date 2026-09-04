@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { DateField, FilterBar, SelectField } from "@/components/filters";
+import { MoneyInput } from "@/components/money-input";
 import { requirePermission } from "@/lib/route-guards";
 import { hoyISO, formatoFecha } from "@/lib/clinic-data";
 import { CATEGORIAS_GASTO_SUGERIDAS, formatMoney, type Expense } from "@/lib/finance";
@@ -78,7 +79,8 @@ interface Draft {
   category: string;
   description: string;
   supplier: string;
-  amount: number;
+  /** Cents. El input muestra la unidad visible y convierte con la moneda. */
+  amount: number | null;
   incurredOn: string;
   branchId: string;
   paymentMethodId: string;
@@ -87,11 +89,13 @@ interface Draft {
 
 function GastoDialog({
   clinicId,
+  currency,
   timezone,
   expense,
   categoriasUsadas,
 }: {
   clinicId: string;
+  currency: string;
   timezone: string | undefined;
   /** Sin `expense` el diálogo crea; con él, edita. */
   expense?: Expense;
@@ -108,7 +112,7 @@ function GastoDialog({
     category: expense?.category ?? "",
     description: expense?.description ?? "",
     supplier: expense?.supplier ?? "",
-    amount: expense?.amountCents ?? 0,
+    amount: expense?.amountCents ?? null,
     incurredOn: expense?.incurredOn ?? hoyISO(timezone),
     branchId: expense?.branchId ?? "",
     paymentMethodId: expense?.paymentMethodId ?? "",
@@ -135,8 +139,7 @@ function GastoDialog({
         category: d.category.trim(),
         description: d.description.trim(),
         supplier: d.supplier.trim() || null,
-        amountCents: d.amount,
-        currency: "CLP",
+        amountCents: d.amount ?? 0,
         incurredOn: d.incurredOn,
         branchId: d.branchId || null,
         paymentMethodId: d.paymentMethodId || null,
@@ -156,7 +159,8 @@ function GastoDialog({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const listo = d.category.trim() && d.description.trim() && d.amount > 0 && !guardar.isPending;
+  const listo =
+    d.category.trim() && d.description.trim() && (d.amount ?? 0) > 0 && !guardar.isPending;
 
   return (
     <Dialog
@@ -230,13 +234,12 @@ function GastoDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="g-monto">Monto</Label>
-              <input
+              <MoneyInput
                 id="g-monto"
-                type="number"
-                min={1}
-                value={d.amount || ""}
-                onChange={(e) => patch({ amount: Number(e.target.value) })}
-                className={INPUT}
+                currency={currency}
+                min={0}
+                valueCents={d.amount}
+                onValueChange={(amount) => patch({ amount })}
               />
             </div>
             <div className="space-y-1.5">
@@ -397,7 +400,12 @@ function GastosPage() {
                 <Download className="size-4" /> Exportar CSV
               </Button>
             )}
-            <GastoDialog clinicId={clinicId!} timezone={timezone} categoriasUsadas={categorias} />
+            <GastoDialog
+              clinicId={clinicId!}
+              currency={currency}
+              timezone={timezone}
+              categoriasUsadas={categorias}
+            />
           </div>
         </div>
 
@@ -492,6 +500,7 @@ function GastosPage() {
                         <div className="flex justify-end gap-1">
                           <GastoDialog
                             clinicId={clinicId!}
+                            currency={currency}
                             timezone={timezone}
                             expense={g}
                             categoriasUsadas={categorias}

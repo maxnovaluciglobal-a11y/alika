@@ -21,19 +21,22 @@ describe("formatMoney", () => {
   });
 
   it("moneda con decimales (USD): el valor guardado sí son centavos, se divide por 100", () => {
-    expect(formatMoney(2_999, "USD")).toBe("US$29,99");
+    expect(formatMoney(2_999, "USD")).toBe("$29.99");
   });
 
   it("moneda con decimales (MXN): mismo criterio", () => {
-    expect(formatMoney(10_050, "MXN")).toContain("100,50");
+    expect(formatMoney(10_050, "MXN")).toContain("100.50");
+  });
+
+  it("el locale sale de la moneda, no de Chile: MXN usa punto decimal", () => {
+    // Con el locale fijo en "es-CL" que había antes, esto daba "100,50" — los
+    // separadores invertidos para quien lo lee en México.
+    expect(formatMoney(10_050, "MXN")).not.toContain("100,50");
+    expect(formatMoney(1_234_567, "CLP")).toBe("$1.234.567");
   });
 
   it("es case-insensitive con el código de moneda", () => {
     expect(formatMoney(35_000, "clp")).toBe(formatMoney(35_000, "CLP"));
-  });
-
-  it("sin moneda especificada, cae a CLP por default", () => {
-    expect(formatMoney(35_000)).toBe(formatMoney(35_000, "CLP"));
   });
 
   it("cero es un valor legítimo (saldo saldado), no un placeholder", () => {

@@ -19,6 +19,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { FilterBar, SelectField } from "@/components/filters";
 import { PatientCombobox } from "@/components/patient-combobox";
+import { MoneyInput } from "@/components/money-input";
 import { requirePermission } from "@/lib/route-guards";
 import { hoyISO, formatoFecha } from "@/lib/clinic-data";
 import {
@@ -141,7 +142,15 @@ function NuevoLaboratorioDialog({ clinicId }: { clinicId: string }) {
   );
 }
 
-function NuevaOrdenDialog({ clinicId, timezone }: { clinicId: string; timezone?: string }) {
+function NuevaOrdenDialog({
+  clinicId,
+  currency,
+  timezone,
+}: {
+  clinicId: string;
+  currency: string;
+  timezone?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [patientId, setPatientId] = useState("");
   const [labId, setLabId] = useState("");
@@ -149,7 +158,7 @@ function NuevaOrdenDialog({ clinicId, timezone }: { clinicId: string; timezone?:
   const [piezas, setPiezas] = useState("");
   const [sentOn, setSentOn] = useState(hoyISO(timezone));
   const [dueOn, setDueOn] = useState("");
-  const [cost, setCost] = useState(0);
+  const [cost, setCost] = useState<number | null>(null);
   const queryClient = useQueryClient();
   const createFn = useServerFn(createLabOrder);
   const fetchLabs = useServerFn(listLabs);
@@ -183,8 +192,7 @@ function NuevaOrdenDialog({ clinicId, timezone }: { clinicId: string; timezone?:
               .filter((n) => Number.isInteger(n) && n > 0) || null,
           sentOn,
           dueOn: dueOn || null,
-          costCents: cost > 0 ? cost : null,
-          currency: "CLP",
+          costCents: cost,
         },
       }),
     onSuccess: () => {
@@ -195,7 +203,7 @@ function NuevaOrdenDialog({ clinicId, timezone }: { clinicId: string; timezone?:
       setDescription("");
       setPiezas("");
       setDueOn("");
-      setCost(0);
+      setCost(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -293,14 +301,13 @@ function NuevaOrdenDialog({ clinicId, timezone }: { clinicId: string; timezone?:
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="o-cost">Costo</Label>
-              <input
+              <MoneyInput
                 id="o-cost"
-                type="number"
+                currency={currency}
                 min={0}
-                value={cost || ""}
-                onChange={(e) => setCost(Number(e.target.value))}
+                valueCents={cost}
+                onValueChange={setCost}
                 placeholder="Opcional"
-                className={INPUT}
               />
             </div>
           </div>
@@ -401,7 +408,7 @@ function LaboratoriosPage() {
               </Button>
             )}
             <NuevoLaboratorioDialog clinicId={clinicId!} />
-            <NuevaOrdenDialog clinicId={clinicId!} timezone={timezone} />
+            <NuevaOrdenDialog clinicId={clinicId!} currency={currency} timezone={timezone} />
           </div>
         </div>
 

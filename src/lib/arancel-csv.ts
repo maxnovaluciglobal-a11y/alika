@@ -15,8 +15,11 @@ export interface ArancelCsvRow {
   name: string;
   code: string;
   category: string;
+  /** Unidades que ve el usuario, NO cents. Convertir con `toCents(_, moneda)`. */
   price: number;
+  /** Unidades visibles, no cents. */
   referencePrice: number | null;
+  /** Unidades visibles, no cents. */
   labCost: number | null;
   durationMin: number | null;
   allowsDiscount: boolean;
@@ -71,10 +74,15 @@ function partirLinea(linea: string, sep: string): string[] {
 }
 
 /**
- * "$45.000" → 45000. "45.000,50" → 45001 (se redondea: el resto del sistema
- * trabaja en cents enteros, regla 6). Vacío → `null`, que no es lo mismo que
- * cero (regla 11): una prestación sin costo de laboratorio cargado no tiene
- * costo cero, no tiene dato.
+ * "$45.000" → 45000. "45.000,50" → 45000.5. Vacío → `null`, que no es lo
+ * mismo que cero (regla 11): una prestación sin costo de laboratorio cargado
+ * no tiene costo cero, no tiene dato.
+ *
+ * Devuelve la UNIDAD QUE VE EL USUARIO, no cents, y por eso no redondea.
+ * Antes hacía `Math.round` argumentando la regla 6, y eso solo era correcto
+ * en CLP: en una clínica en MXN, "45.000,50" tiene que terminar en 4500050
+ * cents, no en 45001. Quién convierte —y con qué moneda— es el llamador, vía
+ * `toCents`, que ya redondea al entero final.
  */
 export function parsearMonto(v: string | undefined): number | null {
   if (v === undefined || v.trim() === "") return null;
@@ -86,7 +94,7 @@ export function parsearMonto(v: string | undefined): number | null {
   const n = Number(
     usaComaDecimal ? limpio.replace(/\./g, "").replace(",", ".") : limpio.replace(/[.,]/g, ""),
   );
-  return Number.isFinite(n) ? Math.round(n) : null;
+  return Number.isFinite(n) ? n : null;
 }
 
 export function parseArancelCsv(texto: string): ArancelCsvResult {

@@ -532,19 +532,72 @@ function centsFactor(currency: string) {
   return ZERO_DECIMAL_CURRENCIES.has(currency.toUpperCase()) ? 1 : 100;
 }
 
-/** Formato de moneda. Respeta currency del quote/plan/payment. */
-export function formatMoney(cents: number, currency = "CLP"): string {
-  const isZeroDec = ZERO_DECIMAL_CURRENCIES.has(currency.toUpperCase());
-  return new Intl.NumberFormat("es-CL", {
+/**
+ * Locale de formato por moneda. `Intl` necesita un locale para decidir el
+ * separador de miles y el de decimales, y hasta ahora estaba fijo en "es-CL":
+ * una clínica mexicana veía "100,50" donde espera "100.50".
+ *
+ * La moneda no determina el locale en el caso general —el dólar se usa en
+ * medio mundo— pero para el mercado de Alika la aproximación es correcta, y
+ * es estrictamente mejor que asumir Chile siempre.
+ */
+const LOCALE_POR_MONEDA: Record<string, string> = {
+  ARS: "es-AR",
+  BOB: "es-BO",
+  BRL: "pt-BR",
+  CLP: "es-CL",
+  COP: "es-CO",
+  CRC: "es-CR",
+  DOP: "es-DO",
+  EUR: "es-ES",
+  GTQ: "es-GT",
+  MXN: "es-MX",
+  PEN: "es-PE",
+  PYG: "es-PY",
+  USD: "en-US",
+  UYU: "es-UY",
+};
+
+/**
+ * Formato de moneda.
+ *
+ * `currency` es obligatorio a propósito. Con un default de "CLP" cualquier
+ * llamada distraída formateaba plata ajena como pesos chilenos sin que nada
+ * fallara; volviéndolo obligatorio, el compilador enumera los sitios que no
+ * tienen la moneda a mano en vez de dejarlos pasar en silencio.
+ */
+export function formatMoney(cents: number, currency: string): string {
+  const iso = currency.toUpperCase();
+  const isZeroDec = ZERO_DECIMAL_CURRENCIES.has(iso);
+  return new Intl.NumberFormat(LOCALE_POR_MONEDA[iso] ?? "es-CL", {
     style: "currency",
     currency,
     maximumFractionDigits: isZeroDec ? 0 : 2,
   }).format(cents / centsFactor(currency));
 }
 
-export function toCents(pesos: number, currency = "CLP"): number {
+/**
+ * Unidad que ve el usuario → entero que guarda la base.
+ *
+ * En CLP el factor es 1 y la conversión no hace nada, que es justo por lo que
+ * media app guardaba el número tipeado directo como "cents" y nadie lo notó.
+ * En MXN el mismo descuido es un error de 100×.
+ */
+export function toCents(pesos: number, currency: string): number {
   return Math.round(pesos * centsFactor(currency));
 }
-export function fromCents(cents: number, currency = "CLP"): number {
+
+/**
+ * Paso de un `<input type="number">` de dinero: 1 donde no hay decimales,
+ * 0.01 donde sí. Sin esto el navegador valida contra el paso implícito de 1
+ * y rechaza "45.50" en una clínica en MXN antes de que el código tenga
+ * oportunidad de convertirlo.
+ */
+export function pasoDeMoneda(currency: string): number {
+  return centsFactor(currency) === 1 ? 1 : 0.01;
+}
+
+/** Entero guardado → unidad que ve el usuario. Inversa de `toCents`. */
+export function fromCents(cents: number, currency: string): number {
   return cents / centsFactor(currency);
 }

@@ -14,9 +14,12 @@ describe("parsearMonto", () => {
     expect(parsearMonto("1.250.000")).toBe(1250000);
   });
 
-  it("interpreta la coma final como decimal (formato es-CL) y redondea a entero", () => {
-    expect(parsearMonto("45.000,50")).toBe(45001);
-    expect(parsearMonto("100,4")).toBe(100);
+  it("interpreta la coma final como decimal (formato es-CL) y NO redondea", () => {
+    // Devuelve la unidad visible, no cents: quien convierte es `toCents`, con
+    // la moneda de la clínica. Antes redondeaba acá y eso solo era correcto en
+    // CLP — en MXN "45.000,50" tiene que llegar a 4500050 cents, no a 45001.
+    expect(parsearMonto("45.000,50")).toBe(45000.5);
+    expect(parsearMonto("100,4")).toBe(100.4);
   });
 
   it("interpreta la coma como separador de miles cuando no hay decimales", () => {

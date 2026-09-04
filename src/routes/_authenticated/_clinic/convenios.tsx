@@ -18,7 +18,15 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { requirePermission } from "@/lib/route-guards";
-import { formatMoney, repartirCobertura, type Agreement, type Procedure } from "@/lib/finance";
+import {
+  formatMoney,
+  fromCents,
+  pasoDeMoneda,
+  repartirCobertura,
+  toCents,
+  type Agreement,
+  type Procedure,
+} from "@/lib/finance";
 import {
   createAgreement,
   listAgreementCoverage,
@@ -231,8 +239,15 @@ function FilaCobertura({
 
   const modoInicial = actual?.coverageFixedCents !== null && actual ? "fijo" : "pct";
   const [modo, setModo] = useState<"pct" | "fijo">(modoInicial);
+  /**
+   * Lo que el usuario ve: un porcentaje en modo "pct", un monto en unidades
+   * visibles en modo "fijo". Nunca cents — la conversión pasa en los tres
+   * bordes de abajo (guardar, previsualizar, y este valor inicial).
+   */
   const [valor, setValor] = useState<number | null>(
-    actual?.coverageFixedCents ?? actual?.coveragePct ?? null,
+    actual?.coverageFixedCents != null
+      ? fromCents(actual.coverageFixedCents, currency)
+      : (actual?.coveragePct ?? null),
   );
 
   const guardar = useMutation({
@@ -243,7 +258,7 @@ function FilaCobertura({
           agreementId,
           procedureId: procedure.id,
           coveragePct: v !== null && modo === "pct" ? v : null,
-          coverageFixedCents: v !== null && modo === "fijo" ? v : null,
+          coverageFixedCents: v !== null && modo === "fijo" ? toCents(v, currency) : null,
         },
       }),
     onSuccess: () => {
@@ -258,7 +273,7 @@ function FilaCobertura({
       ? null
       : {
           coveragePct: modo === "pct" ? valor : null,
-          coverageFixedCents: modo === "fijo" ? valor : null,
+          coverageFixedCents: modo === "fijo" ? toCents(valor, currency) : null,
         },
   );
 
@@ -272,6 +287,8 @@ function FilaCobertura({
         <div className="flex items-center justify-end gap-1">
           <input
             type="number"
+            inputMode="decimal"
+            step={modo === "pct" ? 1 : pasoDeMoneda(currency)}
             min={0}
             max={modo === "pct" ? 100 : undefined}
             value={valor ?? ""}

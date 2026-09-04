@@ -234,6 +234,7 @@ function ConvenioDelPaciente({
 function PacienteDetalle() {
   const { access } = Route.useRouteContext();
   const { paciente } = Route.useLoaderData() as { paciente: Paciente };
+  const currency = access.clinic?.currency ?? "CLP";
   const puedeVerClinico = hasPermission(access.role, "clinical:view");
   const clinicId = access.clinic?.id;
   const puedeFacturar = hasPermission(access.role, "patients:manage");
@@ -343,9 +344,9 @@ function PacienteDetalle() {
                     {paciente.saldo == null
                       ? "Sin datos"
                       : paciente.saldo > 0
-                        ? formatMoney(paciente.saldo, access.clinic?.currency)
+                        ? formatMoney(paciente.saldo, currency)
                         : paciente.saldo < 0
-                          ? `${formatMoney(-paciente.saldo, access.clinic?.currency)} a favor`
+                          ? `${formatMoney(-paciente.saldo, currency)} a favor`
                           : "Al día"}
                   </p>
                 </div>
@@ -451,6 +452,7 @@ function PacienteDetalle() {
               <FinanceSection
                 clinicId={access.clinic.id}
                 clinicaNombre={access.clinic.name}
+                currency={currency}
                 patientId={paciente.id}
                 puedeEditar={puedeFacturar}
                 userId={access.userId}

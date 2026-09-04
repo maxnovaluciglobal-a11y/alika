@@ -241,12 +241,13 @@ export const listExpenses = createServerFn({ method: "GET" })
   });
 
 const ExpenseFields = {
+  // Sin `currency`: la fija el trigger `moneda_desde_la_clinica` desde
+  // `clinics.currency`. En qué moneda está una fila no lo decide el cliente.
   branchId: z.string().uuid().nullish(),
   category: z.string().trim().min(1, "La categoría es obligatoria.").max(80),
   description: z.string().trim().min(1, "La descripción es obligatoria.").max(300),
   supplier: z.string().trim().max(120).nullish(),
   amountCents: z.number().int().positive("El monto tiene que ser mayor a cero."),
-  currency: z.string().length(3).default("CLP"),
   paymentMethodId: z.string().uuid().nullish(),
   incurredOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida."),
   notes: z.string().trim().max(500).nullish(),
@@ -290,7 +291,6 @@ export const createExpense = createServerFn({ method: "POST" })
         description: data.description,
         supplier: data.supplier?.trim() || null,
         amount_cents: data.amountCents,
-        currency: data.currency,
         payment_method_id: data.paymentMethodId ?? null,
         method_name_snapshot: methodName,
         incurred_on: data.incurredOn,
@@ -327,7 +327,6 @@ export const updateExpense = createServerFn({ method: "POST" })
         description: data.description,
         supplier: data.supplier?.trim() || null,
         amount_cents: data.amountCents,
-        currency: data.currency,
         payment_method_id: data.paymentMethodId ?? null,
         method_name_snapshot: methodName,
         incurred_on: data.incurredOn,
