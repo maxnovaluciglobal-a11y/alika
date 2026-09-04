@@ -285,6 +285,113 @@ export interface Payment {
   createdById: string;
 }
 
+export const LAB_ORDER_STATUSES = [
+  "enviado",
+  "en_proceso",
+  "recibido",
+  "reprocesar",
+  "cancelado",
+] as const;
+export type LabOrderStatus = (typeof LAB_ORDER_STATUSES)[number];
+
+export const LAB_ORDER_STATUS_LABELS: Record<LabOrderStatus, string> = {
+  enviado: "Enviado",
+  en_proceso: "En proceso",
+  recibido: "Recibido",
+  reprocesar: "Reprocesar",
+  cancelado: "Cancelado",
+};
+
+export interface Lab {
+  id: string;
+  name: string;
+  contactName: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  notes: string | null;
+  isActive: boolean;
+}
+
+export interface LabOrder {
+  id: string;
+  labId: string | null;
+  labNameSnapshot: string | null;
+  patientId: string;
+  patientName: string;
+  treatmentItemId: string | null;
+  professionalId: string | null;
+  description: string;
+  toothNumbers: number[] | null;
+  status: LabOrderStatus;
+  /** Días de calendario del taller (YYYY-MM-DD), no instantes. */
+  sentOn: string;
+  dueOn: string | null;
+  receivedOn: string | null;
+  costCents: number | null;
+  currency: string;
+  notes: string | null;
+}
+
+/**
+ * Una orden está atrasada si prometieron una fecha, ya pasó, y todavía no
+ * llegó. Sin `dueOn` no hay atraso posible: no se inventa un plazo que el
+ * laboratorio nunca dio.
+ */
+export function ordenAtrasada(orden: LabOrder, hoyIso: string): boolean {
+  if (!orden.dueOn) return false;
+  if (orden.status === "recibido" || orden.status === "cancelado") return false;
+  return orden.dueOn < hoyIso;
+}
+
+export interface Warehouse {
+  id: string;
+  name: string;
+  branchId: string | null;
+  isActive: boolean;
+  position: number;
+}
+
+/** Nivel del semáforo de stock. */
+export type NivelStock = "critico" | "bajo" | "ok" | "sin-alerta";
+
+/**
+ * Semáforo de tres niveles sobre el stock de seguridad, como el de Dentalink.
+ *
+ * `minStock` null significa que la clínica no configuró alerta para ese ítem —
+ * no que el mínimo sea cero. Sin ese dato no hay semáforo posible y se
+ * devuelve "sin-alerta" en vez de pintar todo en rojo.
+ *
+ * El umbral de "bajo" es 1,5× el mínimo: el punto no es avisar cuando ya no
+ * queda, sino cuando queda poco y todavía hay tiempo de reponer.
+ */
+export function nivelStock(actual: number, minStock: number | null): NivelStock {
+  if (minStock === null) return "sin-alerta";
+  if (actual <= minStock) return "critico";
+  if (actual <= minStock * 1.5) return "bajo";
+  return "ok";
+}
+
+/**
+ * Precio promedio ponderado desde el historial de entradas.
+ *
+ * Se calcula y no se guarda: guardarlo obliga a recalcularlo en cada
+ * movimiento y a mantener dos verdades que se desincronizan. Las entradas sin
+ * costo cargado se ignoran — promediarlas como cero hundiría el promedio y
+ * haría creer que el insumo sale más barato de lo que sale.
+ *
+ * Devuelve `null` cuando ninguna entrada tiene costo: sin dato no es cero.
+ */
+export function precioPromedioPonderado(
+  entradas: { quantity: number; unitCostCents: number | null }[],
+): number | null {
+  const conCosto = entradas.filter((e) => e.unitCostCents !== null && e.quantity > 0);
+  if (!conCosto.length) return null;
+  const unidades = conCosto.reduce((s, e) => s + e.quantity, 0);
+  if (unidades <= 0) return null;
+  const total = conCosto.reduce((s, e) => s + e.quantity * (e.unitCostCents ?? 0), 0);
+  return Math.round(total / unidades);
+}
+
 /** Etiqueta del bloque implícito que junta los ítems sin fase asignada. */
 export const SIN_FASE_LABEL = "Sin fase";
 

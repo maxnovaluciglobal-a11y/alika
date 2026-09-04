@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Download, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -40,6 +40,7 @@ import {
 } from "@/lib/clinic-finance.functions";
 import { listBranches } from "@/lib/clinic-catalog.functions";
 import { str } from "@/lib/search";
+import { exportarCsv } from "@/lib/csv-export";
 
 interface GastosSearch {
   desde: string;
@@ -370,7 +371,34 @@ function GastosPage() {
               {filtrados.length} {filtrados.length === 1 ? "gasto" : "gastos"} en el período
             </p>
           </div>
-          <GastoDialog clinicId={clinicId!} timezone={timezone} categoriasUsadas={categorias} />
+          <div className="flex flex-wrap gap-2">
+            {filtrados.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  exportarCsv<Expense>(
+                    filtrados,
+                    [
+                      { header: "Fecha", value: (g) => g.incurredOn },
+                      { header: "Categoría", value: (g) => g.category },
+                      { header: "Descripción", value: (g) => g.description },
+                      { header: "Proveedor", value: (g) => g.supplier },
+                      { header: "Medio de pago", value: (g) => g.methodNameSnapshot },
+                      { header: "Monto", value: (g) => g.amountCents },
+                      { header: "Moneda", value: (g) => g.currency },
+                      { header: "Notas", value: (g) => g.notes },
+                    ],
+                    "gastos",
+                    hoyISO(timezone),
+                  )
+                }
+              >
+                <Download className="size-4" /> Exportar CSV
+              </Button>
+            )}
+            <GastoDialog clinicId={clinicId!} timezone={timezone} categoriasUsadas={categorias} />
+          </div>
         </div>
 
         <FilterBar

@@ -44,8 +44,10 @@ import { Route as AuthenticatedClinicDashboardRouteImport } from './routes/_auth
 import { Route as AuthenticatedClinicDominioEmailRouteImport } from './routes/_authenticated/_clinic/dominio-email'
 import { Route as AuthenticatedClinicEquipoRouteImport } from './routes/_authenticated/_clinic/equipo'
 import { Route as AuthenticatedClinicFinanzasRouteImport } from './routes/_authenticated/_clinic/finanzas'
+import { Route as AuthenticatedClinicFusionarFichasRouteImport } from './routes/_authenticated/_clinic/fusionar-fichas'
 import { Route as AuthenticatedClinicGastosRouteImport } from './routes/_authenticated/_clinic/gastos'
 import { Route as AuthenticatedClinicInventarioRouteImport } from './routes/_authenticated/_clinic/inventario'
+import { Route as AuthenticatedClinicLaboratoriosRouteImport } from './routes/_authenticated/_clinic/laboratorios'
 import { Route as AuthenticatedClinicMediosDePagoRouteImport } from './routes/_authenticated/_clinic/medios-de-pago'
 import { Route as AuthenticatedClinicMiAgendaRouteImport } from './routes/_authenticated/_clinic/mi-agenda'
 import { Route as AuthenticatedClinicPermisosRouteImport } from './routes/_authenticated/_clinic/permisos'
@@ -246,6 +248,12 @@ const AuthenticatedClinicFinanzasRoute =
     path: '/finanzas',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
+const AuthenticatedClinicFusionarFichasRoute =
+  AuthenticatedClinicFusionarFichasRouteImport.update({
+    id: '/fusionar-fichas',
+    path: '/fusionar-fichas',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
 const AuthenticatedClinicGastosRoute =
   AuthenticatedClinicGastosRouteImport.update({
     id: '/gastos',
@@ -256,6 +264,12 @@ const AuthenticatedClinicInventarioRoute =
   AuthenticatedClinicInventarioRouteImport.update({
     id: '/inventario',
     path: '/inventario',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
+const AuthenticatedClinicLaboratoriosRoute =
+  AuthenticatedClinicLaboratoriosRouteImport.update({
+    id: '/laboratorios',
+    path: '/laboratorios',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
 const AuthenticatedClinicMediosDePagoRoute =
@@ -382,8 +396,10 @@ export interface FileRoutesByFullPath {
   '/dominio-email': typeof AuthenticatedClinicDominioEmailRoute
   '/equipo': typeof AuthenticatedClinicEquipoRoute
   '/finanzas': typeof AuthenticatedClinicFinanzasRoute
+  '/fusionar-fichas': typeof AuthenticatedClinicFusionarFichasRoute
   '/gastos': typeof AuthenticatedClinicGastosRoute
   '/inventario': typeof AuthenticatedClinicInventarioRoute
+  '/laboratorios': typeof AuthenticatedClinicLaboratoriosRoute
   '/medios-de-pago': typeof AuthenticatedClinicMediosDePagoRoute
   '/mi-agenda': typeof AuthenticatedClinicMiAgendaRoute
   '/permisos': typeof AuthenticatedClinicPermisosRoute
@@ -432,8 +448,10 @@ export interface FileRoutesByTo {
   '/dominio-email': typeof AuthenticatedClinicDominioEmailRoute
   '/equipo': typeof AuthenticatedClinicEquipoRoute
   '/finanzas': typeof AuthenticatedClinicFinanzasRoute
+  '/fusionar-fichas': typeof AuthenticatedClinicFusionarFichasRoute
   '/gastos': typeof AuthenticatedClinicGastosRoute
   '/inventario': typeof AuthenticatedClinicInventarioRoute
+  '/laboratorios': typeof AuthenticatedClinicLaboratoriosRoute
   '/medios-de-pago': typeof AuthenticatedClinicMediosDePagoRoute
   '/mi-agenda': typeof AuthenticatedClinicMiAgendaRoute
   '/permisos': typeof AuthenticatedClinicPermisosRoute
@@ -487,8 +505,10 @@ export interface FileRoutesById {
   '/_authenticated/_clinic/dominio-email': typeof AuthenticatedClinicDominioEmailRoute
   '/_authenticated/_clinic/equipo': typeof AuthenticatedClinicEquipoRoute
   '/_authenticated/_clinic/finanzas': typeof AuthenticatedClinicFinanzasRoute
+  '/_authenticated/_clinic/fusionar-fichas': typeof AuthenticatedClinicFusionarFichasRoute
   '/_authenticated/_clinic/gastos': typeof AuthenticatedClinicGastosRoute
   '/_authenticated/_clinic/inventario': typeof AuthenticatedClinicInventarioRoute
+  '/_authenticated/_clinic/laboratorios': typeof AuthenticatedClinicLaboratoriosRoute
   '/_authenticated/_clinic/medios-de-pago': typeof AuthenticatedClinicMediosDePagoRoute
   '/_authenticated/_clinic/mi-agenda': typeof AuthenticatedClinicMiAgendaRoute
   '/_authenticated/_clinic/permisos': typeof AuthenticatedClinicPermisosRoute
@@ -541,8 +561,10 @@ export interface FileRouteTypes {
     | '/dominio-email'
     | '/equipo'
     | '/finanzas'
+    | '/fusionar-fichas'
     | '/gastos'
     | '/inventario'
+    | '/laboratorios'
     | '/medios-de-pago'
     | '/mi-agenda'
     | '/permisos'
@@ -591,8 +613,10 @@ export interface FileRouteTypes {
     | '/dominio-email'
     | '/equipo'
     | '/finanzas'
+    | '/fusionar-fichas'
     | '/gastos'
     | '/inventario'
+    | '/laboratorios'
     | '/medios-de-pago'
     | '/mi-agenda'
     | '/permisos'
@@ -645,8 +669,10 @@ export interface FileRouteTypes {
     | '/_authenticated/_clinic/dominio-email'
     | '/_authenticated/_clinic/equipo'
     | '/_authenticated/_clinic/finanzas'
+    | '/_authenticated/_clinic/fusionar-fichas'
     | '/_authenticated/_clinic/gastos'
     | '/_authenticated/_clinic/inventario'
+    | '/_authenticated/_clinic/laboratorios'
     | '/_authenticated/_clinic/medios-de-pago'
     | '/_authenticated/_clinic/mi-agenda'
     | '/_authenticated/_clinic/permisos'
@@ -929,6 +955,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicFinanzasRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
+    '/_authenticated/_clinic/fusionar-fichas': {
+      id: '/_authenticated/_clinic/fusionar-fichas'
+      path: '/fusionar-fichas'
+      fullPath: '/fusionar-fichas'
+      preLoaderRoute: typeof AuthenticatedClinicFusionarFichasRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
     '/_authenticated/_clinic/gastos': {
       id: '/_authenticated/_clinic/gastos'
       path: '/gastos'
@@ -941,6 +974,13 @@ declare module '@tanstack/react-router' {
       path: '/inventario'
       fullPath: '/inventario'
       preLoaderRoute: typeof AuthenticatedClinicInventarioRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
+    '/_authenticated/_clinic/laboratorios': {
+      id: '/_authenticated/_clinic/laboratorios'
+      path: '/laboratorios'
+      fullPath: '/laboratorios'
+      preLoaderRoute: typeof AuthenticatedClinicLaboratoriosRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
     '/_authenticated/_clinic/medios-de-pago': {
@@ -1062,8 +1102,10 @@ interface AuthenticatedClinicRouteRouteChildren {
   AuthenticatedClinicDominioEmailRoute: typeof AuthenticatedClinicDominioEmailRoute
   AuthenticatedClinicEquipoRoute: typeof AuthenticatedClinicEquipoRoute
   AuthenticatedClinicFinanzasRoute: typeof AuthenticatedClinicFinanzasRoute
+  AuthenticatedClinicFusionarFichasRoute: typeof AuthenticatedClinicFusionarFichasRoute
   AuthenticatedClinicGastosRoute: typeof AuthenticatedClinicGastosRoute
   AuthenticatedClinicInventarioRoute: typeof AuthenticatedClinicInventarioRoute
+  AuthenticatedClinicLaboratoriosRoute: typeof AuthenticatedClinicLaboratoriosRoute
   AuthenticatedClinicMediosDePagoRoute: typeof AuthenticatedClinicMediosDePagoRoute
   AuthenticatedClinicMiAgendaRoute: typeof AuthenticatedClinicMiAgendaRoute
   AuthenticatedClinicPermisosRoute: typeof AuthenticatedClinicPermisosRoute
@@ -1093,8 +1135,11 @@ const AuthenticatedClinicRouteRouteChildren: AuthenticatedClinicRouteRouteChildr
     AuthenticatedClinicDominioEmailRoute: AuthenticatedClinicDominioEmailRoute,
     AuthenticatedClinicEquipoRoute: AuthenticatedClinicEquipoRoute,
     AuthenticatedClinicFinanzasRoute: AuthenticatedClinicFinanzasRoute,
+    AuthenticatedClinicFusionarFichasRoute:
+      AuthenticatedClinicFusionarFichasRoute,
     AuthenticatedClinicGastosRoute: AuthenticatedClinicGastosRoute,
     AuthenticatedClinicInventarioRoute: AuthenticatedClinicInventarioRoute,
+    AuthenticatedClinicLaboratoriosRoute: AuthenticatedClinicLaboratoriosRoute,
     AuthenticatedClinicMediosDePagoRoute: AuthenticatedClinicMediosDePagoRoute,
     AuthenticatedClinicMiAgendaRoute: AuthenticatedClinicMiAgendaRoute,
     AuthenticatedClinicPermisosRoute: AuthenticatedClinicPermisosRoute,
