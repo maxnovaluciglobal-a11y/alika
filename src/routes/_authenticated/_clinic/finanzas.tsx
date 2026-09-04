@@ -10,6 +10,7 @@ import { hoyISO } from "@/lib/clinic-data";
 import { formatMoney, PAYMENT_METHOD_LABELS, type PaymentMethod } from "@/lib/finance";
 import { getFinanceSummary, getQuoteConversionReport } from "@/lib/finance-reports.functions";
 import { str } from "@/lib/search";
+import { cn } from "@/lib/utils";
 
 interface FinanzasSearch {
   desde: string;
@@ -100,30 +101,101 @@ function FinanzasPage() {
 
         {!isLoading && resumen && (
           <>
+            {/* Resultado primero: es la única pregunta que un dueño de clínica
+                se hace al abrir esta pantalla. Lo cobrado y lo gastado quedan
+                como el desglose que lo explica. */}
             <section className="grid gap-4 sm:grid-cols-3">
               <div className="card-clinical p-5">
                 <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  <CircleDollarSign className="size-3.5" /> Total cobrado
+                  <CircleDollarSign className="size-3.5" /> Cobrado
                 </p>
-                <p className="font-display text-2xl font-semibold">
+                <p className="font-display text-2xl font-semibold tabular-nums">
                   {formatMoney(resumen.totalCents, currency)}
                 </p>
+                {resumen.retentionCents !== null && resumen.retentionCents > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Entra {formatMoney(resumen.netCents ?? 0, currency)} · retienen{" "}
+                    {formatMoney(resumen.retentionCents, currency)}
+                  </p>
+                )}
               </div>
               <div className="card-clinical p-5">
                 <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  <Receipt className="size-3.5" /> Pagos registrados
+                  <Receipt className="size-3.5" /> Gastos
                 </p>
-                <p className="font-display text-2xl font-semibold">{resumen.paymentsCount}</p>
+                <p className="font-display text-2xl font-semibold tabular-nums">
+                  {formatMoney(resumen.expensesCents, currency)}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {resumen.expensesCount === 0
+                    ? "Sin gastos cargados"
+                    : `${resumen.expensesCount} ${resumen.expensesCount === 1 ? "gasto" : "gastos"}`}
+                </p>
               </div>
               <div className="card-clinical p-5">
                 <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  <TrendingUp className="size-3.5" /> Ticket promedio
+                  <TrendingUp className="size-3.5" /> Resultado
                 </p>
-                <p className="font-display text-2xl font-semibold">
+                <p
+                  className={cn(
+                    "font-display text-2xl font-semibold tabular-nums",
+                    resumen.resultCents < 0 && "text-destructive",
+                  )}
+                >
+                  {formatMoney(resumen.resultCents, currency)}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {resumen.retentionCents === null
+                    ? "Sobre lo facturado — sin retenciones cargadas"
+                    : "Neto de retenciones, menos gastos"}
+                </p>
+              </div>
+            </section>
+
+            <section className="grid gap-4 sm:grid-cols-2">
+              <div className="card-clinical p-5">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Pagos registrados
+                </p>
+                <p className="font-display text-xl font-semibold tabular-nums">
+                  {resumen.paymentsCount}
+                </p>
+              </div>
+              <div className="card-clinical p-5">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Ticket promedio
+                </p>
+                <p className="font-display text-xl font-semibold tabular-nums">
                   {formatMoney(resumen.averageTicketCents, currency)}
                 </p>
               </div>
             </section>
+
+            {resumen.byExpenseCategory.length > 0 && (
+              <section className="card-clinical p-5">
+                <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Gastos por categoría
+                </p>
+                <div className="space-y-2">
+                  {resumen.byExpenseCategory.map((c) => (
+                    <div key={c.category} className="flex items-center gap-3 text-sm">
+                      <span className="w-40 shrink-0 truncate">{c.category}</span>
+                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
+                        <div
+                          className="h-full rounded-full bg-warning"
+                          style={{
+                            width: `${resumen.expensesCents ? (c.totalCents / resumen.expensesCents) * 100 : 0}%`,
+                          }}
+                        />
+                      </div>
+                      <span className="w-28 shrink-0 text-right font-mono text-xs tabular-nums">
+                        {formatMoney(c.totalCents, currency)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {conversion && conversion.created > 0 && (
               <section className="card-clinical p-5">

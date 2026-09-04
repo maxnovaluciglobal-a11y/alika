@@ -8,8 +8,10 @@ import {
   CalendarCheck,
   Users,
   Stethoscope,
+  Receipt,
   Settings,
   UsersRound,
+  CreditCard,
   FileSearch,
   ShieldCheck,
   BellRing,
@@ -26,6 +28,7 @@ import {
   Boxes,
   Building2,
   FileSignature,
+  Tags,
   UserRound,
   ChevronDown,
   Wrench,
@@ -86,6 +89,7 @@ const navGroups: { section: string; items: readonly NavItem[] }[] = [
     section: "Finanzas",
     items: [
       { to: "/finanzas", label: "Finanzas", icon: Landmark, permission: "finance:view" },
+      { to: "/gastos", label: "Gastos", icon: Receipt, permission: "finance:view" },
       { to: "/comisiones", label: "Comisiones", icon: Percent, permission: "finance:view" },
       { to: "/inventario", label: "Inventario", icon: Boxes, permission: "inventory:view" },
     ],
@@ -102,6 +106,13 @@ const navGroups: { section: string; items: readonly NavItem[] }[] = [
   {
     section: "Configuración",
     items: [
+      { to: "/aranceles", label: "Arancel de precios", icon: Tags, permission: "settings:manage" },
+      {
+        to: "/medios-de-pago",
+        label: "Medios de pago",
+        icon: CreditCard,
+        permission: "settings:manage",
+      },
       { to: "/sucursales", label: "Sucursales", icon: Building2, permission: "settings:manage" },
       {
         to: "/profesionales",

@@ -48,7 +48,70 @@ export interface Procedure {
   currency: string;
   durationMin: number | null;
   isActive: boolean;
+  /** Si es false, la UI no deja descontar esta prestación en el presupuesto. */
+  allowsDiscount: boolean;
+  /** Valor referencial declarado ante convenios. `null` = sin dato, no cero. */
+  referencePriceCents: number | null;
+  /** Costo de laboratorio. `null` = sin dato, no cero. */
+  labCostCents: number | null;
+  position: number;
 }
+
+/**
+ * Medio de pago configurable por clínica (G-6). Reemplaza al enum fijo para
+ * lo nuevo, sin borrarlo: `Payment.method` sigue existiendo para el histórico.
+ */
+export interface PaymentMethodConfig {
+  id: string;
+  name: string;
+  /** Comisión que retiene el operador, 0-100. El paciente paga el total igual. */
+  retentionPct: number;
+  allowsRefund: boolean;
+  isActive: boolean;
+  position: number;
+  /** Valor del enum viejo al que equivale, si equivale a alguno. */
+  legacyKey: PaymentMethod | null;
+}
+
+/** Neto que le queda a la clínica tras la retención del medio de pago. */
+export function netAfterRetention(amountCents: number, retentionPct: number): number {
+  if (retentionPct <= 0) return amountCents;
+  return Math.max(0, amountCents - Math.round((amountCents * retentionPct) / 100));
+}
+
+export interface Expense {
+  id: string;
+  branchId: string | null;
+  category: string;
+  description: string;
+  supplier: string | null;
+  amountCents: number;
+  currency: string;
+  paymentMethodId: string | null;
+  methodNameSnapshot: string | null;
+  /** Día contable del gasto (YYYY-MM-DD), no un instante. */
+  incurredOn: string;
+  notes: string | null;
+  createdAt: string;
+}
+
+/**
+ * Categorías sugeridas para el primer gasto de una clínica. NO es un catálogo
+ * cerrado: `expenses.category` es texto libre y la UI ofrece además las que la
+ * clínica ya viene usando.
+ */
+export const CATEGORIAS_GASTO_SUGERIDAS = [
+  "Arriendo",
+  "Sueldos",
+  "Insumos clínicos",
+  "Laboratorio",
+  "Servicios básicos",
+  "Marketing",
+  "Equipamiento",
+  "Mantención",
+  "Impuestos",
+  "Otros",
+] as const;
 
 export interface QuoteItem {
   id: string;

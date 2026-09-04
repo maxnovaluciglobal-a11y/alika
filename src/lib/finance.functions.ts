@@ -17,6 +17,7 @@ import {
   type QuoteItem,
   type TreatmentItem,
   type TreatmentPlan,
+  netAfterRetention,
 } from "@/lib/finance";
 
 const SURFACE_ENUM = z.enum(TOOTH_SURFACES);
@@ -39,7 +40,7 @@ const TOOTH_NUMBER_OPT = z
 // ─── PROCEDURES ──────────────────────────────────────────────────────────
 
 const PROCEDURE_COLUMNS =
-  "id, code, name, category, default_price_cents, currency, duration_min, is_active";
+  "id, code, name, category, default_price_cents, currency, duration_min, is_active, allows_discount, reference_price_cents, lab_cost_cents, position";
 
 type ProcedureRow = {
   id: string;
@@ -50,6 +51,10 @@ type ProcedureRow = {
   currency: string;
   duration_min: number | null;
   is_active: boolean;
+  allows_discount: boolean;
+  reference_price_cents: number | null;
+  lab_cost_cents: number | null;
+  position: number;
 };
 
 function mapProcedure(row: ProcedureRow): Procedure {
@@ -62,18 +67,37 @@ function mapProcedure(row: ProcedureRow): Procedure {
     currency: row.currency,
     durationMin: row.duration_min,
     isActive: row.is_active,
+    allowsDiscount: row.allows_discount,
+    referencePriceCents: row.reference_price_cents,
+    labCostCents: row.lab_cost_cents,
+    position: row.position,
   };
 }
 
 export const listProcedures = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        /**
+         * El presupuesto solo ofrece prestaciones vigentes; el arancel
+         * (/aranceles) necesita ver también las dadas de baja para poder
+         * reactivarlas. Default false = comportamiento de siempre.
+         */
+        incluirInactivas: z.boolean().default(false),
+      })
+      .parse(input),
+  )
   .handler(async ({ data, context }): Promise<Procedure[]> => {
-    const { data: rows, error } = await context.supabase
+    let query = context.supabase
       .from("procedures")
       .select(PROCEDURE_COLUMNS)
-      .eq("clinic_id", data.clinicId)
-      .eq("is_active", true)
+      .eq("clinic_id", data.clinicId);
+    if (!data.incluirInactivas) query = query.eq("is_active", true);
+    const { data: rows, error } = await query
+      .order("category", { ascending: true, nullsFirst: true })
+      .order("position", { ascending: true })
       .order("name", { ascending: true });
 
     if (error)
@@ -81,38 +105,177 @@ export const listProcedures = createServerFn({ method: "GET" })
     return (rows ?? []).map((r) => mapProcedure(r as ProcedureRow));
   });
 
+/** Campos editables de una prestación del arancel. Compartido por create y update. */
+const ProcedureFields = {
+  name: z.string().trim().min(1, "Nombre obligatorio."),
+  code: z.string().trim().max(40).nullish(),
+  category: z.string().trim().max(80).nullish(),
+  defaultPriceCents: z.number().int().min(0).default(0),
+  currency: z.string().length(3).default("CLP"),
+  durationMin: z.number().int().min(0).max(600).nullish(),
+  allowsDiscount: z.boolean().default(true),
+  referencePriceCents: z.number().int().min(0).nullish(),
+  labCostCents: z.number().int().min(0).nullish(),
+  position: z.number().int().min(0).max(9999).default(0),
+};
+
+/** DTO → fila de `procedures`. `?? null` y no `|| null`: un 0 es un valor. */
+function procedureRow(d: {
+  name: string;
+  code?: string | null;
+  category?: string | null;
+  defaultPriceCents: number;
+  currency: string;
+  durationMin?: number | null;
+  allowsDiscount: boolean;
+  referencePriceCents?: number | null;
+  labCostCents?: number | null;
+  position: number;
+}) {
+  return {
+    name: d.name,
+    code: d.code?.trim() || null,
+    category: d.category?.trim() || null,
+    default_price_cents: d.defaultPriceCents,
+    currency: d.currency,
+    duration_min: d.durationMin ?? null,
+    allows_discount: d.allowsDiscount,
+    reference_price_cents: d.referencePriceCents ?? null,
+    lab_cost_cents: d.labCostCents ?? null,
+    position: d.position,
+  };
+}
+
 export const createProcedure = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z
-      .object({
-        clinicId: z.string().uuid(),
-        name: z.string().trim().min(1, "Nombre obligatorio."),
-        code: z.string().trim().max(40).optional(),
-        category: z.string().trim().max(80).optional(),
-        defaultPriceCents: z.number().int().min(0).default(0),
-        currency: z.string().length(3).default("CLP"),
-        durationMin: z.number().int().min(0).max(600).optional(),
-      })
-      .parse(input),
+    z.object({ clinicId: z.string().uuid(), ...ProcedureFields }).parse(input),
   )
   .handler(async ({ data, context }): Promise<{ id: string }> => {
     const { data: inserted, error } = await context.supabase
       .from("procedures")
-      .insert({
-        clinic_id: data.clinicId,
-        name: data.name,
-        code: data.code || null,
-        category: data.category || null,
-        default_price_cents: data.defaultPriceCents,
-        currency: data.currency,
-        duration_min: data.durationMin ?? null,
-      })
+      .insert({ clinic_id: data.clinicId, ...procedureRow(data) })
       .select("id")
       .single();
 
     if (error) throw new Error("No tienes permisos para editar el catálogo. " + error.message);
     return { id: inserted.id };
+  });
+
+export const updateProcedure = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        procedureId: z.string().uuid(),
+        ...ProcedureFields,
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { error } = await context.supabase
+      .from("procedures")
+      .update(procedureRow(data))
+      .eq("id", data.procedureId)
+      .eq("clinic_id", data.clinicId);
+    if (error) throw new Error("No tienes permisos para editar el catálogo. " + error.message);
+    return { ok: true };
+  });
+
+/**
+ * Da de baja o reactiva una prestación. Nunca se borra: `quote_items` y
+ * `treatment_items` la referencian con ON DELETE SET NULL, y aunque el
+ * `name_snapshot` protege el histórico (regla 10), perder el vínculo impide
+ * saber qué prestación del arancel generó una línea vieja.
+ */
+export const setProcedureActive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        procedureId: z.string().uuid(),
+        isActive: z.boolean(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { error } = await context.supabase
+      .from("procedures")
+      .update({ is_active: data.isActive })
+      .eq("id", data.procedureId)
+      .eq("clinic_id", data.clinicId);
+    if (error) throw new Error("No tienes permisos para editar el catálogo. " + error.message);
+    return { ok: true };
+  });
+
+/**
+ * Alta masiva del arancel desde CSV. Es la puerta de entrada de toda
+ * migración: sin esto, un cliente que llega con 300 prestaciones en una
+ * planilla tiene que cargarlas a mano y el onboarding se muere ahí.
+ *
+ * Actualiza por `code` cuando la clínica lo usa (es su identificador real en
+ * la planilla de origen) y por `name` cuando no hay código. El parseo del CSV
+ * vive en el cliente: acá llegan filas ya validadas, y esta función solo
+ * decide alta contra actualización.
+ */
+export const importProcedures = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        filas: z.array(z.object(ProcedureFields)).min(1).max(1000),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ creadas: number; actualizadas: number }> => {
+    const { supabase } = context;
+
+    const { data: existentes, error: readErr } = await supabase
+      .from("procedures")
+      .select("id, code, name")
+      .eq("clinic_id", data.clinicId);
+    if (readErr)
+      throw new Error(mensajeDb(readErr, "No pudimos leer el arancel actual de la clínica."));
+
+    // Un mismo nombre puede repetirse entre categorías; el código, si existe,
+    // manda. Se normaliza a minúsculas para que "Consulta" y "consulta" de la
+    // planilla no creen dos filas.
+    const porCodigo = new Map<string, string>();
+    const porNombre = new Map<string, string>();
+    for (const p of existentes ?? []) {
+      if (p.code) porCodigo.set(p.code.trim().toLowerCase(), p.id);
+      porNombre.set(p.name.trim().toLowerCase(), p.id);
+    }
+
+    const nuevas: (ReturnType<typeof procedureRow> & { clinic_id: string })[] = [];
+    const cambios: { id: string; row: ReturnType<typeof procedureRow> }[] = [];
+
+    for (const fila of data.filas) {
+      const row = procedureRow(fila);
+      const id =
+        (row.code && porCodigo.get(row.code.toLowerCase())) ??
+        porNombre.get(row.name.trim().toLowerCase());
+      if (id) cambios.push({ id, row });
+      else nuevas.push({ clinic_id: data.clinicId, ...row });
+    }
+
+    if (nuevas.length) {
+      const { error } = await supabase.from("procedures").insert(nuevas);
+      if (error) throw new Error("No tienes permisos para importar al catálogo. " + error.message);
+    }
+    for (const { id, row } of cambios) {
+      const { error } = await supabase
+        .from("procedures")
+        .update(row)
+        .eq("id", id)
+        .eq("clinic_id", data.clinicId);
+      if (error) throw new Error("No pudimos actualizar una prestación. " + error.message);
+    }
+
+    return { creadas: nuevas.length, actualizadas: cambios.length };
   });
 
 // ─── QUOTES ──────────────────────────────────────────────────────────────
@@ -936,6 +1099,12 @@ export const registerPayment = createServerFn({ method: "POST" })
         amountCents: z.number().int().positive("El monto debe ser mayor a cero."),
         currency: z.string().length(3).default("CLP"),
         method: z.enum(PAYMENT_METHODS).default("cash"),
+        /**
+         * Medio de pago configurado de la clínica (G-6). Opcional: la cola
+         * offline y cualquier caller viejo siguen mandando solo `method`, y
+         * en ese caso el pago se guarda sin retención, igual que antes.
+         */
+        paymentMethodId: z.string().uuid().nullish(),
         reference: z.string().trim().max(120).optional(),
         paidAt: z
           .string()
@@ -951,6 +1120,24 @@ export const registerPayment = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<{ id: string }> => {
+    // Congela nombre y neto del medio de pago al cobrar (regla 10). No se
+    // recalcula después: la retención del operador cambia con el tiempo y el
+    // recibo tiene que seguir diciendo lo que efectivamente entró ese día.
+    let methodName: string | null = null;
+    let netCents: number | null = null;
+    if (data.paymentMethodId) {
+      const { data: medio } = await context.supabase
+        .from("payment_methods")
+        .select("name, retention_pct")
+        .eq("id", data.paymentMethodId)
+        .eq("clinic_id", data.clinicId)
+        .maybeSingle();
+      if (medio) {
+        methodName = medio.name;
+        netCents = netAfterRetention(data.amountCents, Number(medio.retention_pct) || 0);
+      }
+    }
+
     const { data: inserted, error } = await context.supabase
       .from("payments")
       .insert({
@@ -960,6 +1147,9 @@ export const registerPayment = createServerFn({ method: "POST" })
         amount_cents: data.amountCents,
         currency: data.currency,
         method: data.method,
+        payment_method_id: data.paymentMethodId ?? null,
+        method_name_snapshot: methodName,
+        net_cents: netCents,
         reference: data.reference || null,
         // ⚠️ Este `new Date()` es la hora del SERVIDOR al procesar. Un cobro
         // capturado sin conexión a las 10:00 que sincroniza a las 15:00

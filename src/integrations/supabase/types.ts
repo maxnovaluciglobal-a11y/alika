@@ -893,6 +893,82 @@ export type Database = {
           },
         ];
       };
+      expenses: {
+        Row: {
+          amount_cents: number;
+          branch_id: string | null;
+          category: string;
+          clinic_id: string;
+          created_at: string;
+          created_by: string;
+          currency: string;
+          description: string;
+          id: string;
+          incurred_on: string;
+          method_name_snapshot: string | null;
+          notes: string | null;
+          payment_method_id: string | null;
+          supplier: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          amount_cents: number;
+          branch_id?: string | null;
+          category: string;
+          clinic_id: string;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          description: string;
+          id?: string;
+          incurred_on: string;
+          method_name_snapshot?: string | null;
+          notes?: string | null;
+          payment_method_id?: string | null;
+          supplier?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          amount_cents?: number;
+          branch_id?: string | null;
+          category?: string;
+          clinic_id?: string;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          description?: string;
+          id?: string;
+          incurred_on?: string;
+          method_name_snapshot?: string | null;
+          notes?: string | null;
+          payment_method_id?: string | null;
+          supplier?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expenses_branch_id_fkey";
+            columns: ["branch_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_payment_method_id_fkey";
+            columns: ["payment_method_id"];
+            isOneToOne: false;
+            referencedRelation: "payment_methods";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       inventory_items: {
         Row: {
           branch_id: string | null;
@@ -1738,6 +1814,53 @@ export type Database = {
           },
         ];
       };
+      payment_methods: {
+        Row: {
+          allows_refund: boolean;
+          clinic_id: string;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          legacy_key: Database["public"]["Enums"]["payment_method"] | null;
+          name: string;
+          position: number;
+          retention_pct: number;
+          updated_at: string;
+        };
+        Insert: {
+          allows_refund?: boolean;
+          clinic_id: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          legacy_key?: Database["public"]["Enums"]["payment_method"] | null;
+          name: string;
+          position?: number;
+          retention_pct?: number;
+          updated_at?: string;
+        };
+        Update: {
+          allows_refund?: boolean;
+          clinic_id?: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          legacy_key?: Database["public"]["Enums"]["payment_method"] | null;
+          name?: string;
+          position?: number;
+          retention_pct?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       payments: {
         Row: {
           amount_cents: number;
@@ -1747,7 +1870,10 @@ export type Database = {
           currency: string;
           id: string;
           method: Database["public"]["Enums"]["payment_method"];
+          method_name_snapshot: string | null;
+          net_cents: number | null;
           notes: string | null;
+          payment_method_id: string | null;
           paid_at: string;
           patient_id: string;
           reference: string | null;
@@ -1763,7 +1889,10 @@ export type Database = {
           currency?: string;
           id?: string;
           method?: Database["public"]["Enums"]["payment_method"];
+          method_name_snapshot?: string | null;
+          net_cents?: number | null;
           notes?: string | null;
+          payment_method_id?: string | null;
           paid_at?: string;
           patient_id: string;
           reference?: string | null;
@@ -1779,7 +1908,10 @@ export type Database = {
           currency?: string;
           id?: string;
           method?: Database["public"]["Enums"]["payment_method"];
+          method_name_snapshot?: string | null;
+          net_cents?: number | null;
           notes?: string | null;
+          payment_method_id?: string | null;
           paid_at?: string;
           patient_id?: string;
           reference?: string | null;
@@ -1972,9 +2104,13 @@ export type Database = {
           currency: string;
           default_price_cents: number;
           duration_min: number | null;
+          allows_discount: boolean;
           id: string;
           is_active: boolean;
+          lab_cost_cents: number | null;
           name: string;
+          position: number;
+          reference_price_cents: number | null;
           updated_at: string;
         };
         Insert: {
@@ -1986,9 +2122,13 @@ export type Database = {
           currency?: string;
           default_price_cents?: number;
           duration_min?: number | null;
+          allows_discount?: boolean;
           id?: string;
           is_active?: boolean;
+          lab_cost_cents?: number | null;
           name: string;
+          position?: number;
+          reference_price_cents?: number | null;
           updated_at?: string;
         };
         Update: {
@@ -2000,9 +2140,13 @@ export type Database = {
           currency?: string;
           default_price_cents?: number;
           duration_min?: number | null;
+          allows_discount?: boolean;
           id?: string;
           is_active?: boolean;
+          lab_cost_cents?: number | null;
           name?: string;
+          position?: number;
+          reference_price_cents?: number | null;
           updated_at?: string;
         };
         Relationships: [

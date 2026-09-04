@@ -83,6 +83,7 @@ import {
   updateQuote,
 } from "@/lib/finance.functions";
 import { cn } from "@/lib/utils";
+import { listPaymentMethods } from "@/lib/clinic-finance.functions";
 import { useOfflineMutation } from "@/hooks/use-offline-mutation";
 
 interface Props {
@@ -520,6 +521,13 @@ function NuevoProcedimientoInline({
         currency: "CLP",
         durationMin: null,
         isActive: true,
+        // Los campos de arancel (Tanda B) toman su default: esta alta rápida
+        // desde el presupuesto solo pide nombre, categoría y precio. Se
+        // completan después en /aranceles.
+        allowsDiscount: true,
+        referencePriceCents: null,
+        labCostCents: null,
+        position: 0,
       });
       setOpen(false);
       setName("");
@@ -929,6 +937,14 @@ function NuevoPagoDialog({
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(suggestedAmountCents);
   const [method, setMethod] = useState<PaymentMethod>("cash");
+  // G-6: el medio configurado de la clínica. El enum `method` se sigue
+  // guardando para el histórico y para los pagos capturados sin conexión.
+  const [paymentMethodId, setPaymentMethodId] = useState("");
+  const fetchPaymentMethods = useServerFn(listPaymentMethods);
+  const { data: mediosDePago = [] } = useQuery({
+    queryKey: ["payment-methods", clinicId],
+    queryFn: () => fetchPaymentMethods({ data: { clinicId } }),
+  });
   const [planId, setPlanId] = useState<string>("");
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
@@ -954,6 +970,7 @@ function NuevoPagoDialog({
       setOpen(false);
       setAmount(0);
       setMethod("cash");
+      setPaymentMethodId("");
       setPlanId("");
       setReference("");
       setNotes("");
@@ -970,6 +987,9 @@ function NuevoPagoDialog({
       patientId,
       amountCents: amount,
       method,
+      // Se manda vacío como undefined: el server solo busca la retención
+      // cuando hay un medio configurado elegido.
+      paymentMethodId: paymentMethodId || undefined,
       // ⚠️ Sellado en la CAPTURA. Sin esto, un cobro tomado a las 10:00 que
       // sincroniza a las 15:00 entraría con la hora del servidor y el cierre
       // de caja del día quedaría mal.
@@ -1015,18 +1035,42 @@ function NuevoPagoDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="pay-method">Método</Label>
-              <select
-                id="pay-method"
-                value={method}
-                onChange={(e) => setMethod(e.target.value as PaymentMethod)}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
-              >
-                {PAYMENT_METHODS.map((m) => (
-                  <option key={m} value={m}>
-                    {PAYMENT_METHOD_LABELS[m]}
-                  </option>
-                ))}
-              </select>
+              {mediosDePago.length > 0 ? (
+                <select
+                  id="pay-method"
+                  value={paymentMethodId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setPaymentMethodId(id);
+                    // El enum sigue guardándose: es lo que leen los reportes
+                    // viejos y la cola offline. `legacyKey` lo mapea; un medio
+                    // propio de la clínica ("Klap - Crédito") cae en 'other'.
+                    const medio = mediosDePago.find((m) => m.id === id);
+                    setMethod(medio?.legacyKey ?? "other");
+                  }}
+                  className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                >
+                  {mediosDePago.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                      {m.retentionPct > 0 ? ` · retiene ${m.retentionPct}%` : ""}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <select
+                  id="pay-method"
+                  value={method}
+                  onChange={(e) => setMethod(e.target.value as PaymentMethod)}
+                  className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                >
+                  {PAYMENT_METHODS.map((m) => (
+                    <option key={m} value={m}>
+                      {PAYMENT_METHOD_LABELS[m]}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
           <div className="space-y-1.5">

@@ -1,0 +1,514 @@
+import { useMemo, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
+import { AppShell } from "@/components/app-shell";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { DateField, FilterBar, SelectField } from "@/components/filters";
+import { requirePermission } from "@/lib/route-guards";
+import { hoyISO, formatoFecha } from "@/lib/clinic-data";
+import { CATEGORIAS_GASTO_SUGERIDAS, formatMoney, type Expense } from "@/lib/finance";
+import {
+  createExpense,
+  deleteExpense,
+  listExpenses,
+  listPaymentMethods,
+  updateExpense,
+} from "@/lib/clinic-finance.functions";
+import { listBranches } from "@/lib/clinic-catalog.functions";
+import { str } from "@/lib/search";
+
+interface GastosSearch {
+  desde: string;
+  hasta: string;
+  categoria: string;
+}
+
+function primerDiaDelMes(timeZone?: string): string {
+  return `${hoyISO(timeZone).slice(0, 7)}-01`;
+}
+
+export const Route = createFileRoute("/_authenticated/_clinic/gastos")({
+  validateSearch: (search: Record<string, unknown>): GastosSearch => ({
+    desde: str(search.desde) || primerDiaDelMes(),
+    hasta: str(search.hasta) || hoyISO(),
+    categoria: str(search.categoria),
+  }),
+  beforeLoad: requirePermission("finance:view"),
+  head: () => ({
+    meta: [
+      { title: "Gastos | Alika" },
+      {
+        name: "description",
+        content: "Egresos de la clínica por categoría, sucursal y medio de pago.",
+      },
+    ],
+  }),
+  component: GastosPage,
+});
+
+const INPUT =
+  "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
+
+interface Draft {
+  category: string;
+  description: string;
+  supplier: string;
+  amount: number;
+  incurredOn: string;
+  branchId: string;
+  paymentMethodId: string;
+  notes: string;
+}
+
+function GastoDialog({
+  clinicId,
+  timezone,
+  expense,
+  categoriasUsadas,
+}: {
+  clinicId: string;
+  timezone: string | undefined;
+  /** Sin `expense` el diálogo crea; con él, edita. */
+  expense?: Expense;
+  categoriasUsadas: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const createFn = useServerFn(createExpense);
+  const updateFn = useServerFn(updateExpense);
+  const fetchBranches = useServerFn(listBranches);
+  const fetchMethods = useServerFn(listPaymentMethods);
+
+  const inicial = (): Draft => ({
+    category: expense?.category ?? "",
+    description: expense?.description ?? "",
+    supplier: expense?.supplier ?? "",
+    amount: expense?.amountCents ?? 0,
+    incurredOn: expense?.incurredOn ?? hoyISO(timezone),
+    branchId: expense?.branchId ?? "",
+    paymentMethodId: expense?.paymentMethodId ?? "",
+    notes: expense?.notes ?? "",
+  });
+  const [d, setD] = useState<Draft>(inicial);
+  const patch = (cambios: Partial<Draft>) => setD((prev) => ({ ...prev, ...cambios }));
+
+  const { data: sucursales = [] } = useQuery({
+    queryKey: ["branches", clinicId],
+    enabled: open,
+    queryFn: () => fetchBranches({ data: { clinicId } }),
+  });
+  const { data: medios = [] } = useQuery({
+    queryKey: ["payment-methods", clinicId],
+    enabled: open,
+    queryFn: () => fetchMethods({ data: { clinicId } }),
+  });
+
+  const guardar = useMutation({
+    mutationFn: () => {
+      const payload = {
+        clinicId,
+        category: d.category.trim(),
+        description: d.description.trim(),
+        supplier: d.supplier.trim() || null,
+        amountCents: d.amount,
+        currency: "CLP",
+        incurredOn: d.incurredOn,
+        branchId: d.branchId || null,
+        paymentMethodId: d.paymentMethodId || null,
+        notes: d.notes.trim() || null,
+      };
+      return expense
+        ? updateFn({ data: { ...payload, expenseId: expense.id } }).then(() => undefined)
+        : createFn({ data: payload }).then(() => undefined);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["expenses", clinicId] });
+      queryClient.invalidateQueries({ queryKey: ["finance-summary", clinicId] });
+      toast.success(expense ? "Gasto actualizado" : "Gasto registrado");
+      setOpen(false);
+      if (!expense) setD(inicial());
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const listo = d.category.trim() && d.description.trim() && d.amount > 0 && !guardar.isPending;
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (next) setD(inicial());
+        setOpen(next);
+      }}
+    >
+      <DialogTrigger asChild>
+        {expense ? (
+          <Button variant="ghost" size="sm">
+            <Pencil className="size-3.5" /> Editar
+          </Button>
+        ) : (
+          <Button size="sm">
+            <Plus className="size-4" /> Registrar gasto
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{expense ? "Editar gasto" : "Registrar gasto"}</DialogTitle>
+          <DialogDescription>
+            Lo que sale de la clínica. Junto con lo cobrado, es lo que arma el resultado del período
+            en Finanzas.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="g-cat">Categoría</Label>
+              <input
+                id="g-cat"
+                list="categorias-gasto"
+                value={d.category}
+                onChange={(e) => patch({ category: e.target.value })}
+                placeholder="Ej: Insumos clínicos"
+                className={INPUT}
+              />
+              <datalist id="categorias-gasto">
+                {[...new Set([...categoriasUsadas, ...CATEGORIAS_GASTO_SUGERIDAS])].map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="g-fecha">Fecha</Label>
+              <input
+                id="g-fecha"
+                type="date"
+                value={d.incurredOn}
+                onChange={(e) => patch({ incurredOn: e.target.value })}
+                className={INPUT}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="g-desc">Descripción</Label>
+            <input
+              id="g-desc"
+              value={d.description}
+              onChange={(e) => patch({ description: e.target.value })}
+              placeholder="Ej: Compra de guantes y mascarillas"
+              className={INPUT}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="g-monto">Monto</Label>
+              <input
+                id="g-monto"
+                type="number"
+                min={1}
+                value={d.amount || ""}
+                onChange={(e) => patch({ amount: Number(e.target.value) })}
+                className={INPUT}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="g-prov">Proveedor</Label>
+              <input
+                id="g-prov"
+                value={d.supplier}
+                onChange={(e) => patch({ supplier: e.target.value })}
+                placeholder="Opcional"
+                className={INPUT}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="g-suc">Sucursal</Label>
+              <select
+                id="g-suc"
+                value={d.branchId}
+                onChange={(e) => patch({ branchId: e.target.value })}
+                className={INPUT}
+              >
+                <option value="">Toda la clínica</option>
+                {sucursales.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="g-medio">Medio de pago</Label>
+              <select
+                id="g-medio"
+                value={d.paymentMethodId}
+                onChange={(e) => patch({ paymentMethodId: e.target.value })}
+                className={INPUT}
+              >
+                <option value="">Sin especificar</option>
+                {medios.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="g-notas">Notas</Label>
+            <textarea
+              id="g-notas"
+              rows={2}
+              value={d.notes}
+              onChange={(e) => patch({ notes: e.target.value })}
+              placeholder="Nº de factura, detalle, lo que haga falta"
+              className={INPUT}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button onClick={() => guardar.mutate()} disabled={!listo}>
+            {guardar.isPending && <Loader2 className="size-3.5 animate-spin" />}
+            {expense ? "Guardar cambios" : "Registrar gasto"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function GastosPage() {
+  const { access } = Route.useRouteContext();
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const clinicId = access.clinic?.id;
+  const currency = access.clinic?.currency ?? "CLP";
+  const timezone = access.clinic?.timezone;
+  const queryClient = useQueryClient();
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const fetchExpenses = useServerFn(listExpenses);
+  const deleteFn = useServerFn(deleteExpense);
+
+  const { data: gastos = [], isLoading } = useQuery({
+    queryKey: ["expenses", clinicId, search.desde, search.hasta],
+    enabled: Boolean(clinicId),
+    queryFn: () =>
+      fetchExpenses({ data: { clinicId: clinicId!, desde: search.desde, hasta: search.hasta } }),
+  });
+
+  const borrar = useMutation({
+    mutationFn: (expenseId: string) => deleteFn({ data: { clinicId: clinicId!, expenseId } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["expenses", clinicId] });
+      queryClient.invalidateQueries({ queryKey: ["finance-summary", clinicId] });
+      toast.success("Gasto borrado");
+      setConfirmDeleteId(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const categorias = useMemo(() => [...new Set(gastos.map((g) => g.category))].sort(), [gastos]);
+
+  const filtrados = useMemo(
+    () => (search.categoria ? gastos.filter((g) => g.category === search.categoria) : gastos),
+    [gastos, search.categoria],
+  );
+
+  const total = useMemo(() => filtrados.reduce((sum, g) => sum + g.amountCents, 0), [filtrados]);
+
+  const porCategoria = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const g of filtrados) map.set(g.category, (map.get(g.category) ?? 0) + g.amountCents);
+    return [...map.entries()].sort(([, a], [, b]) => b - a);
+  }, [filtrados]);
+
+  const set = (patch: Partial<GastosSearch>) =>
+    navigate({ search: (prev: GastosSearch) => ({ ...prev, ...patch }) });
+
+  return (
+    <AppShell title="Gastos" access={access}>
+      <div className="space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-display text-2xl font-semibold tabular-nums">
+              {formatMoney(total, currency)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {filtrados.length} {filtrados.length === 1 ? "gasto" : "gastos"} en el período
+            </p>
+          </div>
+          <GastoDialog clinicId={clinicId!} timezone={timezone} categoriasUsadas={categorias} />
+        </div>
+
+        <FilterBar
+          activos={search.categoria ? 1 : 0}
+          onReset={() =>
+            set({
+              desde: primerDiaDelMes(timezone),
+              hasta: hoyISO(timezone),
+              categoria: "",
+            })
+          }
+        >
+          <DateField label="Desde" value={search.desde} onChange={(desde) => set({ desde })} />
+          <DateField label="Hasta" value={search.hasta} onChange={(hasta) => set({ hasta })} />
+          <SelectField
+            label="Categoría"
+            value={search.categoria}
+            onChange={(categoria) => set({ categoria })}
+            allLabel="Todas las categorías"
+            options={categorias.map((c) => ({ value: c, label: c }))}
+          />
+        </FilterBar>
+
+        {isLoading && <p className="text-sm text-muted-foreground">Cargando gastos…</p>}
+
+        {!isLoading && gastos.length === 0 && (
+          <div className="card-clinical p-8 text-center">
+            <p className="mb-1 font-display text-lg font-semibold">Sin gastos en este período</p>
+            <p className="mx-auto max-w-md text-sm text-muted-foreground">
+              Cargá arriendo, sueldos, insumos y laboratorio acá. Finanzas los resta de lo cobrado y
+              te dice si el mes cerró en verde.
+            </p>
+          </div>
+        )}
+
+        {!isLoading && porCategoria.length > 1 && (
+          <section className="card-clinical p-5">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Por categoría
+            </p>
+            <div className="space-y-2">
+              {porCategoria.map(([categoria, monto]) => (
+                <div key={categoria} className="flex items-center gap-3 text-sm">
+                  <span className="w-40 shrink-0 truncate">{categoria}</span>
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
+                    <div
+                      className="h-full rounded-full bg-brand"
+                      style={{ width: `${total ? (monto / total) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <span className="w-28 shrink-0 text-right font-mono text-xs tabular-nums">
+                    {formatMoney(monto, currency)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {!isLoading && filtrados.length > 0 && (
+          <section className="card-clinical overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[44rem] text-sm">
+                <thead>
+                  <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <th className="px-4 py-2 text-left font-medium">Fecha</th>
+                    <th className="px-3 py-2 text-left font-medium">Categoría</th>
+                    <th className="px-3 py-2 text-left font-medium">Descripción</th>
+                    <th className="px-3 py-2 text-left font-medium">Proveedor</th>
+                    <th className="px-3 py-2 text-left font-medium">Medio</th>
+                    <th className="px-3 py-2 text-right font-medium">Monto</th>
+                    <th className="px-3 py-2" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtrados.map((g) => (
+                    <tr key={g.id} className="border-b border-hairline last:border-0">
+                      <td className="whitespace-nowrap px-4 py-2 font-mono text-xs text-muted-foreground">
+                        {formatoFecha(g.incurredOn)}
+                      </td>
+                      <td className="px-3 py-2">{g.category}</td>
+                      <td className="px-3 py-2">{g.description}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{g.supplier ?? "—"}</td>
+                      <td className="px-3 py-2 text-xs text-muted-foreground">
+                        {g.methodNameSnapshot ?? "—"}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 text-right font-mono tabular-nums">
+                        {formatMoney(g.amountCents, g.currency)}
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex justify-end gap-1">
+                          <GastoDialog
+                            clinicId={clinicId!}
+                            timezone={timezone}
+                            expense={g}
+                            categoriasUsadas={categorias}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-label={`Borrar gasto: ${g.description}`}
+                            onClick={() => setConfirmDeleteId(g.id)}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
+        <AlertDialog
+          open={confirmDeleteId !== null}
+          onOpenChange={(o) => !o && setConfirmDeleteId(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Borrar este gasto?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Se elimina definitivamente y el resultado del período se recalcula sin él.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => confirmDeleteId && borrar.mutate(confirmDeleteId)}
+                disabled={borrar.isPending}
+              >
+                Borrar gasto
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </AppShell>
+  );
+}

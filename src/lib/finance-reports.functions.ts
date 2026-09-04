@@ -48,6 +48,26 @@ export interface FinanceSummary {
     totalCents: number;
     itemsCount: number;
   }[];
+  /**
+   * Lo que efectivamente entró tras la retención de los medios de pago (G-6).
+   * `null` cuando ningún pago del período tiene `net_cents` — es decir, todos
+   * son anteriores a los medios configurables. No se asume que neto = bruto:
+   * eso escondería justamente la comisión que este número existe para mostrar.
+   */
+  netCents: number | null;
+  /** Retención total del período. `null` por la misma razón que `netCents`. */
+  retentionCents: number | null;
+  /** Gastos del período (`expenses.incurred_on` dentro del rango). */
+  expensesCents: number;
+  expensesCount: number;
+  byExpenseCategory: { category: string; totalCents: number; count: number }[];
+  /**
+   * Resultado del período: lo que entró menos lo que salió. Usa el neto
+   * cuando hay dato de retención y el bruto cuando no — la alternativa sería
+   * no mostrar resultado hasta que la clínica configure retenciones, y eso
+   * deja el módulo sin su número más útil.
+   */
+  resultCents: number;
 }
 
 /**
@@ -83,7 +103,7 @@ export const getFinanceSummary = createServerFn({ method: "GET" })
 
     const { data: pagos, error } = await supabase
       .from("payments")
-      .select("amount_cents, currency, method, paid_at")
+      .select("amount_cents, currency, method, method_name_snapshot, net_cents, paid_at")
       .eq("clinic_id", data.clinicId)
       .gte("paid_at", desdeIso)
       .lte("paid_at", hastaIso);
@@ -104,13 +124,27 @@ export const getFinanceSummary = createServerFn({ method: "GET" })
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, dayTotalCents]) => ({ date, totalCents: dayTotalCents }));
 
+    // Agrupa por el nombre configurado cuando el pago lo tiene (G-6) y cae al
+    // valor del enum para los pagos viejos: así "Tarjeta de crédito" y
+    // "credit_card" no aparecen como dos filas distintas si la clínica no
+    // renombró el medio, pero un "Klap - Crédito" propio se ve con su nombre.
     const byMethodMap = new Map<string, { totalCents: number; count: number }>();
     for (const p of rows) {
-      const cur = byMethodMap.get(p.method) ?? { totalCents: 0, count: 0 };
+      const clave = p.method_name_snapshot ?? p.method;
+      const cur = byMethodMap.get(clave) ?? { totalCents: 0, count: 0 };
       cur.totalCents += p.amount_cents;
       cur.count += 1;
-      byMethodMap.set(p.method, cur);
+      byMethodMap.set(clave, cur);
     }
+
+    // Neto y retención: solo sobre los pagos que TIENEN net_cents. Si ninguno
+    // lo tiene, ambos quedan null y la UI no promete un neto que no calculó.
+    const conNeto = rows.filter((p) => p.net_cents !== null);
+    const netCents = conNeto.length
+      ? conNeto.reduce((sum, p) => sum + (p.net_cents ?? 0), 0) +
+        rows.filter((p) => p.net_cents === null).reduce((sum, p) => sum + p.amount_cents, 0)
+      : null;
+    const retentionCents = netCents === null ? null : totalCents - netCents;
     const byMethod = [...byMethodMap.entries()]
       .map(([method, v]) => ({ method, ...v }))
       .sort((a, b) => b.totalCents - a.totalCents);
@@ -155,6 +189,32 @@ export const getFinanceSummary = createServerFn({ method: "GET" })
       }))
       .sort((a, b) => b.totalCents - a.totalCents);
 
+    // Gastos del período. `incurred_on` es `date`, así que el filtro usa las
+    // fechas tal cual, sin fabricar límites UTC como sí hace `payments` con su
+    // `timestamptz` — un gasto pertenece a un día contable, no a un instante.
+    const { data: gastos, error: gastosError } = await supabase
+      .from("expenses")
+      .select("amount_cents, category")
+      .eq("clinic_id", data.clinicId)
+      .gte("incurred_on", data.desde)
+      .lte("incurred_on", data.hasta);
+    if (gastosError)
+      throw new Error(mensajeDb(gastosError, "No pudimos cargar los gastos del período."));
+
+    const gastoRows = gastos ?? [];
+    const expensesCents = gastoRows.reduce((sum, g) => sum + g.amount_cents, 0);
+
+    const byCategoryMap = new Map<string, { totalCents: number; count: number }>();
+    for (const g of gastoRows) {
+      const cur = byCategoryMap.get(g.category) ?? { totalCents: 0, count: 0 };
+      cur.totalCents += g.amount_cents;
+      cur.count += 1;
+      byCategoryMap.set(g.category, cur);
+    }
+    const byExpenseCategory = [...byCategoryMap.entries()]
+      .map(([category, v]) => ({ category, ...v }))
+      .sort((a, b) => b.totalCents - a.totalCents);
+
     return {
       currency,
       totalCents,
@@ -163,6 +223,12 @@ export const getFinanceSummary = createServerFn({ method: "GET" })
       byDay,
       byMethod,
       byProfessional,
+      netCents,
+      retentionCents,
+      expensesCents,
+      expensesCount: gastoRows.length,
+      byExpenseCategory,
+      resultCents: (netCents ?? totalCents) - expensesCents,
     };
   });
 
