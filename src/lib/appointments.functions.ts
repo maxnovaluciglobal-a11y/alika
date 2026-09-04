@@ -6,6 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { HORA_INICIO, type Cita, type EstadoCita } from "@/lib/clinic-data";
 import { mensajeDb } from "@/lib/db-errors";
 import { filaYaCreada } from "@/lib/idempotency";
+import { fetchPatientBalances } from "@/lib/patients.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 const DEFAULT_TIMEZONE = "America/Santiago";
@@ -512,4 +513,43 @@ export const setAppointmentStatus = createServerFn({ method: "POST" })
       .eq("id", data.appointmentId);
     if (error) throw new Error("No tienes permisos para actualizar esta cita.");
     return { ok: true };
+  });
+
+/**
+ * Situación financiera de un conjunto de pacientes, para mostrarla en la fila
+ * de cada cita de la agenda (G-3).
+ *
+ * Es el dato que recepción más usa en el mostrador: si el paciente que está
+ * llegando debe plata, hay que cobrarle antes de que entre al box. Dentalink
+ * lo muestra por fila y es probablemente el detalle más útil de su agenda.
+ *
+ * Una sola agregación por lote para toda la lista, no una consulta por fila:
+ * reusa `fetchPatientBalances`, el mismo helper que alimenta el saldo de la
+ * ficha y el aviso de `payment_due`, así que los tres números no pueden
+ * divergir (ver el comentario de "saldo fantasma" en finance-section.tsx).
+ *
+ * Un paciente sin plan de tratamiento no aparece en el mapa y la UI lo muestra
+ * como "sin datos", no como saldo cero — no es lo mismo no deber nada que no
+ * tener nada facturado todavía.
+ */
+export const getAppointmentPatientBalances = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        patientIds: z.array(z.string().uuid()).max(500),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<Record<string, number>> => {
+    if (!data.patientIds.length) return {};
+
+    const balances = await fetchPatientBalances(context.supabase, data.clinicId);
+    const pedidos = new Set(data.patientIds);
+    const out: Record<string, number> = {};
+    for (const [patientId, { billedCents, paidCents }] of balances) {
+      if (pedidos.has(patientId)) out[patientId] = billedCents - paidCents;
+    }
+    return out;
   });

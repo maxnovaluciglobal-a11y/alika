@@ -2172,9 +2172,12 @@ export type Database = {
           clinic_id: string;
           created_at: string;
           discount_cents: number;
+          discount_pct: number | null;
           id: string;
           name_snapshot: string;
           notes: string | null;
+          phase_label: string | null;
+          phase_position: number;
           position: number;
           procedure_id: string | null;
           quantity: number;
@@ -2188,9 +2191,12 @@ export type Database = {
           clinic_id: string;
           created_at?: string;
           discount_cents?: number;
+          discount_pct?: number | null;
           id?: string;
           name_snapshot: string;
           notes?: string | null;
+          phase_label?: string | null;
+          phase_position?: number;
           position?: number;
           procedure_id?: string | null;
           quantity?: number;
@@ -2204,9 +2210,12 @@ export type Database = {
           clinic_id?: string;
           created_at?: string;
           discount_cents?: number;
+          discount_pct?: number | null;
           id?: string;
           name_snapshot?: string;
           notes?: string | null;
+          phase_label?: string | null;
+          phase_position?: number;
           position?: number;
           procedure_id?: string | null;
           quantity?: number;
@@ -2250,6 +2259,7 @@ export type Database = {
           clinic_id: string;
           created_at: string;
           created_by: string;
+          commercial_discount_pct: number | null;
           currency: string;
           discount_cents: number;
           id: string;
@@ -2273,6 +2283,7 @@ export type Database = {
           clinic_id: string;
           created_at?: string;
           created_by?: string;
+          commercial_discount_pct?: number | null;
           currency?: string;
           discount_cents?: number;
           id?: string;
@@ -2296,6 +2307,7 @@ export type Database = {
           clinic_id?: string;
           created_at?: string;
           created_by?: string;
+          commercial_discount_pct?: number | null;
           currency?: string;
           discount_cents?: number;
           id?: string;
@@ -2453,6 +2465,8 @@ export type Database = {
           id: string;
           name_snapshot: string;
           notes: string | null;
+          phase_label: string | null;
+          phase_position: number;
           plan_id: string;
           position: number;
           price_cents: number;
@@ -2473,6 +2487,8 @@ export type Database = {
           id?: string;
           name_snapshot: string;
           notes?: string | null;
+          phase_label?: string | null;
+          phase_position?: number;
           plan_id: string;
           position?: number;
           price_cents: number;
@@ -2493,6 +2509,8 @@ export type Database = {
           id?: string;
           name_snapshot?: string;
           notes?: string | null;
+          phase_label?: string | null;
+          phase_position?: number;
           plan_id?: string;
           position?: number;
           price_cents?: number;

@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState, type KeyboardEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { History, Info, List, LayoutGrid, Loader2, RotateCcw, X } from "lucide-react";
+import { History, Info, List, LayoutGrid, Loader2, Receipt, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { useOfflineMutation } from "@/hooks/use-offline-mutation";
@@ -348,9 +348,23 @@ interface Props {
   patientId: string;
   puedeEditar: boolean;
   userId: string;
+  /**
+   * Manda la pieza seleccionada al presupuesto (G-1). Cuando está presente, el
+   * popover ofrece "Presupuestar" además de las condiciones clínicas — es el
+   * puente entre registrar qué le pasa a un diente y cobrarlo, que hasta ahora
+   * eran dos pantallas sin conexión pese a que `quote_items` ya guardaba pieza
+   * y superficie.
+   */
+  onPresupuestarPieza?: (pieza: { tooth: number; surface: ToothSurface }) => void;
 }
 
-export function Odontogram({ clinicId, patientId, puedeEditar, userId }: Props) {
+export function Odontogram({
+  clinicId,
+  patientId,
+  puedeEditar,
+  userId,
+  onPresupuestarPieza,
+}: Props) {
   const queryClient = useQueryClient();
   const fetchMarks = useServerFn(listOdontogramMarks);
   const fetchHistory = useServerFn(listOdontogramHistory);
@@ -588,6 +602,17 @@ export function Odontogram({ clinicId, patientId, puedeEditar, userId }: Props) 
                 <X className="size-3.5" />
               </button>
             </div>
+            {onPresupuestarPieza && (
+              <button
+                onClick={() => {
+                  onPresupuestarPieza({ tooth: selection.tooth, surface: selection.surface });
+                  setSelection(null);
+                }}
+                className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-md bg-brand px-2 py-1.5 text-[11px] font-medium text-brand-foreground transition-colors hover:bg-brand/90"
+              >
+                <Receipt className="size-3.5" /> Presupuestar esta pieza
+              </button>
+            )}
             {!puedeEditar ? (
               <p className="text-[11px] text-muted-foreground">
                 Tu rol no puede modificar el odontograma.

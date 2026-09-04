@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -13,7 +14,7 @@ import { PatientDocumentsCard } from "@/components/patient-documents-card";
 import { PatientConsentsCard } from "@/components/patient-consents-card";
 import { Odontogram } from "@/components/odontogram";
 import { PeriodontalChart } from "@/components/periodontal-chart";
-import { FinanceSection } from "@/components/finance-section";
+import { FinanceSection, type PiezaSeed } from "@/components/finance-section";
 import { MessagesHistory } from "@/components/messages-history";
 import { WhatsAppOptInToggle } from "@/components/whatsapp-opt-in-toggle";
 import { PortalLinkButton, RevokePortalAccessButton } from "@/components/portal-link-button";
@@ -114,6 +115,11 @@ function PacienteDetalle() {
   const { paciente } = Route.useLoaderData() as { paciente: Paciente };
   const puedeVerClinico = hasPermission(access.role, "clinical:view");
   const clinicId = access.clinic?.id;
+  const puedeFacturar = hasPermission(access.role, "patients:manage");
+
+  // Puente odontograma → presupuesto (G-1). El `nonce` hace que clickear dos
+  // veces la misma pieza vuelva a abrir el diálogo en vez de no hacer nada.
+  const [piezaSeed, setPiezaSeed] = useState<PiezaSeed | null>(null);
 
   const fetchMedicalHistory = useServerFn(getMedicalHistory);
   const medicalHistoryQuery = useQuery({
@@ -269,6 +275,11 @@ function PacienteDetalle() {
                     patientId={paciente.id}
                     puedeEditar={hasPermission(access.role, "clinical:write")}
                     userId={access.userId}
+                    onPresupuestarPieza={
+                      puedeFacturar
+                        ? (pieza) => setPiezaSeed({ ...pieza, nonce: Date.now() })
+                        : undefined
+                    }
                   />
                 )}
 
@@ -311,8 +322,10 @@ function PacienteDetalle() {
                 clinicId={access.clinic.id}
                 clinicaNombre={access.clinic.name}
                 patientId={paciente.id}
-                puedeEditar={hasPermission(access.role, "patients:manage")}
+                puedeEditar={puedeFacturar}
                 userId={access.userId}
+                piezaSeed={piezaSeed}
+                onPiezaSeedConsumido={() => setPiezaSeed(null)}
               />
             )}
 

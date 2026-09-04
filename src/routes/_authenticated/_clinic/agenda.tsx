@@ -61,8 +61,10 @@ import {
 const HOY = hoyISO();
 import { listBranches, listProfessionals } from "@/lib/clinic-catalog.functions";
 import { listProcedures } from "@/lib/finance.functions";
+import { formatMoney } from "@/lib/finance";
 import { listPatients } from "@/lib/patients.functions";
 import { listAllergyAlerts } from "@/lib/medical-history.functions";
+import { getAppointmentPatientBalances } from "@/lib/appointments.functions";
 import {
   createAppointment,
   listAppointments,
@@ -236,6 +238,45 @@ function claseEstadoBadge(estado: EstadoCita) {
  * bubbling de eventos de portales por el árbol de componentes, no por el
  * DOM físico, así que el wrapper los agarra igual.
  */
+/**
+ * Situación financiera del paciente en la fila de la agenda (G-3).
+ *
+ * Tres estados y no dos: "sin datos" (el paciente no tiene ningún plan
+ * facturado todavía) es distinto de "al día" (tiene planes y no debe nada), y
+ * confundirlos haría que un paciente nuevo se vea igual que uno que ya pagó
+ * todo. Regla 11 del CLAUDE.md: placeholder nullable, nunca fabricar el cero.
+ */
+function SaldoBadge({
+  saldoCents,
+  currency,
+}: {
+  saldoCents: number | undefined;
+  currency: string;
+}) {
+  if (saldoCents === undefined) {
+    return <span className="text-[11px] text-muted-foreground">Sin datos</span>;
+  }
+  if (saldoCents > 0) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded bg-destructive/10 px-1.5 py-0.5 text-[11px] font-medium text-destructive">
+        Debe {formatMoney(saldoCents, currency)}
+      </span>
+    );
+  }
+  if (saldoCents < 0) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded bg-ai-soft px-1.5 py-0.5 text-[11px] font-medium text-ai">
+        A favor {formatMoney(-saldoCents, currency)}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded bg-success-soft px-1.5 py-0.5 text-[11px] font-medium text-success">
+      Al día
+    </span>
+  );
+}
+
 function CambiarEstadoMenu({
   clinicId,
   userId,
@@ -947,6 +988,7 @@ function AgendaPage() {
   const fetchPatients = useServerFn(listPatients);
   const fetchWaitlist = useServerFn(listWaitlist);
   const fetchAllergyAlerts = useServerFn(listAllergyAlerts);
+  const fetchBalances = useServerFn(getAppointmentPatientBalances);
 
   const { data: appointmentsRes, isLoading } = useQuery({
     queryKey: ["appointments", clinicId],
@@ -974,6 +1016,7 @@ function AgendaPage() {
     enabled: Boolean(clinicId) && hasPermission(access.role, "clinical:view"),
     queryFn: () => fetchAllergyAlerts({ data: { clinicId: clinicId! } }),
   });
+
   const { data: sucursales = [] } = useQuery({
     queryKey: ["branches", clinicId],
     enabled: Boolean(clinicId),
@@ -1089,6 +1132,22 @@ function AgendaPage() {
     [filtradas],
   );
   const pagina = paginar(ordenadas, search.page);
+
+  // G-3: situación financiera de los pacientes visibles en la página, para que
+  // recepción sepa a quién cobrarle antes de que entre al box. Una sola
+  // agregación por lote (igual que las alergias), acotada a la página y no a
+  // la clínica entera. Gate `finance:view`: un asistente clínico no ve deudas.
+  const puedeVerSaldos = hasPermission(access.role, "finance:view");
+  const pacienteIdsVisibles = useMemo(
+    () => [...new Set(pagina.items.map((c) => c.pacienteId))].sort(),
+    [pagina.items],
+  );
+  const { data: saldos = {} } = useQuery({
+    queryKey: ["appointment-balances", clinicId, pacienteIdsVisibles],
+    enabled: Boolean(clinicId) && puedeVerSaldos && pacienteIdsVisibles.length > 0,
+    queryFn: () =>
+      fetchBalances({ data: { clinicId: clinicId!, patientIds: pacienteIdsVisibles } }),
+  });
   const activos =
     [search.q, search.sucursal, search.profesional, search.estado].filter(Boolean).length +
     (search.fecha !== hoy ? 1 : 0);
@@ -1277,7 +1336,15 @@ function AgendaPage() {
                       <span className="text-xs text-muted-foreground">
                         {profesionalNombre} · {sucursalNombre}
                       </span>
-                      <span className="text-xs text-muted-foreground">{c.duracion} min</span>
+                      <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        {c.duracion} min
+                        {puedeVerSaldos && (
+                          <SaldoBadge
+                            saldoCents={saldos[c.pacienteId]}
+                            currency={access.clinic?.currency ?? "CLP"}
+                          />
+                        )}
+                      </span>
                       {clinicId && hasPermission(access.role, "agenda:manage") ? (
                         <span className="flex items-center gap-1">
                           <CambiarEstadoMenu

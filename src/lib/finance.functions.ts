@@ -118,9 +118,9 @@ export const createProcedure = createServerFn({ method: "POST" })
 // ─── QUOTES ──────────────────────────────────────────────────────────────
 
 const QUOTE_COLUMNS =
-  "id, number, status, currency, subtotal_cents, discount_cents, total_cents, notes, valid_until, sent_at, accepted_at, rejected_at, accepted_by_name, created_at";
+  "id, number, status, currency, subtotal_cents, discount_cents, commercial_discount_pct, total_cents, notes, valid_until, sent_at, accepted_at, rejected_at, accepted_by_name, created_at";
 const QUOTE_ITEM_COLUMNS =
-  "id, quote_id, procedure_id, name_snapshot, tooth_number, surface, quantity, unit_price_cents, discount_cents, total_cents, position, notes";
+  "id, quote_id, procedure_id, name_snapshot, tooth_number, surface, quantity, unit_price_cents, discount_cents, discount_pct, total_cents, phase_label, phase_position, position, notes";
 
 type QuoteRow = {
   id: string;
@@ -129,6 +129,7 @@ type QuoteRow = {
   currency: string;
   subtotal_cents: number;
   discount_cents: number;
+  commercial_discount_pct: number | null;
   total_cents: number;
   notes: string | null;
   valid_until: string | null;
@@ -148,7 +149,10 @@ type QuoteItemRow = {
   quantity: number;
   unit_price_cents: number;
   discount_cents: number;
+  discount_pct: number | null;
   total_cents: number;
+  phase_label: string | null;
+  phase_position: number;
   position: number;
   notes: string | null;
 };
@@ -163,7 +167,10 @@ function mapQuoteItem(row: QuoteItemRow): QuoteItem {
     quantity: row.quantity,
     unitPriceCents: row.unit_price_cents,
     discountCents: row.discount_cents,
+    discountPct: row.discount_pct,
     totalCents: row.total_cents,
+    phaseLabel: row.phase_label,
+    phasePosition: row.phase_position,
     position: row.position,
     notes: row.notes,
   };
@@ -177,6 +184,7 @@ function mapQuote(row: QuoteRow, items: QuoteItem[]): Quote {
     currency: row.currency,
     subtotalCents: row.subtotal_cents,
     discountCents: row.discount_cents,
+    commercialDiscountPct: row.commercial_discount_pct,
     totalCents: row.total_cents,
     notes: row.notes,
     validUntil: row.valid_until,
@@ -217,6 +225,7 @@ export const listQuotes = createServerFn({ method: "GET" })
         "quote_id",
         quotes.map((q) => q.id),
       )
+      .order("phase_position", { ascending: true })
       .order("position", { ascending: true });
 
     if (itemsError)
@@ -239,8 +248,110 @@ const QuoteItemInput = z.object({
   quantity: z.number().int().min(1).max(20).default(1),
   unitPriceCents: z.number().int().min(0),
   discountCents: z.number().int().min(0).default(0),
+  /** Si viene, manda sobre `discountCents`: el server deriva los cents. */
+  discountPct: z.number().min(0).max(100).nullish(),
+  phaseLabel: z.string().trim().max(60).nullish(),
+  phasePosition: z.number().int().min(0).max(999).default(0),
   notes: z.string().trim().max(300).optional(),
 });
+
+type QuoteItemDraft = z.infer<typeof QuoteItemInput>;
+
+/**
+ * Resuelve el descuento de un ítem a cents, que es la única verdad contable
+ * (regla 6). Cuando el usuario negoció en porcentaje, el porcentaje manda y
+ * los cents se derivan; cuando cargó pesos, el porcentaje queda `null`.
+ *
+ * El descuento nunca puede superar la línea: un 100% deja el ítem en cero, no
+ * en negativo, y el CHECK de la tabla exige `discount_cents >= 0`.
+ */
+function resolveItemDiscount(item: QuoteItemDraft): {
+  discountCents: number;
+  discountPct: number | null;
+} {
+  const lineCents = item.quantity * item.unitPriceCents;
+  if (item.discountPct === null || item.discountPct === undefined) {
+    return { discountCents: Math.min(item.discountCents, lineCents), discountPct: null };
+  }
+  return {
+    discountCents: Math.min(Math.round((lineCents * item.discountPct) / 100), lineCents),
+    discountPct: item.discountPct,
+  };
+}
+
+/**
+ * Totales del presupuesto a partir de sus ítems. Extraído porque `createQuote`
+ * y `updateQuote` lo calculaban duplicado y ahora además tienen que resolver
+ * el porcentaje por línea y el descuento comercial global.
+ *
+ * `position` se reasigna por índice dentro de cada fase, no sobre la lista
+ * entera: así dos ítems de fases distintas pueden ambos ser el primero de su
+ * bloque y el orden se lee correcto al agrupar.
+ */
+function computeQuoteTotals(
+  items: QuoteItemDraft[],
+  globalDiscountCents: number,
+  commercialDiscountPct: number | null | undefined,
+) {
+  const positionByPhase = new Map<string, number>();
+
+  const resolved = items.map((item) => {
+    const { discountCents, discountPct } = resolveItemDiscount(item);
+    const phaseLabel = item.phaseLabel?.trim() || null;
+    const phaseKey = phaseLabel ?? "";
+    const position = positionByPhase.get(phaseKey) ?? 0;
+    positionByPhase.set(phaseKey, position + 1);
+
+    return {
+      ...item,
+      phaseLabel,
+      phasePosition: phaseLabel ? item.phasePosition : 0,
+      discountCents,
+      discountPct,
+      position,
+      total: Math.max(0, item.quantity * item.unitPriceCents - discountCents),
+    };
+  });
+
+  const subtotal = resolved.reduce((sum, item) => sum + item.total, 0);
+  const discount =
+    commercialDiscountPct === null || commercialDiscountPct === undefined
+      ? Math.min(globalDiscountCents, subtotal)
+      : Math.min(Math.round((subtotal * commercialDiscountPct) / 100), subtotal);
+
+  return {
+    items: resolved,
+    subtotal,
+    discountCents: discount,
+    commercialDiscountPct: commercialDiscountPct ?? null,
+    total: Math.max(0, subtotal - discount),
+  };
+}
+
+/** Fila lista para insertar en `quote_items`, compartida por create y update. */
+function quoteItemRow(
+  item: ReturnType<typeof computeQuoteTotals>["items"][number],
+  clinicId: string,
+  quoteId: string,
+) {
+  return {
+    clinic_id: clinicId,
+    quote_id: quoteId,
+    procedure_id: item.procedureId ?? null,
+    name_snapshot: item.nameSnapshot,
+    tooth_number: item.toothNumber ?? null,
+    surface: item.surface ?? null,
+    quantity: item.quantity,
+    unit_price_cents: item.unitPriceCents,
+    discount_cents: item.discountCents,
+    discount_pct: item.discountPct,
+    total_cents: item.total,
+    phase_label: item.phaseLabel,
+    phase_position: item.phasePosition,
+    position: item.position,
+    notes: item.notes || null,
+  };
+}
 
 /**
  * Crea un presupuesto con sus ítems. Genera un número correlativo por clínica
@@ -258,6 +369,7 @@ export const createQuote = createServerFn({ method: "POST" })
         notes: z.string().trim().max(1000).optional(),
         validUntil: z.string().optional(),
         globalDiscountCents: z.number().int().min(0).default(0),
+        commercialDiscountPct: z.number().min(0).max(100).nullish(),
         items: z.array(QuoteItemInput).min(1, "Agrega al menos un ítem."),
       })
       .parse(input),
@@ -286,12 +398,11 @@ export const createQuote = createServerFn({ method: "POST" })
     if (rpcErr) throw new Error("No pudimos generar el número de presupuesto. " + rpcErr.message);
     const nextNumber = `P-${year}-${String(nextValue as number).padStart(4, "0")}`;
 
-    const itemsWithTotals = data.items.map((it, i) => {
-      const total = Math.max(0, it.quantity * it.unitPriceCents - it.discountCents);
-      return { ...it, position: i, total };
-    });
-    const subtotal = itemsWithTotals.reduce((s, it) => s + it.total, 0);
-    const total = Math.max(0, subtotal - data.globalDiscountCents);
+    const totals = computeQuoteTotals(
+      data.items,
+      data.globalDiscountCents,
+      data.commercialDiscountPct,
+    );
 
     const { data: quoteRow, error: qErr } = await supabase
       .from("quotes")
@@ -302,31 +413,19 @@ export const createQuote = createServerFn({ method: "POST" })
         currency: data.currency,
         notes: data.notes || null,
         valid_until: data.validUntil || null,
-        subtotal_cents: subtotal,
-        discount_cents: data.globalDiscountCents,
-        total_cents: total,
+        subtotal_cents: totals.subtotal,
+        discount_cents: totals.discountCents,
+        commercial_discount_pct: totals.commercialDiscountPct,
+        total_cents: totals.total,
       })
       .select("id, number")
       .single();
 
     if (qErr) throw new Error("No pudimos crear el presupuesto. " + qErr.message);
 
-    const { error: iErr } = await supabase.from("quote_items").insert(
-      itemsWithTotals.map((it) => ({
-        clinic_id: data.clinicId,
-        quote_id: quoteRow.id,
-        procedure_id: it.procedureId ?? null,
-        name_snapshot: it.nameSnapshot,
-        tooth_number: it.toothNumber ?? null,
-        surface: it.surface ?? null,
-        quantity: it.quantity,
-        unit_price_cents: it.unitPriceCents,
-        discount_cents: it.discountCents,
-        total_cents: it.total,
-        position: it.position,
-        notes: it.notes || null,
-      })),
-    );
+    const { error: iErr } = await supabase
+      .from("quote_items")
+      .insert(totals.items.map((it) => quoteItemRow(it, data.clinicId, quoteRow.id)));
 
     if (iErr) {
       // Best-effort rollback manual (no hay transacciones cross-request en la
@@ -359,6 +458,7 @@ export const updateQuote = createServerFn({ method: "POST" })
         notes: z.string().trim().max(1000).optional(),
         validUntil: z.string().optional(),
         globalDiscountCents: z.number().int().min(0).default(0),
+        commercialDiscountPct: z.number().min(0).max(100).nullish(),
         items: z.array(QuoteItemInput).min(1, "Agrega al menos un ítem."),
       })
       .parse(input),
@@ -380,12 +480,11 @@ export const updateQuote = createServerFn({ method: "POST" })
       );
     }
 
-    const itemsWithTotals = data.items.map((it, i) => {
-      const total = Math.max(0, it.quantity * it.unitPriceCents - it.discountCents);
-      return { ...it, position: i, total };
-    });
-    const subtotal = itemsWithTotals.reduce((s, it) => s + it.total, 0);
-    const total = Math.max(0, subtotal - data.globalDiscountCents);
+    const totals = computeQuoteTotals(
+      data.items,
+      data.globalDiscountCents,
+      data.commercialDiscountPct,
+    );
 
     const { error: delErr } = await supabase
       .from("quote_items")
@@ -394,22 +493,9 @@ export const updateQuote = createServerFn({ method: "POST" })
     if (delErr)
       throw new Error("No pudimos actualizar los ítems del presupuesto. " + delErr.message);
 
-    const { error: insErr } = await supabase.from("quote_items").insert(
-      itemsWithTotals.map((it) => ({
-        clinic_id: data.clinicId,
-        quote_id: data.quoteId,
-        procedure_id: it.procedureId ?? null,
-        name_snapshot: it.nameSnapshot,
-        tooth_number: it.toothNumber ?? null,
-        surface: it.surface ?? null,
-        quantity: it.quantity,
-        unit_price_cents: it.unitPriceCents,
-        discount_cents: it.discountCents,
-        total_cents: it.total,
-        position: it.position,
-        notes: it.notes || null,
-      })),
-    );
+    const { error: insErr } = await supabase
+      .from("quote_items")
+      .insert(totals.items.map((it) => quoteItemRow(it, data.clinicId, data.quoteId)));
     if (insErr) throw new Error("No pudimos guardar los ítems del presupuesto. " + insErr.message);
 
     const { error: updErr } = await supabase
@@ -417,9 +503,10 @@ export const updateQuote = createServerFn({ method: "POST" })
       .update({
         notes: data.notes || null,
         valid_until: data.validUntil || null,
-        subtotal_cents: subtotal,
-        discount_cents: data.globalDiscountCents,
-        total_cents: total,
+        subtotal_cents: totals.subtotal,
+        discount_cents: totals.discountCents,
+        commercial_discount_pct: totals.commercialDiscountPct,
+        total_cents: totals.total,
       })
       .eq("id", data.quoteId)
       .eq("clinic_id", data.clinicId);
@@ -530,7 +617,7 @@ export const setQuoteStatus = createServerFn({ method: "POST" })
 const PLAN_COLUMNS =
   "id, quote_id, name, status, total_cents, currency, started_at, completed_at, notes, created_at";
 const ITEM_COLUMNS =
-  "id, procedure_id, quote_item_id, name_snapshot, tooth_number, surface, status, price_cents, position, professional_id, scheduled_appointment_id, completed_at, notes";
+  "id, procedure_id, quote_item_id, name_snapshot, tooth_number, surface, status, price_cents, phase_label, phase_position, position, professional_id, scheduled_appointment_id, completed_at, notes";
 
 type PlanRow = {
   id: string;
@@ -553,6 +640,8 @@ type PlanItemRow = {
   surface: string | null;
   status: string;
   price_cents: number;
+  phase_label: string | null;
+  phase_position: number;
   position: number;
   professional_id: string | null;
   scheduled_appointment_id: string | null;
@@ -570,6 +659,8 @@ function mapPlanItem(row: PlanItemRow): TreatmentItem {
     surface: row.surface as TreatmentItem["surface"],
     status: row.status as TreatmentItem["status"],
     priceCents: row.price_cents,
+    phaseLabel: row.phase_label,
+    phasePosition: row.phase_position,
     position: row.position,
     professionalId: row.professional_id,
     scheduledAppointmentId: row.scheduled_appointment_id,
@@ -624,6 +715,7 @@ export const listTreatmentPlans = createServerFn({ method: "GET" })
         "plan_id",
         plans.map((p) => p.id),
       )
+      .order("phase_position", { ascending: true })
       .order("position", { ascending: true });
 
     if (itemsError)

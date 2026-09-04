@@ -59,7 +59,16 @@ export interface QuoteItem {
   quantity: number;
   unitPriceCents: number;
   discountCents: number;
+  /**
+   * Descuento negociado en % del que se derivó `discountCents`. `null` cuando
+   * el descuento se cargó directamente en pesos — no es un 0, es "no aplica"
+   * (regla 11). La verdad contable siempre es `discountCents`.
+   */
+  discountPct: number | null;
   totalCents: number;
+  /** Bloque que agrupa el ítem ("Fase 1", "Rehabilitación"). `null` = sin fase. */
+  phaseLabel: string | null;
+  phasePosition: number;
   position: number;
   notes: string | null;
 }
@@ -71,6 +80,8 @@ export interface Quote {
   currency: string;
   subtotalCents: number;
   discountCents: number;
+  /** Descuento comercial global en %. `null` = se cargó en pesos o no hay. */
+  commercialDiscountPct: number | null;
   totalCents: number;
   notes: string | null;
   validUntil: string | null;
@@ -91,6 +102,9 @@ export interface TreatmentItem {
   surface: ToothSurface | null;
   status: TreatmentItemStatus;
   priceCents: number;
+  /** Heredado del `quote_item` al aceptar el presupuesto. `null` = sin fase. */
+  phaseLabel: string | null;
+  phasePosition: number;
   position: number;
   professionalId: string | null;
   scheduledAppointmentId: string | null;
@@ -134,6 +148,100 @@ export interface Payment {
   treatmentPlanId: string | null;
   treatmentItemId: string | null;
   createdById: string;
+}
+
+/** Etiqueta del bloque implícito que junta los ítems sin fase asignada. */
+export const SIN_FASE_LABEL = "Sin fase";
+
+export interface PhaseGroup<T> {
+  /** `null` para el bloque implícito de ítems sin fase. */
+  label: string | null;
+  phasePosition: number;
+  items: T[];
+  subtotalCents: number;
+}
+
+/**
+ * Agrupa ítems de presupuesto o de plan en bloques por `phaseLabel`, para
+ * renderizar el subtotal por fase que espera un dentista (G-2).
+ *
+ * Agrupa por `phaseLabel` y no por `phasePosition` a propósito: la etiqueta es
+ * lo que el usuario escribió y lo que ve, y dos ítems con el mismo nombre de
+ * fase tienen que caer juntos aunque sus `phase_position` se hayan desfasado
+ * por una edición. La posición solo ordena los bloques entre sí.
+ *
+ * Los ítems sin fase salen siempre primero — es el equivalente de la "Sección
+ * sin nombre" de Dentalink, donde vive lo que se cargó antes de que existieran
+ * las fases y lo que no pertenece a ninguna etapa.
+ */
+export function groupByPhase<
+  T extends { phaseLabel: string | null; phasePosition: number; position: number },
+>(items: T[], amount: (item: T) => number): PhaseGroup<T>[] {
+  // Clave `string | null`: un Map de JS acepta null como clave, así que el
+  // bloque sin fase no necesita un centinela de texto que podría colisionar
+  // con una fase que la clínica llame igual.
+  const groups = new Map<string | null, PhaseGroup<T>>();
+
+  for (const item of items) {
+    const key = item.phaseLabel;
+    let group = groups.get(key);
+    if (!group) {
+      group = {
+        label: item.phaseLabel,
+        // Los sin-fase se fuerzan al principio; el resto respeta lo guardado.
+        phasePosition: item.phaseLabel === null ? -1 : item.phasePosition,
+        items: [],
+        subtotalCents: 0,
+      };
+      groups.set(key, group);
+    }
+    group.items.push(item);
+    group.subtotalCents += amount(item);
+  }
+
+  const ordered = [...groups.values()].sort(
+    (a, b) => a.phasePosition - b.phasePosition || (a.label ?? "").localeCompare(b.label ?? ""),
+  );
+  for (const group of ordered) group.items.sort((a, b) => a.position - b.position);
+  return ordered;
+}
+
+/** Estado de cobro de un ítem del plan, para el semáforo por línea (G-5). */
+export type ItemPaymentState = "unpaid" | "partial" | "paid";
+
+export const ITEM_PAYMENT_LABELS: Record<ItemPaymentState, string> = {
+  unpaid: "Sin pagos imputados",
+  partial: "Pago parcial",
+  paid: "Pagado",
+};
+
+/**
+ * Cuánto se pagó de cada ítem del plan, mirando `payments.treatment_item_id`.
+ * Devuelve cents por id de ítem; un ítem ausente del mapa no tiene pagos.
+ *
+ * Solo cuenta los pagos imputados a un ítem concreto: un pago suelto contra el
+ * plan entero no se prorratea entre las líneas, porque repartirlo inventaría
+ * una imputación que nadie hizo y el semáforo mentiría. Un plan cobrado
+ * globalmente muestra todas sus líneas en "Sin pagos imputados", que es la
+ * verdad — el saldo real del paciente sigue estando en el encabezado de la
+ * ficha, calculado server-side sobre el total.
+ */
+export function paidCentsByItem(payments: Payment[]): Map<string, number> {
+  const paidByItem = new Map<string, number>();
+  for (const payment of payments) {
+    if (!payment.treatmentItemId) continue;
+    paidByItem.set(
+      payment.treatmentItemId,
+      (paidByItem.get(payment.treatmentItemId) ?? 0) + payment.amountCents,
+    );
+  }
+  return paidByItem;
+}
+
+/** Resuelve el semáforo de un ítem contra lo que se le imputó. */
+export function itemPaymentState(paidCents: number, priceCents: number): ItemPaymentState {
+  if (paidCents <= 0) return "unpaid";
+  return paidCents >= priceCents ? "paid" : "partial";
 }
 
 /**

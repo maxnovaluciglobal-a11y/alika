@@ -42,13 +42,19 @@ import {
 import { Label } from "@/components/ui/label";
 import { SignaturePad } from "@/components/signature-pad";
 import {
+  ITEM_PAYMENT_LABELS,
   PAYMENT_METHODS,
   PAYMENT_METHOD_LABELS,
   QUOTE_STATUS_LABELS,
+  SIN_FASE_LABEL,
   TREATMENT_ITEM_STATUSES,
   TREATMENT_ITEM_STATUS_LABELS,
   TREATMENT_PLAN_STATUS_LABELS,
   formatMoney,
+  groupByPhase,
+  itemPaymentState,
+  paidCentsByItem,
+  type ItemPaymentState,
   type PaymentMethod,
   type Procedure,
   type Quote,
@@ -56,6 +62,14 @@ import {
   type TreatmentItemStatus,
   type TreatmentPlan,
 } from "@/lib/finance";
+import {
+  FDI_ALL_ADULT,
+  FDI_ALL_PRIMARY,
+  SURFACE_LABELS,
+  TOOTH_SURFACES,
+  toothCommonName,
+  type ToothSurface,
+} from "@/lib/odontogram";
 import {
   createProcedure,
   createQuote,
@@ -78,6 +92,13 @@ interface Props {
   puedeEditar: boolean;
   /** Dueño de lo que quede en la cola offline (ver `offline-queue.ts`). */
   userId: string;
+  /**
+   * Pieza que el odontograma mandó a presupuestar (G-1). Al cambiar, abre el
+   * diálogo de nuevo presupuesto con esa pieza ya cargada en la primera línea.
+   */
+  piezaSeed?: PiezaSeed | null;
+  /** Se llama al cerrar el diálogo, para que el padre limpie el seed. */
+  onPiezaSeedConsumido?: () => void;
 }
 
 interface DraftItem {
@@ -86,17 +107,283 @@ interface DraftItem {
   quantity: number;
   unitPrice: number; // pesos (sin cents) — CLP no usa decimales, el resto sí. La conversión al server se hace vía toCents
   discount: number;
+  /**
+   * Cómo se está negociando el descuento de esta línea. En "pct" el valor de
+   * `discount` es un porcentaje y el server deriva los pesos; en "amount" son
+   * pesos directos. El dentista negocia casi siempre en porcentaje, pero el
+   * campo guardado sigue siendo cents (ver `resolveItemDiscount`).
+   */
+  discountMode: "amount" | "pct";
+  toothNumber: number | null;
+  surface: ToothSurface | null;
+  phaseLabel: string;
   notes: string;
 }
 
-const emptyItem = (): DraftItem => ({
+const emptyItem = (overrides: Partial<DraftItem> = {}): DraftItem => ({
   procedureId: null,
   nameSnapshot: "",
   quantity: 1,
   unitPrice: 0,
   discount: 0,
+  discountMode: "amount",
+  toothNumber: null,
+  surface: null,
+  phaseLabel: "",
   notes: "",
+  ...overrides,
 });
+
+/** DraftItem → payload del server. Compartido por crear y editar. */
+function draftToInput(it: DraftItem) {
+  return {
+    procedureId: it.procedureId ?? undefined,
+    nameSnapshot: it.nameSnapshot.trim(),
+    toothNumber: it.toothNumber ?? undefined,
+    surface: it.surface ?? undefined,
+    quantity: it.quantity,
+    unitPriceCents: it.unitPrice,
+    discountCents: it.discountMode === "amount" ? it.discount : 0,
+    discountPct: it.discountMode === "pct" ? it.discount : null,
+    phaseLabel: it.phaseLabel.trim() || null,
+    notes: it.notes.trim() || undefined,
+  };
+}
+
+/** QuoteItem guardado → DraftItem, para precargar el diálogo de edición. */
+function quoteItemToDraft(it: Quote["items"][number]): DraftItem {
+  return {
+    procedureId: it.procedureId,
+    nameSnapshot: it.nameSnapshot,
+    quantity: it.quantity,
+    unitPrice: it.unitPriceCents,
+    discount: it.discountPct ?? it.discountCents,
+    discountMode: it.discountPct === null ? "amount" : "pct",
+    toothNumber: it.toothNumber,
+    surface: it.surface,
+    phaseLabel: it.phaseLabel ?? "",
+    notes: it.notes ?? "",
+  };
+}
+
+/** Descuento de una línea en pesos, con la misma regla que el server. */
+function draftDiscountCents(it: DraftItem): number {
+  const line = it.quantity * it.unitPrice;
+  if (it.discountMode === "amount") return Math.min(it.discount, line);
+  return Math.min(Math.round((line * it.discount) / 100), line);
+}
+
+function draftLineTotal(it: DraftItem): number {
+  return Math.max(0, it.quantity * it.unitPrice - draftDiscountCents(it));
+}
+
+const INPUT_CLASS =
+  "rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50";
+
+/**
+ * Editor de las líneas de un presupuesto. Extraído de
+ * `NuevoPresupuestoDialog`/`EditarPresupuestoDialog`, que tenían el formulario
+ * duplicado carácter por carácter — al sumar pieza, superficie, fase y
+ * descuento en % (Tanda A) mantener las dos copias en sincronía dejaba de ser
+ * viable.
+ */
+function QuoteItemsEditor({
+  items,
+  setItems,
+  procedures,
+  currency,
+}: {
+  items: DraftItem[];
+  setItems: React.Dispatch<React.SetStateAction<DraftItem[]>>;
+  procedures: Procedure[];
+  currency: string;
+}) {
+  const patch = (idx: number, cambios: Partial<DraftItem>) =>
+    setItems((arr) => arr.map((x, j) => (j === idx ? { ...x, ...cambios } : x)));
+
+  const pickProcedure = (idx: number, procId: string) => {
+    if (!procId) return patch(idx, { procedureId: null });
+    const p = procedures.find((x) => x.id === procId);
+    if (!p) return;
+    patch(idx, { procedureId: p.id, nameSnapshot: p.name, unitPrice: p.defaultPriceCents });
+  };
+
+  // Fases ya usadas en este presupuesto: alimentan el datalist para que la
+  // segunda línea de "Fase 1" se escriba igual que la primera y agrupen juntas.
+  const fasesUsadas = useMemo(
+    () => [...new Set(items.map((it) => it.phaseLabel.trim()).filter(Boolean))],
+    [items],
+  );
+
+  return (
+    <div className="space-y-2">
+      <datalist id="fases-presupuesto">
+        {fasesUsadas.map((f) => (
+          <option key={f} value={f} />
+        ))}
+      </datalist>
+
+      {items.map((it, i) => (
+        <div key={i} className="space-y-2 rounded-lg border border-hairline p-2">
+          <div className="flex items-start gap-2">
+            <div className="min-w-0 flex-1 space-y-1">
+              <select
+                value={it.procedureId ?? ""}
+                onChange={(e) => pickProcedure(i, e.target.value)}
+                aria-label={`Prestación del ítem ${i + 1}`}
+                className={cn(INPUT_CLASS, "w-full")}
+              >
+                <option value="">— Elegir del catálogo o escribir libre —</option>
+                {procedures.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} · {formatMoney(p.defaultPriceCents, p.currency)}
+                  </option>
+                ))}
+              </select>
+              <input
+                value={it.nameSnapshot}
+                onChange={(e) => patch(i, { nameSnapshot: e.target.value })}
+                placeholder="Descripción del ítem"
+                aria-label={`Descripción del ítem ${i + 1}`}
+                className={cn(INPUT_CLASS, "w-full")}
+              />
+            </div>
+            <button
+              onClick={() => setItems((arr) => arr.filter((_, j) => j !== i))}
+              disabled={items.length === 1}
+              aria-label={`Quitar ítem ${i + 1}`}
+              className="rounded-md p-1 text-muted-foreground hover:bg-secondary disabled:opacity-30"
+            >
+              <Trash2 className="size-3.5" />
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              value={it.phaseLabel}
+              onChange={(e) => patch(i, { phaseLabel: e.target.value })}
+              list="fases-presupuesto"
+              placeholder="Fase"
+              title="Bloque que agrupa este ítem. Vacío = sin fase."
+              aria-label={`Fase del ítem ${i + 1}`}
+              className={cn(INPUT_CLASS, "w-28")}
+            />
+
+            <select
+              value={it.toothNumber ?? ""}
+              onChange={(e) =>
+                patch(i, {
+                  toothNumber: e.target.value ? Number(e.target.value) : null,
+                  surface: e.target.value ? it.surface : null,
+                })
+              }
+              title="Pieza dental (FDI)"
+              aria-label={`Pieza del ítem ${i + 1}`}
+              className={cn(INPUT_CLASS, "w-24")}
+            >
+              <option value="">Sin pieza</option>
+              <optgroup label="Permanente">
+                {FDI_ALL_ADULT.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Temporal">
+                {FDI_ALL_PRIMARY.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+
+            <select
+              value={it.surface ?? ""}
+              onChange={(e) =>
+                patch(i, { surface: (e.target.value || null) as ToothSurface | null })
+              }
+              disabled={it.toothNumber === null}
+              title="Superficie de la pieza"
+              aria-label={`Superficie del ítem ${i + 1}`}
+              className={cn(INPUT_CLASS, "w-32 disabled:opacity-40")}
+            >
+              <option value="">Toda la pieza</option>
+              {TOOTH_SURFACES.filter((s) => s !== "whole").map((s) => (
+                <option key={s} value={s}>
+                  {SURFACE_LABELS[s]}
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="number"
+              min={1}
+              max={20}
+              value={it.quantity}
+              onChange={(e) => patch(i, { quantity: Number(e.target.value) })}
+              title="Cantidad"
+              aria-label={`Cantidad del ítem ${i + 1}`}
+              className={cn(INPUT_CLASS, "w-14")}
+            />
+            <input
+              type="number"
+              min={0}
+              value={it.unitPrice}
+              onChange={(e) => patch(i, { unitPrice: Number(e.target.value) })}
+              title="Precio unitario"
+              aria-label={`Precio unitario del ítem ${i + 1}`}
+              className={cn(INPUT_CLASS, "w-24")}
+            />
+
+            <div className="flex items-center">
+              <input
+                type="number"
+                min={0}
+                max={it.discountMode === "pct" ? 100 : undefined}
+                value={it.discount}
+                onChange={(e) => patch(i, { discount: Number(e.target.value) })}
+                title={it.discountMode === "pct" ? "Descuento en %" : "Descuento en pesos"}
+                aria-label={`Descuento del ítem ${i + 1}`}
+                placeholder="Desc."
+                className={cn(INPUT_CLASS, "w-16 rounded-r-none")}
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  patch(i, {
+                    discountMode: it.discountMode === "amount" ? "pct" : "amount",
+                    discount: 0,
+                  })
+                }
+                title="Cambiar entre descuento en pesos y en porcentaje"
+                aria-label={`Descuento del ítem ${i + 1} en ${
+                  it.discountMode === "amount" ? "pesos" : "porcentaje"
+                }. Cambiar.`}
+                className="rounded-r-md border border-l-0 border-hairline px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary"
+              >
+                {it.discountMode === "amount" ? "$" : "%"}
+              </button>
+            </div>
+
+            <span className="ml-auto font-mono text-xs text-muted-foreground">
+              {formatMoney(draftLineTotal(it), currency)}
+            </span>
+          </div>
+        </div>
+      ))}
+
+      <button
+        onClick={() =>
+          setItems((arr) => [...arr, emptyItem({ phaseLabel: arr.at(-1)?.phaseLabel ?? "" })])
+        }
+        className="inline-flex items-center gap-1 text-[11px] font-medium text-brand hover:underline"
+      >
+        <Plus className="size-3" /> Agregar otro ítem
+      </button>
+    </div>
+  );
+}
 
 function QuoteStatusBadge({ status }: { status: QuoteStatus }) {
   const tone: Record<QuoteStatus, string> = {
@@ -112,6 +399,63 @@ function QuoteStatusBadge({ status }: { status: QuoteStatus }) {
       className={cn("inline-block rounded px-1.5 py-0.5 text-[10px] font-medium", tone[status])}
     >
       {QUOTE_STATUS_LABELS[status]}
+    </span>
+  );
+}
+
+/** ¿Vale la pena mostrar encabezados de fase en este plan/presupuesto? */
+function planTieneFases(contenedor: { items: { phaseLabel: string | null }[] }): boolean {
+  return contenedor.items.some((it) => it.phaseLabel !== null);
+}
+
+/**
+ * Semáforo de cobro de una línea (G-5). Es un punto de color con el detalle
+ * en el `title`, no un badge de texto: la fila del plan ya tiene nombre,
+ * pieza, precio y estado clínico, y una etiqueta más la vuelve ilegible.
+ */
+function PagoDot({
+  estado,
+  pagado,
+  total,
+  currency,
+}: {
+  estado: ItemPaymentState;
+  pagado: number;
+  total: number;
+  currency: string;
+}) {
+  const tono: Record<ItemPaymentState, string> = {
+    unpaid: "bg-muted-foreground/30",
+    partial: "bg-warning",
+    paid: "bg-success",
+  };
+  const detalle =
+    estado === "unpaid"
+      ? ITEM_PAYMENT_LABELS.unpaid
+      : `${ITEM_PAYMENT_LABELS[estado]} · ${formatMoney(pagado, currency)} de ${formatMoney(total, currency)}`;
+  return (
+    <span
+      role="img"
+      aria-label={detalle}
+      title={detalle}
+      className={cn("size-2 shrink-0 rounded-full", tono[estado])}
+    />
+  );
+}
+
+/** Pieza y superficie de un ítem, con el nombre común en el tooltip. */
+function PiezaTag({ tooth, surface }: { tooth: number; surface: ToothSurface | null }) {
+  const comun = toothCommonName(tooth);
+  const zona = surface && surface !== "whole" ? SURFACE_LABELS[surface] : null;
+  return (
+    <span
+      title={[comun ? `Diente ${tooth} (${comun})` : `Diente ${tooth}`, zona]
+        .filter(Boolean)
+        .join(" · ")}
+      className="shrink-0 rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground"
+    >
+      {tooth}
+      {zona && <span className="ml-1 font-sans">{zona.slice(0, 3)}</span>}
     </span>
   );
 }
@@ -249,28 +593,107 @@ function NuevoProcedimientoInline({
   );
 }
 
+/** Pieza que el odontograma mandó a presupuestar (G-1). */
+export interface PiezaSeed {
+  tooth: number;
+  surface: ToothSurface;
+  /** Cambia en cada click aunque la pieza sea la misma, para reabrir el diálogo. */
+  nonce: number;
+}
+
+/** Encabezado con el total y el descuento comercial en %, compartido por ambos diálogos. */
+function TotalesPresupuesto({
+  subtotal,
+  descuentoPct,
+  setDescuentoPct,
+  currency,
+}: {
+  subtotal: number;
+  descuentoPct: number;
+  setDescuentoPct: (v: number) => void;
+  currency: string;
+}) {
+  const descuento = Math.min(Math.round((subtotal * descuentoPct) / 100), subtotal);
+  return (
+    <div className="space-y-1.5 border-t border-hairline pt-3 text-sm">
+      <div className="flex items-center justify-end gap-3">
+        <span className="text-muted-foreground">Subtotal</span>
+        <span className="w-32 text-right font-mono text-xs">{formatMoney(subtotal, currency)}</span>
+      </div>
+      <div className="flex items-center justify-end gap-3">
+        <label htmlFor="desc-comercial" className="text-muted-foreground">
+          Descuento comercial
+        </label>
+        <div className="flex items-center gap-1">
+          <input
+            id="desc-comercial"
+            type="number"
+            min={0}
+            max={100}
+            value={descuentoPct}
+            onChange={(e) => setDescuentoPct(Math.min(100, Math.max(0, Number(e.target.value))))}
+            className={cn(INPUT_CLASS, "w-16 text-right")}
+          />
+          <span className="text-xs text-muted-foreground">%</span>
+        </div>
+        <span className="w-32 text-right font-mono text-xs text-muted-foreground">
+          {descuento > 0 ? `− ${formatMoney(descuento, currency)}` : "—"}
+        </span>
+      </div>
+      <div className="flex items-center justify-end gap-3 pt-1">
+        <span className="text-muted-foreground">Total</span>
+        <span className="w-32 text-right font-display text-lg font-semibold">
+          {formatMoney(Math.max(0, subtotal - descuento), currency)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function NuevoPresupuestoDialog({
   clinicId,
   patientId,
   procedures,
+  seed,
+  onSeedConsumido,
 }: {
   clinicId: string;
   patientId: string;
   procedures: Procedure[];
+  /** Cuando llega una pieza desde el odontograma, el diálogo se abre solo. */
+  seed?: PiezaSeed | null;
+  onSeedConsumido?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [notes, setNotes] = useState("");
+  const [descuentoPct, setDescuentoPct] = useState(0);
   const [items, setItems] = useState<DraftItem[]>([emptyItem()]);
+  const [seedAplicado, setSeedAplicado] = useState<number | null>(null);
   const queryClient = useQueryClient();
   const createFn = useServerFn(createQuote);
 
-  const totals = useMemo(() => {
-    const subtotal = items.reduce(
-      (s, it) => s + Math.max(0, it.quantity * it.unitPrice - it.discount),
-      0,
-    );
-    return { subtotal, total: subtotal };
-  }, [items]);
+  // Abrir con la pieza precargada cuando el odontograma manda una. Se compara
+  // por `nonce` y no por pieza para que clickear dos veces el mismo diente
+  // vuelva a abrir el diálogo.
+  if (seed && seed.nonce !== seedAplicado) {
+    setSeedAplicado(seed.nonce);
+    setItems([
+      emptyItem({
+        toothNumber: seed.tooth,
+        surface: seed.surface === "whole" ? null : seed.surface,
+      }),
+    ]);
+    setNotes("");
+    setDescuentoPct(0);
+    setOpen(true);
+  }
+
+  const subtotal = useMemo(() => items.reduce((s, it) => s + draftLineTotal(it), 0), [items]);
+
+  const cerrar = (next: boolean) => {
+    setOpen(next);
+    if (!next) onSeedConsumido?.();
+  };
 
   const create = useMutation({
     mutationFn: () =>
@@ -279,54 +702,36 @@ function NuevoPresupuestoDialog({
           clinicId,
           patientId,
           notes: notes.trim() || undefined,
-          items: items
-            .filter((it) => it.nameSnapshot.trim())
-            .map((it) => ({
-              procedureId: it.procedureId ?? undefined,
-              nameSnapshot: it.nameSnapshot.trim(),
-              quantity: it.quantity,
-              unitPriceCents: it.unitPrice,
-              discountCents: it.discount,
-              notes: it.notes.trim() || undefined,
-            })),
+          commercialDiscountPct: descuentoPct > 0 ? descuentoPct : null,
+          items: items.filter((it) => it.nameSnapshot.trim()).map(draftToInput),
         },
       }),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["quotes", clinicId, patientId] });
       toast.success(`Presupuesto ${res.number} creado`);
-      setOpen(false);
+      cerrar(false);
       setNotes("");
+      setDescuentoPct(0);
       setItems([emptyItem()]);
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const pickProcedure = (idx: number, procId: string) => {
-    const p = procedures.find((x) => x.id === procId);
-    if (!p) return;
-    setItems((arr) =>
-      arr.map((it, i) =>
-        i === idx
-          ? { ...it, procedureId: p.id, nameSnapshot: p.name, unitPrice: p.defaultPriceCents }
-          : it,
-      ),
-    );
-  };
-
   const puedeCrear = items.some((it) => it.nameSnapshot.trim()) && !create.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={cerrar}>
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="size-4" /> Nuevo presupuesto
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Nuevo presupuesto</DialogTitle>
           <DialogDescription>
-            Cada ítem del presupuesto se convierte en un tratamiento del plan cuando lo aceptes.
+            Agrupá las prestaciones en fases si el tratamiento va por etapas. Cada ítem se convierte
+            en un tratamiento del plan cuando aceptes el presupuesto.
           </DialogDescription>
         </DialogHeader>
 
@@ -355,100 +760,12 @@ function NuevoPresupuestoDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            {items.map((it, i) => (
-              <div
-                key={i}
-                className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 rounded-lg border border-hairline p-2"
-              >
-                <div className="min-w-0 space-y-1">
-                  <select
-                    value={it.procedureId ?? ""}
-                    onChange={(e) =>
-                      e.target.value
-                        ? pickProcedure(i, e.target.value)
-                        : setItems((arr) =>
-                            arr.map((x, j) => (j === i ? { ...x, procedureId: null } : x)),
-                          )
-                    }
-                    className="w-full rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
-                  >
-                    <option value="">— Elegir del catálogo o escribir libre —</option>
-                    {procedures.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} · {formatMoney(p.defaultPriceCents, p.currency)}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    value={it.nameSnapshot}
-                    onChange={(e) =>
-                      setItems((arr) =>
-                        arr.map((x, j) => (j === i ? { ...x, nameSnapshot: e.target.value } : x)),
-                      )
-                    }
-                    placeholder="Descripción del ítem"
-                    className="w-full rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
-                  />
-                </div>
-                <input
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={it.quantity}
-                  onChange={(e) =>
-                    setItems((arr) =>
-                      arr.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) } : x)),
-                    )
-                  }
-                  title="Cantidad"
-                  className="w-14 rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
-                />
-                <input
-                  type="number"
-                  min={0}
-                  value={it.unitPrice}
-                  onChange={(e) =>
-                    setItems((arr) =>
-                      arr.map((x, j) =>
-                        j === i ? { ...x, unitPrice: Number(e.target.value) } : x,
-                      ),
-                    )
-                  }
-                  title="Precio unitario (CLP)"
-                  className="w-24 rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
-                />
-                <input
-                  type="number"
-                  min={0}
-                  value={it.discount}
-                  onChange={(e) =>
-                    setItems((arr) =>
-                      arr.map((x, j) => (j === i ? { ...x, discount: Number(e.target.value) } : x)),
-                    )
-                  }
-                  title="Descuento (CLP)"
-                  placeholder="Desc."
-                  className="w-20 rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
-                />
-                <button
-                  onClick={() => setItems((arr) => arr.filter((_, j) => j !== i))}
-                  disabled={items.length === 1}
-                  aria-label="Quitar"
-                  className="rounded-md p-1 text-muted-foreground hover:bg-secondary disabled:opacity-30"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={() => setItems((arr) => [...arr, emptyItem()])}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-brand hover:underline"
-          >
-            <Plus className="size-3" /> Agregar otro ítem
-          </button>
+          <QuoteItemsEditor
+            items={items}
+            setItems={setItems}
+            procedures={procedures}
+            currency="CLP"
+          />
 
           <div className="space-y-1.5">
             <Label htmlFor="q-notes">Notas</Label>
@@ -462,10 +779,12 @@ function NuevoPresupuestoDialog({
             />
           </div>
 
-          <div className="flex items-center justify-end gap-4 border-t border-hairline pt-3 text-sm">
-            <span className="text-muted-foreground">Total</span>
-            <span className="font-display text-lg font-semibold">{formatMoney(totals.total)}</span>
-          </div>
+          <TotalesPresupuesto
+            subtotal={subtotal}
+            descuentoPct={descuentoPct}
+            setDescuentoPct={setDescuentoPct}
+            currency="CLP"
+          />
         </div>
 
         <DialogFooter>
@@ -500,43 +819,21 @@ function EditarPresupuestoDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [notes, setNotes] = useState(quote.notes ?? "");
-  const [items, setItems] = useState<DraftItem[]>(
-    quote.items.map((it) => ({
-      procedureId: it.procedureId,
-      nameSnapshot: it.nameSnapshot,
-      quantity: it.quantity,
-      unitPrice: it.unitPriceCents,
-      discount: it.discountCents,
-      notes: it.notes ?? "",
-    })),
-  );
+  const [descuentoPct, setDescuentoPct] = useState(quote.commercialDiscountPct ?? 0);
+  const [items, setItems] = useState<DraftItem[]>(quote.items.map(quoteItemToDraft));
   const queryClient = useQueryClient();
   const updateFn = useServerFn(updateQuote);
 
   function reabrirConValoresActuales(next: boolean) {
     if (next) {
       setNotes(quote.notes ?? "");
-      setItems(
-        quote.items.map((it) => ({
-          procedureId: it.procedureId,
-          nameSnapshot: it.nameSnapshot,
-          quantity: it.quantity,
-          unitPrice: it.unitPriceCents,
-          discount: it.discountCents,
-          notes: it.notes ?? "",
-        })),
-      );
+      setDescuentoPct(quote.commercialDiscountPct ?? 0);
+      setItems(quote.items.map(quoteItemToDraft));
     }
     setOpen(next);
   }
 
-  const totals = useMemo(() => {
-    const subtotal = items.reduce(
-      (s, it) => s + Math.max(0, it.quantity * it.unitPrice - it.discount),
-      0,
-    );
-    return { subtotal, total: subtotal };
-  }, [items]);
+  const subtotal = useMemo(() => items.reduce((s, it) => s + draftLineTotal(it), 0), [items]);
 
   const update = useMutation({
     mutationFn: () =>
@@ -546,16 +843,8 @@ function EditarPresupuestoDialog({
           clinicId,
           notes: notes.trim() || undefined,
           validUntil: quote.validUntil ?? undefined,
-          items: items
-            .filter((it) => it.nameSnapshot.trim())
-            .map((it) => ({
-              procedureId: it.procedureId ?? undefined,
-              nameSnapshot: it.nameSnapshot.trim(),
-              quantity: it.quantity,
-              unitPriceCents: it.unitPrice,
-              discountCents: it.discount,
-              notes: it.notes.trim() || undefined,
-            })),
+          commercialDiscountPct: descuentoPct > 0 ? descuentoPct : null,
+          items: items.filter((it) => it.nameSnapshot.trim()).map(draftToInput),
         },
       }),
     onSuccess: () => {
@@ -566,18 +855,6 @@ function EditarPresupuestoDialog({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const pickProcedure = (idx: number, procId: string) => {
-    const p = procedures.find((x) => x.id === procId);
-    if (!p) return;
-    setItems((arr) =>
-      arr.map((it, i) =>
-        i === idx
-          ? { ...it, procedureId: p.id, nameSnapshot: p.name, unitPrice: p.defaultPriceCents }
-          : it,
-      ),
-    );
-  };
-
   const puedeGuardar = items.some((it) => it.nameSnapshot.trim()) && !update.isPending;
 
   return (
@@ -587,7 +864,7 @@ function EditarPresupuestoDialog({
           <Pencil className="size-3.5" /> Editar
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Editar presupuesto {quote.number}</DialogTitle>
           <DialogDescription>
@@ -596,100 +873,12 @@ function EditarPresupuestoDialog({
         </DialogHeader>
 
         <div className="space-y-3">
-          <div className="space-y-2">
-            {items.map((it, i) => (
-              <div
-                key={i}
-                className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 rounded-lg border border-hairline p-2"
-              >
-                <div className="min-w-0 space-y-1">
-                  <select
-                    value={it.procedureId ?? ""}
-                    onChange={(e) =>
-                      e.target.value
-                        ? pickProcedure(i, e.target.value)
-                        : setItems((arr) =>
-                            arr.map((x, j) => (j === i ? { ...x, procedureId: null } : x)),
-                          )
-                    }
-                    className="w-full rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
-                  >
-                    <option value="">— Elegir del catálogo o escribir libre —</option>
-                    {procedures.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} · {formatMoney(p.defaultPriceCents, p.currency)}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    value={it.nameSnapshot}
-                    onChange={(e) =>
-                      setItems((arr) =>
-                        arr.map((x, j) => (j === i ? { ...x, nameSnapshot: e.target.value } : x)),
-                      )
-                    }
-                    placeholder="Descripción del ítem"
-                    className="w-full rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
-                  />
-                </div>
-                <input
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={it.quantity}
-                  onChange={(e) =>
-                    setItems((arr) =>
-                      arr.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) } : x)),
-                    )
-                  }
-                  title="Cantidad"
-                  className="w-14 rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
-                />
-                <input
-                  type="number"
-                  min={0}
-                  value={it.unitPrice}
-                  onChange={(e) =>
-                    setItems((arr) =>
-                      arr.map((x, j) =>
-                        j === i ? { ...x, unitPrice: Number(e.target.value) } : x,
-                      ),
-                    )
-                  }
-                  title="Precio unitario"
-                  className="w-24 rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
-                />
-                <input
-                  type="number"
-                  min={0}
-                  value={it.discount}
-                  onChange={(e) =>
-                    setItems((arr) =>
-                      arr.map((x, j) => (j === i ? { ...x, discount: Number(e.target.value) } : x)),
-                    )
-                  }
-                  title="Descuento"
-                  placeholder="Desc."
-                  className="w-20 rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
-                />
-                <button
-                  onClick={() => setItems((arr) => arr.filter((_, j) => j !== i))}
-                  disabled={items.length === 1}
-                  aria-label="Quitar"
-                  className="rounded-md p-1 text-muted-foreground hover:bg-secondary disabled:opacity-30"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={() => setItems((arr) => [...arr, emptyItem()])}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-brand hover:underline"
-          >
-            <Plus className="size-3" /> Agregar otro ítem
-          </button>
+          <QuoteItemsEditor
+            items={items}
+            setItems={setItems}
+            procedures={procedures}
+            currency={quote.currency}
+          />
 
           <div className="space-y-1.5">
             <Label htmlFor="eq-notes">Notas</Label>
@@ -703,10 +892,12 @@ function EditarPresupuestoDialog({
             />
           </div>
 
-          <div className="flex items-center justify-end gap-4 border-t border-hairline pt-3 text-sm">
-            <span className="text-muted-foreground">Total</span>
-            <span className="font-display text-lg font-semibold">{formatMoney(totals.total)}</span>
-          </div>
+          <TotalesPresupuesto
+            subtotal={subtotal}
+            descuentoPct={descuentoPct}
+            setDescuentoPct={setDescuentoPct}
+            currency={quote.currency}
+          />
         </div>
 
         <DialogFooter>
@@ -946,7 +1137,15 @@ function AceptarPresupuestoDialog({
   );
 }
 
-export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar, userId }: Props) {
+export function FinanceSection({
+  clinicId,
+  clinicaNombre,
+  patientId,
+  puedeEditar,
+  userId,
+  piezaSeed,
+  onPiezaSeedConsumido,
+}: Props) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const [expandedQuote, setExpandedQuote] = useState<string | null>(null);
@@ -968,11 +1167,19 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
   const setStatusFn = useServerFn(setQuoteStatus);
   const setItemFn = useServerFn(setTreatmentItemStatus);
 
-  const { data: quotes = [], isLoading: qLoading } = useQuery({
+  const {
+    data: quotes = [],
+    isLoading: qLoading,
+    error: qError,
+  } = useQuery({
     queryKey: ["quotes", clinicId, patientId],
     queryFn: () => fetchQuotes({ data: { clinicId, patientId } }),
   });
-  const { data: plans = [], isLoading: pLoading } = useQuery({
+  const {
+    data: plans = [],
+    isLoading: pLoading,
+    error: pError,
+  } = useQuery({
     queryKey: ["treatment-plans", clinicId, patientId],
     queryFn: () => fetchPlans({ data: { clinicId, patientId } }),
   });
@@ -984,6 +1191,9 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
     queryKey: ["payments", clinicId, patientId],
     queryFn: () => fetchPayments({ data: { clinicId, patientId } }),
   });
+
+  /** Cents imputados a cada ítem del plan, para el semáforo por línea (G-5). */
+  const pagosPorItem = useMemo(() => paidCentsByItem(payments), [payments]);
 
   // Resumen de saldo calculado client-side desde plans + payments — tiene que
   // coincidir con el saldo del header (calculado server-side en getPatient).
@@ -1055,6 +1265,12 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
   });
 
   const isLoading = qLoading || pLoading;
+  // `useQuery` con `data = []` por defecto convierte un error del servidor en
+  // una lista vacía, y la sección termina diciendo "sin presupuestos" cuando
+  // en realidad la consulta falló. Distinguir los dos casos importa: acá se
+  // muestra plata, y un error leído como "no hay nada" hace que alguien
+  // cobre de menos.
+  const loadError = qError ?? pError;
 
   return (
     <div className="card-clinical p-6">
@@ -1079,6 +1295,8 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
               clinicId={clinicId}
               patientId={patientId}
               procedures={procedures}
+              seed={piezaSeed}
+              onSeedConsumido={onPiezaSeedConsumido}
             />
           </div>
         )}
@@ -1116,6 +1334,17 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
       )}
 
       {isLoading && <p className="text-xs text-muted-foreground">Cargando…</p>}
+
+      {!isLoading && loadError && (
+        <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-xs text-destructive">
+          <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+          <p>
+            No pudimos cargar los presupuestos y planes de este paciente, así que lo que ves abajo
+            está incompleto — no asumas que no tiene nada cargado. Recargá la página; si sigue
+            igual, avisá al equipo antes de cobrarle.
+          </p>
+        </div>
+      )}
 
       {!isLoading && (
         <div className="space-y-6">
@@ -1159,24 +1388,52 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
                     </div>
                   </button>
                   {isOpen && (
-                    <div className="divide-y divide-hairline border-t border-hairline">
-                      {plan.items.map((it) => (
-                        <div key={it.id} className="flex items-center gap-3 px-4 py-2 text-xs">
-                          <span className="w-8 text-center font-mono text-muted-foreground">
-                            {it.position + 1}
-                          </span>
-                          <span className="min-w-0 flex-1 truncate">{it.nameSnapshot}</span>
-                          {it.toothNumber && (
-                            <span className="text-muted-foreground">Pieza {it.toothNumber}</span>
+                    <div className="border-t border-hairline">
+                      {groupByPhase(plan.items, (it) => it.priceCents).map((fase) => (
+                        <div key={fase.label ?? "sin-fase"}>
+                          {/* El encabezado de fase solo aparece si el plan usa
+                              fases: un plan de una sola línea no necesita el
+                              ruido de una "Sin fase" que no agrupa nada. */}
+                          {planTieneFases(plan) && (
+                            <div className="flex items-center justify-between gap-3 bg-secondary/40 px-4 py-1.5">
+                              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                {fase.label ?? SIN_FASE_LABEL}
+                              </span>
+                              <span className="font-mono text-[11px] text-muted-foreground">
+                                {formatMoney(fase.subtotalCents, plan.currency)}
+                              </span>
+                            </div>
                           )}
-                          <span className="font-mono text-muted-foreground">
-                            {formatMoney(it.priceCents, plan.currency)}
-                          </span>
-                          <ItemStatusPicker
-                            current={it.status}
-                            disabled={!puedeEditar}
-                            onChange={(s) => setItem.mutate({ itemId: it.id, status: s })}
-                          />
+                          <div className="divide-y divide-hairline">
+                            {fase.items.map((it) => (
+                              <div
+                                key={it.id}
+                                className="flex items-center gap-3 px-4 py-2 text-xs"
+                              >
+                                <PagoDot
+                                  estado={itemPaymentState(
+                                    pagosPorItem.get(it.id) ?? 0,
+                                    it.priceCents,
+                                  )}
+                                  pagado={pagosPorItem.get(it.id) ?? 0}
+                                  total={it.priceCents}
+                                  currency={plan.currency}
+                                />
+                                <span className="min-w-0 flex-1 truncate">{it.nameSnapshot}</span>
+                                {it.toothNumber && (
+                                  <PiezaTag tooth={it.toothNumber} surface={it.surface} />
+                                )}
+                                <span className="font-mono text-muted-foreground">
+                                  {formatMoney(it.priceCents, plan.currency)}
+                                </span>
+                                <ItemStatusPicker
+                                  current={it.status}
+                                  disabled={!puedeEditar}
+                                  onChange={(s) => setItem.mutate({ itemId: it.id, status: s })}
+                                />
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1244,25 +1501,61 @@ export function FinanceSection({ clinicId, clinicaNombre, patientId, puedeEditar
                   )}
                   {isOpen && (
                     <>
-                      <div className="divide-y divide-hairline border-t border-hairline">
-                        {quote.items.map((it) => (
-                          <div
-                            key={it.id}
-                            className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 px-4 py-2 text-xs"
-                          >
-                            <span className="w-6 text-center font-mono text-muted-foreground">
-                              {it.position + 1}
-                            </span>
-                            <span className="min-w-0 truncate">{it.nameSnapshot}</span>
-                            <span className="text-muted-foreground">×{it.quantity}</span>
-                            <span className="font-mono text-muted-foreground">
-                              {formatMoney(it.unitPriceCents, quote.currency)}
-                            </span>
-                            <span className="font-mono font-medium">
-                              {formatMoney(it.totalCents, quote.currency)}
-                            </span>
+                      <div className="border-t border-hairline">
+                        {groupByPhase(quote.items, (it) => it.totalCents).map((fase) => (
+                          <div key={fase.label ?? "sin-fase"}>
+                            {planTieneFases(quote) && (
+                              <div className="flex items-center justify-between gap-3 bg-secondary/40 px-4 py-1.5">
+                                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                  {fase.label ?? SIN_FASE_LABEL}
+                                </span>
+                                <span className="font-mono text-[11px] text-muted-foreground">
+                                  {formatMoney(fase.subtotalCents, quote.currency)}
+                                </span>
+                              </div>
+                            )}
+                            <div className="divide-y divide-hairline">
+                              {fase.items.map((it) => (
+                                <div
+                                  key={it.id}
+                                  className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-3 px-4 py-2 text-xs"
+                                >
+                                  <span className="min-w-0 truncate">{it.nameSnapshot}</span>
+                                  {it.toothNumber ? (
+                                    <PiezaTag tooth={it.toothNumber} surface={it.surface} />
+                                  ) : (
+                                    <span />
+                                  )}
+                                  <span className="text-muted-foreground">×{it.quantity}</span>
+                                  {/* El descuento se muestra como se negoció:
+                                      en % si así se cargó, en pesos si no. */}
+                                  <span className="font-mono text-muted-foreground">
+                                    {it.discountPct !== null
+                                      ? `−${it.discountPct}%`
+                                      : it.discountCents > 0
+                                        ? `−${formatMoney(it.discountCents, quote.currency)}`
+                                        : formatMoney(it.unitPriceCents, quote.currency)}
+                                  </span>
+                                  <span className="font-mono font-medium">
+                                    {formatMoney(it.totalCents, quote.currency)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         ))}
+                        {quote.discountCents > 0 && (
+                          <div className="flex items-center justify-end gap-3 border-t border-hairline px-4 py-2 text-xs">
+                            <span className="text-muted-foreground">
+                              Descuento comercial
+                              {quote.commercialDiscountPct !== null &&
+                                ` (${quote.commercialDiscountPct}%)`}
+                            </span>
+                            <span className="font-mono text-muted-foreground">
+                              − {formatMoney(quote.discountCents, quote.currency)}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-wrap items-center gap-2 border-t border-hairline px-4 py-2">
                         {canAccept && (
