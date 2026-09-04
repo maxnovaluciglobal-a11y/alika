@@ -58,7 +58,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/aranceles")({
 });
 
 const INPUT =
-  "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
+  "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 interface Draft {
   name: string;

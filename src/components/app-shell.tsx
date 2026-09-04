@@ -123,6 +123,12 @@ const navGroups: { section: string; items: readonly NavItem[] }[] = [
       { to: "/aranceles", label: "Arancel de precios", icon: Tags, permission: "settings:manage" },
       { to: "/convenios", label: "Convenios", icon: Handshake, permission: "settings:manage" },
       {
+        to: "/estados-de-cita",
+        label: "Estados de cita",
+        icon: CalendarCheck,
+        permission: "settings:manage",
+      },
+      {
         to: "/medios-de-pago",
         label: "Medios de pago",
         icon: CreditCard,

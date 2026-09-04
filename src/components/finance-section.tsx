@@ -179,7 +179,7 @@ function draftLineTotal(it: DraftItem): number {
 }
 
 const INPUT_CLASS =
-  "rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50";
+  "rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 /**
  * Editor de las líneas de un presupuesto. Extraído de
@@ -465,13 +465,17 @@ function ItemStatusPicker({
   current,
   onChange,
   disabled,
+  nombreItem,
 }: {
   current: TreatmentItemStatus;
   onChange: (s: TreatmentItemStatus) => void;
   disabled?: boolean;
+  /** Para el nombre accesible: sin esto son N selects que se anuncian igual. */
+  nombreItem: string;
 }) {
   return (
     <select
+      aria-label={`Estado de ${nombreItem}`}
       value={current}
       disabled={disabled}
       onChange={(e) => onChange(e.target.value as TreatmentItemStatus)}
@@ -563,7 +567,7 @@ function NuevoProcedimientoInline({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ej: Limpieza dental"
-              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -574,7 +578,7 @@ function NuevoProcedimientoInline({
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 placeholder="Preventiva"
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               />
             </div>
             <div className="space-y-1.5">
@@ -585,7 +589,7 @@ function NuevoProcedimientoInline({
                 min={0}
                 value={price}
                 onChange={(e) => setPrice(Number(e.target.value))}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               />
             </div>
           </div>
@@ -782,7 +786,7 @@ function NuevoPresupuestoDialog({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               placeholder="Observaciones o condiciones del presupuesto"
             />
           </div>
@@ -895,7 +899,7 @@ function EditarPresupuestoDialog({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               placeholder="Observaciones o condiciones del presupuesto"
             />
           </div>
@@ -1030,7 +1034,7 @@ function NuevoPagoDialog({
                 min={0}
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               />
             </div>
             <div className="space-y-1.5">
@@ -1048,7 +1052,7 @@ function NuevoPagoDialog({
                     const medio = mediosDePago.find((m) => m.id === id);
                     setMethod(medio?.legacyKey ?? "other");
                   }}
-                  className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                  className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
                   {mediosDePago.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -1062,7 +1066,7 @@ function NuevoPagoDialog({
                   id="pay-method"
                   value={method}
                   onChange={(e) => setMethod(e.target.value as PaymentMethod)}
-                  className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                  className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
                   {PAYMENT_METHODS.map((m) => (
                     <option key={m} value={m}>
@@ -1079,7 +1083,7 @@ function NuevoPagoDialog({
               id="pay-plan"
               value={planId}
               onChange={(e) => setPlanId(e.target.value)}
-              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               <option value="">A cuenta (sin asignar a un plan)</option>
               {plans.map((p) => (
@@ -1096,7 +1100,7 @@ function NuevoPagoDialog({
               value={reference}
               onChange={(e) => setReference(e.target.value)}
               placeholder="Nº de transacción, comprobante…"
-              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             />
           </div>
           <div className="space-y-1.5">
@@ -1106,7 +1110,7 @@ function NuevoPagoDialog({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             />
           </div>
         </div>
@@ -1158,7 +1162,7 @@ function AceptarPresupuestoDialog({
             <input
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               placeholder="Nombre del paciente o responsable"
             />
           </div>
@@ -1244,8 +1248,12 @@ export function FinanceSection({
   // Los planes cancelados no cuentan en la deuda comprometida (misma regla en
   // ambos lados).
   const planesActivos = plans.filter((p) => p.status !== "cancelled");
+  // `patientCents ?? priceCents`, igual que `fetchPatientBalances`: con
+  // convenio, lo que el paciente debe NO es el precio de la línea. Antes esta
+  // tarjeta sumaba el precio de lista y mostraba un número distinto al del
+  // header de la misma página (auditoría 04-sep).
   const totalBilled = planesActivos.reduce(
-    (s, p) => s + p.items.reduce((si, it) => si + it.priceCents, 0),
+    (s, p) => s + p.items.reduce((si, it) => si + (it.patientCents ?? it.priceCents), 0),
     0,
   );
   const totalPaid = payments.reduce((s, p) => s + p.amountCents, 0);
@@ -1433,64 +1441,70 @@ export function FinanceSection({
                   </button>
                   {isOpen && (
                     <div className="border-t border-hairline">
-                      {groupByPhase(plan.items, (it) => it.priceCents).map((fase) => (
-                        <div key={fase.label ?? "sin-fase"}>
-                          {/* El encabezado de fase solo aparece si el plan usa
+                      {groupByPhase(plan.items, (it) => it.patientCents ?? it.priceCents).map(
+                        (fase) => (
+                          <div key={fase.label ?? "sin-fase"}>
+                            {/* El encabezado de fase solo aparece si el plan usa
                               fases: un plan de una sola línea no necesita el
                               ruido de una "Sin fase" que no agrupa nada. */}
-                          {planTieneFases(plan) && (
-                            <div className="flex items-center justify-between gap-3 bg-secondary/40 px-4 py-1.5">
-                              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                {fase.label ?? SIN_FASE_LABEL}
-                              </span>
-                              <span className="font-mono text-[11px] text-muted-foreground">
-                                {formatMoney(fase.subtotalCents, plan.currency)}
-                              </span>
-                            </div>
-                          )}
-                          <div className="divide-y divide-hairline">
-                            {fase.items.map((it) => (
-                              <div
-                                key={it.id}
-                                className="flex items-center gap-3 px-4 py-2 text-xs"
-                              >
-                                <PagoDot
-                                  estado={itemPaymentState(
-                                    pagosPorItem.get(it.id) ?? 0,
-                                    it.priceCents,
-                                  )}
-                                  pagado={pagosPorItem.get(it.id) ?? 0}
-                                  total={it.priceCents}
-                                  currency={plan.currency}
-                                />
-                                <span className="min-w-0 flex-1 truncate">{it.nameSnapshot}</span>
-                                {it.toothNumber && (
-                                  <PiezaTag tooth={it.toothNumber} surface={it.surface} />
-                                )}
-                                <span className="font-mono text-muted-foreground">
-                                  {it.patientCents !== null && it.patientCents !== it.priceCents ? (
-                                    <span
-                                      title={`Precio ${formatMoney(it.priceCents, plan.currency)} · cubre el convenio ${formatMoney(it.coverageCents ?? 0, plan.currency)}`}
-                                    >
-                                      {formatMoney(it.patientCents, plan.currency)}
-                                      <span className="ml-1 text-[10px] line-through opacity-60">
-                                        {formatMoney(it.priceCents, plan.currency)}
-                                      </span>
-                                    </span>
-                                  ) : (
-                                    formatMoney(it.priceCents, plan.currency)
-                                  )}
+                            {planTieneFases(plan) && (
+                              <div className="flex items-center justify-between gap-3 bg-secondary/40 px-4 py-1.5">
+                                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                  {fase.label ?? SIN_FASE_LABEL}
                                 </span>
-                                <ItemStatusPicker
-                                  current={it.status}
-                                  disabled={!puedeEditar}
-                                  onChange={(s) => setItem.mutate({ itemId: it.id, status: s })}
-                                />
+                                <span className="font-mono text-[11px] text-muted-foreground">
+                                  {formatMoney(fase.subtotalCents, plan.currency)}
+                                </span>
                               </div>
-                            ))}
+                            )}
+                            <div className="divide-y divide-hairline">
+                              {fase.items.map((it) => (
+                                <div
+                                  key={it.id}
+                                  className="flex items-center gap-3 px-4 py-2 text-xs"
+                                >
+                                  <PagoDot
+                                    estado={itemPaymentState(
+                                      pagosPorItem.get(it.id) ?? 0,
+                                      // Contra lo que debe el paciente: con
+                                      // convenio, pagar su parte es pagar todo.
+                                      it.patientCents ?? it.priceCents,
+                                    )}
+                                    pagado={pagosPorItem.get(it.id) ?? 0}
+                                    total={it.patientCents ?? it.priceCents}
+                                    currency={plan.currency}
+                                  />
+                                  <span className="min-w-0 flex-1 truncate">{it.nameSnapshot}</span>
+                                  {it.toothNumber && (
+                                    <PiezaTag tooth={it.toothNumber} surface={it.surface} />
+                                  )}
+                                  <span className="font-mono text-muted-foreground">
+                                    {it.patientCents !== null &&
+                                    it.patientCents !== it.priceCents ? (
+                                      <span
+                                        title={`Precio ${formatMoney(it.priceCents, plan.currency)} · cubre el convenio ${formatMoney(it.coverageCents ?? 0, plan.currency)}`}
+                                      >
+                                        {formatMoney(it.patientCents, plan.currency)}
+                                        <span className="ml-1 text-[10px] line-through opacity-60">
+                                          {formatMoney(it.priceCents, plan.currency)}
+                                        </span>
+                                      </span>
+                                    ) : (
+                                      formatMoney(it.priceCents, plan.currency)
+                                    )}
+                                  </span>
+                                  <ItemStatusPicker
+                                    nombreItem={it.nameSnapshot}
+                                    current={it.status}
+                                    disabled={!puedeEditar}
+                                    onChange={(s) => setItem.mutate({ itemId: it.id, status: s })}
+                                  />
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ),
+                      )}
                     </div>
                   )}
                 </div>

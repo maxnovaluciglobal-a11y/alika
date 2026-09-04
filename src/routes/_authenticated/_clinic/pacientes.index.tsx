@@ -199,7 +199,12 @@ const MAX_FILAS_IMPORT = 2000;
 
 /** "Fecha de Nacimiento" / "fecha_nacimiento" / "Fecha nacimiento" → fecha_nacimiento. */
 function normalizarHeader(h: string): string {
-  return h.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, "_");
+  return h
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "_");
 }
 
 const CAMPO_POR_HEADER: Record<string, keyof FilaCsv> = {

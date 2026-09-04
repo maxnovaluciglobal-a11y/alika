@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { mensajeDb } from "@/lib/db-errors";
+import { permissionsForRole, type ClinicRole } from "@/lib/access";
 import { LAB_ORDER_STATUSES, type Lab, type LabOrder, type Warehouse } from "@/lib/finance";
 
 /**
@@ -66,7 +67,12 @@ export const createLab = createServerFn({ method: "POST" })
     if (error) {
       if (error.code === "23505")
         throw new Error(`Ya existe un laboratorio llamado "${data.name}".`);
-      throw new Error("No tienes permisos para configurar laboratorios. " + error.message);
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar laboratorios.",
+        ),
+      );
     }
     return { id: inserted.id };
   });
@@ -84,7 +90,13 @@ export const setLabActive = createServerFn({ method: "POST" })
       .update({ is_active: data.isActive })
       .eq("id", data.labId)
       .eq("clinic_id", data.clinicId);
-    if (error) throw new Error("No tienes permisos para configurar laboratorios. " + error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar laboratorios.",
+        ),
+      );
     return { ok: true };
   });
 
@@ -105,7 +117,21 @@ export const listLabOrders = createServerFn({ method: "GET" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<LabOrder[]> => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
+
+    // El costo es lo que la clínica le paga al laboratorio: mismo tipo de dato
+    // que un gasto. La fila entera es operativa y la ve todo el equipo, pero
+    // el número solo quien tiene `finance:view` (auditoría 04-sep).
+    const { data: membresia } = await supabase
+      .from("clinic_members")
+      .select("role")
+      .eq("clinic_id", data.clinicId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    const puedeVerCostos = membresia?.role
+      ? permissionsForRole(membresia.role as ClinicRole).includes("finance:view")
+      : false;
+
     let query = supabase
       .from("lab_orders")
       .select(LAB_ORDER_COLUMNS)
@@ -145,7 +171,7 @@ export const listLabOrders = createServerFn({ method: "GET" })
       sentOn: r.sent_on,
       dueOn: r.due_on,
       receivedOn: r.received_on,
-      costCents: r.cost_cents,
+      costCents: puedeVerCostos ? r.cost_cents : null,
       currency: r.currency,
       notes: r.notes,
     }));
@@ -209,7 +235,13 @@ export const createLabOrder = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error) throw new Error("No tienes permisos para registrar órdenes. " + error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda registrar órdenes.",
+        ),
+      );
     return { id: inserted.id };
   });
 
@@ -240,7 +272,13 @@ export const setLabOrderStatus = createServerFn({ method: "POST" })
       })
       .eq("id", data.orderId)
       .eq("clinic_id", data.clinicId);
-    if (error) throw new Error("No tienes permisos para editar órdenes. " + error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar órdenes.",
+        ),
+      );
     return { ok: true };
   });
 
@@ -291,7 +329,12 @@ export const createWarehouse = createServerFn({ method: "POST" })
       .single();
     if (error) {
       if (error.code === "23505") throw new Error(`Ya existe una bodega llamada "${data.name}".`);
-      throw new Error("No tienes permisos para configurar bodegas. " + error.message);
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar bodegas.",
+        ),
+      );
     }
     return { id: inserted.id };
   });
@@ -403,7 +446,12 @@ export const upsertAppointmentStatus = createServerFn({ method: "POST" })
           .insert({ clinic_id: data.clinicId, ...fila });
     if (error) {
       if (error.code === "23505") throw new Error(`Ya existe un estado llamado "${data.label}".`);
-      throw new Error("No tienes permisos para configurar estados de cita. " + error.message);
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar estados de cita.",
+        ),
+      );
     }
     return { ok: true };
   });
@@ -426,7 +474,12 @@ export const setAppointmentStatusActive = createServerFn({ method: "POST" })
       .eq("id", data.statusId)
       .eq("clinic_id", data.clinicId);
     if (error)
-      throw new Error("No tienes permisos para configurar estados de cita. " + error.message);
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar estados de cita.",
+        ),
+      );
     return { ok: true };
   });
 

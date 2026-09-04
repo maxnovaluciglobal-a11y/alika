@@ -43,6 +43,7 @@ import { Route as AuthenticatedClinicConveniosRouteImport } from './routes/_auth
 import { Route as AuthenticatedClinicDashboardRouteImport } from './routes/_authenticated/_clinic/dashboard'
 import { Route as AuthenticatedClinicDominioEmailRouteImport } from './routes/_authenticated/_clinic/dominio-email'
 import { Route as AuthenticatedClinicEquipoRouteImport } from './routes/_authenticated/_clinic/equipo'
+import { Route as AuthenticatedClinicEstadosDeCitaRouteImport } from './routes/_authenticated/_clinic/estados-de-cita'
 import { Route as AuthenticatedClinicFinanzasRouteImport } from './routes/_authenticated/_clinic/finanzas'
 import { Route as AuthenticatedClinicFusionarFichasRouteImport } from './routes/_authenticated/_clinic/fusionar-fichas'
 import { Route as AuthenticatedClinicGastosRouteImport } from './routes/_authenticated/_clinic/gastos'
@@ -242,6 +243,12 @@ const AuthenticatedClinicEquipoRoute =
     path: '/equipo',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
+const AuthenticatedClinicEstadosDeCitaRoute =
+  AuthenticatedClinicEstadosDeCitaRouteImport.update({
+    id: '/estados-de-cita',
+    path: '/estados-de-cita',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
 const AuthenticatedClinicFinanzasRoute =
   AuthenticatedClinicFinanzasRouteImport.update({
     id: '/finanzas',
@@ -395,6 +402,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedClinicDashboardRoute
   '/dominio-email': typeof AuthenticatedClinicDominioEmailRoute
   '/equipo': typeof AuthenticatedClinicEquipoRoute
+  '/estados-de-cita': typeof AuthenticatedClinicEstadosDeCitaRoute
   '/finanzas': typeof AuthenticatedClinicFinanzasRoute
   '/fusionar-fichas': typeof AuthenticatedClinicFusionarFichasRoute
   '/gastos': typeof AuthenticatedClinicGastosRoute
@@ -447,6 +455,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedClinicDashboardRoute
   '/dominio-email': typeof AuthenticatedClinicDominioEmailRoute
   '/equipo': typeof AuthenticatedClinicEquipoRoute
+  '/estados-de-cita': typeof AuthenticatedClinicEstadosDeCitaRoute
   '/finanzas': typeof AuthenticatedClinicFinanzasRoute
   '/fusionar-fichas': typeof AuthenticatedClinicFusionarFichasRoute
   '/gastos': typeof AuthenticatedClinicGastosRoute
@@ -504,6 +513,7 @@ export interface FileRoutesById {
   '/_authenticated/_clinic/dashboard': typeof AuthenticatedClinicDashboardRoute
   '/_authenticated/_clinic/dominio-email': typeof AuthenticatedClinicDominioEmailRoute
   '/_authenticated/_clinic/equipo': typeof AuthenticatedClinicEquipoRoute
+  '/_authenticated/_clinic/estados-de-cita': typeof AuthenticatedClinicEstadosDeCitaRoute
   '/_authenticated/_clinic/finanzas': typeof AuthenticatedClinicFinanzasRoute
   '/_authenticated/_clinic/fusionar-fichas': typeof AuthenticatedClinicFusionarFichasRoute
   '/_authenticated/_clinic/gastos': typeof AuthenticatedClinicGastosRoute
@@ -560,6 +570,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/dominio-email'
     | '/equipo'
+    | '/estados-de-cita'
     | '/finanzas'
     | '/fusionar-fichas'
     | '/gastos'
@@ -612,6 +623,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/dominio-email'
     | '/equipo'
+    | '/estados-de-cita'
     | '/finanzas'
     | '/fusionar-fichas'
     | '/gastos'
@@ -668,6 +680,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_clinic/dashboard'
     | '/_authenticated/_clinic/dominio-email'
     | '/_authenticated/_clinic/equipo'
+    | '/_authenticated/_clinic/estados-de-cita'
     | '/_authenticated/_clinic/finanzas'
     | '/_authenticated/_clinic/fusionar-fichas'
     | '/_authenticated/_clinic/gastos'
@@ -948,6 +961,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicEquipoRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
+    '/_authenticated/_clinic/estados-de-cita': {
+      id: '/_authenticated/_clinic/estados-de-cita'
+      path: '/estados-de-cita'
+      fullPath: '/estados-de-cita'
+      preLoaderRoute: typeof AuthenticatedClinicEstadosDeCitaRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
     '/_authenticated/_clinic/finanzas': {
       id: '/_authenticated/_clinic/finanzas'
       path: '/finanzas'
@@ -1101,6 +1121,7 @@ interface AuthenticatedClinicRouteRouteChildren {
   AuthenticatedClinicDashboardRoute: typeof AuthenticatedClinicDashboardRoute
   AuthenticatedClinicDominioEmailRoute: typeof AuthenticatedClinicDominioEmailRoute
   AuthenticatedClinicEquipoRoute: typeof AuthenticatedClinicEquipoRoute
+  AuthenticatedClinicEstadosDeCitaRoute: typeof AuthenticatedClinicEstadosDeCitaRoute
   AuthenticatedClinicFinanzasRoute: typeof AuthenticatedClinicFinanzasRoute
   AuthenticatedClinicFusionarFichasRoute: typeof AuthenticatedClinicFusionarFichasRoute
   AuthenticatedClinicGastosRoute: typeof AuthenticatedClinicGastosRoute
@@ -1134,6 +1155,8 @@ const AuthenticatedClinicRouteRouteChildren: AuthenticatedClinicRouteRouteChildr
     AuthenticatedClinicDashboardRoute: AuthenticatedClinicDashboardRoute,
     AuthenticatedClinicDominioEmailRoute: AuthenticatedClinicDominioEmailRoute,
     AuthenticatedClinicEquipoRoute: AuthenticatedClinicEquipoRoute,
+    AuthenticatedClinicEstadosDeCitaRoute:
+      AuthenticatedClinicEstadosDeCitaRoute,
     AuthenticatedClinicFinanzasRoute: AuthenticatedClinicFinanzasRoute,
     AuthenticatedClinicFusionarFichasRoute:
       AuthenticatedClinicFusionarFichasRoute,
