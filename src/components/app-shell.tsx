@@ -23,6 +23,7 @@ import {
   Sun,
   LifeBuoy,
   MessageCircleMore,
+  Merge,
   MessageCircle,
   Landmark,
   Percent,
@@ -79,6 +80,12 @@ const navGroups: { section: string; items: readonly NavItem[] }[] = [
       },
       { to: "/pacientes", label: "Pacientes", icon: Users, permission: "patients:view" },
       {
+        to: "/fusionar-fichas",
+        label: "Fichas duplicadas",
+        icon: Merge,
+        permission: "patients:manage",
+      },
+      {
         to: "/tratamientos",
         label: "Tratamientos",
         icon: Stethoscope,
@@ -93,6 +100,12 @@ const navGroups: { section: string; items: readonly NavItem[] }[] = [
       { to: "/gastos", label: "Gastos", icon: Receipt, permission: "finance:view" },
       { to: "/comisiones", label: "Comisiones", icon: Percent, permission: "finance:view" },
       { to: "/inventario", label: "Inventario", icon: Boxes, permission: "inventory:view" },
+      {
+        to: "/laboratorios",
+        label: "Laboratorios",
+        icon: FlaskConical,
+        permission: "treatments:view",
+      },
     ],
   },
   {
@@ -109,6 +122,12 @@ const navGroups: { section: string; items: readonly NavItem[] }[] = [
     items: [
       { to: "/aranceles", label: "Arancel de precios", icon: Tags, permission: "settings:manage" },
       { to: "/convenios", label: "Convenios", icon: Handshake, permission: "settings:manage" },
+      {
+        to: "/estados-de-cita",
+        label: "Estados de cita",
+        icon: CalendarCheck,
+        permission: "settings:manage",
+      },
       {
         to: "/medios-de-pago",
         label: "Medios de pago",

@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/convenios")({
 });
 
 const INPUT =
-  "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
+  "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 /**
  * Tipos sugeridos. Texto libre a propósito: el vocabulario cambia por país
@@ -279,7 +279,7 @@ function FilaCobertura({
             aria-label={`Cobertura de ${procedure.name}`}
             onChange={(e) => setValor(e.target.value === "" ? null : Number(e.target.value))}
             onBlur={() => guardar.mutate(valor)}
-            className="w-24 rounded-md border border-hairline bg-transparent px-2 py-1 text-right text-xs outline-none focus:border-brand/50"
+            className="w-24 rounded-md border border-hairline bg-transparent px-2 py-1 text-right text-xs outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           />
           <button
             type="button"

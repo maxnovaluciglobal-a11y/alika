@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/table";
 import { hasPermission } from "@/lib/access";
 import { listBranches } from "@/lib/clinic-catalog.functions";
+import { listStockByWarehouse, listWarehouses } from "@/lib/clinic-operations.functions";
 import type { Sucursal } from "@/lib/clinic-data";
 import { formatMoney, fromCents, toCents } from "@/lib/finance";
 import {
@@ -635,6 +636,27 @@ function InventarioPage() {
   const [branchFilter, setBranchFilter] = useState("");
   const branchNameById = new Map(sucursales.map((s) => [s.id, s.nombre]));
 
+  // Bodegas (Tanda C). Mismo criterio que el filtro de sucursal de arriba:
+  // con una sola bodega —el caso de toda clínica que no la configuró— el
+  // selector no aparece y la pantalla se ve exactamente igual que antes.
+  const fetchWarehouses = useServerFn(listWarehouses);
+  const warehousesQuery = useQuery({
+    queryKey: ["warehouses", clinicId],
+    queryFn: () => fetchWarehouses({ data: { clinicId } }),
+  });
+  const bodegas = warehousesQuery.data ?? [];
+  const multiBodega = bodegas.length > 1;
+  const [warehouseFilter, setWarehouseFilter] = useState("");
+
+  const fetchStock = useServerFn(listStockByWarehouse);
+  const stockQuery = useQuery({
+    queryKey: ["inventory-stock", clinicId, warehouseFilter],
+    enabled: multiBodega && Boolean(warehouseFilter),
+    queryFn: () => fetchStock({ data: { clinicId, warehouseId: warehouseFilter || null } }),
+  });
+  /** Saldo de la bodega elegida; vacío = se muestra el total del ítem. */
+  const stockPorBodega = stockQuery.data ?? {};
+
   const fetchItems = useServerFn(listInventoryItems);
   const itemsQuery = useQuery({
     queryKey: ["inventory-items", clinicId, multiSucursal ? branchFilter : ""],
@@ -685,6 +707,24 @@ function InventarioPage() {
                   {sucursales.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {multiBodega && (
+              <label className="block">
+                <span className="sr-only">Bodega</span>
+                <select
+                  value={warehouseFilter}
+                  onChange={(e) => setWarehouseFilter(e.target.value)}
+                  aria-label="Ver el stock de una bodega"
+                  className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                  <option value="">Stock total</option>
+                  {bodegas.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
                     </option>
                   ))}
                 </select>
@@ -772,7 +812,8 @@ function InventarioPage() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <span>
-                          {item.currentStock} {item.unit}
+                          {warehouseFilter ? (stockPorBodega[item.id] ?? 0) : item.currentStock}{" "}
+                          {item.unit}
                         </span>
                         {item.belowMinStock && (
                           <Badge variant="destructive" className="gap-1">

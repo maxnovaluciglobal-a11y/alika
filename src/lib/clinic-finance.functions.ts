@@ -97,7 +97,12 @@ export const createPaymentMethod = createServerFn({ method: "POST" })
       // 23505 = unique_violation sobre (clinic_id, name).
       if (error.code === "23505")
         throw new Error(`Ya existe un medio de pago llamado "${data.name}".`);
-      throw new Error("No tienes permisos para configurar los medios de pago. " + error.message);
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar los medios de pago.",
+        ),
+      );
     }
     return { id: inserted.id };
   });
@@ -127,7 +132,12 @@ export const updatePaymentMethod = createServerFn({ method: "POST" })
     if (error) {
       if (error.code === "23505")
         throw new Error(`Ya existe un medio de pago llamado "${data.name}".`);
-      throw new Error("No tienes permisos para configurar los medios de pago. " + error.message);
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar los medios de pago.",
+        ),
+      );
     }
     return { ok: true };
   });
@@ -155,7 +165,12 @@ export const setPaymentMethodActive = createServerFn({ method: "POST" })
       .eq("id", data.paymentMethodId)
       .eq("clinic_id", data.clinicId);
     if (error)
-      throw new Error("No tienes permisos para configurar los medios de pago. " + error.message);
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar los medios de pago.",
+        ),
+      );
     return { ok: true };
   });
 
@@ -283,7 +298,13 @@ export const createExpense = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error) throw new Error("No tienes permisos para registrar gastos. " + error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda registrar gastos.",
+        ),
+      );
     return { id: inserted.id };
   });
 
@@ -314,7 +335,13 @@ export const updateExpense = createServerFn({ method: "POST" })
       })
       .eq("id", data.expenseId)
       .eq("clinic_id", data.clinicId);
-    if (error) throw new Error("No tienes permisos para editar gastos. " + error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar gastos.",
+        ),
+      );
     return { ok: true };
   });
 
@@ -334,7 +361,13 @@ export const deleteExpense = createServerFn({ method: "POST" })
       .delete()
       .eq("id", data.expenseId)
       .eq("clinic_id", data.clinicId);
-    if (error) throw new Error("No tienes permisos para borrar gastos. " + error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda borrar gastos.",
+        ),
+      );
     return { ok: true };
   });
 
@@ -429,7 +462,12 @@ export const createAgreement = createServerFn({ method: "POST" })
       .single();
     if (error) {
       if (error.code === "23505") throw new Error(`Ya existe un convenio llamado "${data.name}".`);
-      throw new Error("No tienes permisos para configurar convenios. " + error.message);
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar convenios.",
+        ),
+      );
     }
     return { id: inserted.id };
   });
@@ -453,7 +491,12 @@ export const updateAgreement = createServerFn({ method: "POST" })
       .eq("clinic_id", data.clinicId);
     if (error) {
       if (error.code === "23505") throw new Error(`Ya existe un convenio llamado "${data.name}".`);
-      throw new Error("No tienes permisos para configurar convenios. " + error.message);
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar convenios.",
+        ),
+      );
     }
     return { ok: true };
   });
@@ -475,7 +518,13 @@ export const setAgreementActive = createServerFn({ method: "POST" })
       .update({ is_active: data.isActive })
       .eq("id", data.agreementId)
       .eq("clinic_id", data.clinicId);
-    if (error) throw new Error("No tienes permisos para configurar convenios. " + error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar convenios.",
+        ),
+      );
     return { ok: true };
   });
 
@@ -544,7 +593,13 @@ export const setAgreementCoverage = createServerFn({ method: "POST" })
         .eq("clinic_id", data.clinicId)
         .eq("agreement_id", data.agreementId)
         .eq("procedure_id", data.procedureId);
-      if (error) throw new Error("No tienes permisos para editar la cobertura. " + error.message);
+      if (error)
+        throw new Error(
+          mensajeDb(
+            error,
+            "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar la cobertura.",
+          ),
+        );
       return { ok: true };
     }
 
@@ -558,7 +613,13 @@ export const setAgreementCoverage = createServerFn({ method: "POST" })
       },
       { onConflict: "agreement_id,procedure_id" },
     );
-    if (error) throw new Error("No tienes permisos para editar la cobertura. " + error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar la cobertura.",
+        ),
+      );
     return { ok: true };
   });
 
@@ -584,6 +645,12 @@ export const setPatientAgreement = createServerFn({ method: "POST" })
       })
       .eq("id", data.patientId)
       .eq("clinic_id", data.clinicId);
-    if (error) throw new Error("No tienes permisos para editar el paciente. " + error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar el paciente.",
+        ),
+      );
     return { ok: true };
   });

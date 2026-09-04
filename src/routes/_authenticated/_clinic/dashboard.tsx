@@ -5,7 +5,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { CalendarClock, CircleAlert } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
+import { PanelDesempeno } from "@/components/panel-desempeno";
 import { requirePermission } from "@/lib/route-guards";
+import { hasPermission } from "@/lib/access";
 import { AgendaGrid } from "@/components/agenda-grid";
 import { formatoFecha, hoyISO } from "@/lib/clinic-data";
 import { listProfessionals } from "@/lib/clinic-catalog.functions";
@@ -116,9 +118,25 @@ function Dashboard() {
     { label: "Pacientes nuevos", valor: pacientesNuevos, nota: "Estado: nuevo" },
   ];
 
+  // El panel de desempeño mira el mes en curso; los KPIs de abajo siguen
+  // siendo del día, que es lo que usa el equipo en el mostrador.
+  const primerDiaDelMes = `${hoy.slice(0, 7)}-01`;
+
   return (
     <AppShell title="Vista de clínica" access={access}>
       <div className="space-y-8">
+        {clinicId && hasPermission(access.role, "finance:view") && (
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="font-display text-lg font-semibold">Desempeño del mes</h2>
+              <p className="text-xs text-muted-foreground">
+                {formatoFecha(primerDiaDelMes)} — {formatoFecha(hoy)}
+              </p>
+            </div>
+            <PanelDesempeno clinicId={clinicId} desde={primerDiaDelMes} hasta={hoy} />
+          </section>
+        )}
+
         <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
           {kpis.map((k) => (
             <div key={k.label} className="card-clinical p-5">

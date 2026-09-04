@@ -161,7 +161,13 @@ export const createProcedure = createServerFn({ method: "POST" })
       .select("id")
       .single();
 
-    if (error) throw new Error("No tienes permisos para editar el catálogo. " + error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar el catálogo.",
+        ),
+      );
     return { id: inserted.id };
   });
 
@@ -182,7 +188,13 @@ export const updateProcedure = createServerFn({ method: "POST" })
       .update(procedureRow(data))
       .eq("id", data.procedureId)
       .eq("clinic_id", data.clinicId);
-    if (error) throw new Error("No tienes permisos para editar el catálogo. " + error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar el catálogo.",
+        ),
+      );
     return { ok: true };
   });
 
@@ -209,7 +221,13 @@ export const setProcedureActive = createServerFn({ method: "POST" })
       .update({ is_active: data.isActive })
       .eq("id", data.procedureId)
       .eq("clinic_id", data.clinicId);
-    if (error) throw new Error("No tienes permisos para editar el catálogo. " + error.message);
+    if (error)
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar el catálogo.",
+        ),
+      );
     return { ok: true };
   });
 
@@ -267,7 +285,13 @@ export const importProcedures = createServerFn({ method: "POST" })
 
     if (nuevas.length) {
       const { error } = await supabase.from("procedures").insert(nuevas);
-      if (error) throw new Error("No tienes permisos para importar al catálogo. " + error.message);
+      if (error)
+        throw new Error(
+          mensajeDb(
+            error,
+            "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda importar al catálogo.",
+          ),
+        );
     }
     for (const { id, row } of cambios) {
       const { error } = await supabase
@@ -514,6 +538,41 @@ function computeQuoteTotals(
       ? Math.min(globalDiscountCents, subtotal)
       : Math.min(Math.round((subtotal * commercialDiscountPct) / 100), subtotal);
 
+  // ── El descuento comercial BAJA a las líneas ────────────────────────────
+  // Auditoría 04-sep: restarlo solo al total del presupuesto lo hacía
+  // desaparecer al aceptar. El trigger de conversión copia `total_cents` de
+  // cada línea a `treatment_items.price_cents`, y de ahí sale el saldo del
+  // paciente — así que un 20 % de descuento se veía en el presupuesto y el
+  // paciente igual terminaba debiendo el 100 %.
+  //
+  // Se prorratea proporcional al peso de cada línea. El resto de la división
+  // se le carga a la última línea con monto, para que la suma de las líneas
+  // dé EXACTAMENTE el total del presupuesto y no un peso de diferencia por
+  // redondeo.
+  if (discount > 0 && subtotal > 0) {
+    let repartido = 0;
+    const conMonto = resolved.filter((i) => i.total > 0);
+    conMonto.forEach((item, idx) => {
+      const parte =
+        idx === conMonto.length - 1
+          ? discount - repartido
+          : Math.round((item.total * discount) / subtotal);
+      repartido += parte;
+      item.total = Math.max(0, item.total - parte);
+      // El reparto convenio/paciente se recalcula sobre la línea ya
+      // descontada: si no, el convenio cubriría un porcentaje de un precio
+      // que nadie va a pagar.
+      if (item.coverageCents !== null) {
+        const cobertura = item.procedureId
+          ? coberturaPorProcedimiento?.get(item.procedureId)
+          : undefined;
+        const nuevo = repartirCobertura(item.total, cobertura, item.quantity);
+        item.coverageCents = nuevo.coverageCents;
+        item.patientCents = nuevo.patientCents;
+      }
+    });
+  }
+
   // Total del convenio: null cuando ninguna línea tuvo cobertura, para que el
   // presupuesto no muestre "cubre $0" en un caso particular.
   const conCobertura = resolved.filter((i) => i.coverageCents !== null);
@@ -527,7 +586,10 @@ function computeQuoteTotals(
     discountCents: discount,
     commercialDiscountPct: commercialDiscountPct ?? null,
     coverageTotalCents,
-    total: Math.max(0, subtotal - discount),
+    // Suma de las líneas ya descontadas: por construcción es idéntico a
+    // `subtotal - discount`, pero se calcula desde las líneas para que si
+    // alguna vez divergen, gane lo que el paciente realmente va a ver.
+    total: resolved.reduce((sum, item) => sum + item.total, 0),
   };
 }
 
@@ -1230,6 +1292,14 @@ export const registerPayment = createServerFn({ method: "POST" })
           ),
         notes: z.string().trim().max(500).optional(),
         treatmentPlanId: z.string().uuid().optional(),
+        /**
+         * Imputar el cobro a una línea concreta del plan. Sin esto, el
+         * semáforo de pago por línea (G-5) nunca podía salir de "sin pagos":
+         * `paidCentsByItem` lee esta columna y nadie la escribía (auditoría
+         * 04-sep). Sigue siendo opcional — un cobro global al plan es
+         * perfectamente válido y deja las líneas sin imputación.
+         */
+        treatmentItemId: z.string().uuid().nullish(),
       })
       .parse(input),
   )
@@ -1273,6 +1343,7 @@ export const registerPayment = createServerFn({ method: "POST" })
         paid_at: data.paidAt ?? new Date().toISOString(),
         notes: data.notes || null,
         treatment_plan_id: data.treatmentPlanId ?? null,
+        treatment_item_id: data.treatmentItemId ?? null,
       })
       .select("id")
       .single();
@@ -1286,7 +1357,12 @@ export const registerPayment = createServerFn({ method: "POST" })
         error,
       );
       if (yaEstaba) return { id: yaEstaba };
-      throw new Error("No tienes permisos para registrar pagos. " + error.message);
+      throw new Error(
+        mensajeDb(
+          error,
+          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda registrar pagos.",
+        ),
+      );
     }
     return { id: inserted.id };
   });

@@ -17,7 +17,10 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{ts,tsx,js}": "eslint --fix",
+    "*.{ts,tsx,js,mjs}": [
+      "node scripts/check-invisibles.mjs",
+      "eslint --fix"
+    ],
     "*.{ts,tsx,js,css,md,json}": "prettier --write"
   },
   "dependencies": {

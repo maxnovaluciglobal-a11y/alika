@@ -7,6 +7,7 @@ import { HORA_INICIO, type Cita, type EstadoCita } from "@/lib/clinic-data";
 import { mensajeDb } from "@/lib/db-errors";
 import { filaYaCreada } from "@/lib/idempotency";
 import { fetchPatientBalances } from "@/lib/patients.functions";
+import { requireFinanceView } from "@/lib/finance-reports.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 const DEFAULT_TIMEZONE = "America/Santiago";
@@ -543,6 +544,13 @@ export const getAppointmentPatientBalances = createServerFn({ method: "GET" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<Record<string, number>> => {
+    // El gate de `finance:view` en agenda.tsx es de interfaz, no un control:
+    // el JWT vive en localStorage y cualquier miembro puede llamar este
+    // endpoint directo. Sin este chequeo, una recepcionista obtiene el saldo
+    // exacto de todos los pacientes de la clínica en un request.
+    // Mismo helper y mismo motivo que `getFinanceSummary` (auditoría 04-sep).
+    await requireFinanceView(context.supabase, data.clinicId, context.userId);
+
     if (!data.patientIds.length) return {};
 
     const balances = await fetchPatientBalances(context.supabase, data.clinicId);

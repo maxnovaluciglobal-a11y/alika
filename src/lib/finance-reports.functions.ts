@@ -310,3 +310,226 @@ export const getQuoteConversionReport = createServerFn({ method: "GET" })
       createdTotalCents,
     };
   });
+
+// ─── PANEL DE DESEMPEÑO (Tanda D · G-7) ──────────────────────────────────
+
+export interface PanelMes {
+  /** YYYY-MM */
+  mes: string;
+  ventasCents: number;
+  recaudacionCents: number;
+}
+
+export interface PanelDesempeno {
+  currency: string;
+  /** Pacientes con primera cita en el período. */
+  pacientesNuevos: number;
+  citasAgendadas: number;
+  citasAnuladas: number;
+  citasAtendidas: number;
+  /**
+   * Atendidos sobre agendados, 0-100. `null` si no hubo citas: dividir por
+   * cero daría 0% y haría ver como desastre un día sin agenda.
+   */
+  tasaAsistencia: number | null;
+  presupuestosEmitidos: number;
+  /** Producción: ítems completados en el período, a su precio. */
+  ventasCents: number;
+  /** Caja: pagos recibidos en el período. */
+  recaudacionCents: number;
+  /** Doce meses hacia atrás desde el fin del período. */
+  serie: PanelMes[];
+  /**
+   * Espera promedio en minutos entre `arrived_at` y `started_at`. `null`
+   * cuando ninguna cita del período registró ambas horas — que es el caso
+   * mientras la clínica no use el check-in. No se inventa un cero.
+   */
+  esperaPromedioMin: number | null;
+  esperaMuestras: number;
+  /**
+   * Ocupación aproximada: horas agendadas sobre horas disponibles de los
+   * profesionales. `null` mientras no haya horarios cargados — sin capacidad
+   * declarada, cualquier porcentaje sería inventado.
+   */
+  ocupacionPct: number | null;
+}
+
+/**
+ * Panel de desempeño de la clínica (G-7).
+ *
+ * Cada indicador que no se puede calcular con datos reales devuelve `null` y
+ * la UI muestra "Sin datos", en vez de un cero que se lee como un resultado
+ * malísimo. Es la regla 11 aplicada al lugar donde más tienta romperla: un
+ * dashboard vacío se ve mal, pero un dashboard que miente se ve peor.
+ */
+export const getPanelDesempeno = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        desde: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        hasta: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<PanelDesempeno> => {
+    const { supabase, userId } = context;
+    await requireFinanceView(supabase, data.clinicId, userId);
+
+    const desdeIso = `${data.desde}T00:00:00.000Z`;
+    const hastaIso = `${data.hasta}T23:59:59.999Z`;
+
+    // Doce meses hacia atrás desde el mes del `hasta`, para la serie.
+    const finSerie = new Date(`${data.hasta}T00:00:00.000Z`);
+    const inicioSerie = new Date(
+      Date.UTC(finSerie.getUTCFullYear(), finSerie.getUTCMonth() - 11, 1),
+    );
+
+    const [citasRes, pagosRes, itemsRes, quotesRes, serieItemsRes, seriePagosRes] =
+      await Promise.all([
+        supabase
+          .from("appointments")
+          .select("id, patient_id, status, starts_at, ends_at, arrived_at, started_at")
+          .eq("clinic_id", data.clinicId)
+          .gte("starts_at", desdeIso)
+          .lte("starts_at", hastaIso),
+        supabase
+          .from("payments")
+          .select("amount_cents, currency, paid_at")
+          .eq("clinic_id", data.clinicId)
+          .gte("paid_at", desdeIso)
+          .lte("paid_at", hastaIso),
+        supabase
+          .from("treatment_items")
+          .select("price_cents")
+          .eq("clinic_id", data.clinicId)
+          .eq("status", "completed")
+          .gte("completed_at", desdeIso)
+          .lte("completed_at", hastaIso),
+        supabase
+          .from("quotes")
+          .select("id")
+          .eq("clinic_id", data.clinicId)
+          .gte("created_at", desdeIso)
+          .lte("created_at", hastaIso),
+        supabase
+          .from("treatment_items")
+          .select("price_cents, completed_at")
+          .eq("clinic_id", data.clinicId)
+          .eq("status", "completed")
+          .gte("completed_at", inicioSerie.toISOString()),
+        supabase
+          .from("payments")
+          .select("amount_cents, paid_at")
+          .eq("clinic_id", data.clinicId)
+          .gte("paid_at", inicioSerie.toISOString()),
+      ]);
+
+    for (const r of [citasRes, pagosRes, itemsRes, quotesRes, serieItemsRes, seriePagosRes]) {
+      if (r.error) throw new Error(mensajeDb(r.error, "No pudimos armar el panel de desempeño."));
+    }
+
+    const citas = citasRes.data ?? [];
+    const pagos = pagosRes.data ?? [];
+    const currency = pagos[0]?.currency ?? "CLP";
+
+    const citasAnuladas = citas.filter((c) => c.status === "cancelada").length;
+    const citasAgendadas = citas.length - citasAnuladas;
+    const citasAtendidas = citas.filter((c) => c.status === "finalizada").length;
+
+    // Pacientes nuevos: los que no tienen ninguna cita anterior al período.
+    // Se resuelve con una consulta más y no en memoria porque las citas
+    // viejas no están en `citas` — pedirlas todas para contar nuevos sería
+    // traer el historial completo de la clínica.
+    const pacientesDelPeriodo = [...new Set(citas.map((c) => c.patient_id))];
+    let pacientesNuevos = 0;
+    if (pacientesDelPeriodo.length) {
+      const { data: previas } = await supabase
+        .from("appointments")
+        .select("patient_id")
+        .eq("clinic_id", data.clinicId)
+        .in("patient_id", pacientesDelPeriodo)
+        .lt("starts_at", desdeIso);
+      const conHistoria = new Set((previas ?? []).map((p) => p.patient_id));
+      pacientesNuevos = pacientesDelPeriodo.filter((p) => !conHistoria.has(p)).length;
+    }
+
+    // Espera real: solo las citas que registraron llegada Y inicio.
+    const esperas = citas
+      .filter((c) => c.arrived_at && c.started_at)
+      .map((c) => (new Date(c.started_at!).getTime() - new Date(c.arrived_at!).getTime()) / 60000)
+      // Una espera negativa es un dato mal cargado (empezó antes de llegar),
+      // no una espera de cero: se descarta en vez de bajar el promedio.
+      .filter((min) => min >= 0);
+    const esperaPromedioMin = esperas.length
+      ? Math.round(esperas.reduce((s, m) => s + m, 0) / esperas.length)
+      : null;
+
+    // Ocupación: horas agendadas contra horas disponibles declaradas.
+    const { data: horarios } = await supabase
+      .from("professional_schedules")
+      .select("start_time, end_time, day_of_week")
+      .eq("clinic_id", data.clinicId);
+
+    let ocupacionPct: number | null = null;
+    if (horarios?.length) {
+      const minutosSemanales = horarios.reduce((sum, h) => {
+        const [hi, mi] = String(h.start_time).split(":").map(Number);
+        const [hf, mf] = String(h.end_time).split(":").map(Number);
+        return sum + Math.max(0, hf * 60 + mf - (hi * 60 + mi));
+      }, 0);
+      const dias =
+        (new Date(`${data.hasta}T00:00:00Z`).getTime() -
+          new Date(`${data.desde}T00:00:00Z`).getTime()) /
+          86_400_000 +
+        1;
+      const capacidad = (minutosSemanales / 7) * dias;
+      const agendado = citas
+        .filter((c) => c.status !== "cancelada")
+        .reduce(
+          (sum, c) =>
+            sum + (new Date(c.ends_at).getTime() - new Date(c.starts_at).getTime()) / 60000,
+          0,
+        );
+      ocupacionPct = capacidad > 0 ? Math.round((agendado / capacidad) * 100) : null;
+    }
+
+    // Serie de 12 meses. Se agrupa por el mes UTC de la fecha; el desfase con
+    // la timezone de la clínica solo puede mover una operación del último día
+    // del mes, y no justifica traer la tz de cada sucursal a un gráfico de
+    // tendencia.
+    const mesDe = (iso: string) => iso.slice(0, 7);
+    const serieMap = new Map<string, { ventasCents: number; recaudacionCents: number }>();
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(Date.UTC(inicioSerie.getUTCFullYear(), inicioSerie.getUTCMonth() + i, 1));
+      serieMap.set(d.toISOString().slice(0, 7), { ventasCents: 0, recaudacionCents: 0 });
+    }
+    for (const it of serieItemsRes.data ?? []) {
+      if (!it.completed_at) continue;
+      const k = mesDe(it.completed_at);
+      const cur = serieMap.get(k);
+      if (cur) cur.ventasCents += it.price_cents;
+    }
+    for (const p of seriePagosRes.data ?? []) {
+      const k = mesDe(p.paid_at);
+      const cur = serieMap.get(k);
+      if (cur) cur.recaudacionCents += p.amount_cents;
+    }
+
+    return {
+      currency,
+      pacientesNuevos,
+      citasAgendadas,
+      citasAnuladas,
+      citasAtendidas,
+      tasaAsistencia: citasAgendadas ? Math.round((citasAtendidas / citasAgendadas) * 100) : null,
+      presupuestosEmitidos: (quotesRes.data ?? []).length,
+      ventasCents: (itemsRes.data ?? []).reduce((s, i) => s + i.price_cents, 0),
+      recaudacionCents: pagos.reduce((s, p) => s + p.amount_cents, 0),
+      serie: [...serieMap.entries()].map(([mes, v]) => ({ mes, ...v })),
+      esperaPromedioMin,
+      esperaMuestras: esperas.length,
+      ocupacionPct,
+    };
+  });

@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Pencil, Plus, Upload } from "lucide-react";
+import { Download, Loader2, Pencil, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -29,6 +29,8 @@ import {
   updateProcedure,
 } from "@/lib/finance.functions";
 import { coincide, str } from "@/lib/search";
+import { exportarCsv } from "@/lib/csv-export";
+import { hoyISO } from "@/lib/clinic-data";
 import { cn } from "@/lib/utils";
 
 interface ArancelesSearch {
@@ -56,7 +58,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/aranceles")({
 });
 
 const INPUT =
-  "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
+  "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 interface Draft {
   name: string;
@@ -473,6 +475,35 @@ function ArancelesPage() {
             de baja
           </p>
           <div className="flex flex-wrap gap-2">
+            {procedures.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  exportarCsv<Procedure>(
+                    filtradas,
+                    [
+                      { header: "Código", value: (p) => p.code },
+                      { header: "Nombre", value: (p) => p.name },
+                      { header: "Categoría", value: (p) => p.category },
+                      { header: "Precio", value: (p) => p.defaultPriceCents },
+                      { header: "Valor referencial", value: (p) => p.referencePriceCents },
+                      { header: "Costo laboratorio", value: (p) => p.labCostCents },
+                      { header: "Duración", value: (p) => p.durationMin },
+                      {
+                        header: "Permite descuento",
+                        value: (p) => (p.allowsDiscount ? "Sí" : "No"),
+                      },
+                      { header: "Activa", value: (p) => (p.isActive ? "Sí" : "No") },
+                    ],
+                    "arancel",
+                    hoyISO(access.clinic?.timezone),
+                  )
+                }
+              >
+                <Download className="size-4" /> Exportar CSV
+              </Button>
+            )}
             <ImportarCsvDialog clinicId={clinicId!} />
             <PrestacionDialog clinicId={clinicId!} categorias={categorias} />
           </div>

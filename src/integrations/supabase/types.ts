@@ -207,8 +207,45 @@ export type Database = {
           },
         ];
       };
+      appointment_statuses: {
+        Row: {
+          canonical: Database["public"]["Enums"]["appointment_status"];
+          clinic_id: string;
+          color: string;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          label: string;
+          position: number;
+          updated_at: string;
+        };
+        Insert: {
+          canonical: Database["public"]["Enums"]["appointment_status"];
+          clinic_id: string;
+          color?: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          label: string;
+          position?: number;
+          updated_at?: string;
+        };
+        Update: {
+          canonical?: Database["public"]["Enums"]["appointment_status"];
+          clinic_id?: string;
+          color?: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          label?: string;
+          position?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       appointments: {
         Row: {
+          arrived_at: string | null;
           branch_id: string;
           clinic_id: string;
           confirmed_at: string | null;
@@ -223,13 +260,16 @@ export type Database = {
           patient_id: string;
           procedure_id: string | null;
           professional_id: string;
+          started_at: string | null;
           starts_at: string;
           status: Database["public"]["Enums"]["appointment_status"];
+          status_id: string | null;
           treatment_label: string;
           updated_at: string;
           updated_by: string | null;
         };
         Insert: {
+          arrived_at?: string | null;
           branch_id: string;
           clinic_id: string;
           confirmed_at?: string | null;
@@ -244,13 +284,16 @@ export type Database = {
           patient_id: string;
           procedure_id?: string | null;
           professional_id: string;
+          started_at?: string | null;
           starts_at: string;
           status?: Database["public"]["Enums"]["appointment_status"];
+          status_id?: string | null;
           treatment_label?: string;
           updated_at?: string;
           updated_by?: string | null;
         };
         Update: {
+          arrived_at?: string | null;
           branch_id?: string;
           clinic_id?: string;
           confirmed_at?: string | null;
@@ -265,8 +308,10 @@ export type Database = {
           patient_id?: string;
           procedure_id?: string | null;
           professional_id?: string;
+          started_at?: string | null;
           starts_at?: string;
           status?: Database["public"]["Enums"]["appointment_status"];
+          status_id?: string | null;
           treatment_label?: string;
           updated_at?: string;
           updated_by?: string | null;
@@ -1070,6 +1115,30 @@ export type Database = {
           },
         ];
       };
+      inventory_stock: {
+        Row: {
+          clinic_id: string;
+          current_stock: number;
+          item_id: string;
+          updated_at: string;
+          warehouse_id: string;
+        };
+        Insert: {
+          clinic_id: string;
+          current_stock?: number;
+          item_id: string;
+          updated_at?: string;
+          warehouse_id: string;
+        };
+        Update: {
+          clinic_id?: string;
+          current_stock?: number;
+          item_id?: string;
+          updated_at?: string;
+          warehouse_id?: string;
+        };
+        Relationships: [];
+      };
       inventory_items: {
         Row: {
           branch_id: string | null;
@@ -1083,6 +1152,7 @@ export type Database = {
           min_stock: number | null;
           name: string;
           notes: string | null;
+          sale_price_cents: number | null;
           unit: string;
         };
         Insert: {
@@ -1097,6 +1167,7 @@ export type Database = {
           min_stock?: number | null;
           name: string;
           notes?: string | null;
+          sale_price_cents?: number | null;
           unit: string;
         };
         Update: {
@@ -1111,6 +1182,7 @@ export type Database = {
           min_stock?: number | null;
           name?: string;
           notes?: string | null;
+          sale_price_cents?: number | null;
           unit?: string;
         };
         Relationships: [
@@ -1142,6 +1214,8 @@ export type Database = {
           reason: string | null;
           recorded_at: string;
           recorded_by: string;
+          unit_cost_cents: number | null;
+          warehouse_id: string | null;
         };
         Insert: {
           clinic_id: string;
@@ -1154,6 +1228,8 @@ export type Database = {
           reason?: string | null;
           recorded_at?: string;
           recorded_by?: string;
+          unit_cost_cents?: number | null;
+          warehouse_id?: string | null;
         };
         Update: {
           clinic_id?: string;
@@ -1166,6 +1242,8 @@ export type Database = {
           reason?: string | null;
           recorded_at?: string;
           recorded_by?: string;
+          unit_cost_cents?: number | null;
+          warehouse_id?: string | null;
         };
         Relationships: [
           {
@@ -1183,6 +1261,114 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      lab_orders: {
+        Row: {
+          clinic_id: string;
+          cost_cents: number | null;
+          created_at: string;
+          created_by: string;
+          currency: string;
+          description: string;
+          due_on: string | null;
+          id: string;
+          lab_id: string | null;
+          lab_name_snapshot: string | null;
+          notes: string | null;
+          patient_id: string;
+          professional_id: string | null;
+          received_on: string | null;
+          sent_on: string;
+          status: Database["public"]["Enums"]["lab_order_status"];
+          tooth_numbers: number[] | null;
+          treatment_item_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          clinic_id: string;
+          cost_cents?: number | null;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          description: string;
+          due_on?: string | null;
+          id?: string;
+          lab_id?: string | null;
+          lab_name_snapshot?: string | null;
+          notes?: string | null;
+          patient_id: string;
+          professional_id?: string | null;
+          received_on?: string | null;
+          sent_on?: string;
+          status?: Database["public"]["Enums"]["lab_order_status"];
+          tooth_numbers?: number[] | null;
+          treatment_item_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          clinic_id?: string;
+          cost_cents?: number | null;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          description?: string;
+          due_on?: string | null;
+          id?: string;
+          lab_id?: string | null;
+          lab_name_snapshot?: string | null;
+          notes?: string | null;
+          patient_id?: string;
+          professional_id?: string | null;
+          received_on?: string | null;
+          sent_on?: string;
+          status?: Database["public"]["Enums"]["lab_order_status"];
+          tooth_numbers?: number[] | null;
+          treatment_item_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      labs: {
+        Row: {
+          clinic_id: string;
+          contact_email: string | null;
+          contact_name: string | null;
+          contact_phone: string | null;
+          created_at: string;
+          created_by: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          notes: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          clinic_id: string;
+          contact_email?: string | null;
+          contact_name?: string | null;
+          contact_phone?: string | null;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          notes?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          clinic_id?: string;
+          contact_email?: string | null;
+          contact_name?: string | null;
+          contact_phone?: string | null;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          notes?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       message_templates: {
         Row: {
@@ -1802,14 +1988,14 @@ export type Database = {
       };
       patients: {
         Row: {
+          agreement_id: string | null;
+          agreement_member_id: string | null;
           ai_summary: string | null;
           ai_summary_updated_at: string | null;
           avatar_url: string | null;
           balance_cents: number | null;
           birth_date: string | null;
           branch_id: string | null;
-          agreement_id: string | null;
-          agreement_member_id: string | null;
           clinic_id: string;
           created_at: string;
           created_by: string;
@@ -1819,6 +2005,8 @@ export type Database = {
           email: string | null;
           full_name: string;
           id: string;
+          merged_at: string | null;
+          merged_into: string | null;
           no_show_risk: number | null;
           phone: string | null;
           phone_valid: boolean | null;
@@ -1834,14 +2022,14 @@ export type Database = {
           wa_opt_out_at: string | null;
         };
         Insert: {
+          agreement_id?: string | null;
+          agreement_member_id?: string | null;
           ai_summary?: string | null;
           ai_summary_updated_at?: string | null;
           avatar_url?: string | null;
           balance_cents?: number | null;
           birth_date?: string | null;
           branch_id?: string | null;
-          agreement_id?: string | null;
-          agreement_member_id?: string | null;
           clinic_id: string;
           created_at?: string;
           created_by?: string;
@@ -1851,6 +2039,8 @@ export type Database = {
           email?: string | null;
           full_name: string;
           id?: string;
+          merged_at?: string | null;
+          merged_into?: string | null;
           no_show_risk?: number | null;
           phone?: string | null;
           phone_valid?: boolean | null;
@@ -1866,14 +2056,14 @@ export type Database = {
           wa_opt_out_at?: string | null;
         };
         Update: {
+          agreement_id?: string | null;
+          agreement_member_id?: string | null;
           ai_summary?: string | null;
           ai_summary_updated_at?: string | null;
           avatar_url?: string | null;
           balance_cents?: number | null;
           birth_date?: string | null;
           branch_id?: string | null;
-          agreement_id?: string | null;
-          agreement_member_id?: string | null;
           clinic_id?: string;
           created_at?: string;
           created_by?: string;
@@ -1883,6 +2073,8 @@ export type Database = {
           email?: string | null;
           full_name?: string;
           id?: string;
+          merged_at?: string | null;
+          merged_into?: string | null;
           no_show_risk?: number | null;
           phone?: string | null;
           phone_valid?: boolean | null;
@@ -2977,6 +3169,39 @@ export type Database = {
           },
         ];
       };
+      warehouses: {
+        Row: {
+          branch_id: string | null;
+          clinic_id: string;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          position: number;
+          updated_at: string;
+        };
+        Insert: {
+          branch_id?: string | null;
+          clinic_id: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          position?: number;
+          updated_at?: string;
+        };
+        Update: {
+          branch_id?: string | null;
+          clinic_id?: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          position?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       whatsapp_accounts: {
         Row: {
           clinic_id: string;
@@ -3104,6 +3329,10 @@ export type Database = {
         Returns: boolean;
       };
       is_clinic_member: { Args: { _clinic_id: string }; Returns: boolean };
+      merge_patients: {
+        Args: { p_clinic_id: string; p_source_id: string; p_target_id: string };
+        Returns: undefined;
+      };
       is_clinic_member_of: {
         Args: { _clinic_id: string; _user_id: string };
         Returns: boolean;
@@ -3136,6 +3365,7 @@ export type Database = {
         "tentativa" | "confirmada" | "en-sala" | "ausente" | "finalizada" | "cancelada";
       clinical_entity_kind: "diagnosis" | "treatment" | "medication" | "allergy";
       inventory_movement_kind: "entrada" | "salida" | "ajuste";
+      lab_order_status: "enviado" | "en_proceso" | "recibido" | "reprocesar" | "cancelado";
       message_channel: "whatsapp" | "sms" | "email";
       message_direction: "outbound" | "inbound";
       message_status: "draft" | "queued" | "sent" | "delivered" | "read" | "failed";
@@ -3312,6 +3542,7 @@ export const Constants = {
       ],
       clinical_entity_kind: ["diagnosis", "treatment", "medication", "allergy"],
       inventory_movement_kind: ["entrada", "salida", "ajuste"],
+      lab_order_status: ["enviado", "en_proceso", "recibido", "reprocesar", "cancelado"],
       message_channel: ["whatsapp", "sms", "email"],
       message_direction: ["outbound", "inbound"],
       message_status: ["draft", "queued", "sent", "delivered", "read", "failed"],

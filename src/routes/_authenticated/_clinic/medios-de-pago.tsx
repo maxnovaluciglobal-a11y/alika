@@ -43,7 +43,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/medios-de-pago")({
 });
 
 const INPUT =
-  "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
+  "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 /** Monto de ejemplo para mostrar el efecto de la retención en pesos reales. */
 const EJEMPLO_CENTS = 100_000;
