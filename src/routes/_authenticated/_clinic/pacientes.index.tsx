@@ -391,6 +391,7 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
 function PacientesPage() {
   const { access } = Route.useRouteContext();
   const search = Route.useSearch();
+  const currency = access.clinic?.currency ?? "CLP";
   const navigate = useNavigate({ from: Route.fullPath });
   const clinicId = access.clinic?.id;
 
@@ -596,7 +597,7 @@ function PacientesPage() {
                       {p.saldo == null
                         ? "Sin datos"
                         : p.saldo > 0
-                          ? formatMoney(p.saldo, access.clinic?.currency)
+                          ? formatMoney(p.saldo, currency)
                           : "Al día"}
                     </span>
                     <span

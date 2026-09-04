@@ -110,11 +110,12 @@ export const listProcedures = createServerFn({ method: "GET" })
 
 /** Campos editables de una prestación del arancel. Compartido por create y update. */
 const ProcedureFields = {
+  // Sin `currency`: la fija el trigger `moneda_desde_la_clinica` desde
+  // `clinics.currency`. En qué moneda está una fila no lo decide el cliente.
   name: z.string().trim().min(1, "Nombre obligatorio."),
   code: z.string().trim().max(40).nullish(),
   category: z.string().trim().max(80).nullish(),
   defaultPriceCents: z.number().int().min(0).default(0),
-  currency: z.string().length(3).default("CLP"),
   durationMin: z.number().int().min(0).max(600).nullish(),
   allowsDiscount: z.boolean().default(true),
   referencePriceCents: z.number().int().min(0).nullish(),
@@ -128,7 +129,6 @@ function procedureRow(d: {
   code?: string | null;
   category?: string | null;
   defaultPriceCents: number;
-  currency: string;
   durationMin?: number | null;
   allowsDiscount: boolean;
   referencePriceCents?: number | null;
@@ -140,7 +140,6 @@ function procedureRow(d: {
     code: d.code?.trim() || null,
     category: d.category?.trim() || null,
     default_price_cents: d.defaultPriceCents,
-    currency: d.currency,
     duration_min: d.durationMin ?? null,
     allows_discount: d.allowsDiscount,
     reference_price_cents: d.referencePriceCents ?? null,
@@ -688,7 +687,8 @@ export const createQuote = createServerFn({ method: "POST" })
       .object({
         clinicId: z.string().uuid(),
         patientId: z.string().uuid(),
-        currency: z.string().length(3).default("CLP"),
+        // Sin `currency`: la fija el trigger `moneda_desde_la_clinica` desde
+        // `clinics.currency`. La moneda no la decide el cliente.
         notes: z.string().trim().max(1000).optional(),
         validUntil: z.string().optional(),
         globalDiscountCents: z.number().int().min(0).default(0),
@@ -738,7 +738,6 @@ export const createQuote = createServerFn({ method: "POST" })
         agreement_id: convenio.agreementId,
         agreement_name_snapshot: convenio.agreementName,
         coverage_total_cents: totals.coverageTotalCents,
-        currency: data.currency,
         notes: data.notes || null,
         valid_until: data.validUntil || null,
         subtotal_cents: totals.subtotal,
@@ -1273,7 +1272,8 @@ export const registerPayment = createServerFn({ method: "POST" })
         clinicId: z.string().uuid(),
         patientId: z.string().uuid(),
         amountCents: z.number().int().positive("El monto debe ser mayor a cero."),
-        currency: z.string().length(3).default("CLP"),
+        // Sin `currency`: la fija el trigger `moneda_desde_la_clinica` desde
+        // `clinics.currency`. La moneda no la decide el cliente.
         method: z.enum(PAYMENT_METHODS).default("cash"),
         /**
          * Medio de pago configurado de la clínica (G-6). Opcional: la cola
@@ -1329,7 +1329,6 @@ export const registerPayment = createServerFn({ method: "POST" })
         clinic_id: data.clinicId,
         patient_id: data.patientId,
         amount_cents: data.amountCents,
-        currency: data.currency,
         method: data.method,
         payment_method_id: data.paymentMethodId ?? null,
         method_name_snapshot: methodName,

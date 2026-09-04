@@ -68,18 +68,19 @@ columnas, 19/19 enums, 6/6 RPCs— pero eso es suerte sostenida por disciplina,
 no una garantía. Conviene además agregar `supabase` como `devDependency` para
 que el script no dependa de un binario global.
 
-**Moneda hardcodeada.** Toda la cadena de escritura pone `"CLP"` literal
-(`createQuote`, `registerPayment`, `createExpense`), mientras la UI formatea
-con `access.clinic.currency`. En una clínica en MXN, la misma pantalla mostraría
-`$5.000,00` en un lado y `$500.000` en el otro: factor 100. **Hoy es inofensivo
-porque todas las clínicas son CLP**, y por eso no se corrigió en caliente — es
-un cambio transversal que merece su propia tanda y su propia verificación.
+**Moneda hardcodeada.** ✅ **Cerrado el 05-sep** (tanda de moneda). Ninguna
+server function acepta ya `currency`: la fija el trigger
+`moneda_desde_la_clinica` desde `clinics.currency`, y las columnas perdieron su
+`DEFAULT 'CLP'` para que un trigger caído falle fuerte en vez de escribir Chile
+en silencio. `formatMoney`/`toCents`/`fromCents` pasaron a exigir la moneda, y
+el locale de formato sale de ella en vez de estar fijo en `es-CL`.
 
-**Dos convenciones de captura de monto conviven.** `inventario.tsx` y
-`profesionales.tsx` convierten con `toCents(...)`; `finance-section.tsx`,
-`gastos.tsx` y `arancel-csv.ts` guardan unidades enteras. Invisible en CLP
-(factor 1), 100× de error en cualquier moneda con decimales. Mismo motivo para
-postergarlo, mismo riesgo latente. Va junto con el punto anterior.
+**Dos convenciones de captura de monto conviven.** ✅ **Cerrado el 05-sep.**
+Quedó una sola: todo input de dinero es `MoneyInput`, que recibe y devuelve
+cents y se encarga de mostrar la unidad visible con el `step` de la moneda. El
+texto crudo vive dentro del componente porque, derivándolo del round-trip,
+escribir "45." se borraba solo — invisible en CLP, rompedor en MXN. La regla de
+sincronización se extrajo a `money-input-sync.ts` y está probada.
 
 ### Medio
 

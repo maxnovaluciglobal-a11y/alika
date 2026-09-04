@@ -82,6 +82,7 @@ import {
   setTreatmentItemStatus,
   updateQuote,
 } from "@/lib/finance.functions";
+import { MoneyInput } from "@/components/money-input";
 import { cn } from "@/lib/utils";
 import { listPaymentMethods } from "@/lib/clinic-finance.functions";
 import { useOfflineMutation } from "@/hooks/use-offline-mutation";
@@ -89,6 +90,8 @@ import { useOfflineMutation } from "@/hooks/use-offline-mutation";
 interface Props {
   clinicId: string;
   clinicaNombre: string;
+  /** Moneda de la clínica. Es la fuente para todo lo que se captura acá. */
+  currency: string;
   patientId: string;
   puedeEditar: boolean;
   /** Dueño de lo que quede en la cola offline (ver `offline-queue.ts`). */
@@ -106,7 +109,14 @@ interface DraftItem {
   procedureId: string | null;
   nameSnapshot: string;
   quantity: number;
-  unitPrice: number; // pesos (sin cents) — CLP no usa decimales, el resto sí. La conversión al server se hace vía toCents
+  /**
+   * Cents, igual que todo el resto de la cadena. El comentario anterior decía
+   * "pesos, la conversión al server se hace vía toCents" y esa conversión no
+   * existía en ningún lado: el número tipeado viajaba tal cual a
+   * `unitPriceCents`. Invisible en CLP, 100× de error en MXN. Ahora el input
+   * es `MoneyInput`, que muestra la unidad visible y devuelve cents.
+   */
+  unitPrice: number;
   discount: number;
   /**
    * Cómo se está negociando el descuento de esta línea. En "pct" el valor de
@@ -327,28 +337,43 @@ function QuoteItemsEditor({
               aria-label={`Cantidad del ítem ${i + 1}`}
               className={cn(INPUT_CLASS, "w-14")}
             />
-            <input
-              type="number"
+            <MoneyInput
+              currency={currency}
               min={0}
-              value={it.unitPrice}
-              onChange={(e) => patch(i, { unitPrice: Number(e.target.value) })}
+              valueCents={it.unitPrice}
+              onValueChange={(c) => patch(i, { unitPrice: c ?? 0 })}
+              mostrarMoneda={false}
               title="Precio unitario"
               aria-label={`Precio unitario del ítem ${i + 1}`}
               className={cn(INPUT_CLASS, "w-24")}
             />
 
             <div className="flex items-center">
-              <input
-                type="number"
-                min={0}
-                max={it.discountMode === "pct" ? 100 : undefined}
-                value={it.discount}
-                onChange={(e) => patch(i, { discount: Number(e.target.value) })}
-                title={it.discountMode === "pct" ? "Descuento en %" : "Descuento en pesos"}
-                aria-label={`Descuento del ítem ${i + 1}`}
-                placeholder="Desc."
-                className={cn(INPUT_CLASS, "w-16 rounded-r-none")}
-              />
+              {it.discountMode === "amount" ? (
+                <MoneyInput
+                  currency={currency}
+                  min={0}
+                  valueCents={it.discount}
+                  onValueChange={(c) => patch(i, { discount: c ?? 0 })}
+                  mostrarMoneda={false}
+                  title="Descuento en dinero"
+                  aria-label={`Descuento del ítem ${i + 1}`}
+                  placeholder="Desc."
+                  className={cn(INPUT_CLASS, "w-16 rounded-r-none")}
+                />
+              ) : (
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={it.discount}
+                  onChange={(e) => patch(i, { discount: Number(e.target.value) })}
+                  title="Descuento en %"
+                  aria-label={`Descuento del ítem ${i + 1}`}
+                  placeholder="Desc."
+                  className={cn(INPUT_CLASS, "w-16 rounded-r-none")}
+                />
+              )}
               <button
                 type="button"
                 onClick={() =>
@@ -492,15 +517,17 @@ function ItemStatusPicker({
 
 function NuevoProcedimientoInline({
   clinicId,
+  currency,
   onCreated,
 }: {
   clinicId: string;
+  currency: string;
   onCreated: (p: Procedure) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
-  const [price, setPrice] = useState(0);
+  const [price, setPrice] = useState<number | null>(null);
   const createFn = useServerFn(createProcedure);
   const queryClient = useQueryClient();
 
@@ -511,7 +538,7 @@ function NuevoProcedimientoInline({
           clinicId,
           name: name.trim(),
           category: category.trim() || undefined,
-          defaultPriceCents: price,
+          defaultPriceCents: price ?? 0,
         },
       }),
     onSuccess: async (res) => {
@@ -521,8 +548,8 @@ function NuevoProcedimientoInline({
         code: null,
         name: name.trim(),
         category: category.trim() || null,
-        defaultPriceCents: price,
-        currency: "CLP",
+        defaultPriceCents: price ?? 0,
+        currency,
         durationMin: null,
         isActive: true,
         // Los campos de arancel (Tanda B) toman su default: esta alta rápida
@@ -536,7 +563,7 @@ function NuevoProcedimientoInline({
       setOpen(false);
       setName("");
       setCategory("");
-      setPrice(0);
+      setPrice(null);
       toast.success("Procedimiento agregado al catálogo");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -582,14 +609,13 @@ function NuevoProcedimientoInline({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="proc-price">Precio base (CLP)</Label>
-              <input
+              <Label htmlFor="proc-price">Precio base</Label>
+              <MoneyInput
                 id="proc-price"
-                type="number"
+                currency={currency}
                 min={0}
-                value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                valueCents={price}
+                onValueChange={setPrice}
               />
             </div>
           </div>
@@ -664,12 +690,14 @@ function TotalesPresupuesto({
 
 function NuevoPresupuestoDialog({
   clinicId,
+  currency,
   patientId,
   procedures,
   seed,
   onSeedConsumido,
 }: {
   clinicId: string;
+  currency: string;
   patientId: string;
   procedures: Procedure[];
   /** Cuando llega una pieza desde el odontograma, el diálogo se abre solo. */
@@ -754,6 +782,7 @@ function NuevoPresupuestoDialog({
             </p>
             <NuevoProcedimientoInline
               clinicId={clinicId}
+              currency={currency}
               onCreated={(p) => {
                 setItems((arr) => {
                   const emptyIdx = arr.findIndex((it) => !it.nameSnapshot.trim());
@@ -776,7 +805,7 @@ function NuevoPresupuestoDialog({
             items={items}
             setItems={setItems}
             procedures={procedures}
-            currency="CLP"
+            currency={currency}
           />
 
           <div className="space-y-1.5">
@@ -795,7 +824,7 @@ function NuevoPresupuestoDialog({
             subtotal={subtotal}
             descuentoPct={descuentoPct}
             setDescuentoPct={setDescuentoPct}
-            currency="CLP"
+            currency={currency}
           />
         </div>
 
@@ -939,7 +968,7 @@ function NuevoPagoDialog({
   currency: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState(suggestedAmountCents);
+  const [amount, setAmount] = useState<number | null>(suggestedAmountCents);
   const [method, setMethod] = useState<PaymentMethod>("cash");
   // G-6: el medio configurado de la clínica. El enum `method` se sigue
   // guardando para el histórico y para los pagos capturados sin conexión.
@@ -972,7 +1001,7 @@ function NuevoPagoDialog({
       // (confirmado por grep); router.invalidate() es el fix real.
       void router.invalidate();
       setOpen(false);
-      setAmount(0);
+      setAmount(null);
       setMethod("cash");
       setPaymentMethodId("");
       setPlanId("");
@@ -989,7 +1018,7 @@ function NuevoPagoDialog({
       id: crypto.randomUUID(),
       clinicId,
       patientId,
-      amountCents: amount,
+      amountCents: amount ?? 0,
       method,
       // Se manda vacío como undefined: el server solo busca la retención
       // cuando hay un medio configurado elegido.
@@ -1027,14 +1056,13 @@ function NuevoPagoDialog({
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="pay-amount">Monto (CLP)</Label>
-              <input
+              <Label htmlFor="pay-amount">Monto</Label>
+              <MoneyInput
                 id="pay-amount"
-                type="number"
+                currency={currency}
                 min={0}
-                value={amount}
-                onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                valueCents={amount}
+                onValueChange={setAmount}
               />
             </div>
             <div className="space-y-1.5">
@@ -1115,7 +1143,7 @@ function NuevoPagoDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={guardar} disabled={create.enCurso || amount <= 0}>
+          <Button onClick={guardar} disabled={create.enCurso || (amount ?? 0) <= 0}>
             {create.enCurso && <Loader2 className="size-3.5 animate-spin" />}
             Guardar pago
           </Button>
@@ -1188,6 +1216,7 @@ function AceptarPresupuestoDialog({
 export function FinanceSection({
   clinicId,
   clinicaNombre,
+  currency: monedaClinica,
   patientId,
   puedeEditar,
   userId,
@@ -1258,7 +1287,9 @@ export function FinanceSection({
   );
   const totalPaid = payments.reduce((s, p) => s + p.amountCents, 0);
   const balance = totalBilled - totalPaid;
-  const currency = planesActivos[0]?.currency ?? payments[0]?.currency ?? "CLP";
+  // Las filas viejas mandan (se cotizaron en su moneda); si no hay ninguna,
+  // la referencia es la clínica y no un "CLP" cableado.
+  const currency = planesActivos[0]?.currency ?? payments[0]?.currency ?? monedaClinica;
 
   const accept = useMutation({
     mutationFn: (v: { quoteId: string; acceptedByName?: string; signatureDataUrl?: string }) =>
@@ -1345,6 +1376,7 @@ export function FinanceSection({
             />
             <NuevoPresupuestoDialog
               clinicId={clinicId}
+              currency={currency}
               patientId={patientId}
               procedures={procedures}
               seed={piezaSeed}

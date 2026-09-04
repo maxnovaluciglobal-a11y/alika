@@ -18,8 +18,9 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { SearchField, FilterBar, SelectField } from "@/components/filters";
+import { MoneyInput } from "@/components/money-input";
 import { requirePermission } from "@/lib/route-guards";
-import { formatMoney, type Procedure } from "@/lib/finance";
+import { formatMoney, fromCents, toCents, type Procedure } from "@/lib/finance";
 import { parseArancelCsv, type ArancelCsvResult } from "@/lib/arancel-csv";
 import {
   createProcedure,
@@ -64,7 +65,8 @@ interface Draft {
   name: string;
   code: string;
   category: string;
-  price: number;
+  /** Los tres montos en cents. `MoneyInput` muestra la unidad visible. */
+  price: number | null;
   referencePrice: number | null;
   labCost: number | null;
   durationMin: number | null;
@@ -75,12 +77,43 @@ const draftVacio = (): Draft => ({
   name: "",
   code: "",
   category: "",
-  price: 0,
+  price: null,
   referencePrice: null,
   labCost: null,
   durationMin: null,
   allowsDiscount: true,
 });
+
+/** Campo de dinero que distingue vacío ("sin dato") de cero — regla 11. */
+function MontoOpcional({
+  id,
+  label,
+  currency,
+  value,
+  onChange,
+  placeholder = "Sin dato",
+}: {
+  id: string;
+  label: string;
+  currency: string;
+  value: number | null;
+  onChange: (v: number | null) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <MoneyInput
+        id={id}
+        currency={currency}
+        min={0}
+        valueCents={value}
+        placeholder={placeholder}
+        onValueChange={onChange}
+      />
+    </div>
+  );
+}
 
 /** Campo numérico que distingue vacío (null) de cero — regla 11. */
 function NumeroOpcional({
@@ -114,10 +147,12 @@ function NumeroOpcional({
 
 function PrestacionDialog({
   clinicId,
+  currency,
   procedure,
   categorias,
 }: {
   clinicId: string;
+  currency: string;
   /** Sin `procedure` el diálogo crea; con él, edita. */
   procedure?: Procedure;
   categorias: string[];
@@ -150,8 +185,7 @@ function PrestacionDialog({
         name: d.name.trim(),
         code: d.code.trim() || null,
         category: d.category.trim() || null,
-        defaultPriceCents: d.price,
-        currency: "CLP",
+        defaultPriceCents: d.price ?? 0,
         durationMin: d.durationMin,
         allowsDiscount: d.allowsDiscount,
         referencePriceCents: d.referencePrice,
@@ -238,27 +272,28 @@ function PrestacionDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="p-price">Precio final</Label>
-              <input
+              <MoneyInput
                 id="p-price"
-                type="number"
+                currency={currency}
                 min={0}
-                value={d.price}
-                onChange={(e) => patch({ price: Number(e.target.value) })}
-                className={INPUT}
+                valueCents={d.price}
+                onValueChange={(price) => patch({ price })}
               />
             </div>
-            <NumeroOpcional
+            <MontoOpcional
               id="p-ref"
               label="Valor referencial"
+              currency={currency}
               value={d.referencePrice}
               onChange={(referencePrice) => patch({ referencePrice })}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <NumeroOpcional
+            <MontoOpcional
               id="p-lab"
               label="Costo de laboratorio"
+              currency={currency}
               value={d.labCost}
               onChange={(labCost) => patch({ labCost })}
             />
@@ -292,7 +327,7 @@ function PrestacionDialog({
   );
 }
 
-function ImportarCsvDialog({ clinicId }: { clinicId: string }) {
+function ImportarCsvDialog({ clinicId, currency }: { clinicId: string; currency: string }) {
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState<ArancelCsvResult | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -308,12 +343,14 @@ function ImportarCsvDialog({ clinicId }: { clinicId: string }) {
             name: f.name,
             code: f.code || null,
             category: f.category || null,
-            defaultPriceCents: f.price,
-            currency: "CLP",
+            // El parser devuelve unidades visibles; la conversión a cents es
+            // acá, con la moneda de la clínica, igual que en el diálogo.
+            defaultPriceCents: toCents(f.price, currency),
             durationMin: f.durationMin,
             allowsDiscount: f.allowsDiscount,
-            referencePriceCents: f.referencePrice,
-            labCostCents: f.labCost,
+            referencePriceCents:
+              f.referencePrice == null ? null : toCents(f.referencePrice, currency),
+            labCostCents: f.labCost == null ? null : toCents(f.labCost, currency),
             position: 0,
           })),
         },
@@ -386,7 +423,9 @@ function ImportarCsvDialog({ clinicId }: { clinicId: string }) {
                       {f.category ? `${f.category} · ` : ""}
                       {f.name}
                     </span>
-                    <span className="shrink-0 font-mono">{formatMoney(f.price)}</span>
+                    <span className="shrink-0 font-mono">
+                      {formatMoney(toCents(f.price, currency), currency)}
+                    </span>
                   </li>
                 ))}
                 {preview.filas.length > 8 && <li>y {preview.filas.length - 8} más…</li>}
@@ -504,8 +543,8 @@ function ArancelesPage() {
                 <Download className="size-4" /> Exportar CSV
               </Button>
             )}
-            <ImportarCsvDialog clinicId={clinicId!} />
-            <PrestacionDialog clinicId={clinicId!} categorias={categorias} />
+            <ImportarCsvDialog clinicId={clinicId!} currency={currency} />
+            <PrestacionDialog clinicId={clinicId!} currency={currency} categorias={categorias} />
           </div>
         </div>
 
@@ -539,8 +578,8 @@ function ArancelesPage() {
               importala.
             </p>
             <div className="flex justify-center gap-2">
-              <ImportarCsvDialog clinicId={clinicId!} />
-              <PrestacionDialog clinicId={clinicId!} categorias={categorias} />
+              <ImportarCsvDialog clinicId={clinicId!} currency={currency} />
+              <PrestacionDialog clinicId={clinicId!} currency={currency} categorias={categorias} />
             </div>
           </div>
         )}
@@ -605,6 +644,7 @@ function ArancelesPage() {
                           <div className="flex justify-end gap-1">
                             <PrestacionDialog
                               clinicId={clinicId!}
+                              currency={currency}
                               procedure={p}
                               categorias={categorias}
                             />
