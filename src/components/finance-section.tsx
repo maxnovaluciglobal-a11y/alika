@@ -1468,7 +1468,18 @@ export function FinanceSection({
                                   <PiezaTag tooth={it.toothNumber} surface={it.surface} />
                                 )}
                                 <span className="font-mono text-muted-foreground">
-                                  {formatMoney(it.priceCents, plan.currency)}
+                                  {it.patientCents !== null && it.patientCents !== it.priceCents ? (
+                                    <span
+                                      title={`Precio ${formatMoney(it.priceCents, plan.currency)} · cubre el convenio ${formatMoney(it.coverageCents ?? 0, plan.currency)}`}
+                                    >
+                                      {formatMoney(it.patientCents, plan.currency)}
+                                      <span className="ml-1 text-[10px] line-through opacity-60">
+                                        {formatMoney(it.priceCents, plan.currency)}
+                                      </span>
+                                    </span>
+                                  ) : (
+                                    formatMoney(it.priceCents, plan.currency)
+                                  )}
                                 </span>
                                 <ItemStatusPicker
                                   current={it.status}
@@ -1598,6 +1609,30 @@ export function FinanceSection({
                             <span className="font-mono text-muted-foreground">
                               − {formatMoney(quote.discountCents, quote.currency)}
                             </span>
+                          </div>
+                        )}
+                        {/* Reparto del convenio. Solo aparece si el
+                            presupuesto tiene uno: un particular no necesita
+                            ver una fila que dice "cubre $0". */}
+                        {quote.coverageTotalCents !== null && (
+                          <div className="space-y-1 border-t border-hairline bg-secondary/30 px-4 py-2 text-xs">
+                            <div className="flex items-center justify-end gap-3">
+                              <span className="text-muted-foreground">
+                                Cubre {quote.agreementNameSnapshot ?? "el convenio"}
+                              </span>
+                              <span className="font-mono text-muted-foreground">
+                                − {formatMoney(quote.coverageTotalCents, quote.currency)}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-end gap-3">
+                              <span className="font-medium">Paga el paciente</span>
+                              <span className="font-mono font-semibold">
+                                {formatMoney(
+                                  Math.max(0, quote.totalCents - quote.coverageTotalCents),
+                                  quote.currency,
+                                )}
+                              </span>
+                            </div>
                           </div>
                         )}
                       </div>

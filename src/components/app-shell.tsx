@@ -3,6 +3,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  Handshake,
   LayoutDashboard,
   CalendarDays,
   CalendarCheck,
@@ -107,6 +108,7 @@ const navGroups: { section: string; items: readonly NavItem[] }[] = [
     section: "Configuración",
     items: [
       { to: "/aranceles", label: "Arancel de precios", icon: Tags, permission: "settings:manage" },
+      { to: "/convenios", label: "Convenios", icon: Handshake, permission: "settings:manage" },
       {
         to: "/medios-de-pago",
         label: "Medios de pago",

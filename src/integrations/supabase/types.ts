@@ -33,6 +33,107 @@ export type Database = {
   };
   public: {
     Tables: {
+      agreement_coverage: {
+        Row: {
+          agreement_id: string;
+          clinic_id: string;
+          coverage_fixed_cents: number | null;
+          coverage_pct: number | null;
+          created_at: string;
+          id: string;
+          procedure_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          agreement_id: string;
+          clinic_id: string;
+          coverage_fixed_cents?: number | null;
+          coverage_pct?: number | null;
+          created_at?: string;
+          id?: string;
+          procedure_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          agreement_id?: string;
+          clinic_id?: string;
+          coverage_fixed_cents?: number | null;
+          coverage_pct?: number | null;
+          created_at?: string;
+          id?: string;
+          procedure_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "agreement_coverage_agreement_id_fkey";
+            columns: ["agreement_id"];
+            isOneToOne: false;
+            referencedRelation: "agreements";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "agreement_coverage_procedure_id_fkey";
+            columns: ["procedure_id"];
+            isOneToOne: false;
+            referencedRelation: "procedures";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      agreements: {
+        Row: {
+          clinic_id: string;
+          contact_email: string | null;
+          contact_name: string | null;
+          contact_phone: string | null;
+          created_at: string;
+          created_by: string;
+          id: string;
+          is_active: boolean;
+          kind: string | null;
+          name: string;
+          notes: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          clinic_id: string;
+          contact_email?: string | null;
+          contact_name?: string | null;
+          contact_phone?: string | null;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          is_active?: boolean;
+          kind?: string | null;
+          name: string;
+          notes?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          clinic_id?: string;
+          contact_email?: string | null;
+          contact_name?: string | null;
+          contact_phone?: string | null;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          is_active?: boolean;
+          kind?: string | null;
+          name?: string;
+          notes?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "agreements_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       appointment_requests: {
         Row: {
           clinic_id: string;
@@ -1707,6 +1808,8 @@ export type Database = {
           balance_cents: number | null;
           birth_date: string | null;
           branch_id: string | null;
+          agreement_id: string | null;
+          agreement_member_id: string | null;
           clinic_id: string;
           created_at: string;
           created_by: string;
@@ -1737,6 +1840,8 @@ export type Database = {
           balance_cents?: number | null;
           birth_date?: string | null;
           branch_id?: string | null;
+          agreement_id?: string | null;
+          agreement_member_id?: string | null;
           clinic_id: string;
           created_at?: string;
           created_by?: string;
@@ -1767,6 +1872,8 @@ export type Database = {
           balance_cents?: number | null;
           birth_date?: string | null;
           branch_id?: string | null;
+          agreement_id?: string | null;
+          agreement_member_id?: string | null;
           clinic_id?: string;
           created_at?: string;
           created_by?: string;
@@ -2316,7 +2423,9 @@ export type Database = {
           clinic_id: string;
           created_at: string;
           discount_cents: number;
+          coverage_cents: number | null;
           discount_pct: number | null;
+          patient_cents: number | null;
           id: string;
           name_snapshot: string;
           notes: string | null;
@@ -2335,7 +2444,9 @@ export type Database = {
           clinic_id: string;
           created_at?: string;
           discount_cents?: number;
+          coverage_cents?: number | null;
           discount_pct?: number | null;
+          patient_cents?: number | null;
           id?: string;
           name_snapshot: string;
           notes?: string | null;
@@ -2354,7 +2465,9 @@ export type Database = {
           clinic_id?: string;
           created_at?: string;
           discount_cents?: number;
+          coverage_cents?: number | null;
           discount_pct?: number | null;
+          patient_cents?: number | null;
           id?: string;
           name_snapshot?: string;
           notes?: string | null;
@@ -2403,7 +2516,10 @@ export type Database = {
           clinic_id: string;
           created_at: string;
           created_by: string;
+          agreement_id: string | null;
+          agreement_name_snapshot: string | null;
           commercial_discount_pct: number | null;
+          coverage_total_cents: number | null;
           currency: string;
           discount_cents: number;
           id: string;
@@ -2427,7 +2543,10 @@ export type Database = {
           clinic_id: string;
           created_at?: string;
           created_by?: string;
+          agreement_id?: string | null;
+          agreement_name_snapshot?: string | null;
           commercial_discount_pct?: number | null;
+          coverage_total_cents?: number | null;
           currency?: string;
           discount_cents?: number;
           id?: string;
@@ -2451,7 +2570,10 @@ export type Database = {
           clinic_id?: string;
           created_at?: string;
           created_by?: string;
+          agreement_id?: string | null;
+          agreement_name_snapshot?: string | null;
           commercial_discount_pct?: number | null;
+          coverage_total_cents?: number | null;
           currency?: string;
           discount_cents?: number;
           id?: string;
@@ -2605,10 +2727,12 @@ export type Database = {
           clinic_id: string;
           completed_at: string | null;
           completed_by: string | null;
+          coverage_cents: number | null;
           created_at: string;
           id: string;
           name_snapshot: string;
           notes: string | null;
+          patient_cents: number | null;
           phase_label: string | null;
           phase_position: number;
           plan_id: string;
@@ -2627,10 +2751,12 @@ export type Database = {
           clinic_id: string;
           completed_at?: string | null;
           completed_by?: string | null;
+          coverage_cents?: number | null;
           created_at?: string;
           id?: string;
           name_snapshot: string;
           notes?: string | null;
+          patient_cents?: number | null;
           phase_label?: string | null;
           phase_position?: number;
           plan_id: string;
@@ -2649,10 +2775,12 @@ export type Database = {
           clinic_id?: string;
           completed_at?: string | null;
           completed_by?: string | null;
+          coverage_cents?: number | null;
           created_at?: string;
           id?: string;
           name_snapshot?: string;
           notes?: string | null;
+          patient_cents?: number | null;
           phase_label?: string | null;
           phase_position?: number;
           plan_id?: string;

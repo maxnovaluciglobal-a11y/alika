@@ -62,6 +62,11 @@ export interface Paciente {
   /** null = aún no calculado (IA de predicción de ausencias, fase 4) */
   riesgoAusencia: number | null;
   etiquetas: string[];
+  /** Convenio o seguro del paciente. `null` = particular, el caso más común. */
+  convenioId?: string | null;
+  convenioNombre?: string | null;
+  /** Nº de afiliado o credencial en ese convenio. */
+  convenioAfiliado?: string | null;
   foto?: string;
   resumenIA: string;
   timeline: EventoClinico[];

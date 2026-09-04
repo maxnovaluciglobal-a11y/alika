@@ -34,6 +34,7 @@ describe("fetchPatientBalances — saldo unificado", () => {
   let ownerUserId: string;
   let patientAId: string;
   let patientBId: string;
+  let patientCId: string;
 
   beforeAll(async () => {
     admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
@@ -117,6 +118,62 @@ describe("fetchPatientBalances — saldo unificado", () => {
     });
 
     // Paciente B queda sin ninguna facturación ni pago a propósito.
+
+    // Paciente C: plan con convenio. La prestación vale $100.000 pero el
+    // convenio cubre $60.000, así que el paciente solo debe $40.000. Es el
+    // caso que introdujo la Tanda B y el que más fácil se rompe: si el saldo
+    // sumara `price_cents`, le cobraríamos $100.000 a alguien que debe menos
+    // de la mitad.
+    const { data: pacienteC } = await admin
+      .from("patients")
+      .insert({
+        clinic_id: clinicId,
+        full_name: "Paciente C con convenio",
+        created_by: ownerUserId,
+      })
+      .select("id")
+      .single();
+    patientCId = pacienteC!.id;
+
+    const { data: planConvenio } = await admin
+      .from("treatment_plans")
+      .insert({
+        clinic_id: clinicId,
+        patient_id: patientCId,
+        name: "Plan con convenio",
+        created_by: ownerUserId,
+      })
+      .select("id")
+      .single();
+
+    await admin.from("treatment_items").insert([
+      {
+        clinic_id: clinicId,
+        plan_id: planConvenio!.id,
+        name_snapshot: "Cubierta al 60%",
+        price_cents: 100_000,
+        coverage_cents: 60_000,
+        patient_cents: 40_000,
+      },
+      {
+        // Cobertura total: `patient_cents` en 0 es un valor real, no un
+        // "sin dato". Si el código cayera a `price_cents` acá, este paciente
+        // debería $25.000 que el convenio ya pagó.
+        clinic_id: clinicId,
+        plan_id: planConvenio!.id,
+        name_snapshot: "Cubierta al 100%",
+        price_cents: 25_000,
+        coverage_cents: 25_000,
+        patient_cents: 0,
+      },
+      {
+        // Sin convenio en la misma línea: cae a price_cents como siempre.
+        clinic_id: clinicId,
+        plan_id: planConvenio!.id,
+        name_snapshot: "Sin cobertura",
+        price_cents: 15_000,
+      },
+    ]);
   }, 60_000);
 
   afterAll(async () => {
@@ -133,5 +190,20 @@ describe("fetchPatientBalances — saldo unificado", () => {
     const balances = await fetchPatientBalances(admin, clinicId);
     expect(balances.get(patientAId)).toEqual({ billedCents: 10_000, paidCents: 4_000 });
     expect(balances.has(patientBId)).toBe(false);
+  });
+
+  it("con convenio, el saldo es lo que debe el PACIENTE y no el precio de lista", async () => {
+    // 40.000 (cubierta al 60%) + 0 (cubierta al 100%) + 15.000 (sin convenio)
+    // = 55.000. El precio de lista de esas tres líneas suma 140.000.
+    const balances = await fetchPatientBalances(admin, clinicId, patientCId);
+    expect(balances.get(patientCId)).toEqual({ billedCents: 55_000, paidCents: 0 });
+  });
+
+  it("una línea cubierta al 100% aporta cero, no su precio de lista", async () => {
+    // Regresión del bug más fácil de cometer acá: usar `||` en vez de `??`
+    // hace que un `patient_cents` de 0 caiga al precio y el paciente termine
+    // debiendo algo que el convenio ya pagó.
+    const balances = await fetchPatientBalances(admin, clinicId, patientCId);
+    expect(balances.get(patientCId)!.billedCents).toBeLessThan(140_000);
   });
 });

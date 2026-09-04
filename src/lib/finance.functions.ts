@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 import { mensajeDb } from "@/lib/db-errors";
 import { TOOTH_SURFACES } from "@/lib/odontogram";
 import { filaYaCreada } from "@/lib/idempotency";
@@ -18,6 +20,7 @@ import {
   type TreatmentItem,
   type TreatmentPlan,
   netAfterRetention,
+  repartirCobertura,
 } from "@/lib/finance";
 
 const SURFACE_ENUM = z.enum(TOOTH_SURFACES);
@@ -281,9 +284,9 @@ export const importProcedures = createServerFn({ method: "POST" })
 // ─── QUOTES ──────────────────────────────────────────────────────────────
 
 const QUOTE_COLUMNS =
-  "id, number, status, currency, subtotal_cents, discount_cents, commercial_discount_pct, total_cents, notes, valid_until, sent_at, accepted_at, rejected_at, accepted_by_name, created_at";
+  "id, number, status, currency, subtotal_cents, discount_cents, commercial_discount_pct, total_cents, agreement_id, agreement_name_snapshot, coverage_total_cents, notes, valid_until, sent_at, accepted_at, rejected_at, accepted_by_name, created_at";
 const QUOTE_ITEM_COLUMNS =
-  "id, quote_id, procedure_id, name_snapshot, tooth_number, surface, quantity, unit_price_cents, discount_cents, discount_pct, total_cents, phase_label, phase_position, position, notes";
+  "id, quote_id, procedure_id, name_snapshot, tooth_number, surface, quantity, unit_price_cents, discount_cents, discount_pct, total_cents, coverage_cents, patient_cents, phase_label, phase_position, position, notes";
 
 type QuoteRow = {
   id: string;
@@ -294,6 +297,9 @@ type QuoteRow = {
   discount_cents: number;
   commercial_discount_pct: number | null;
   total_cents: number;
+  agreement_id: string | null;
+  agreement_name_snapshot: string | null;
+  coverage_total_cents: number | null;
   notes: string | null;
   valid_until: string | null;
   sent_at: string | null;
@@ -314,6 +320,8 @@ type QuoteItemRow = {
   discount_cents: number;
   discount_pct: number | null;
   total_cents: number;
+  coverage_cents: number | null;
+  patient_cents: number | null;
   phase_label: string | null;
   phase_position: number;
   position: number;
@@ -332,6 +340,8 @@ function mapQuoteItem(row: QuoteItemRow): QuoteItem {
     discountCents: row.discount_cents,
     discountPct: row.discount_pct,
     totalCents: row.total_cents,
+    coverageCents: row.coverage_cents,
+    patientCents: row.patient_cents,
     phaseLabel: row.phase_label,
     phasePosition: row.phase_position,
     position: row.position,
@@ -349,6 +359,9 @@ function mapQuote(row: QuoteRow, items: QuoteItem[]): Quote {
     discountCents: row.discount_cents,
     commercialDiscountPct: row.commercial_discount_pct,
     totalCents: row.total_cents,
+    agreementId: row.agreement_id,
+    agreementNameSnapshot: row.agreement_name_snapshot,
+    coverageTotalCents: row.coverage_total_cents,
     notes: row.notes,
     validUntil: row.valid_until,
     sentAt: row.sent_at,
@@ -455,6 +468,15 @@ function computeQuoteTotals(
   items: QuoteItemDraft[],
   globalDiscountCents: number,
   commercialDiscountPct: number | null | undefined,
+  /**
+   * Cobertura del convenio del paciente, por `procedure_id`. Vacío o ausente =
+   * presupuesto particular, y todas las líneas quedan con `coverageCents` y
+   * `patientCents` en NULL (regla 11: sin convenio no es cobertura cero).
+   */
+  coberturaPorProcedimiento?: Map<
+    string,
+    { coveragePct: number | null; coverageFixedCents: number | null }
+  >,
 ) {
   const positionByPhase = new Map<string, number>();
 
@@ -465,6 +487,14 @@ function computeQuoteTotals(
     const position = positionByPhase.get(phaseKey) ?? 0;
     positionByPhase.set(phaseKey, position + 1);
 
+    const total = Math.max(0, item.quantity * item.unitPriceCents - discountCents);
+    // Un ítem escrito a mano (sin `procedureId`) no puede tener cobertura: el
+    // convenio cubre prestaciones de su arancel, no texto libre.
+    const cobertura = item.procedureId
+      ? coberturaPorProcedimiento?.get(item.procedureId)
+      : undefined;
+    const { coverageCents, patientCents } = repartirCobertura(total, cobertura, item.quantity);
+
     return {
       ...item,
       phaseLabel,
@@ -472,7 +502,9 @@ function computeQuoteTotals(
       discountCents,
       discountPct,
       position,
-      total: Math.max(0, item.quantity * item.unitPriceCents - discountCents),
+      total,
+      coverageCents,
+      patientCents,
     };
   });
 
@@ -482,11 +514,19 @@ function computeQuoteTotals(
       ? Math.min(globalDiscountCents, subtotal)
       : Math.min(Math.round((subtotal * commercialDiscountPct) / 100), subtotal);
 
+  // Total del convenio: null cuando ninguna línea tuvo cobertura, para que el
+  // presupuesto no muestre "cubre $0" en un caso particular.
+  const conCobertura = resolved.filter((i) => i.coverageCents !== null);
+  const coverageTotalCents = conCobertura.length
+    ? conCobertura.reduce((sum, i) => sum + (i.coverageCents ?? 0), 0)
+    : null;
+
   return {
     items: resolved,
     subtotal,
     discountCents: discount,
     commercialDiscountPct: commercialDiscountPct ?? null,
+    coverageTotalCents,
     total: Math.max(0, subtotal - discount),
   };
 }
@@ -509,6 +549,8 @@ function quoteItemRow(
     discount_cents: item.discountCents,
     discount_pct: item.discountPct,
     total_cents: item.total,
+    coverage_cents: item.coverageCents,
+    patient_cents: item.patientCents,
     phase_label: item.phaseLabel,
     phase_position: item.phasePosition,
     position: item.position,
@@ -521,6 +563,62 @@ function quoteItemRow(
  * si no se especifica uno. Cada ítem calcula su total como
  * qty*unit - discount, y el subtotal/total del quote se derivan.
  */
+/**
+ * Convenio del paciente y su tabla de cobertura, para repartir el presupuesto.
+ *
+ * Se resuelve en el servidor y no se acepta desde el cliente a propósito: el
+ * convenio decide cuánto termina debiendo el paciente, así que dejar que el
+ * navegador lo mande sería dejar que el navegador decida un saldo.
+ */
+async function cargarCoberturaDelPaciente(
+  supabase: SupabaseClient<Database>,
+  clinicId: string,
+  patientId: string,
+): Promise<{
+  agreementId: string | null;
+  agreementName: string | null;
+  cobertura: Map<string, { coveragePct: number | null; coverageFixedCents: number | null }>;
+}> {
+  const vacio = { agreementId: null, agreementName: null, cobertura: new Map() };
+
+  const { data: paciente } = await supabase
+    .from("patients")
+    .select("agreement_id")
+    .eq("id", patientId)
+    .eq("clinic_id", clinicId)
+    .maybeSingle();
+  if (!paciente?.agreement_id) return vacio;
+
+  const [{ data: convenio }, { data: filas }] = await Promise.all([
+    supabase
+      .from("agreements")
+      .select("name, is_active")
+      .eq("id", paciente.agreement_id)
+      .maybeSingle(),
+    supabase
+      .from("agreement_coverage")
+      .select("procedure_id, coverage_pct, coverage_fixed_cents")
+      .eq("clinic_id", clinicId)
+      .eq("agreement_id", paciente.agreement_id),
+  ]);
+
+  // Un convenio dado de baja no reparte nada nuevo: los presupuestos viejos
+  // conservan su snapshot, pero uno nuevo se cobra como particular.
+  if (!convenio?.is_active) return vacio;
+
+  const cobertura = new Map<
+    string,
+    { coveragePct: number | null; coverageFixedCents: number | null }
+  >();
+  for (const f of filas ?? []) {
+    cobertura.set(f.procedure_id, {
+      coveragePct: f.coverage_pct === null ? null : Number(f.coverage_pct),
+      coverageFixedCents: f.coverage_fixed_cents,
+    });
+  }
+  return { agreementId: paciente.agreement_id, agreementName: convenio.name, cobertura };
+}
+
 export const createQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -561,10 +659,12 @@ export const createQuote = createServerFn({ method: "POST" })
     if (rpcErr) throw new Error("No pudimos generar el número de presupuesto. " + rpcErr.message);
     const nextNumber = `P-${year}-${String(nextValue as number).padStart(4, "0")}`;
 
+    const convenio = await cargarCoberturaDelPaciente(supabase, data.clinicId, data.patientId);
     const totals = computeQuoteTotals(
       data.items,
       data.globalDiscountCents,
       data.commercialDiscountPct,
+      convenio.cobertura,
     );
 
     const { data: quoteRow, error: qErr } = await supabase
@@ -573,6 +673,9 @@ export const createQuote = createServerFn({ method: "POST" })
         clinic_id: data.clinicId,
         patient_id: data.patientId,
         number: nextNumber,
+        agreement_id: convenio.agreementId,
+        agreement_name_snapshot: convenio.agreementName,
+        coverage_total_cents: totals.coverageTotalCents,
         currency: data.currency,
         notes: data.notes || null,
         valid_until: data.validUntil || null,
@@ -631,7 +734,7 @@ export const updateQuote = createServerFn({ method: "POST" })
 
     const { data: quote, error: qErr } = await supabase
       .from("quotes")
-      .select("status")
+      .select("status, patient_id")
       .eq("id", data.quoteId)
       .eq("clinic_id", data.clinicId)
       .maybeSingle();
@@ -643,10 +746,14 @@ export const updateQuote = createServerFn({ method: "POST" })
       );
     }
 
+    // Se recarga la cobertura en cada edición: si al paciente le cambiaron el
+    // convenio desde que se emitió, corregir el presupuesto tiene que reflejarlo.
+    const convenio = await cargarCoberturaDelPaciente(supabase, data.clinicId, quote.patient_id);
     const totals = computeQuoteTotals(
       data.items,
       data.globalDiscountCents,
       data.commercialDiscountPct,
+      convenio.cobertura,
     );
 
     const { error: delErr } = await supabase
@@ -670,6 +777,9 @@ export const updateQuote = createServerFn({ method: "POST" })
         discount_cents: totals.discountCents,
         commercial_discount_pct: totals.commercialDiscountPct,
         total_cents: totals.total,
+        agreement_id: convenio.agreementId,
+        agreement_name_snapshot: convenio.agreementName,
+        coverage_total_cents: totals.coverageTotalCents,
       })
       .eq("id", data.quoteId)
       .eq("clinic_id", data.clinicId);
@@ -780,7 +890,7 @@ export const setQuoteStatus = createServerFn({ method: "POST" })
 const PLAN_COLUMNS =
   "id, quote_id, name, status, total_cents, currency, started_at, completed_at, notes, created_at";
 const ITEM_COLUMNS =
-  "id, procedure_id, quote_item_id, name_snapshot, tooth_number, surface, status, price_cents, phase_label, phase_position, position, professional_id, scheduled_appointment_id, completed_at, notes";
+  "id, procedure_id, quote_item_id, name_snapshot, tooth_number, surface, status, price_cents, coverage_cents, patient_cents, phase_label, phase_position, position, professional_id, scheduled_appointment_id, completed_at, notes";
 
 type PlanRow = {
   id: string;
@@ -803,6 +913,8 @@ type PlanItemRow = {
   surface: string | null;
   status: string;
   price_cents: number;
+  coverage_cents: number | null;
+  patient_cents: number | null;
   phase_label: string | null;
   phase_position: number;
   position: number;
@@ -822,6 +934,8 @@ function mapPlanItem(row: PlanItemRow): TreatmentItem {
     surface: row.surface as TreatmentItem["surface"],
     status: row.status as TreatmentItem["status"],
     priceCents: row.price_cents,
+    coverageCents: row.coverage_cents,
+    patientCents: row.patient_cents,
     phaseLabel: row.phase_label,
     phasePosition: row.phase_position,
     position: row.position,

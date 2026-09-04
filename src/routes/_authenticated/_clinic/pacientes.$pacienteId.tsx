@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, CalendarClock, Mail, Phone, ShieldAlert, Tag } from "lucide-react";
+
+import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/route-guards";
@@ -10,6 +12,7 @@ import { PacienteTimeline } from "@/components/paciente-timeline";
 import { NotasClinicas } from "@/components/notas-clinicas";
 import { AllergyAlertBanner, MedicalHistoryCard } from "@/components/medical-history-card";
 import { getMedicalHistory } from "@/lib/medical-history.functions";
+import { listAgreements, setPatientAgreement } from "@/lib/clinic-finance.functions";
 import { PatientDocumentsCard } from "@/components/patient-documents-card";
 import { PatientConsentsCard } from "@/components/patient-consents-card";
 import { Odontogram } from "@/components/odontogram";
@@ -107,6 +110,124 @@ function PacienteError() {
         </Link>
       </p>
     </AppShell>
+  );
+}
+
+/**
+ * Convenio del paciente en el encabezado de la ficha (Tanda B). Es un dato que
+ * recepción necesita ver antes de presupuestar: define cuánto termina pagando
+ * el paciente de cada prestación.
+ */
+function ConvenioDelPaciente({
+  clinicId,
+  patientId,
+  convenioId,
+  afiliado,
+  puedeEditar,
+}: {
+  clinicId: string;
+  patientId: string;
+  convenioId: string | null;
+  afiliado: string | null;
+  puedeEditar: boolean;
+}) {
+  const router = useRouter();
+  const fetchAgreements = useServerFn(listAgreements);
+  const setFn = useServerFn(setPatientAgreement);
+  const [editando, setEditando] = useState(false);
+  const [seleccion, setSeleccion] = useState(convenioId ?? "");
+  const [nroAfiliado, setNroAfiliado] = useState(afiliado ?? "");
+
+  const { data: convenios = [] } = useQuery({
+    queryKey: ["agreements", clinicId],
+    queryFn: () => fetchAgreements({ data: { clinicId } }),
+  });
+
+  const guardar = useMutation({
+    mutationFn: () =>
+      setFn({
+        data: {
+          clinicId,
+          patientId,
+          agreementId: seleccion || null,
+          memberId: nroAfiliado.trim() || null,
+        },
+      }),
+    onSuccess: () => {
+      // El convenio viene del loader de la ruta, no de React Query — mismo
+      // motivo por el que el saldo usa router.invalidate() y no invalidateQueries.
+      void router.invalidate();
+      setEditando(false);
+      toast.success("Convenio actualizado");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const actual = convenios.find((c) => c.id === convenioId);
+
+  if (editando) {
+    return (
+      <div className="space-y-1.5">
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Convenio</p>
+        <select
+          value={seleccion}
+          onChange={(e) => setSeleccion(e.target.value)}
+          aria-label="Convenio del paciente"
+          className="w-full rounded-md border border-hairline bg-transparent px-2 py-1 text-sm outline-none focus:border-brand/50"
+        >
+          <option value="">Particular</option>
+          {convenios.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        {seleccion && (
+          <input
+            value={nroAfiliado}
+            onChange={(e) => setNroAfiliado(e.target.value)}
+            placeholder="Nº de afiliado"
+            aria-label="Número de afiliado"
+            className="w-full rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
+          />
+        )}
+        <div className="flex gap-1">
+          <button
+            onClick={() => guardar.mutate()}
+            disabled={guardar.isPending}
+            className="text-[11px] font-medium text-brand hover:underline disabled:opacity-50"
+          >
+            Guardar
+          </button>
+          <button
+            onClick={() => setEditando(false)}
+            className="text-[11px] text-muted-foreground hover:underline"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Convenio</p>
+      <p className="font-display text-xl font-semibold">{actual?.name ?? "Particular"}</p>
+      {afiliado && <p className="text-[11px] text-muted-foreground">Afiliado {afiliado}</p>}
+      {puedeEditar && (
+        <button
+          onClick={() => {
+            setSeleccion(convenioId ?? "");
+            setNroAfiliado(afiliado ?? "");
+            setEditando(true);
+          }}
+          className="text-[11px] font-medium text-brand hover:underline"
+        >
+          Cambiar
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -213,7 +334,7 @@ function PacienteDetalle() {
                 </div>
               )}
 
-              <div className="mt-6 grid gap-4 border-t border-hairline pt-5 sm:grid-cols-3">
+              <div className="mt-6 grid gap-4 border-t border-hairline pt-5 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
                     Saldo
@@ -246,6 +367,15 @@ function PacienteDetalle() {
                       : `${paciente.riesgoAusencia}%`}
                   </p>
                 </div>
+                {access.clinic?.id && (
+                  <ConvenioDelPaciente
+                    clinicId={access.clinic.id}
+                    patientId={paciente.id}
+                    convenioId={paciente.convenioId ?? null}
+                    afiliado={paciente.convenioAfiliado ?? null}
+                    puedeEditar={puedeFacturar}
+                  />
+                )}
               </div>
             </div>
 

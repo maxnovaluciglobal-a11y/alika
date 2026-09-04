@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import { mensajeDb } from "@/lib/db-errors";
-import type { Expense, PaymentMethodConfig } from "@/lib/finance";
+import type { Agreement, AgreementCoverage, Expense, PaymentMethodConfig } from "@/lib/finance";
 
 /**
  * Medios de pago configurables por clínica y módulo de gastos (Tanda B).
@@ -335,5 +335,255 @@ export const deleteExpense = createServerFn({ method: "POST" })
       .eq("id", data.expenseId)
       .eq("clinic_id", data.clinicId);
     if (error) throw new Error("No tienes permisos para borrar gastos. " + error.message);
+    return { ok: true };
+  });
+
+// ─── CONVENIOS Y COBERTURA ───────────────────────────────────────────────
+
+const AGREEMENT_COLUMNS =
+  "id, name, kind, contact_name, contact_phone, contact_email, notes, is_active";
+
+type AgreementRow = {
+  id: string;
+  name: string;
+  kind: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  notes: string | null;
+  is_active: boolean;
+};
+
+function mapAgreement(row: AgreementRow): Agreement {
+  return {
+    id: row.id,
+    name: row.name,
+    kind: row.kind,
+    contactName: row.contact_name,
+    contactPhone: row.contact_phone,
+    contactEmail: row.contact_email,
+    notes: row.notes,
+    isActive: row.is_active,
+  };
+}
+
+export const listAgreements = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        incluirInactivos: z.boolean().default(false),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<Agreement[]> => {
+    let query = context.supabase
+      .from("agreements")
+      .select(AGREEMENT_COLUMNS)
+      .eq("clinic_id", data.clinicId);
+    if (!data.incluirInactivos) query = query.eq("is_active", true);
+
+    const { data: rows, error } = await query.order("name", { ascending: true });
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar los convenios."));
+    return (rows ?? []).map((r) => mapAgreement(r as AgreementRow));
+  });
+
+const AgreementFields = {
+  name: z.string().trim().min(1, "El nombre del convenio es obligatorio."),
+  kind: z.string().trim().max(60).nullish(),
+  contactName: z.string().trim().max(120).nullish(),
+  contactPhone: z.string().trim().max(40).nullish(),
+  contactEmail: z.string().trim().max(160).nullish(),
+  notes: z.string().trim().max(1000).nullish(),
+};
+
+function agreementRow(d: {
+  name: string;
+  kind?: string | null;
+  contactName?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
+  notes?: string | null;
+}) {
+  return {
+    name: d.name,
+    kind: d.kind?.trim() || null,
+    contact_name: d.contactName?.trim() || null,
+    contact_phone: d.contactPhone?.trim() || null,
+    contact_email: d.contactEmail?.trim() || null,
+    notes: d.notes?.trim() || null,
+  };
+}
+
+export const createAgreement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ clinicId: z.string().uuid(), ...AgreementFields }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ id: string }> => {
+    const { data: inserted, error } = await context.supabase
+      .from("agreements")
+      .insert({ clinic_id: data.clinicId, ...agreementRow(data) })
+      .select("id")
+      .single();
+    if (error) {
+      if (error.code === "23505") throw new Error(`Ya existe un convenio llamado "${data.name}".`);
+      throw new Error("No tienes permisos para configurar convenios. " + error.message);
+    }
+    return { id: inserted.id };
+  });
+
+export const updateAgreement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        agreementId: z.string().uuid(),
+        ...AgreementFields,
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { error } = await context.supabase
+      .from("agreements")
+      .update(agreementRow(data))
+      .eq("id", data.agreementId)
+      .eq("clinic_id", data.clinicId);
+    if (error) {
+      if (error.code === "23505") throw new Error(`Ya existe un convenio llamado "${data.name}".`);
+      throw new Error("No tienes permisos para configurar convenios. " + error.message);
+    }
+    return { ok: true };
+  });
+
+export const setAgreementActive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        agreementId: z.string().uuid(),
+        isActive: z.boolean(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { error } = await context.supabase
+      .from("agreements")
+      .update({ is_active: data.isActive })
+      .eq("id", data.agreementId)
+      .eq("clinic_id", data.clinicId);
+    if (error) throw new Error("No tienes permisos para configurar convenios. " + error.message);
+    return { ok: true };
+  });
+
+/** Cobertura de un convenio, prestación por prestación. */
+export const listAgreementCoverage = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ clinicId: z.string().uuid(), agreementId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<AgreementCoverage[]> => {
+    const { data: rows, error } = await context.supabase
+      .from("agreement_coverage")
+      .select("id, agreement_id, procedure_id, coverage_pct, coverage_fixed_cents")
+      .eq("clinic_id", data.clinicId)
+      .eq("agreement_id", data.agreementId);
+    if (error) throw new Error(mensajeDb(error, "No pudimos cargar la cobertura del convenio."));
+    return (rows ?? []).map((r) => ({
+      id: r.id,
+      agreementId: r.agreement_id,
+      procedureId: r.procedure_id,
+      coveragePct: r.coverage_pct === null ? null : Number(r.coverage_pct),
+      coverageFixedCents: r.coverage_fixed_cents,
+    }));
+  });
+
+/**
+ * Define (o quita) la cobertura de una prestación en un convenio.
+ *
+ * Pasar ambas formas en `null` BORRA la fila en vez de guardar una cobertura
+ * vacía: una prestación sin cobertura definida es una que el convenio no
+ * cubre, y eso se representa con la ausencia de fila, no con ceros que después
+ * hay que interpretar.
+ */
+export const setAgreementCoverage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        agreementId: z.string().uuid(),
+        procedureId: z.string().uuid(),
+        coveragePct: z.number().min(0).max(100).nullish(),
+        coverageFixedCents: z.number().int().min(0).nullish(),
+      })
+      .refine(
+        (v) =>
+          !(
+            v.coveragePct !== null &&
+            v.coveragePct !== undefined &&
+            v.coverageFixedCents !== null &&
+            v.coverageFixedCents !== undefined
+          ),
+        "Elegí porcentaje o monto fijo, no las dos cosas.",
+      )
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { supabase } = context;
+    const pct = data.coveragePct ?? null;
+    const fijo = data.coverageFixedCents ?? null;
+
+    if (pct === null && fijo === null) {
+      const { error } = await supabase
+        .from("agreement_coverage")
+        .delete()
+        .eq("clinic_id", data.clinicId)
+        .eq("agreement_id", data.agreementId)
+        .eq("procedure_id", data.procedureId);
+      if (error) throw new Error("No tienes permisos para editar la cobertura. " + error.message);
+      return { ok: true };
+    }
+
+    const { error } = await supabase.from("agreement_coverage").upsert(
+      {
+        clinic_id: data.clinicId,
+        agreement_id: data.agreementId,
+        procedure_id: data.procedureId,
+        coverage_pct: pct,
+        coverage_fixed_cents: fijo,
+      },
+      { onConflict: "agreement_id,procedure_id" },
+    );
+    if (error) throw new Error("No tienes permisos para editar la cobertura. " + error.message);
+    return { ok: true };
+  });
+
+/** Asigna (o quita) el convenio de un paciente. */
+export const setPatientAgreement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        patientId: z.string().uuid(),
+        agreementId: z.string().uuid().nullish(),
+        memberId: z.string().trim().max(60).nullish(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { error } = await context.supabase
+      .from("patients")
+      .update({
+        agreement_id: data.agreementId ?? null,
+        agreement_member_id: data.memberId?.trim() || null,
+      })
+      .eq("id", data.patientId)
+      .eq("clinic_id", data.clinicId);
+    if (error) throw new Error("No tienes permisos para editar el paciente. " + error.message);
     return { ok: true };
   });

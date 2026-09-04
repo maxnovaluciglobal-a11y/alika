@@ -34,6 +34,8 @@ function calcularEdad(birthDate: string): number {
 }
 
 type PatientRow = {
+  agreement_id?: string | null;
+  agreement_member_id?: string | null;
   id: string;
   full_name: string;
   document_id: string | null;
@@ -92,6 +94,8 @@ function mapPatientRow(
     saldo: row.balance_cents,
     riesgoAusencia: row.no_show_risk,
     etiquetas: row.tags ?? [],
+    convenioId: row.agreement_id ?? null,
+    convenioAfiliado: row.agreement_member_id ?? null,
     foto: row.avatar_url ?? undefined,
     resumenIA: row.ai_summary ?? "Aún no hay un resumen de IA para este paciente.",
     timeline: [],
@@ -101,7 +105,7 @@ function mapPatientRow(
 }
 
 const PATIENT_COLUMNS =
-  "id, full_name, document_id, birth_date, phone, phone_valid, email, branch_id, primary_professional_id, status, tags, avatar_url, balance_cents, no_show_risk, ai_summary, wa_opt_in, referral_code";
+  "id, full_name, document_id, birth_date, phone, phone_valid, email, branch_id, primary_professional_id, status, tags, avatar_url, balance_cents, no_show_risk, ai_summary, wa_opt_in, referral_code, agreement_id, agreement_member_id";
 
 /**
  * Tope de fila del listado — red de seguridad, no la estrategia de paginado
@@ -172,7 +176,8 @@ export const listPatients = createServerFn({ method: "GET" })
 
 /**
  * Auditoría de código 01-sep-2026: esta regla (total facturado en
- * treatment_items, excluyendo planes cancelled, menos total pagado en
+ * treatment_items —lo que le toca al paciente cuando hay convenio—,
+ * excluyendo planes cancelled, menos total pagado en
  * payments) estaba reimplementada por separado acá y en
  * `listPendingOutreach` (messaging.functions.ts) — confirmado que hoy
  * coinciden exactamente (mismos filtros) antes de unificar, no había bug
@@ -188,7 +193,10 @@ export async function fetchPatientBalances(
 ): Promise<Map<string, { billedCents: number; paidCents: number }>> {
   let billedQuery = supabase
     .from("treatment_items")
-    .select("price_cents, treatment_plans!inner(patient_id, clinic_id, status)")
+    // `patient_cents` viene del reparto con el convenio (Tanda B): cuando hay
+    // convenio, lo que el paciente debe NO es el precio de la línea. Se traen
+    // las dos y abajo se prefiere `patient_cents` cuando no es NULL.
+    .select("price_cents, patient_cents, treatment_plans!inner(patient_id, clinic_id, status)")
     .eq("clinic_id", clinicId)
     .neq("treatment_plans.status", "cancelled");
   let paidQuery = supabase
@@ -211,7 +219,11 @@ export async function fetchPatientBalances(
     const pid = (r as unknown as { treatment_plans: { patient_id: string } }).treatment_plans
       .patient_id;
     const cur = byPatient.get(pid) ?? { billedCents: 0, paidCents: 0 };
-    cur.billedCents += (r as { price_cents: number }).price_cents ?? 0;
+    const fila = r as { price_cents: number; patient_cents: number | null };
+    // `?? price_cents` y no `|| price_cents`: un `patient_cents` de 0 es un
+    // valor real (el convenio cubre el 100 %) y tiene que quedar en cero, no
+    // caer al precio de lista y hacerle deber al paciente algo que no debe.
+    cur.billedCents += fila.patient_cents ?? fila.price_cents ?? 0;
     byPatient.set(pid, cur);
   }
   for (const r of paidRows ?? []) {

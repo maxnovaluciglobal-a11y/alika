@@ -113,6 +113,65 @@ export const CATEGORIAS_GASTO_SUGERIDAS = [
   "Otros",
 ] as const;
 
+/**
+ * Convenio o seguro del paciente (Fonasa, Isapre, obra social, EPS…). El
+ * `kind` es texto libre porque el vocabulario cambia por país.
+ */
+export interface Agreement {
+  id: string;
+  name: string;
+  kind: string | null;
+  contactName: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  notes: string | null;
+  isActive: boolean;
+}
+
+/**
+ * Cuánto cubre un convenio de una prestación. Exactamente una de las dos
+ * formas: porcentaje de la línea, o monto fijo por unidad (el "bono" de valor
+ * cerrado). La base lo garantiza con un CHECK.
+ */
+export interface AgreementCoverage {
+  id: string;
+  agreementId: string;
+  procedureId: string;
+  coveragePct: number | null;
+  coverageFixedCents: number | null;
+}
+
+/**
+ * Reparte una línea entre convenio y paciente.
+ *
+ * La cobertura se calcula sobre el total de la línea ya descontado, no sobre
+ * el precio de lista: si la clínica bonificó un 20 %, el convenio cubre su
+ * porcentaje de lo que efectivamente se cobra, no de un precio que nadie va a
+ * pagar. Una clínica que necesite la otra semántica usa monto fijo.
+ *
+ * `null` de cobertura significa "sin convenio" y devuelve `null` en ambos
+ * lados: el resto del sistema cae entonces a `total_cents`, que es el
+ * comportamiento de siempre (regla 11 — sin dato no es cero).
+ */
+export function repartirCobertura(
+  lineTotalCents: number,
+  coverage: { coveragePct: number | null; coverageFixedCents: number | null } | null | undefined,
+  quantity = 1,
+): { coverageCents: number | null; patientCents: number | null } {
+  if (!coverage) return { coverageCents: null, patientCents: null };
+
+  const bruto =
+    coverage.coverageFixedCents !== null
+      ? // Monto fijo POR UNIDAD: dos piezas con el mismo bono cubren el doble.
+        coverage.coverageFixedCents * quantity
+      : Math.round((lineTotalCents * (coverage.coveragePct ?? 0)) / 100);
+
+  // El convenio nunca puede cubrir más que la línea: un bono de $50.000 sobre
+  // una prestación de $30.000 cubre $30.000, no deja al paciente a favor.
+  const coverageCents = Math.min(Math.max(0, bruto), lineTotalCents);
+  return { coverageCents, patientCents: lineTotalCents - coverageCents };
+}
+
 export interface QuoteItem {
   id: string;
   procedureId: string | null;
@@ -129,6 +188,10 @@ export interface QuoteItem {
    */
   discountPct: number | null;
   totalCents: number;
+  /** Lo que pone el convenio en esta línea. `null` = sin convenio, no cero. */
+  coverageCents: number | null;
+  /** Lo que paga el paciente. `null` = sin convenio; el saldo usa `totalCents`. */
+  patientCents: number | null;
   /** Bloque que agrupa el ítem ("Fase 1", "Rehabilitación"). `null` = sin fase. */
   phaseLabel: string | null;
   phasePosition: number;
@@ -146,6 +209,11 @@ export interface Quote {
   /** Descuento comercial global en %. `null` = se cargó en pesos o no hay. */
   commercialDiscountPct: number | null;
   totalCents: number;
+  /** Convenio aplicado. `null` = paciente particular. */
+  agreementId: string | null;
+  agreementNameSnapshot: string | null;
+  /** Total que pone el convenio. `null` = sin convenio. */
+  coverageTotalCents: number | null;
   notes: string | null;
   validUntil: string | null;
   sentAt: string | null;
@@ -165,6 +233,10 @@ export interface TreatmentItem {
   surface: ToothSurface | null;
   status: TreatmentItemStatus;
   priceCents: number;
+  /** Lo que pone el convenio. `null` = sin convenio, no cero. */
+  coverageCents: number | null;
+  /** Lo que debe el paciente por esta línea. Es lo que suma el saldo. */
+  patientCents: number | null;
   /** Heredado del `quote_item` al aceptar el presupuesto. `null` = sin fase. */
   phaseLabel: string | null;
   phasePosition: number;
