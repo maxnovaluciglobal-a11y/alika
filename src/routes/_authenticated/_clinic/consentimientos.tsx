@@ -22,7 +22,7 @@ import {
   createConsentTemplate,
   listConsentTemplates,
   setConsentTemplateActive,
-} from "@/lib/clinical-documents.functions";
+} from "@/lib/clinical/clinical-documents.functions";
 import { requirePermission } from "@/lib/route-guards";
 
 function inputClass() {

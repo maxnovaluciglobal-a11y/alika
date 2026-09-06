@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { versionVigente } from "../src/lib/clinical-notes";
+import { versionVigente } from "../src/lib/clinical/clinical-notes";
 
 /**
  * Prueba pura, sin DB: cubre el bug real que arregla `versionVigente` — el

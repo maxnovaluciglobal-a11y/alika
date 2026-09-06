@@ -9,7 +9,7 @@ import {
   TOOTH_SURFACES,
   WHOLE_TOOTH_CONDITIONS,
   type OdontogramMark,
-} from "@/lib/odontogram";
+} from "@/lib/clinical/odontogram";
 
 const TOOTH_SURFACE_ENUM = z.enum(TOOTH_SURFACES);
 const TOOTH_CONDITION_ENUM = z.enum(TOOTH_CONDITIONS);

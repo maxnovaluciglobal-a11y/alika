@@ -35,7 +35,7 @@ import {
   saveClinicalNote,
   setNoteStatus,
   type SaveNoteResult,
-} from "@/lib/clinical-notes.functions";
+} from "@/lib/clinical/clinical-notes.functions";
 import { useOfflineMutation } from "@/hooks/use-offline-mutation";
 import {
   AI_ACTION_LABELS,
@@ -47,14 +47,18 @@ import {
   formatoFechaHora,
   type ClinicalNoteEntity,
   type NoteReviewStatus,
-} from "@/lib/clinical-notes";
-import { NOTE_TEMPLATES, NOTE_TEMPLATE_SPECIALTIES, getNoteTemplate } from "@/lib/note-templates";
+} from "@/lib/clinical/clinical-notes";
+import {
+  NOTE_TEMPLATES,
+  NOTE_TEMPLATE_SPECIALTIES,
+  getNoteTemplate,
+} from "@/lib/clinical/note-templates";
 import { VersionDiffDialog } from "@/components/version-diff-dialog";
 import { DevDiagnosticsPanel } from "@/components/dev-diagnostics-panel";
 import { estadoNota, reportarBloqueo } from "@/lib/block-diagnostics";
-import type { NoteAction } from "@/lib/note-permissions";
+import type { NoteAction } from "@/lib/clinical/note-permissions";
 import { leerRolSimulado } from "@/lib/role-simulation";
-import { exportarNotaPdf } from "@/lib/note-pdf";
+import { exportarNotaPdf } from "@/lib/clinical/note-pdf";
 
 import type { ClinicRole } from "@/lib/access";
 import type { Paciente } from "@/lib/clinic-data";

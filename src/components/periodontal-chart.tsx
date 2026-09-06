@@ -20,7 +20,7 @@ import {
   getLatestPeriodontalChart,
   getPeriodontalChartById,
   listPeriodontalCharts,
-} from "@/lib/periodontal.functions";
+} from "@/lib/clinical/periodontal.functions";
 import {
   FDI_ADULT_QUADRANTS,
   FURCATION_LABELS,
@@ -32,7 +32,7 @@ import {
   pocketSeverity,
   type PeriodontalChart as PeriodontalChartData,
   type PeriodontalPoint,
-} from "@/lib/periodontal";
+} from "@/lib/clinical/periodontal";
 
 type Props = {
   clinicId: string;

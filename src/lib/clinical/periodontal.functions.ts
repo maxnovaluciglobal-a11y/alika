@@ -9,7 +9,7 @@ import {
   type PeriodontalChartSummary,
   type PeriodontalPoint,
   type PeriodontalToothMeasurement,
-} from "@/lib/periodontal";
+} from "@/lib/clinical/periodontal";
 
 const TOOTH_NUMBER = z
   .number()

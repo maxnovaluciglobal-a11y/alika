@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useColaOffline } from "@/hooks/use-offline-mutation";
 import { descartarConflicto, descartarFallido, type ItemCola } from "@/lib/offline-queue";
 import { resolverConflicto } from "@/lib/offline-sync";
-import { CONDITION_LABELS, type ToothCondition } from "@/lib/odontogram";
+import { CONDITION_LABELS, type ToothCondition } from "@/lib/clinical/odontogram";
 
 const hora = new Intl.DateTimeFormat("es", { hour: "2-digit", minute: "2-digit" });
 

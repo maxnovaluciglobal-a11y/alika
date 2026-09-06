@@ -9,7 +9,7 @@ import { createNotification } from "@/lib/notifications.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 type SupabaseCtx = SupabaseClient<Database>;
-import { versionVigente } from "@/lib/clinical-notes";
+import { versionVigente } from "@/lib/clinical/clinical-notes";
 import type {
   ClinicalEntityKind,
   ClinicalNote,
@@ -20,7 +20,7 @@ import type {
   NoteReviewAction,
   NoteReviewStatus,
   NoteStatus,
-} from "@/lib/clinical-notes";
+} from "@/lib/clinical/clinical-notes";
 
 /** Devuelve el mensaje de la base de datos (reglas de permisos) o un texto por defecto. */
 const clinicPatient = z.object({
@@ -619,7 +619,7 @@ export const generateNoteText = createServerFn({ method: "POST" })
       throw new Error("Tu rol no puede redactar notas clínicas.");
     }
 
-    const { getNoteTemplate } = await import("@/lib/note-templates");
+    const { getNoteTemplate } = await import("@/lib/clinical/note-templates");
     const plantilla = getNoteTemplate(data.templateId);
     const guiaPlantilla = plantilla
       ? `\n\nPlantilla activa: ${plantilla.specialty} · ${plantilla.motivo}. ${plantilla.guidance}` +

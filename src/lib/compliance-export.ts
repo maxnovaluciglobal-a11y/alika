@@ -1,4 +1,8 @@
-import { AUDIT_LABELS, REVIEW_ACTION_LABELS, formatoFechaHora } from "@/lib/clinical-notes";
+import {
+  AUDIT_LABELS,
+  REVIEW_ACTION_LABELS,
+  formatoFechaHora,
+} from "@/lib/clinical/clinical-notes";
 import type { ComplianceEvent } from "@/lib/compliance.functions";
 
 export interface ExportContexto {

@@ -7,7 +7,7 @@ import {
   type ClinicalNoteAuditEntry,
   type ClinicalNoteEntity,
   type ClinicalNoteVersion,
-} from "@/lib/clinical-notes";
+} from "@/lib/clinical/clinical-notes";
 
 interface ExportArgs {
   clinicaNombre: string;

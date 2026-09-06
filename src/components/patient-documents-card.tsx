@@ -20,7 +20,7 @@ import {
   listPatientDocuments,
   uploadPatientDocument,
   type PatientDocument,
-} from "@/lib/clinical-documents.functions";
+} from "@/lib/clinical/clinical-documents.functions";
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {

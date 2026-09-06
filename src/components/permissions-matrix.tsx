@@ -16,7 +16,7 @@ import {
   NOTE_STATE_LABELS,
   evaluarAccionNota,
   type NoteState,
-} from "@/lib/note-permissions";
+} from "@/lib/clinical/note-permissions";
 
 const PERMISSION_LABELS: Record<Permission, string> = {
   "dashboard:view": "Ver dashboard",
