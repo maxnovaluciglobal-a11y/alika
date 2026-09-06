@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { HORA_INICIO, type Cita, type EstadoCita } from "@/lib/clinic-operations/clinic-data";
 import { mensajeDb } from "@/lib/db-errors";
 import { filaYaCreada } from "@/lib/idempotency";
-import { fetchPatientBalances } from "@/lib/patients.functions";
+import { fetchPatientBalances } from "@/lib/patients/patients.functions";
 import { requireFinanceView } from "@/lib/finance/finance-reports.functions";
 import type { Database } from "@/integrations/supabase/types";
 

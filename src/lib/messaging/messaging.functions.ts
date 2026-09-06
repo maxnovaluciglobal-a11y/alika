@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { mensajeDb } from "@/lib/db-errors";
-import { fetchPatientBalances } from "@/lib/patients.functions";
+import { fetchPatientBalances } from "@/lib/patients/patients.functions";
 import {
   MESSAGE_CHANNELS,
   MESSAGE_TEMPLATE_KINDS,

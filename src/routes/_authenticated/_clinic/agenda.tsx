@@ -62,7 +62,7 @@ const HOY = hoyISO();
 import { listBranches, listProfessionals } from "@/lib/clinic-operations/clinic-catalog.functions";
 import { listProcedures } from "@/lib/finance/finance.functions";
 import { formatMoney } from "@/lib/finance/finance";
-import { listPatients } from "@/lib/patients.functions";
+import { listPatients } from "@/lib/patients/patients.functions";
 import { listAllergyAlerts } from "@/lib/clinical/medical-history.functions";
 import { getAppointmentPatientBalances } from "@/lib/clinic-operations/appointments.functions";
 import {
@@ -82,7 +82,7 @@ import {
   listPendingAppointmentRequests,
   markAppointmentRequestScheduled,
   type PendingAppointmentRequest,
-} from "@/lib/portal.functions";
+} from "@/lib/patients/portal.functions";
 import { coincide, num, paginar, str } from "@/lib/search";
 import { cn } from "@/lib/utils";
 

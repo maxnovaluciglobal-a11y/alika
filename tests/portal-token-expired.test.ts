@@ -47,7 +47,7 @@ async function firmarToken(opts: {
 
 describe("clinicIdFromExpiredToken", () => {
   it("token vencido con firma válida: devuelve el clinic_id real", async () => {
-    const { clinicIdFromExpiredToken } = await import("../src/lib/portal-token.server");
+    const { clinicIdFromExpiredToken } = await import("../src/lib/patients/portal-token.server");
     const token = await firmarToken({
       clinicId: "33333333-3333-3333-3333-333333333333",
       expMsAgo: 60_000,
@@ -56,13 +56,13 @@ describe("clinicIdFromExpiredToken", () => {
   });
 
   it("token todavía vigente: no es el caso que cubre esta función, devuelve null", async () => {
-    const { clinicIdFromExpiredToken } = await import("../src/lib/portal-token.server");
+    const { clinicIdFromExpiredToken } = await import("../src/lib/patients/portal-token.server");
     const token = await firmarToken({});
     expect(await clinicIdFromExpiredToken(token)).toBeNull();
   });
 
   it("token con firma incorrecta (secret distinto): nunca revela el clinic_id", async () => {
-    const { clinicIdFromExpiredToken } = await import("../src/lib/portal-token.server");
+    const { clinicIdFromExpiredToken } = await import("../src/lib/patients/portal-token.server");
     const token = await firmarToken({
       expMsAgo: 60_000,
       secret: "otro-secret-completamente-distinto",
@@ -71,12 +71,12 @@ describe("clinicIdFromExpiredToken", () => {
   });
 
   it("token manipulado (basura): no revienta, devuelve null", async () => {
-    const { clinicIdFromExpiredToken } = await import("../src/lib/portal-token.server");
+    const { clinicIdFromExpiredToken } = await import("../src/lib/patients/portal-token.server");
     expect(await clinicIdFromExpiredToken("no-es-un-jwt-valido")).toBeNull();
   });
 
   it("token vencido pero con issuer distinto: no lo acepta como propio", async () => {
-    const { clinicIdFromExpiredToken } = await import("../src/lib/portal-token.server");
+    const { clinicIdFromExpiredToken } = await import("../src/lib/patients/portal-token.server");
     const token = await firmarToken({ expMsAgo: 60_000, issuer: "otro:emisor" });
     expect(await clinicIdFromExpiredToken(token)).toBeNull();
   });

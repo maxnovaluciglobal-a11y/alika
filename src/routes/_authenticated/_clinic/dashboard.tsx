@@ -11,7 +11,7 @@ import { hasPermission } from "@/lib/access/access";
 import { AgendaGrid } from "@/components/agenda-grid";
 import { formatoFecha, hoyISO } from "@/lib/clinic-operations/clinic-data";
 import { listProfessionals } from "@/lib/clinic-operations/clinic-catalog.functions";
-import { listPatients } from "@/lib/patients.functions";
+import { listPatients } from "@/lib/patients/patients.functions";
 import { listAppointments } from "@/lib/clinic-operations/appointments.functions";
 import { cn } from "@/lib/utils";
 

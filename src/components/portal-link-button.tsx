@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Check, CheckCircle2, Copy, Link2, Loader2, MessageCircle, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 
-import { generatePortalLink, revokePortalAccess } from "@/lib/portal.functions";
+import { generatePortalLink, revokePortalAccess } from "@/lib/patients/portal.functions";
 import { cn } from "@/lib/utils";
 
 interface Props {

@@ -12,7 +12,7 @@ import {
   signPortalToken,
   verifyPortalToken,
   type PortalTokenPayload,
-} from "@/lib/portal-token.server";
+} from "@/lib/patients/portal-token.server";
 import { tryMetaTemplateSend } from "@/lib/messaging/whatsapp.functions";
 
 // ────────────────────────────────────────────────────────────

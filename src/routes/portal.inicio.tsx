@@ -29,7 +29,7 @@ import {
   getExpiredPortalContact,
   getMyPortalOverview,
   requestPortalAppointment,
-} from "@/lib/portal.functions";
+} from "@/lib/patients/portal.functions";
 
 /**
  * El portal no tiene sesión de Supabase (sin `access.clinic?.timezone`

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 
-import { fetchPatientBalances } from "@/lib/patients.functions";
+import { fetchPatientBalances } from "@/lib/patients/patients.functions";
 
 /**
  * Regresión de la unificación 01-sep-2026: `getPatient`
