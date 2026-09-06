@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, Loader2, Plus, Save, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { getMedicalHistory, setMedicalHistory } from "@/lib/medical-history.functions";
+import { getMedicalHistory, setMedicalHistory } from "@/lib/clinical/medical-history.functions";
 import { useOfflineMutation } from "@/hooks/use-offline-mutation";
 
 function ChipListEditor({

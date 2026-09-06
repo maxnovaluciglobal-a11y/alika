@@ -16,18 +16,18 @@ vi.mock("@/lib/appointments.functions", () => ({
 vi.mock("@/lib/finance/finance.functions", () => ({
   registerPayment: vi.fn(),
 }));
-vi.mock("@/lib/clinical-notes.functions", () => ({
+vi.mock("@/lib/clinical/clinical-notes.functions", () => ({
   saveClinicalNote: vi.fn(),
   restoreNoteVersion: vi.fn(),
 }));
-vi.mock("@/lib/odontogram.functions", () => ({
+vi.mock("@/lib/clinical/odontogram.functions", () => ({
   setOdontogramMark: vi.fn(),
 }));
 
 import { createAppointment, setAppointmentStatus } from "@/lib/appointments.functions";
 import { registerPayment } from "@/lib/finance/finance.functions";
-import { saveClinicalNote, restoreNoteVersion } from "@/lib/clinical-notes.functions";
-import { setOdontogramMark } from "@/lib/odontogram.functions";
+import { saveClinicalNote, restoreNoteVersion } from "@/lib/clinical/clinical-notes.functions";
+import { setOdontogramMark } from "@/lib/clinical/odontogram.functions";
 import { encolar, leerCola, type ItemCola } from "@/lib/offline-queue";
 import { describirItem, resolverConflicto, sincronizarCola } from "@/lib/offline-sync";
 

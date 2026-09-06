@@ -63,7 +63,7 @@ import { listBranches, listProfessionals } from "@/lib/clinic-catalog.functions"
 import { listProcedures } from "@/lib/finance/finance.functions";
 import { formatMoney } from "@/lib/finance/finance";
 import { listPatients } from "@/lib/patients.functions";
-import { listAllergyAlerts } from "@/lib/medical-history.functions";
+import { listAllergyAlerts } from "@/lib/clinical/medical-history.functions";
 import { getAppointmentPatientBalances } from "@/lib/appointments.functions";
 import {
   createAppointment,

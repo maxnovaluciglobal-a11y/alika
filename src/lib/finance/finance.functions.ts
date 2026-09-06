@@ -6,7 +6,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import { mensajeDb } from "@/lib/db-errors";
-import { TOOTH_SURFACES } from "@/lib/odontogram";
+import { TOOTH_SURFACES } from "@/lib/clinical/odontogram";
 import { filaYaCreada } from "@/lib/idempotency";
 import {
   PAYMENT_METHODS,

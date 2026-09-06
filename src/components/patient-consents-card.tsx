@@ -30,7 +30,7 @@ import {
   listPatientConsents,
   revokePatientConsent,
   signPatientConsent,
-} from "@/lib/clinical-documents.functions";
+} from "@/lib/clinical/clinical-documents.functions";
 import { SignaturePad } from "@/components/signature-pad";
 
 function inputClass() {

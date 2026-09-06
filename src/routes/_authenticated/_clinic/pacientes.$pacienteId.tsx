@@ -11,7 +11,7 @@ import { requirePermission } from "@/lib/route-guards";
 import { PacienteTimeline } from "@/components/paciente-timeline";
 import { NotasClinicas } from "@/components/notas-clinicas";
 import { AllergyAlertBanner, MedicalHistoryCard } from "@/components/medical-history-card";
-import { getMedicalHistory } from "@/lib/medical-history.functions";
+import { getMedicalHistory } from "@/lib/clinical/medical-history.functions";
 import { listAgreements, setPatientAgreement } from "@/lib/finance/clinic-finance.functions";
 import { PatientDocumentsCard } from "@/components/patient-documents-card";
 import { PatientConsentsCard } from "@/components/patient-consents-card";

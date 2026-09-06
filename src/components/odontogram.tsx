@@ -26,7 +26,7 @@ import {
   type OdontogramMark,
   type ToothCondition,
   type ToothSurface,
-} from "@/lib/odontogram";
+} from "@/lib/clinical/odontogram";
 // Foco de teclado consistente con el patrón usado en app-shell.tsx
 // (focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring).
 const FOCUS_RING_CLASS =
@@ -35,7 +35,7 @@ import {
   listOdontogramHistory,
   listOdontogramMarks,
   setOdontogramMark,
-} from "@/lib/odontogram.functions";
+} from "@/lib/clinical/odontogram.functions";
 import { cn } from "@/lib/utils";
 
 const TOOTH_SIZE = 40;

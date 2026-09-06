@@ -1,4 +1,4 @@
-import type { ToothSurface } from "@/lib/odontogram";
+import type { ToothSurface } from "@/lib/clinical/odontogram";
 
 export const QUOTE_STATUSES = [
   "draft",

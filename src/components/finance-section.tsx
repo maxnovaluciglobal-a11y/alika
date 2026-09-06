@@ -69,7 +69,7 @@ import {
   TOOTH_SURFACES,
   toothCommonName,
   type ToothSurface,
-} from "@/lib/odontogram";
+} from "@/lib/clinical/odontogram";
 import {
   createProcedure,
   createQuote,

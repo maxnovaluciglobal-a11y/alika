@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatoFechaHora } from "@/lib/clinical-notes";
+import { formatoFechaHora } from "@/lib/clinical/clinical-notes";
 import {
   ORIGEN_LABELS,
   etiquetaAccion,

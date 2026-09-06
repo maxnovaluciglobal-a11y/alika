@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ArrowRight, GitCompare, X } from "lucide-react";
-import { diffLineas, resumenDiff } from "@/lib/note-diff";
-import { formatoFechaHora, type ClinicalNoteVersion } from "@/lib/clinical-notes";
+import { diffLineas, resumenDiff } from "@/lib/clinical/note-diff";
+import { formatoFechaHora, type ClinicalNoteVersion } from "@/lib/clinical/clinical-notes";
 
 interface Props {
   versiones: ClinicalNoteVersion[];
