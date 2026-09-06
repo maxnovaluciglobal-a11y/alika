@@ -12,14 +12,13 @@ Runbook para escenarios de falla operacional. Autoridad: Walter (`walterlamadriz
 
 **Recuperación:**
 
-1. ⚠️ **Desde la migración a Supabase propio (`7ca6301`, 2026-08-14) esto YA NO tiene backup automático.** El proyecto real es `hvfkygoguxvpmwslrccb` (`alika-prod`), plan **Free**. Verificado el 2026-08-15 vía `supabase backups list --project-ref hvfkygoguxvpmwslrccb`: `pitr_enabled: false`, `backups: []` — cero backups existen hoy. El plan Free de Supabase no incluye backups automáticos (a diferencia de Lovable Cloud, que sí los hacía — este párrafo describía ese sistema anterior, ya no aplica).
-2. Sin backup propio, la única recuperación posible hoy es reconstruir desde las migraciones versionadas: `supabase/migrations/` está en git, se pueden re-ejecutar en orden contra un proyecto Supabase nuevo vía psql (ver `CLAUDE.md` regla 5). Esto reconstruye el **schema**, no los **datos** — cualquier paciente/cita/pago real cargado hoy se perdería sin remedio.
-3. Los seeds iniciales se recuperan solos al re-ejecutar las migraciones: el trigger `on_clinic_created` → `handle_new_clinic()` (definido en `20260726145220`, última redefinición en `20260816170100`) siembra automáticamente los `procedures` default y las 14 `message_templates` de WhatsApp en **cualquier clínica nueva** que se cree — no es un seed hardcodeado a una sola clínica. (Este párrafo mencionaba antes solo la clínica `58d8e02c-cf1a-47b6-8f9d-457c0373d209` porque describía un estado previo a que el trigger cubriera altas nuevas; verificado 2026-08-22 creando y borrando una clínica de prueba contra Supabase real, confirmando que las 14 plantillas aparecen automáticamente.)
-4. El proyecto huérfano de Lovable Cloud (`9f5bde21-...`) ya no es un rollback útil una vez que pasen los 30 días de gracia post-migración (borrado pendiente, ver `docs/SUPABASE_MIGRATION.md`) — y de todos modos es un snapshot congelado al 2026-08-14, cada vez más viejo.
+1. ✅ **Actualizado 2026-09-05 — esto ya NO describe la situación real.** Desde el 2026-09-01 corre un backup diario propio (`.github/workflows/backup.yml`, 07:15 UTC): exporta todas las tablas de negocio vía API REST de Supabase (`service_role`), cifra con `age` y sube a Backblaze B2 (`b2:alika-backups/db/`). La lista de tablas del script (`scripts/backup-data.mjs`) estaba desactualizada desde el 22-ago (excluía 22 tablas nuevas, incluidas `patient_medical_history`/`patient_consents`/`patient_documents`) — corregido hoy mismo. `pitr_enabled` sigue en `false` (Supabase plan actual no lo incluye) — el backup diario es la única cobertura, no hay recuperación a un punto intermedio del día.
+2. Restauración: manual, documentada paso a paso en `docs/BACKUPS_ALIKA.md` (recrear schema con las migraciones + reinsertar cada tabla del JSON descifrado). **Nunca se ejecutó un restore real end-to-end** — ver checklist post-incidente.
+3. Si el backup del día también fallara (o el bucket B2 no fuera accesible), la única recuperación posible es reconstruir desde las migraciones versionadas en `supabase/migrations/` (ver `CLAUDE.md` regla 5) — esto reconstruye el **schema**, no los **datos**.
+4. Los seeds iniciales se recuperan solos al re-ejecutar las migraciones: el trigger `on_clinic_created` → `handle_new_clinic()` (definido en `20260726145220`, última redefinición en `20260816170100`) siembra automáticamente los `procedures` default y las 14 `message_templates` de WhatsApp en **cualquier clínica nueva** que se cree.
+5. El proyecto huérfano de Lovable Cloud (`9f5bde21-...`) es un snapshot congelado al 2026-08-14 — cada vez más desactualizado, no reemplaza al backup diario.
 
-**Datos que se perderían:** TODO lo cargado desde la migración del 2026-08-14 en adelante — no hay backup de ningún punto intermedio. Con pacientes reales de piloto ya en la base, este es el hallazgo de mayor riesgo pendiente del proyecto.
-
-**Mitigación — pendiente de decisión de Walter:** (a) subir a Supabase Pro (~US$25/mes) para backups diarios automáticos + PITR opcional, o (b) backup diario propio vía `pg_dump` a S3/B2 mientras se sigue en Free (mismo patrón que GastroCore360, que ya lo tiene con cifrado `age` — ver memoria `gastrocore360_age_encryption` y `gastrocore360_b2_offsite` en el otro proyecto como referencia). Cualquiera de las dos requiere que Walter decida (gasto recurrente o cuenta B2/S3 nueva).
+**Datos que se perderían (RPO real hoy):** hasta 24 horas — todo lo escrito entre la última corrida exitosa del backup (07:15 UTC) y el momento de la falla. Antes del 2026-09-01 no había backup alguno; ese hueco (14-ago a 01-sep) no es recuperable retroactivamente.
 
 ---
 
@@ -104,9 +103,26 @@ Runbook para escenarios de falla operacional. Autoridad: Walter (`walterlamadriz
 
 1. Cloudflare frente a Vercel (mover DNS a Cloudflare, activar proxy) — mitigación inmediata.
 2. Bloquear IPs en el firewall del Supabase (via Lovable soporte).
-3. Verificar que endpoints costosos tengan rate-limit (Vercel edge middleware) — actualmente **no está implementado**, es un pendiente.
+3. ✅ Actualizado 2026-09-05: `_serverFn/*` y `/api/*` (excepto los webhooks de Stripe/Meta, protegidos por firma) tienen un rate-limit por IP desde `src/server.ts` (`src/lib/rate-limit.server.ts`) — 180 req/min por IP en server functions, 60 req/min en API pública. **Limitación conocida:** es en memoria por instancia de función serverless, no compartido entre instancias — bajo un ataque distribuido en escala (muchas IPs, o mucho tráfico repartido entre instancias de Vercel) no alcanza. Un store compartido (Upstash Redis / Vercel KV) daría un tope real y exacto — no implementado, requiere decisión de infraestructura nueva.
 
-**Prevención pendiente:** rate-limit middleware por IP + JWT en `_serverFn/*`. Ver el hallazgo #12 de la auditoría (listAppointments sin paginación).
+**Prevención pendiente:** si el rate-limit en memoria no alcanza bajo un ataque real, migrar a un store compartido (Upstash Redis/Vercel KV). Ver también el hallazgo #12 de la auditoría (listAppointments sin paginación).
+
+---
+
+## RTO / RPO — objetivos formales
+
+Sin SLA firmado con ninguna clínica todavía; estos son los objetivos internos que gobiernan cómo se prioriza este runbook y las decisiones de infraestructura, no una promesa contractual. Se actualizan si la infraestructura cambia (backups, PITR, ensayo de restore) o cuando exista un SLA real.
+
+| Escenario                           | RPO objetivo             | RPO real hoy                   | RTO objetivo | RTO real hoy                                                  |
+| ----------------------------------- | ------------------------ | ------------------------------ | ------------ | ------------------------------------------------------------- |
+| DB corrupta/borrada (#1)            | 24 h                     | 24 h (backup diario 07:15 UTC) | 4 h          | **Sin validar** — nunca se ejecutó un restore real end-to-end |
+| Deploy Vercel roto (#2)             | 0 (sin pérdida de datos) | 0                              | 15 min       | ~15 min (rollback a deploy anterior vía dashboard)            |
+| Credenciales comprometidas (#3)     | 0                        | 0                              | 1 h          | Sin validar                                                   |
+| Vercel caído/cuenta suspendida (#5) | 0                        | 0                              | 4 h          | Sin validar — depende de comprar el dominio (pendiente)       |
+
+**Por qué el RTO de DB no está validado:** el backup existe y se verificó por round-trip (descifrar + descomprimir + confirmar filas), pero eso no es lo mismo que reconstruir una base desde cero y confirmar que la app vuelve a andar — ese ensayo nunca se hizo. Hasta que se haga, "4 horas" es una meta, no un número con el que se pueda comprometer una clínica piloto.
+
+**Próximo paso concreto:** ensayar un restore real contra un proyecto Supabase descartable (no el de producción) usando el backup de hoy + `docs/BACKUPS_ALIKA.md`, cronometrarlo, y reemplazar "Sin validar" por el tiempo real. Recién ahí este RTO deja de ser una suposición.
 
 ---
 
@@ -114,14 +130,14 @@ Runbook para escenarios de falla operacional. Autoridad: Walter (`walterlamadriz
 
 - **Owner del proyecto:** Walter — `walterlamadriz@gmail.com`
 - **Lovable:** editor `https://lovable.dev/projects/9f5bde21-41b4-43c0-bc81-ea2215cab660`
-- **GitHub:** `walterlamadriz-ai/alika` (rama `main`)
-- **Supabase (via Lovable):** proyecto `9f5bde21-41b4-43c0-bc81-ea2215cab660`
+- **GitHub:** `maxnovaluciglobal-a11y/alika` (rama `main`) — migrado desde `walterlamadriz-ai/alika` el 2026-08-31, la URL vieja redirige
+- **Supabase propio (producción real):** proyecto `hvfkygoguxvpmwslrccb`, `sa-east-1`, org MaxnovaLuci. El proyecto Lovable Cloud `9f5bde21-...` es un huérfano congelado al 14-ago, no producción.
 - **Login owner de la clínica "clinica Patricia":** `walterlamadriz@gmail.com` / password reseteada via SQL directo en Fase 1
 - **VPS fallback:** `91.99.204.162` (mismo host que GastroCore, ver memoria de proyectos)
 
 ## Checklist post-incidente
 
-- [ ] Confirmar RTO real vs objetivo (aún sin objetivo formal; sugerido: 4 hrs).
+- [ ] Confirmar RTO real vs el objetivo de la tabla "RTO / RPO — objetivos formales" arriba.
 - [ ] Identificar datos perdidos (RPO) y comunicar a las clínicas.
 - [ ] Escribir post-mortem en `docs/post-mortems/YYYY-MM-DD-<slug>.md`.
 - [ ] Actualizar este runbook con lo aprendido.
@@ -130,8 +146,8 @@ Runbook para escenarios de falla operacional. Autoridad: Walter (`walterlamadriz
 
 Ver también `docs/DEPLOY_PRODUCTION.md`.
 
-1. Backup diario propio via pg_dump → B2/S3 (independiente de Lovable).
-2. Rate-limit middleware en server functions.
-3. Monitoreo activo (Sentry/Vercel logs alertas + healthcheck externo).
-4. Ejecutar un ensayo de restore desde backup — nunca se ha probado.
-5. Documento formal de RTO/RPO firmado con clientes cuando haya SLA.
+1. ✅ Backup diario propio (API REST de Supabase → B2), corrigiendo 2026-09-05.
+2. ✅ Rate-limit en server functions y API pública — con la limitación de memoria-por-instancia documentada arriba.
+3. Monitoreo activo (Sentry/Vercel logs alertas + healthcheck externo) — Sentry sigue no-op sin `VITE_SENTRY_DSN`.
+4. Ejecutar un ensayo de restore desde backup — nunca se ha probado. Sigue siendo el mayor hueco real de este runbook.
+5. Documento formal de RTO/RPO firmado con clientes — la tabla de arriba son objetivos internos, no un SLA firmado; falta eso cuando haya clínicas piloto con contrato.
