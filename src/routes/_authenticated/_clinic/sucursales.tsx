@@ -24,7 +24,7 @@ import {
   listBranchesDetailed,
   updateBranch,
   type BranchDetail,
-} from "@/lib/branches.functions";
+} from "@/lib/clinic-operations/branches.functions";
 import { requirePermission } from "@/lib/access/route-guards";
 
 function inputClass() {

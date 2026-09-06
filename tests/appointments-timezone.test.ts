@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { wallTimeInTzToUtc } from "@/lib/appointments.functions";
+import { wallTimeInTzToUtc } from "@/lib/clinic-operations/appointments.functions";
 
 /**
  * `wallTimeInTzToUtc` interpreta el string crudo de un

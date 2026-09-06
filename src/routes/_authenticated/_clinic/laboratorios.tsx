@@ -21,7 +21,7 @@ import { FilterBar, SelectField } from "@/components/filters";
 import { PatientCombobox } from "@/components/patient-combobox";
 import { MoneyInput } from "@/components/money-input";
 import { requirePermission } from "@/lib/access/route-guards";
-import { hoyISO, formatoFecha } from "@/lib/clinic-data";
+import { hoyISO, formatoFecha } from "@/lib/clinic-operations/clinic-data";
 import {
   LAB_ORDER_STATUSES,
   LAB_ORDER_STATUS_LABELS,
@@ -36,7 +36,7 @@ import {
   listLabOrders,
   listLabs,
   setLabOrderStatus,
-} from "@/lib/clinic-operations.functions";
+} from "@/lib/clinic-operations/clinic-operations.functions";
 import { listPatients } from "@/lib/patients.functions";
 import { exportarCsv } from "@/lib/csv-export";
 import { str } from "@/lib/search";

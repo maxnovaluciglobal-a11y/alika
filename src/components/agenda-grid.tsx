@@ -10,7 +10,7 @@ import {
   PIXELES_POR_MINUTO,
   type Cita,
   type Profesional,
-} from "@/lib/clinic-data";
+} from "@/lib/clinic-operations/clinic-data";
 import { cn } from "@/lib/utils";
 
 // El borde izquierdo identifica al profesional (color guardado en

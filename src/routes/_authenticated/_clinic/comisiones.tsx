@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/table";
 import { requireAnyPermission } from "@/lib/access/route-guards";
 import { hasPermission } from "@/lib/access/access";
-import { hoyISO } from "@/lib/clinic-data";
+import { hoyISO } from "@/lib/clinic-operations/clinic-data";
 import { formatMoney } from "@/lib/finance/finance";
 import {
   closeCommissionPeriod,

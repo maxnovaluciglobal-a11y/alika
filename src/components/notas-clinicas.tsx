@@ -61,7 +61,7 @@ import { leerRolSimulado } from "@/lib/access/role-simulation";
 import { exportarNotaPdf } from "@/lib/clinical/note-pdf";
 
 import type { ClinicRole } from "@/lib/access/access";
-import type { Paciente } from "@/lib/clinic-data";
+import type { Paciente } from "@/lib/clinic-operations/clinic-data";
 
 const REVIEW_BADGE: Record<NoteReviewStatus, string> = {
   none: "border-hairline text-muted-foreground",

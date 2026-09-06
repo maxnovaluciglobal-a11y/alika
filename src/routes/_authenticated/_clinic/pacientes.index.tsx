@@ -20,9 +20,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { requirePermission } from "@/lib/access/route-guards";
 import { hasPermission } from "@/lib/access/access";
-import { etiquetaEstadoPaciente, type EstadoPaciente } from "@/lib/clinic-data";
+import { etiquetaEstadoPaciente, type EstadoPaciente } from "@/lib/clinic-operations/clinic-data";
 import { formatMoney } from "@/lib/finance/finance";
-import { listBranches, listProfessionals } from "@/lib/clinic-catalog.functions";
+import { listBranches, listProfessionals } from "@/lib/clinic-operations/clinic-catalog.functions";
 import {
   createPatient,
   importPatients,

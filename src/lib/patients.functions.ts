@@ -8,7 +8,7 @@ import {
   type EstadoPaciente,
   type EventoClinico,
   type Paciente,
-} from "@/lib/clinic-data";
+} from "@/lib/clinic-operations/clinic-data";
 import { mensajeDb } from "@/lib/db-errors";
 import { validatePhoneNumber } from "@/lib/phoneValidation";
 import type { Database } from "@/integrations/supabase/types";

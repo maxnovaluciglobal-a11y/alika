@@ -9,10 +9,10 @@ import { PanelDesempeno } from "@/components/panel-desempeno";
 import { requirePermission } from "@/lib/access/route-guards";
 import { hasPermission } from "@/lib/access/access";
 import { AgendaGrid } from "@/components/agenda-grid";
-import { formatoFecha, hoyISO } from "@/lib/clinic-data";
-import { listProfessionals } from "@/lib/clinic-catalog.functions";
+import { formatoFecha, hoyISO } from "@/lib/clinic-operations/clinic-data";
+import { listProfessionals } from "@/lib/clinic-operations/clinic-catalog.functions";
 import { listPatients } from "@/lib/patients.functions";
-import { listAppointments } from "@/lib/appointments.functions";
+import { listAppointments } from "@/lib/clinic-operations/appointments.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/dashboard")({

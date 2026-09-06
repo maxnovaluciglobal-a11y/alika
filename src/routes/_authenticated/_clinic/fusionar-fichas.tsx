@@ -18,7 +18,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { requirePermission } from "@/lib/access/route-guards";
-import { listDuplicateCandidates, mergePatients } from "@/lib/clinic-operations.functions";
+import {
+  listDuplicateCandidates,
+  mergePatients,
+} from "@/lib/clinic-operations/clinic-operations.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/fusionar-fichas")({

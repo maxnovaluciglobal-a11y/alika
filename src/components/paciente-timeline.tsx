@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
-import type { Paciente } from "@/lib/clinic-data";
+import type { Paciente } from "@/lib/clinic-operations/clinic-data";
 import { cn } from "@/lib/utils";
 
 export function PacienteTimeline({

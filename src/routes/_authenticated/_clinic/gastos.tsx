@@ -30,7 +30,7 @@ import { Label } from "@/components/ui/label";
 import { DateField, FilterBar, SelectField } from "@/components/filters";
 import { MoneyInput } from "@/components/money-input";
 import { requirePermission } from "@/lib/access/route-guards";
-import { hoyISO, formatoFecha } from "@/lib/clinic-data";
+import { hoyISO, formatoFecha } from "@/lib/clinic-operations/clinic-data";
 import { CATEGORIAS_GASTO_SUGERIDAS, formatMoney, type Expense } from "@/lib/finance/finance";
 import {
   createExpense,
@@ -39,7 +39,7 @@ import {
   listPaymentMethods,
   updateExpense,
 } from "@/lib/finance/clinic-finance.functions";
-import { listBranches } from "@/lib/clinic-catalog.functions";
+import { listBranches } from "@/lib/clinic-operations/clinic-catalog.functions";
 import { str } from "@/lib/search";
 import { exportarCsv } from "@/lib/csv-export";
 

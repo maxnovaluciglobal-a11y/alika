@@ -17,7 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { listBranches, listSpecialties } from "@/lib/clinic-catalog.functions";
+import { listBranches, listSpecialties } from "@/lib/clinic-operations/clinic-catalog.functions";
 import {
   createProfessional,
   getProfessionalSchedule,
@@ -26,7 +26,7 @@ import {
   updateProfessional,
   type ProfessionalDetail,
   type ScheduleBlock,
-} from "@/lib/professionals.functions";
+} from "@/lib/clinic-operations/professionals.functions";
 import {
   listCommissionRules,
   removeCommissionRule,

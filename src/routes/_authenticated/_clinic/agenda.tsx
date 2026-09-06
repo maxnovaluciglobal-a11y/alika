@@ -22,7 +22,7 @@ import { AgendaGrid } from "@/components/agenda-grid";
 import { AgendaMonth, AgendaWeek } from "@/components/agenda-views";
 import { AllergyAlertBanner, AllergyAlertIcon } from "@/components/medical-history-card";
 import { PatientCombobox } from "@/components/patient-combobox";
-import { addDaysISO, addMonthsISO, rangoDeVista } from "@/lib/agenda-fechas";
+import { addDaysISO, addMonthsISO, rangoDeVista } from "@/lib/clinic-operations/agenda-fechas";
 import { Button } from "@/components/ui/button";
 import { HolidayNotice } from "@/components/holiday-notice";
 import { WhatsAppButton } from "@/components/whatsapp-button";
@@ -53,26 +53,30 @@ import {
   hoyISO,
   type Cita,
   type EstadoCita,
-} from "@/lib/clinic-data";
+} from "@/lib/clinic-operations/clinic-data";
 
 // Fallback para el default de validateSearch (no tiene acceso al contexto
 // de la ruta ni a la clínica activa). Dentro del componente usamos la
 // timezone real de la clínica vía access.clinic?.timezone.
 const HOY = hoyISO();
-import { listBranches, listProfessionals } from "@/lib/clinic-catalog.functions";
+import { listBranches, listProfessionals } from "@/lib/clinic-operations/clinic-catalog.functions";
 import { listProcedures } from "@/lib/finance/finance.functions";
 import { formatMoney } from "@/lib/finance/finance";
 import { listPatients } from "@/lib/patients.functions";
 import { listAllergyAlerts } from "@/lib/clinical/medical-history.functions";
-import { getAppointmentPatientBalances } from "@/lib/appointments.functions";
+import { getAppointmentPatientBalances } from "@/lib/clinic-operations/appointments.functions";
 import {
   createAppointment,
   listAppointments,
   setAppointmentStatus,
   updateAppointment,
   type Solapamiento,
-} from "@/lib/appointments.functions";
-import { createWaitlistEntry, listWaitlist, removeWaitlistEntry } from "@/lib/waitlist.functions";
+} from "@/lib/clinic-operations/appointments.functions";
+import {
+  createWaitlistEntry,
+  listWaitlist,
+  removeWaitlistEntry,
+} from "@/lib/clinic-operations/waitlist.functions";
 import {
   declineAppointmentRequest,
   listPendingAppointmentRequests,

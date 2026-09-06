@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
-import { getPublicHolidays } from "@/lib/holidays.functions";
+import { getPublicHolidays } from "@/lib/clinic-operations/holidays.functions";
 
 /**
  * Feriados públicos (Nager.Date) del país de la clínica, para marcar

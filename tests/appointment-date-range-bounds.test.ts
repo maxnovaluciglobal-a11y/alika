@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { appointmentDateRangeToUtcBounds } from "@/lib/appointments.functions";
+import { appointmentDateRangeToUtcBounds } from "@/lib/clinic-operations/appointments.functions";
 
 /**
  * Regresión del hallazgo "listAppointments sin filtro de fecha" de la
