@@ -25,7 +25,7 @@ import { ReferralCodeCard } from "@/components/referral-code-card";
 import { hasPermission } from "@/lib/access/access";
 import type { Paciente } from "@/lib/clinic-operations/clinic-data";
 import { formatMoney } from "@/lib/finance/finance";
-import { getPatient } from "@/lib/patients.functions";
+import { getPatient } from "@/lib/patients/patients.functions";
 
 export const Route = createFileRoute("/_authenticated/_clinic/pacientes/$pacienteId")({
   // Datos demográficos (nombre, teléfono, próximo control) son de agenda/recepción,

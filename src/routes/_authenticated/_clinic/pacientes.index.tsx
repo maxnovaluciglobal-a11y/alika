@@ -28,7 +28,7 @@ import {
   importPatients,
   listPatients,
   type ImportPatientsResult,
-} from "@/lib/patients.functions";
+} from "@/lib/patients/patients.functions";
 import { coincide, num, paginar, str } from "@/lib/search";
 import { cn } from "@/lib/utils";
 

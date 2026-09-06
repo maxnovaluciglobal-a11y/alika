@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, MessageCircle } from "lucide-react";
 
-import { getExpiredPortalContact, openPortalSession } from "@/lib/portal.functions";
+import { getExpiredPortalContact, openPortalSession } from "@/lib/patients/portal.functions";
 
 /**
  * Entrada del portal: `alika.com/portal/<jwt>`.

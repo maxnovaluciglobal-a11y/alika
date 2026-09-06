@@ -10,7 +10,7 @@ import {
   type Paciente,
 } from "@/lib/clinic-operations/clinic-data";
 import { mensajeDb } from "@/lib/db-errors";
-import { validatePhoneNumber } from "@/lib/phoneValidation";
+import { validatePhoneNumber } from "@/lib/patients/phoneValidation";
 import type { Database } from "@/integrations/supabase/types";
 
 const DB_STATUS_TO_UI: Record<string, EstadoPaciente> = {

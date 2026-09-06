@@ -11,7 +11,7 @@ import type {
   Expense,
   PaymentMethodConfig,
 } from "@/lib/finance/finance";
-import { writePatientFields } from "@/lib/patients.functions";
+import { writePatientFields } from "@/lib/patients/patients.functions";
 
 /**
  * Medios de pago configurables por clínica y módulo de gastos (Tanda B).

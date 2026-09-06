@@ -37,7 +37,7 @@ import {
   listLabs,
   setLabOrderStatus,
 } from "@/lib/clinic-operations/clinic-operations.functions";
-import { listPatients } from "@/lib/patients.functions";
+import { listPatients } from "@/lib/patients/patients.functions";
 import { exportarCsv } from "@/lib/csv-export";
 import { str } from "@/lib/search";
 import { cn } from "@/lib/utils";
