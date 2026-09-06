@@ -2,6 +2,20 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { checkRateLimit, clientIpFromRequest, rateLimitRuleFor } from "./lib/rate-limit.server";
+
+function tooManyRequests(retryAfterSeconds: number): Response {
+  return new Response(
+    JSON.stringify({ error: "Demasiadas solicitudes. Reintentá en un momento." }),
+    {
+      status: 429,
+      headers: {
+        "content-type": "application/json",
+        "retry-after": String(retryAfterSeconds),
+      },
+    },
+  );
+}
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -47,6 +61,14 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const url = new URL(request.url);
+      const rule = rateLimitRuleFor(url.pathname);
+      if (rule) {
+        const ip = clientIpFromRequest(request);
+        const result = checkRateLimit(ip, rule);
+        if (result.limited) return tooManyRequests(result.retryAfterSeconds);
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
