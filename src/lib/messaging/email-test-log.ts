@@ -11,8 +11,8 @@ import {
   normalizeEmail,
   resolveEmailRecipient,
   type EmailSandboxConfig,
-} from "@/lib/email-sandbox";
-import type { PreflightReport } from "@/lib/email-preflight";
+} from "@/lib/messaging/email-sandbox";
+import type { PreflightReport } from "@/lib/messaging/email-preflight";
 
 /** Un preflight aprobado caduca a los 10 minutos. */
 const PREFLIGHT_VIGENCIA_MS = 10 * 60 * 1000;

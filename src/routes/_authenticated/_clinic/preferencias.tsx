@@ -9,13 +9,13 @@ import { toast } from "sonner";
 import {
   getMyNotificationPreferences,
   updateMyNotificationPreferences,
-} from "@/lib/notification-preferences.functions";
+} from "@/lib/messaging/notification-preferences.functions";
 import {
   DEFAULT_PREFERENCES,
   EMAIL_EVENTS,
   type EmailEventKey,
   type NotificationPreferences,
-} from "@/lib/notification-preferences";
+} from "@/lib/messaging/notification-preferences";
 import {
   listBranchesForReviewLinks,
   updateBranchGoogleReviewUrl,

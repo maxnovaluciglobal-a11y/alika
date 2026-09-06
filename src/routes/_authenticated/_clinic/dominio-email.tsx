@@ -14,7 +14,7 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/route-guards";
-import { verificarDnsEmail } from "@/lib/dns-email.functions";
+import { verificarDnsEmail } from "@/lib/messaging/dns-email.functions";
 import {
   PASOS_ASISTENTE,
   VIGENCIA_HORAS,
@@ -25,7 +25,7 @@ import {
   type DnsCheckId,
   type DnsCheckState,
   type DnsVerification,
-} from "@/lib/dns-email";
+} from "@/lib/messaging/dns-email";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/dominio-email")({

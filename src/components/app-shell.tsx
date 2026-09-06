@@ -50,7 +50,7 @@ import { resetOfflineCache } from "@/lib/offline-cache";
 import { useSincronizacionAutomatica } from "@/hooks/use-offline-mutation";
 import { leerCola, pendientes } from "@/lib/offline-queue";
 import { hasPermission, ROLE_LABELS, type ClinicAccess, type Permission } from "@/lib/access";
-import { listPendingOutreach, listPendingReminders } from "@/lib/messaging.functions";
+import { listPendingOutreach, listPendingReminders } from "@/lib/messaging/messaging.functions";
 import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; label: string; icon: typeof Users; permission: Permission };

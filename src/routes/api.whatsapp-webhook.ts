@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-import { normalizeToWaMe } from "@/lib/messaging";
-import { isClinicOpenNow } from "@/lib/whatsapp";
-import { sendMetaTextMessage } from "@/lib/whatsapp.functions";
+import { normalizeToWaMe } from "@/lib/messaging/messaging";
+import { isClinicOpenNow } from "@/lib/messaging/whatsapp";
+import { sendMetaTextMessage } from "@/lib/messaging/whatsapp.functions";
 import { captureException } from "@/lib/sentry";
 import type { Database } from "@/integrations/supabase/types";
 

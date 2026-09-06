@@ -6,9 +6,9 @@ import { permissionsForRole, type ClinicRole } from "@/lib/access";
 import { mensajeDb } from "@/lib/db-errors";
 import { calcularComision, type CommissionKind } from "@/lib/finance/commissions";
 import { formatMoney } from "@/lib/finance/finance";
-import { renderTemplate, renderTemplateHtml } from "@/lib/messaging";
-import { loadEmailSandboxConfig } from "@/lib/messaging.functions";
-import { sendEmail } from "@/lib/email.server";
+import { renderTemplate, renderTemplateHtml } from "@/lib/messaging/messaging";
+import { loadEmailSandboxConfig } from "@/lib/messaging/messaging.functions";
+import { sendEmail } from "@/lib/messaging/email.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 

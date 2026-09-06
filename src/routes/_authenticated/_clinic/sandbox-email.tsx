@@ -6,7 +6,10 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/route-guards";
-import { getEmailSandboxConfig, setEmailSandboxConfig } from "@/lib/email-config.functions";
+import {
+  getEmailSandboxConfig,
+  setEmailSandboxConfig,
+} from "@/lib/messaging/email-config.functions";
 import {
   DEFAULT_EMAIL_SANDBOX,
   isValidEmail,
@@ -16,13 +19,17 @@ import {
   clampMinEntregas,
   MAX_ENTREGAS_PRODUCCION,
   type EmailSandboxConfig,
-} from "@/lib/email-sandbox";
+} from "@/lib/messaging/email-sandbox";
 import {
   leerEmailTestLog,
   puertaEntregasProduccion,
   type EmailTestEntry,
-} from "@/lib/email-test-log";
-import { leerVerificacion, puedeActivarProduccion, type DnsVerification } from "@/lib/dns-email";
+} from "@/lib/messaging/email-test-log";
+import {
+  leerVerificacion,
+  puedeActivarProduccion,
+  type DnsVerification,
+} from "@/lib/messaging/dns-email";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/sandbox-email")({

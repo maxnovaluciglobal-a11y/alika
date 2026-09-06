@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { mensajeDb } from "@/lib/db-errors";
-import { buildWaMeUrl } from "@/lib/messaging";
+import { buildWaMeUrl } from "@/lib/messaging/messaging";
 import {
   PORTAL_COOKIE_MAX_AGE_SECONDS,
   PORTAL_COOKIE_NAME,
@@ -13,7 +13,7 @@ import {
   verifyPortalToken,
   type PortalTokenPayload,
 } from "@/lib/portal-token.server";
-import { tryMetaTemplateSend } from "@/lib/whatsapp.functions";
+import { tryMetaTemplateSend } from "@/lib/messaging/whatsapp.functions";
 
 // ────────────────────────────────────────────────────────────
 // Cara clínica: generar link firmado + mandar por WhatsApp

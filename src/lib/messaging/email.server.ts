@@ -17,7 +17,7 @@ import {
   DEFAULT_EMAIL_SANDBOX,
   resolveEmailRecipient,
   type EmailSandboxConfig,
-} from "@/lib/email-sandbox";
+} from "@/lib/messaging/email-sandbox";
 
 export type SendEmailResult =
   | { ok: true; externalId: string | null; recipient: string; redirected: boolean }

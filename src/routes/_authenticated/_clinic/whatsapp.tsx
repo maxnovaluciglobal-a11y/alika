@@ -17,7 +17,7 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/route-guards";
-import { normalizeToWaMe } from "@/lib/messaging";
+import { normalizeToWaMe } from "@/lib/messaging/messaging";
 import {
   completeWhatsAppEmbeddedSignup,
   disconnectWhatsAppAccount,
@@ -25,7 +25,7 @@ import {
   listWhatsAppLeads,
   updateWhatsAppLeadStatus,
   type WhatsAppLead,
-} from "@/lib/whatsapp.functions";
+} from "@/lib/messaging/whatsapp.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/whatsapp")({

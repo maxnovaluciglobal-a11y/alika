@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { MessageCircle } from "lucide-react";
 
-import { MESSAGE_STATUS_LABELS, MESSAGE_TEMPLATE_KIND_LABELS } from "@/lib/messaging";
-import { listMessages } from "@/lib/messaging.functions";
+import { MESSAGE_STATUS_LABELS, MESSAGE_TEMPLATE_KIND_LABELS } from "@/lib/messaging/messaging";
+import { listMessages } from "@/lib/messaging/messaging.functions";
 
 interface Props {
   clinicId: string;

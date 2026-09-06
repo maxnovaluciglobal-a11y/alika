@@ -8,7 +8,7 @@ import {
   clampMinEntregas,
   normalizeEmail,
   type EmailSandboxConfig,
-} from "@/lib/email-sandbox";
+} from "@/lib/messaging/email-sandbox";
 
 type EmailSandboxRow = {
   mode: string;

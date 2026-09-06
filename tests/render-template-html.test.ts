@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { renderTemplate, renderTemplateHtml } from "@/lib/messaging";
+import { renderTemplate, renderTemplateHtml } from "@/lib/messaging/messaging";
 
 /**
  * Regresión del P1 de la auditoría de código 01-sep-2026: renderTemplate()

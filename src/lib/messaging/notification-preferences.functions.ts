@@ -5,7 +5,7 @@ import {
   DEFAULT_PREFERENCES,
   EMAIL_EVENTS,
   type NotificationPreferences,
-} from "@/lib/notification-preferences";
+} from "@/lib/messaging/notification-preferences";
 
 const eventKeys = EMAIL_EVENTS.map((e) => e.key);
 

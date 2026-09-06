@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { setPatientWhatsAppOptIn } from "@/lib/messaging.functions";
+import { setPatientWhatsAppOptIn } from "@/lib/messaging/messaging.functions";
 import { cn } from "@/lib/utils";
 
 interface Props {
