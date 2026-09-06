@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 
-import { requireFinanceView } from "@/lib/finance-reports.functions";
+import { requireFinanceView } from "@/lib/finance/finance-reports.functions";
 
 /**
  * Regresión del P0 de la auditoría de código 01-sep-2026: `getFinanceSummary`/

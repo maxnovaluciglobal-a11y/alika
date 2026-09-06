@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calcularComision } from "../src/lib/commissions";
+import { calcularComision } from "../src/lib/finance/commissions";
 
 /**
  * Prueba pura, sin DB: cubre el cálculo de liquidación de comisiones que

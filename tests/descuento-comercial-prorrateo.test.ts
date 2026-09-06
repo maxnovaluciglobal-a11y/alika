@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { repartirCobertura } from "../src/lib/finance";
+import { repartirCobertura } from "../src/lib/finance/finance";
 
 /**
  * Regresión del bug más caro de la auditoría del 04-sep: el descuento

@@ -12,8 +12,8 @@ import {
   TREATMENT_PLAN_STATUS_LABELS,
   formatMoney,
   type TreatmentPlanStatus,
-} from "@/lib/finance";
-import { listClinicTreatmentPlans } from "@/lib/finance.functions";
+} from "@/lib/finance/finance";
+import { listClinicTreatmentPlans } from "@/lib/finance/finance.functions";
 import { coincide, num, paginar, str } from "@/lib/search";
 import { cn } from "@/lib/utils";
 

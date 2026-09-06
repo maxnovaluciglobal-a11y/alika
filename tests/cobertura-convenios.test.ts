@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { repartirCobertura } from "../src/lib/finance";
+import { repartirCobertura } from "../src/lib/finance/finance";
 
 /**
  * Reparto entre convenio y paciente (Tanda B parte 2).

@@ -7,8 +7,11 @@ import { AppShell } from "@/components/app-shell";
 import { DateField, FilterBar } from "@/components/filters";
 import { requirePermission } from "@/lib/route-guards";
 import { hoyISO } from "@/lib/clinic-data";
-import { formatMoney, PAYMENT_METHOD_LABELS, type PaymentMethod } from "@/lib/finance";
-import { getFinanceSummary, getQuoteConversionReport } from "@/lib/finance-reports.functions";
+import { formatMoney, PAYMENT_METHOD_LABELS, type PaymentMethod } from "@/lib/finance/finance";
+import {
+  getFinanceSummary,
+  getQuoteConversionReport,
+} from "@/lib/finance/finance-reports.functions";
 import { str } from "@/lib/search";
 import { cn } from "@/lib/utils";
 

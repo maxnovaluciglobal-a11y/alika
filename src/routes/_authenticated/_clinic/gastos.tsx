@@ -31,14 +31,14 @@ import { DateField, FilterBar, SelectField } from "@/components/filters";
 import { MoneyInput } from "@/components/money-input";
 import { requirePermission } from "@/lib/route-guards";
 import { hoyISO, formatoFecha } from "@/lib/clinic-data";
-import { CATEGORIAS_GASTO_SUGERIDAS, formatMoney, type Expense } from "@/lib/finance";
+import { CATEGORIAS_GASTO_SUGERIDAS, formatMoney, type Expense } from "@/lib/finance/finance";
 import {
   createExpense,
   deleteExpense,
   listExpenses,
   listPaymentMethods,
   updateExpense,
-} from "@/lib/clinic-finance.functions";
+} from "@/lib/finance/clinic-finance.functions";
 import { listBranches } from "@/lib/clinic-catalog.functions";
 import { str } from "@/lib/search";
 import { exportarCsv } from "@/lib/csv-export";

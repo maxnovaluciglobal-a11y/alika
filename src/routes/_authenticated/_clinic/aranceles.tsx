@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { SearchField, FilterBar, SelectField } from "@/components/filters";
 import { MoneyInput } from "@/components/money-input";
 import { requirePermission } from "@/lib/route-guards";
-import { formatMoney, fromCents, toCents, type Procedure } from "@/lib/finance";
+import { formatMoney, fromCents, toCents, type Procedure } from "@/lib/finance/finance";
 import { parseArancelCsv, type ArancelCsvResult } from "@/lib/arancel-csv";
 import {
   createProcedure,
@@ -28,7 +28,7 @@ import {
   listProcedures,
   setProcedureActive,
   updateProcedure,
-} from "@/lib/finance.functions";
+} from "@/lib/finance/finance.functions";
 import { coincide, str } from "@/lib/search";
 import { exportarCsv } from "@/lib/csv-export";
 import { hoyISO } from "@/lib/clinic-data";

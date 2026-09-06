@@ -32,8 +32,8 @@ import {
   removeCommissionRule,
   setCommissionRule,
   type CommissionKind,
-} from "@/lib/commissions.functions";
-import { formatMoney, fromCents, toCents } from "@/lib/finance";
+} from "@/lib/finance/commissions.functions";
+import { formatMoney, fromCents, toCents } from "@/lib/finance/finance";
 import { requirePermission } from "@/lib/route-guards";
 
 function inputClass() {

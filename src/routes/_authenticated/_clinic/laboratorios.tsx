@@ -29,7 +29,7 @@ import {
   ordenAtrasada,
   type LabOrder,
   type LabOrderStatus,
-} from "@/lib/finance";
+} from "@/lib/finance/finance";
 import {
   createLab,
   createLabOrder,

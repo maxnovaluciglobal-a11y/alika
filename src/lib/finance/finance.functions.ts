@@ -21,7 +21,7 @@ import {
   type TreatmentPlan,
   netAfterRetention,
   repartirCobertura,
-} from "@/lib/finance";
+} from "@/lib/finance/finance";
 
 const SURFACE_ENUM = z.enum(TOOTH_SURFACES);
 const TOOTH_NUMBER_OPT = z

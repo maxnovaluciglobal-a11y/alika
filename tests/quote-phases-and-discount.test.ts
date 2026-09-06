@@ -5,7 +5,7 @@ import {
   itemPaymentState,
   paidCentsByItem,
   type Payment,
-} from "../src/lib/finance";
+} from "../src/lib/finance/finance";
 
 /**
  * Pruebas puras, sin DB, de la lógica que introdujo la Tanda A del análisis

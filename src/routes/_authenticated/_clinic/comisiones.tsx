@@ -30,12 +30,12 @@ import {
 import { requireAnyPermission } from "@/lib/route-guards";
 import { hasPermission } from "@/lib/access";
 import { hoyISO } from "@/lib/clinic-data";
-import { formatMoney } from "@/lib/finance";
+import { formatMoney } from "@/lib/finance/finance";
 import {
   closeCommissionPeriod,
   getCommissionReport,
   markCommissionSettlementPaid,
-} from "@/lib/commissions.functions";
+} from "@/lib/finance/commissions.functions";
 import { str } from "@/lib/search";
 
 interface ComisionesSearch {

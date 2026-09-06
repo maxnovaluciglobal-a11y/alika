@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatMoney, toCents } from "../src/lib/finance";
+import { formatMoney, toCents } from "../src/lib/finance/finance";
 
 /**
  * Prueba pura, sin DB: cubre la regla #6 del CLAUDE.md — `formatMoney`

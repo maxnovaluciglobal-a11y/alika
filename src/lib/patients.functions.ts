@@ -552,11 +552,44 @@ export const importPatients = createServerFn({ method: "POST" })
     return { created, skipped, warnings, errors };
   });
 
+type SupabaseCtx = SupabaseClient<Database>;
+type PatientPatch = Database["public"]["Tables"]["patients"]["Update"];
+
+/**
+ * Une los dos escritores de campos generales de `patients` que editaban la
+ * misma fila por separado (progresivo #3, plan Carlos 05-sep-2026):
+ * `updatePatient` acá y `setPatientAgreement` en clinic-finance.functions.ts.
+ * Fuerza `clinicId` en el `.eq()` como cinturón de seguridad en las dos
+ * rutas (RLS ya cubre, pero defensa en profundidad — mismo criterio que el
+ * resto del repo).
+ *
+ * No cubre los `.update()` de un solo campo que ya tenían su propio dueño
+ * narrow (opt-in de WhatsApp en messaging.functions.ts, revocación de
+ * portal en portal.functions.ts, opt-out por webhook en
+ * api.whatsapp-webhook.ts vía supabaseAdmin) — consolidarlos exigiría
+ * generalizar esto para service_role además de JWT de usuario, y no es lo
+ * que este ítem del plan pedía resolver.
+ */
+export async function writePatientFields(
+  supabase: SupabaseCtx,
+  clinicId: string,
+  patientId: string,
+  patch: PatientPatch,
+): Promise<{ error: { message: string } | null }> {
+  const { error } = await supabase
+    .from("patients")
+    .update(patch)
+    .eq("id", patientId)
+    .eq("clinic_id", clinicId);
+  return { error };
+}
+
 export const updatePatient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
+        clinicId: z.string().uuid(),
         patientId: z.string().uuid(),
         nombre: z.string().trim().min(1).max(200).optional(),
         documento: z.string().trim().optional(),
@@ -571,7 +604,7 @@ export const updatePatient = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const { patientId, ...rest } = data;
+    const { clinicId, patientId, ...rest } = data;
 
     // Solo re-valida contra Numverify si el teléfono realmente cambió — no
     // gastar cuota de nuevo en cada edición que no toca ese campo.
@@ -600,7 +633,7 @@ export const updatePatient = createServerFn({ method: "POST" })
       ...(rest.estado !== undefined && { status: UI_STATUS_TO_DB[rest.estado] }),
     };
 
-    const { error } = await supabase.from("patients").update(patch).eq("id", patientId);
+    const { error } = await writePatientFields(supabase, clinicId, patientId, patch);
     if (error) throw new Error("No tienes permisos para editar este paciente.");
 
     // security-6 Fase 1: mismo criterio que createPatient — doble escritura

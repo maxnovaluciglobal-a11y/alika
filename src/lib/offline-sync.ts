@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 
 import { createAppointment, setAppointmentStatus } from "@/lib/appointments.functions";
-import { registerPayment } from "@/lib/finance.functions";
+import { registerPayment } from "@/lib/finance/finance.functions";
 import { saveClinicalNote, restoreNoteVersion } from "@/lib/clinical-notes.functions";
 import { setOdontogramMark } from "@/lib/odontogram.functions";
 import { setMedicalHistory } from "@/lib/medical-history.functions";
