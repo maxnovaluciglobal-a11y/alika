@@ -1,11 +1,83 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
+import { createIsomorphicFn } from "@tanstack/react-start";
 import { routeTree } from "./routeTree.gen";
 
 /** Igual que el cache persistido en disco (ver `lib/offline-cache.ts`). */
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-export const getRouter = () => {
+/**
+ * CSP con nonce real (urgente #4 del plan de remediación). El primer intento
+ * (05-sep-2026) se descartó porque la versión de @tanstack/react-router de
+ * entonces no soportaba nonce — confirmado ahora, releyendo el código fuente
+ * instalado, que SÍ lo soporta (`router.options.ssr.nonce`, ya threadeado
+ * por `Scripts`/`HeadContent`/`Asset`/`headContentUtils` a cada script y
+ * meta que el router mismo inyecta, incluidos el manifest de rutas y el
+ * JSON-LD de SEO — ambos con contenido que cambia por request, la razón
+ * original por la que ni `'unsafe-inline'` a secas ni un CSP por hash
+ * alcanzaban).
+ *
+ * El nonce se genera acá (no en vercel.json) porque tiene que ser random
+ * por request — vercel.json se queda con los headers que sí pueden ser
+ * estáticos (HSTS, X-Frame-Options, etc.), aplicados incluso a los
+ * archivos estáticos que nunca pasan por acá.
+ *
+ * `style-src` sigue con `'unsafe-inline'` a propósito, sin tocar: Radix UI
+ * (Popover/Dialog/Tooltip, usados en toda la app) inyecta `style=""` en
+ * runtime para posicionar — un ATRIBUTO inline, no una etiqueta `<style>`.
+ * CSP nonce/hash nunca cubre atributos, solo elementos — sacar
+ * `'unsafe-inline'` de `style-src` rompería todo diálogo/popover de la app
+ * sin que el nonce pueda arreglarlo. Consistente con que esta app no usa
+ * `inlineCss` de TanStack Start (el CSS real carga por `<link>` a un
+ * archivo hasheado, nunca inline).
+ */
+function buildCsp(nonce: string): string {
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}'`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: https://*.supabase.co",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io",
+    "worker-src 'self'",
+    "manifest-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'self'",
+  ].join("; ");
+}
+
+/** 128 bits de entropía real (crypto.getRandomValues), no Math.random. */
+function generateNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
+// `createIsomorphicFn` (no un simple `if (typeof document === "undefined")`)
+// porque el plugin de Vite de TanStack Start bloquea en build cualquier
+// import de `@tanstack/react-start/server` alcanzable desde el bundle de
+// cliente, aunque esté detrás de un guard en runtime — el análisis es
+// estático, no ve que la rama nunca corre en el browser. Este es el
+// mecanismo que el propio error de Vite sugiere para separar limpiamente
+// la rama server (con el import) de la rama cliente (no-op, nunca headerea
+// nada: no hay request/response en el browser, y el navegador igual oculta
+// el atributo `nonce` post-parseo).
+const nonceForRequest = createIsomorphicFn()
+  .server(async () => {
+    const { setResponseHeader } = await import("@tanstack/react-start/server");
+    const nonce = generateNonce();
+    setResponseHeader("Content-Security-Policy", buildCsp(nonce));
+    return nonce;
+  })
+  .client(() => undefined);
+
+export const getRouter = async () => {
+  const nonce = await nonceForRequest();
+
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -40,6 +112,7 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
+    ssr: nonce ? { nonce } : undefined,
   });
 
   return router;
