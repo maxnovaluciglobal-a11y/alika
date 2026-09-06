@@ -363,20 +363,31 @@ export const closeCommissionPeriod = createServerFn({ method: "POST" })
 /** Deja rastro en la propia fila de commission_settlements de si el aviso se
  * mandó o no (progresivo #4, plan Carlos 05-sep-2026) — antes este envío era
  * el único de toda la app sin ningún registro de éxito/fallo. Nunca lanza:
- * un fallo acá no debe tapar el resultado real del envío que ya se logueó. */
+ * un fallo acá no debe tapar el resultado real del envío que ya se logueó.
+ * postgrest-js nunca rechaza la promesa (devuelve `{ error }` incluso ante
+ * fallas de red) — el try/catch de acá es solo para lo verdaderamente
+ * inesperado; el chequeo real de éxito/fallo es el `if (error)` de abajo,
+ * sin el cual esta función nunca podría reportar que algo salió mal
+ * (revisión de código, 05-sep-2026). */
 async function logSettlementEmail(
   supabase: SupabaseClient<Database>,
   key: { clinicId: string; professionalId: string; from: string; to: string },
   outcome: { sentAt: string | null; error: string | null },
 ): Promise<void> {
   try {
-    await supabase
+    const { error } = await supabase
       .from("commission_settlements")
       .update({ email_notified_at: outcome.sentAt, email_error: outcome.error })
       .eq("clinic_id", key.clinicId)
       .eq("professional_id", key.professionalId)
       .eq("period_from", key.from)
       .eq("period_to", key.to);
+    if (error) {
+      console.error(
+        "[commissions] no se pudo registrar el estado del aviso de comisión",
+        error.message,
+      );
+    }
   } catch (err) {
     console.error("[commissions] no se pudo registrar el estado del aviso de comisión", err);
   }

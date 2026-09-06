@@ -556,12 +556,19 @@ type SupabaseCtx = SupabaseClient<Database>;
 type PatientPatch = Database["public"]["Tables"]["patients"]["Update"];
 
 /**
- * Punto único de escritura sobre `patients` (progresivo #3, plan Carlos
- * 05-sep-2026) — antes `updatePatient` acá y `setPatientAgreement` en
- * clinic-finance.functions.ts escribían por separado sobre la misma fila
- * central, cada uno con su propio `.update()`. Fuerza `clinicId` en el
- * `.eq()` como cinturón de seguridad en las dos rutas (RLS ya cubre, pero
- * defensa en profundidad — mismo criterio que el resto del repo).
+ * Une los dos escritores de campos generales de `patients` que editaban la
+ * misma fila por separado (progresivo #3, plan Carlos 05-sep-2026):
+ * `updatePatient` acá y `setPatientAgreement` en clinic-finance.functions.ts.
+ * Fuerza `clinicId` en el `.eq()` como cinturón de seguridad en las dos
+ * rutas (RLS ya cubre, pero defensa en profundidad — mismo criterio que el
+ * resto del repo).
+ *
+ * No cubre los `.update()` de un solo campo que ya tenían su propio dueño
+ * narrow (opt-in de WhatsApp en messaging.functions.ts, revocación de
+ * portal en portal.functions.ts, opt-out por webhook en
+ * api.whatsapp-webhook.ts vía supabaseAdmin) — consolidarlos exigiría
+ * generalizar esto para service_role además de JWT de usuario, y no es lo
+ * que este ítem del plan pedía resolver.
  */
 export async function writePatientFields(
   supabase: SupabaseCtx,
