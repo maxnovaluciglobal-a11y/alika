@@ -37,6 +37,7 @@ import {
   listProcedureSupplies,
   setProcedureSupplies,
 } from "@/lib/clinic-operations/procedure-supplies.functions";
+import { listRecipeRecalibrationSuggestions } from "@/lib/clinic-operations/recipe-recalibration.functions";
 import { coincide, str } from "@/lib/search";
 import { exportarCsv } from "@/lib/csv-export";
 import { hoyISO } from "@/lib/clinic-operations/clinic-data";
@@ -386,6 +387,21 @@ function RecetaDialog({
     if (data) setLineas(data.supplies.map((s) => ({ itemId: s.itemId, quantity: s.quantity })));
   }, [data]);
 
+  // Tanda 4 — recalibración sugerida: solo se calcula con la receta ya
+  // cargada (open), nunca aplica nada sola — "Aplicar" solo prellena la
+  // cantidad en el borrador de acá abajo, todavía hace falta "Guardar
+  // receta" para que quede en firme.
+  const fetchSuggestions = useServerFn(listRecipeRecalibrationSuggestions);
+  const { data: suggestionsData } = useQuery({
+    queryKey: ["recipe-recalibration-suggestions", clinicId, procedure.id],
+    enabled: open,
+    queryFn: () => fetchSuggestions({ data: { clinicId, procedureId: procedure.id } }),
+  });
+  const [descartadas, setDescartadas] = useState<Set<string>>(new Set());
+  const sugerencias = (suggestionsData?.suggestions ?? []).filter(
+    (s) => !descartadas.has(s.itemId),
+  );
+
   const itemById = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
 
   const guardar = useMutation({
@@ -442,6 +458,45 @@ function RecetaDialog({
           </div>
         ) : (
           <div className="space-y-3">
+            {sugerencias.length > 0 && (
+              <div className="space-y-2">
+                {sugerencias.map((s) => (
+                  <div
+                    key={s.itemId}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-xs"
+                  >
+                    <span>
+                      <strong>{s.itemName}</strong>: la receta dice {s.currentQuantity} {s.unit},
+                      pero los últimos 3 conteos físicos sugieren {s.suggestedQuantity.toFixed(2)}{" "}
+                      {s.unit}.
+                    </span>
+                    <span className="flex shrink-0 gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setLineas((prev) =>
+                            prev.map((l) =>
+                              l.itemId === s.itemId ? { ...l, quantity: s.suggestedQuantity } : l,
+                            ),
+                          );
+                          setDescartadas((prev) => new Set(prev).add(s.itemId));
+                        }}
+                      >
+                        Aplicar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setDescartadas((prev) => new Set(prev).add(s.itemId))}
+                      >
+                        Descartar
+                      </Button>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
             {lineas.length === 0 && (
               <p className="text-sm text-muted-foreground">Todavía no tiene insumos asociados.</p>
             )}
