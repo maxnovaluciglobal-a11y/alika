@@ -264,6 +264,10 @@ export const registerInventoryMovement = createServerFn({ method: "POST" })
         kind: z.enum(["entrada", "salida", "ajuste"]),
         quantity: z.number().positive("La cantidad debe ser mayor a 0."),
         reason: z.string().trim().max(300).optional(),
+        // Tanda 3: a qué bodega afecta. La UI solo lo manda cuando la
+        // clínica configuró más de una — sin bodega, cae en "Bodega
+        // general" (ver apply_inventory_movement), igual que hoy.
+        warehouseId: z.string().uuid().nullable().optional(),
         // Solo tienen sentido en una entrada — un lote que llega con su
         // propio vencimiento. En salida/ajuste el cliente no los manda.
         lotNumber: z.string().trim().max(80).optional(),
@@ -283,6 +287,7 @@ export const registerInventoryMovement = createServerFn({ method: "POST" })
         kind: data.kind,
         quantity: data.quantity,
         reason: data.reason || null,
+        warehouse_id: data.warehouseId ?? null,
         lot_number: data.kind === "entrada" ? data.lotNumber || null : null,
         expiration_date: data.kind === "entrada" ? data.expirationDate || null : null,
       })

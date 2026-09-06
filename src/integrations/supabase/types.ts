@@ -1145,6 +1145,46 @@ export type Database = {
         };
         Relationships: [];
       };
+      inventory_counts: {
+        Row: {
+          clinic_id: string;
+          counted_at: string;
+          counted_by: string;
+          counted_quantity: number;
+          difference: number;
+          id: string;
+          item_id: string;
+          movement_id: string | null;
+          notes: string | null;
+          theoretical_quantity: number;
+          warehouse_id: string | null;
+        };
+        Insert: {
+          clinic_id: string;
+          counted_at?: string;
+          counted_by?: string;
+          counted_quantity: number;
+          id?: string;
+          item_id: string;
+          movement_id?: string | null;
+          notes?: string | null;
+          theoretical_quantity: number;
+          warehouse_id?: string | null;
+        };
+        Update: {
+          clinic_id?: string;
+          counted_at?: string;
+          counted_by?: string;
+          counted_quantity?: number;
+          id?: string;
+          item_id?: string;
+          movement_id?: string | null;
+          notes?: string | null;
+          theoretical_quantity?: number;
+          warehouse_id?: string | null;
+        };
+        Relationships: [];
+      };
       inventory_items: {
         Row: {
           branch_id: string | null;

@@ -39,3 +39,14 @@ export function mensajeDb(
 export function isUndefinedColumnError(error: { code?: string } | null | undefined): boolean {
   return error?.code === "42703" || error?.code === "PGRST204";
 }
+
+/**
+ * Una tabla nueva todavía no se aplicó al Supabase real — mismo estado
+ * "pre-migración" que `isUndefinedColumnError`, pero para una tabla entera
+ * en vez de una columna. `42P01` (undefined_table) es el código nativo de
+ * Postgres; `PGRST205` es el que devuelve PostgREST cuando la tabla no está
+ * en su caché de esquema.
+ */
+export function isUndefinedTableError(error: { code?: string } | null | undefined): boolean {
+  return error?.code === "42P01" || error?.code === "PGRST205";
+}

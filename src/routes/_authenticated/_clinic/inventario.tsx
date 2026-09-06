@@ -2,7 +2,15 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, History, Loader2, Package, Plus, Repeat } from "lucide-react";
+import {
+  AlertTriangle,
+  ClipboardList,
+  History,
+  Loader2,
+  Package,
+  Plus,
+  Repeat,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -34,6 +42,7 @@ import {
 } from "@/lib/clinic-operations/clinic-operations.functions";
 import type { Sucursal } from "@/lib/clinic-operations/clinic-data";
 import { formatMoney, fromCents, toCents } from "@/lib/finance/finance";
+import type { Warehouse } from "@/lib/finance/finance";
 import {
   createInventoryItem,
   listExpiringLots,
@@ -44,6 +53,10 @@ import {
   type InventoryItem,
   type InventoryMovementKind,
 } from "@/lib/clinic-operations/inventory.functions";
+import {
+  listInventoryCounts,
+  recordInventoryCount,
+} from "@/lib/clinic-operations/inventory-counts.functions";
 import type { ConsumptionType } from "@/lib/clinic-operations/procedure-supply-consumption";
 import { requirePermission } from "@/lib/access/route-guards";
 
@@ -464,13 +477,23 @@ function EditarItemDialog({
   );
 }
 
-function RegistrarMovimientoDialog({ clinicId, item }: { clinicId: string; item: InventoryItem }) {
+function RegistrarMovimientoDialog({
+  clinicId,
+  item,
+  bodegas,
+}: {
+  clinicId: string;
+  item: InventoryItem;
+  bodegas: Warehouse[];
+}) {
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<InventoryMovementKind>("entrada");
   const [quantity, setQuantity] = useState("");
   const [reason, setReason] = useState("");
   const [lotNumber, setLotNumber] = useState("");
   const [expirationDate, setExpirationDate] = useState("");
+  const [warehouseId, setWarehouseId] = useState("");
+  const multiBodega = bodegas.length > 1;
 
   const queryClient = useQueryClient();
   const registerFn = useServerFn(registerInventoryMovement);
@@ -484,6 +507,7 @@ function RegistrarMovimientoDialog({ clinicId, item }: { clinicId: string; item:
           kind,
           quantity: Number(quantity),
           reason: reason.trim() || undefined,
+          warehouseId: multiBodega && warehouseId ? warehouseId : null,
           lotNumber: kind === "entrada" ? lotNumber.trim() || undefined : undefined,
           expirationDate: kind === "entrada" ? expirationDate || undefined : undefined,
         },
@@ -492,6 +516,7 @@ function RegistrarMovimientoDialog({ clinicId, item }: { clinicId: string; item:
       queryClient.invalidateQueries({ queryKey: ["inventory-items", clinicId] });
       queryClient.invalidateQueries({ queryKey: ["inventory-movements", clinicId, item.id] });
       queryClient.invalidateQueries({ queryKey: ["inventory-expiring", clinicId] });
+      queryClient.invalidateQueries({ queryKey: ["inventory-stock", clinicId] });
       toast.success("Movimiento registrado.");
       setOpen(false);
       setQuantity("");
@@ -499,6 +524,7 @@ function RegistrarMovimientoDialog({ clinicId, item }: { clinicId: string; item:
       setLotNumber("");
       setExpirationDate("");
       setKind("entrada");
+      setWarehouseId("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -536,9 +562,28 @@ function RegistrarMovimientoDialog({ clinicId, item }: { clinicId: string; item:
             {kind === "ajuste" && (
               <p className="text-xs text-muted-foreground">
                 El ajuste fija el stock al valor contado (recuento físico), no lo suma ni lo resta.
+                Para un conteo de una bodega puntual, usá "Conteo físico" en vez de esto.
               </p>
             )}
           </div>
+          {multiBodega && (
+            <div className="space-y-1.5">
+              <Label htmlFor={`mv-bodega-${item.id}`}>Bodega</Label>
+              <select
+                id={`mv-bodega-${item.id}`}
+                value={warehouseId}
+                onChange={(e) => setWarehouseId(e.target.value)}
+                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                <option value="">Bodega general</option>
+                {bodegas.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label htmlFor={`mv-cant-${item.id}`}>
               {kind === "ajuste" ? "Stock contado" : "Cantidad"}
@@ -595,6 +640,130 @@ function RegistrarMovimientoDialog({ clinicId, item }: { clinicId: string; item:
           >
             {registrar.isPending && <Loader2 className="size-3.5 animate-spin" />}
             Registrar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Tanda 3 — reconciliación física: compara lo contado contra lo teórico y
+ * el sistema mismo genera el entrada/salida que corrige la diferencia (ver
+ * recordInventoryCount). A diferencia de "Movimiento → Ajuste", que fija el
+ * total de la clínica entera al valor cargado, esto respeta el resto de las
+ * bodegas cuando el conteo fue de una puntual. */
+function ConteoFisicoDialog({
+  clinicId,
+  item,
+  bodegas,
+}: {
+  clinicId: string;
+  item: InventoryItem;
+  bodegas: Warehouse[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [warehouseId, setWarehouseId] = useState("");
+  const [countedQuantity, setCountedQuantity] = useState("");
+  const [notes, setNotes] = useState("");
+  const multiBodega = bodegas.length > 1;
+
+  const queryClient = useQueryClient();
+  const countFn = useServerFn(recordInventoryCount);
+
+  const registrar = useMutation({
+    mutationFn: () =>
+      countFn({
+        data: {
+          clinicId,
+          itemId: item.id,
+          warehouseId: multiBodega && warehouseId ? warehouseId : null,
+          countedQuantity: Number(countedQuantity),
+          notes: notes.trim() || undefined,
+        },
+      }),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["inventory-items", clinicId] });
+      queryClient.invalidateQueries({ queryKey: ["inventory-movements", clinicId, item.id] });
+      queryClient.invalidateQueries({ queryKey: ["inventory-stock", clinicId] });
+      queryClient.invalidateQueries({ queryKey: ["inventory-counts", clinicId, item.id] });
+      toast.success(
+        result.reconciled
+          ? "Conteo guardado — el stock del sistema se ajustó a lo contado."
+          : "Conteo guardado — coincide exacto con lo que el sistema tenía.",
+      );
+      setOpen(false);
+      setCountedQuantity("");
+      setNotes("");
+      setWarehouseId("");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <ClipboardList className="size-3.5" /> Conteo físico
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Conteo físico — {item.name}</DialogTitle>
+          <DialogDescription>
+            El sistema cree que hay {item.currentStock} {item.unit}
+            {multiBodega ? " en total, sumando todas las bodegas" : ""}. Contá lo que hay realmente
+            y el sistema ajusta la diferencia solo.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          {multiBodega && (
+            <div className="space-y-1.5">
+              <Label htmlFor={`cf-bodega-${item.id}`}>Bodega contada</Label>
+              <select
+                id={`cf-bodega-${item.id}`}
+                value={warehouseId}
+                onChange={(e) => setWarehouseId(e.target.value)}
+                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                <option value="">Bodega general</option>
+                {bodegas.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="space-y-1.5">
+            <Label htmlFor={`cf-cant-${item.id}`}>Cantidad contada ({item.unit})</Label>
+            <input
+              id={`cf-cant-${item.id}`}
+              type="number"
+              min={0}
+              step="any"
+              value={countedQuantity}
+              onChange={(e) => setCountedQuantity(e.target.value)}
+              className={inputClass()}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`cf-notas-${item.id}`}>Notas (opcional)</Label>
+            <input
+              id={`cf-notas-${item.id}`}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className={inputClass()}
+              placeholder="quién contó, en qué contexto…"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            onClick={() => registrar.mutate()}
+            disabled={registrar.isPending || !countedQuantity.trim()}
+          >
+            {registrar.isPending && <Loader2 className="size-3.5 animate-spin" />}
+            Guardar conteo
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -939,7 +1108,14 @@ function InventarioPage() {
                       <div className="flex flex-wrap justify-end gap-2">
                         <HistorialMovimientosDialog clinicId={clinicId} item={item} />
                         {puedeRegistrarMovimiento && (
-                          <RegistrarMovimientoDialog clinicId={clinicId} item={item} />
+                          <>
+                            <RegistrarMovimientoDialog
+                              clinicId={clinicId}
+                              item={item}
+                              bodegas={bodegas}
+                            />
+                            <ConteoFisicoDialog clinicId={clinicId} item={item} bodegas={bodegas} />
+                          </>
                         )}
                         {puedeGestionar && (
                           <EditarItemDialog
