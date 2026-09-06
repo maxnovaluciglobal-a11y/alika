@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 
 import { AlikaLogo } from "@/components/alika-logo";
+import { ClinicSwitcher } from "@/components/clinic-switcher";
 import { GlobalSearch } from "@/components/global-search";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { RoleSimulationBar } from "@/components/role-simulation-bar";
@@ -324,9 +325,7 @@ export function AppShell({
             <AlikaLogo tone="brand" size={32} />
             <span className="font-display text-xl font-bold tracking-tight text-brand">Alika</span>
           </Link>
-          {access.clinic && (
-            <p className="mt-2 truncate text-xs text-muted-foreground">{access.clinic.name}</p>
-          )}
+          <ClinicSwitcher access={access} />
         </div>
 
         <nav className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
