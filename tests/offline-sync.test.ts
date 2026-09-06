@@ -13,7 +13,7 @@ vi.mock("@/lib/appointments.functions", () => ({
   createAppointment: vi.fn(),
   setAppointmentStatus: vi.fn(),
 }));
-vi.mock("@/lib/finance.functions", () => ({
+vi.mock("@/lib/finance/finance.functions", () => ({
   registerPayment: vi.fn(),
 }));
 vi.mock("@/lib/clinical-notes.functions", () => ({
@@ -25,7 +25,7 @@ vi.mock("@/lib/odontogram.functions", () => ({
 }));
 
 import { createAppointment, setAppointmentStatus } from "@/lib/appointments.functions";
-import { registerPayment } from "@/lib/finance.functions";
+import { registerPayment } from "@/lib/finance/finance.functions";
 import { saveClinicalNote, restoreNoteVersion } from "@/lib/clinical-notes.functions";
 import { setOdontogramMark } from "@/lib/odontogram.functions";
 import { encolar, leerCola, type ItemCola } from "@/lib/offline-queue";

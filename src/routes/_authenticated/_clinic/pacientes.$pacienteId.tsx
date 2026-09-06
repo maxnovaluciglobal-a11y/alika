@@ -12,7 +12,7 @@ import { PacienteTimeline } from "@/components/paciente-timeline";
 import { NotasClinicas } from "@/components/notas-clinicas";
 import { AllergyAlertBanner, MedicalHistoryCard } from "@/components/medical-history-card";
 import { getMedicalHistory } from "@/lib/medical-history.functions";
-import { listAgreements, setPatientAgreement } from "@/lib/clinic-finance.functions";
+import { listAgreements, setPatientAgreement } from "@/lib/finance/clinic-finance.functions";
 import { PatientDocumentsCard } from "@/components/patient-documents-card";
 import { PatientConsentsCard } from "@/components/patient-consents-card";
 import { Odontogram } from "@/components/odontogram";
@@ -24,7 +24,7 @@ import { PortalLinkButton, RevokePortalAccessButton } from "@/components/portal-
 import { ReferralCodeCard } from "@/components/referral-code-card";
 import { hasPermission } from "@/lib/access";
 import type { Paciente } from "@/lib/clinic-data";
-import { formatMoney } from "@/lib/finance";
+import { formatMoney } from "@/lib/finance/finance";
 import { getPatient } from "@/lib/patients.functions";
 
 export const Route = createFileRoute("/_authenticated/_clinic/pacientes/$pacienteId")({

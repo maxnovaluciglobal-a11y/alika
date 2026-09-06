@@ -4,8 +4,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { permissionsForRole, type ClinicRole } from "@/lib/access";
 import { mensajeDb } from "@/lib/db-errors";
-import { calcularComision, type CommissionKind } from "@/lib/commissions";
-import { formatMoney } from "@/lib/finance";
+import { calcularComision, type CommissionKind } from "@/lib/finance/commissions";
+import { formatMoney } from "@/lib/finance/finance";
 import { renderTemplate, renderTemplateHtml } from "@/lib/messaging";
 import { loadEmailSandboxConfig } from "@/lib/messaging.functions";
 import { sendEmail } from "@/lib/email.server";
@@ -360,6 +360,28 @@ export const closeCommissionPeriod = createServerFn({ method: "POST" })
     return { closed: rows.length };
   });
 
+/** Deja rastro en la propia fila de commission_settlements de si el aviso se
+ * mandó o no (progresivo #4, plan Carlos 05-sep-2026) — antes este envío era
+ * el único de toda la app sin ningún registro de éxito/fallo. Nunca lanza:
+ * un fallo acá no debe tapar el resultado real del envío que ya se logueó. */
+async function logSettlementEmail(
+  supabase: SupabaseClient<Database>,
+  key: { clinicId: string; professionalId: string; from: string; to: string },
+  outcome: { sentAt: string | null; error: string | null },
+): Promise<void> {
+  try {
+    await supabase
+      .from("commission_settlements")
+      .update({ email_notified_at: outcome.sentAt, email_error: outcome.error })
+      .eq("clinic_id", key.clinicId)
+      .eq("professional_id", key.professionalId)
+      .eq("period_from", key.from)
+      .eq("period_to", key.to);
+  } catch (err) {
+    console.error("[commissions] no se pudo registrar el estado del aviso de comisión", err);
+  }
+}
+
 /** Manda el aviso de comisión liquidada a cada profesional cerrado que tenga
  * email cargado. Nunca lanza — un fallo de envío se loguea y se sigue. */
 async function notifyCommissionSettled(params: {
@@ -371,6 +393,10 @@ async function notifyCommissionSettled(params: {
   commissionCentsByProfessional: Map<string, number>;
 }): Promise<void> {
   const { supabase, clinicId, from, to, professionalIds, commissionCentsByProfessional } = params;
+  const marcar = (
+    professionalId: string,
+    outcome: { sentAt: string | null; error: string | null },
+  ) => logSettlementEmail(supabase, { clinicId, professionalId, from, to }, outcome);
   try {
     const [
       { data: pros, error: prosErr },
@@ -394,17 +420,21 @@ async function notifyCommissionSettled(params: {
         .maybeSingle(),
     ]);
     if (prosErr || clinicErr || templateErr) {
+      const motivo = "No se pudo preparar el aviso (error consultando datos de la clínica).";
       console.error(
         "[commissions] no se pudo preparar el aviso de comisión liquidada",
         prosErr ?? clinicErr ?? templateErr,
       );
+      await Promise.all(professionalIds.map((id) => marcar(id, { sentAt: null, error: motivo })));
       return;
     }
     if (!template) {
+      const motivo = "Falta el template 'commission_settled' (email) de la clínica.";
       console.error(
         "[commissions] falta template 'commission_settled' (email) para la clínica",
         clinicId,
       );
+      await Promise.all(professionalIds.map((id) => marcar(id, { sentAt: null, error: motivo })));
       return;
     }
 
@@ -414,7 +444,10 @@ async function notifyCommissionSettled(params: {
 
     for (const pro of pros ?? []) {
       const recipient = (pro.email ?? "").trim();
-      if (!recipient) continue; // sin email cargado, no hay dónde avisar.
+      if (!recipient) {
+        await marcar(pro.id, { sentAt: null, error: "El profesional no tiene email cargado." });
+        continue;
+      }
       const commissionCents = commissionCentsByProfessional.get(pro.id) ?? 0;
       const vars = {
         profesional: pro.full_name,
@@ -433,6 +466,10 @@ async function notifyCommissionSettled(params: {
           result.reason,
         );
       }
+      await marcar(pro.id, {
+        sentAt: result.ok ? new Date().toISOString() : null,
+        error: result.ok ? null : result.reason,
+      });
     }
   } catch (err) {
     // Best-effort: el cierre del período ya está guardado, esto nunca debe

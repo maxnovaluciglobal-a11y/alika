@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { netAfterRetention } from "../src/lib/finance";
+import { netAfterRetention } from "../src/lib/finance/finance";
 
 /**
  * Retención de los medios de pago (G-6). Es el número que separa "lo que

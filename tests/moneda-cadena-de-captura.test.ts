@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { parsearMonto } from "../src/lib/arancel-csv";
-import { formatMoney, fromCents, pasoDeMoneda, toCents } from "../src/lib/finance";
+import { formatMoney, fromCents, pasoDeMoneda, toCents } from "../src/lib/finance/finance";
 
 /**
  * La tanda de moneda (05-sep-2026). La auditoría del 04-sep encontró que toda

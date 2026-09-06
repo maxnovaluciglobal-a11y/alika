@@ -1,6 +1,6 @@
 import { forwardRef, useState } from "react";
 
-import { pasoDeMoneda } from "@/lib/finance";
+import { pasoDeMoneda } from "@/lib/finance/finance";
 import { centsATexto, textoACents, textoSincronizado } from "@/lib/money-input-sync";
 import { cn } from "@/lib/utils";
 

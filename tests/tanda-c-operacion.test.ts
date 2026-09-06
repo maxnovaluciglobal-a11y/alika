@@ -4,7 +4,7 @@ import {
   ordenAtrasada,
   precioPromedioPonderado,
   type LabOrder,
-} from "../src/lib/finance";
+} from "../src/lib/finance/finance";
 
 /** Semáforo de stock, atraso de laboratorio y precio promedio (Tanda C). */
 

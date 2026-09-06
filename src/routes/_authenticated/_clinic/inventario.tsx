@@ -30,7 +30,7 @@ import { hasPermission } from "@/lib/access";
 import { listBranches } from "@/lib/clinic-catalog.functions";
 import { listStockByWarehouse, listWarehouses } from "@/lib/clinic-operations.functions";
 import type { Sucursal } from "@/lib/clinic-data";
-import { formatMoney, fromCents, toCents } from "@/lib/finance";
+import { formatMoney, fromCents, toCents } from "@/lib/finance/finance";
 import {
   createInventoryItem,
   listExpiringLots,

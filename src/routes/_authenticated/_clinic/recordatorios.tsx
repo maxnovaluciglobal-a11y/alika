@@ -25,7 +25,7 @@ import {
   type PendingReminder,
 } from "@/lib/messaging.functions";
 import type { OutreachTemplateKind } from "@/lib/messaging";
-import { formatMoney } from "@/lib/finance";
+import { formatMoney } from "@/lib/finance/finance";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/recordatorios")({

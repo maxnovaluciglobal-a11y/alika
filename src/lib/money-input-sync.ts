@@ -1,4 +1,4 @@
-import { fromCents, toCents } from "@/lib/finance";
+import { fromCents, toCents } from "@/lib/finance/finance";
 
 /**
  * Lógica de sincronización de `MoneyInput`, separada del componente para

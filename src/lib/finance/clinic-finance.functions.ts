@@ -5,7 +5,13 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import { mensajeDb } from "@/lib/db-errors";
-import type { Agreement, AgreementCoverage, Expense, PaymentMethodConfig } from "@/lib/finance";
+import type {
+  Agreement,
+  AgreementCoverage,
+  Expense,
+  PaymentMethodConfig,
+} from "@/lib/finance/finance";
+import { writePatientFields } from "@/lib/patients.functions";
 
 /**
  * Medios de pago configurables por clínica y módulo de gastos (Tanda B).
@@ -636,14 +642,10 @@ export const setPatientAgreement = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    const { error } = await context.supabase
-      .from("patients")
-      .update({
-        agreement_id: data.agreementId ?? null,
-        agreement_member_id: data.memberId?.trim() || null,
-      })
-      .eq("id", data.patientId)
-      .eq("clinic_id", data.clinicId);
+    const { error } = await writePatientFields(context.supabase, data.clinicId, data.patientId, {
+      agreement_id: data.agreementId ?? null,
+      agreement_member_id: data.memberId?.trim() || null,
+    });
     if (error)
       throw new Error(
         mensajeDb(

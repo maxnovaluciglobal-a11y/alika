@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { mensajeDb } from "@/lib/db-errors";
 import { permissionsForRole, type ClinicRole } from "@/lib/access";
-import { LAB_ORDER_STATUSES, type Lab, type LabOrder, type Warehouse } from "@/lib/finance";
+import { LAB_ORDER_STATUSES, type Lab, type LabOrder, type Warehouse } from "@/lib/finance/finance";
 
 /**
  * Operación de clínica mediana (Tanda C): laboratorios, bodegas, estados de

@@ -26,7 +26,7 @@ import {
   toCents,
   type Agreement,
   type Procedure,
-} from "@/lib/finance";
+} from "@/lib/finance/finance";
 import {
   createAgreement,
   listAgreementCoverage,
@@ -34,8 +34,8 @@ import {
   setAgreementActive,
   setAgreementCoverage,
   updateAgreement,
-} from "@/lib/clinic-finance.functions";
-import { listProcedures } from "@/lib/finance.functions";
+} from "@/lib/finance/clinic-finance.functions";
+import { listProcedures } from "@/lib/finance/finance.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/convenios")({

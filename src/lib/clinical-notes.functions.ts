@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { filaYaCreada } from "@/lib/idempotency";
 import { mensajeDb } from "@/lib/db-errors";
+import { createNotification } from "@/lib/notifications.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 type SupabaseCtx = SupabaseClient<Database>;
@@ -914,35 +915,6 @@ export const listNoteReviewers = createServerFn({ method: "GET" })
     },
   );
 
-/** Envía una nota firmada a revisión de un supervisor. */
-/** Crea una notificación in-app para un integrante de la clínica (sin romper el flujo si falla). */
-async function notificar(
-  supabase: SupabaseCtx,
-  payload: {
-    clinicId: string;
-    recipientId: string | null | undefined;
-    actorId: string;
-    kind: string;
-    title: string;
-    body?: string | null;
-    noteId?: string | null;
-    patientRef?: string | null;
-  },
-) {
-  if (!payload.recipientId || payload.recipientId === payload.actorId) return;
-  await supabase.from("notifications").insert({
-    clinic_id: payload.clinicId,
-    recipient_id: payload.recipientId,
-    actor_id: payload.actorId,
-    kind: payload.kind,
-    title: payload.title,
-    body: payload.body ?? null,
-    link: payload.patientRef ? `/pacientes/${payload.patientRef}` : null,
-    note_id: payload.noteId ?? null,
-    patient_ref: payload.patientRef ?? null,
-  });
-}
-
 /** Resuelve el nombre visible de un usuario para los mensajes de notificación. */
 async function nombreDe(supabase: SupabaseCtx, userId: string): Promise<string> {
   const { data } = await supabase
@@ -1025,7 +997,7 @@ export const requestNoteReview = createServerFn({ method: "POST" })
     });
 
     const solicitante = await nombreDe(supabase, userId);
-    await notificar(supabase, {
+    await createNotification(supabase, {
       clinicId: note.clinic_id,
       recipientId: data.reviewerId,
       actorId: userId,
@@ -1161,7 +1133,7 @@ export const resolveNoteReview = createServerFn({ method: "POST" })
       comment: `${actor} comentó en la revisión`,
       cancelled: `${actor} canceló la solicitud de revisión`,
     };
-    await notificar(supabase, {
+    await createNotification(supabase, {
       clinicId: note.clinic_id,
       recipientId: destinatario,
       actorId: userId,

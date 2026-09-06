@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
-import { formatMoney } from "@/lib/finance";
-import { getPanelDesempeno, type PanelMes } from "@/lib/finance-reports.functions";
+import { formatMoney } from "@/lib/finance/finance";
+import { getPanelDesempeno, type PanelMes } from "@/lib/finance/finance-reports.functions";
 import { cn } from "@/lib/utils";
 
 /**

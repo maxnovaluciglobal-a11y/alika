@@ -7,7 +7,7 @@ import { HORA_INICIO, type Cita, type EstadoCita } from "@/lib/clinic-data";
 import { mensajeDb } from "@/lib/db-errors";
 import { filaYaCreada } from "@/lib/idempotency";
 import { fetchPatientBalances } from "@/lib/patients.functions";
-import { requireFinanceView } from "@/lib/finance-reports.functions";
+import { requireFinanceView } from "@/lib/finance/finance-reports.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 const DEFAULT_TIMEZONE = "America/Santiago";

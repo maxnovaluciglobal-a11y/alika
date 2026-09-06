@@ -894,6 +894,8 @@ export type Database = {
           closed_at: string;
           closed_by: string;
           commission_cents: number;
+          email_error: string | null;
+          email_notified_at: string | null;
           id: string;
           paid_at: string | null;
           paid_by: string | null;
@@ -911,6 +913,8 @@ export type Database = {
           closed_at?: string;
           closed_by: string;
           commission_cents: number;
+          email_error?: string | null;
+          email_notified_at?: string | null;
           id?: string;
           paid_at?: string | null;
           paid_by?: string | null;
@@ -928,6 +932,8 @@ export type Database = {
           closed_at?: string;
           closed_by?: string;
           commission_cents?: number;
+          email_error?: string | null;
+          email_notified_at?: string | null;
           id?: string;
           paid_at?: string | null;
           paid_by?: string | null;

@@ -18,13 +18,13 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { requirePermission } from "@/lib/route-guards";
-import { formatMoney, netAfterRetention, type PaymentMethodConfig } from "@/lib/finance";
+import { formatMoney, netAfterRetention, type PaymentMethodConfig } from "@/lib/finance/finance";
 import {
   createPaymentMethod,
   listPaymentMethods,
   setPaymentMethodActive,
   updatePaymentMethod,
-} from "@/lib/clinic-finance.functions";
+} from "@/lib/finance/clinic-finance.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/medios-de-pago")({

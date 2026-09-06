@@ -61,7 +61,7 @@ import {
   type QuoteStatus,
   type TreatmentItemStatus,
   type TreatmentPlan,
-} from "@/lib/finance";
+} from "@/lib/finance/finance";
 import {
   FDI_ALL_ADULT,
   FDI_ALL_PRIMARY,
@@ -81,10 +81,10 @@ import {
   setQuoteStatus,
   setTreatmentItemStatus,
   updateQuote,
-} from "@/lib/finance.functions";
+} from "@/lib/finance/finance.functions";
 import { MoneyInput } from "@/components/money-input";
 import { cn } from "@/lib/utils";
-import { listPaymentMethods } from "@/lib/clinic-finance.functions";
+import { listPaymentMethods } from "@/lib/finance/clinic-finance.functions";
 import { useOfflineMutation } from "@/hooks/use-offline-mutation";
 
 interface Props {
