@@ -29,7 +29,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { DateField, FilterBar, SelectField } from "@/components/filters";
 import { MoneyInput } from "@/components/money-input";
-import { requirePermission } from "@/lib/route-guards";
+import { requirePermission } from "@/lib/access/route-guards";
 import { hoyISO, formatoFecha } from "@/lib/clinic-data";
 import { CATEGORIAS_GASTO_SUGERIDAS, formatMoney, type Expense } from "@/lib/finance/finance";
 import {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveActiveMembership } from "../src/lib/access.functions";
+import { resolveActiveMembership } from "../src/lib/access/access.functions";
 
 /**
  * Prueba pura, sin DB: cubre la lógica de selección de clínica activa

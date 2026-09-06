@@ -25,7 +25,7 @@ import {
   updateBranch,
   type BranchDetail,
 } from "@/lib/branches.functions";
-import { requirePermission } from "@/lib/route-guards";
+import { requirePermission } from "@/lib/access/route-guards";
 
 function inputClass() {
   return "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";

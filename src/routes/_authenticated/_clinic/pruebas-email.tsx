@@ -13,7 +13,7 @@ import {
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
-import { requirePermission } from "@/lib/route-guards";
+import { requirePermission } from "@/lib/access/route-guards";
 import { useServerFn } from "@tanstack/react-start";
 import { leerVerificacion, type DnsVerification } from "@/lib/messaging/dns-email";
 import { getEmailSandboxConfig } from "@/lib/messaging/email-config.functions";

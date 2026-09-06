@@ -7,8 +7,8 @@ import {
   ROLE_LABELS,
   type ClinicAccess,
   type ClinicRole,
-} from "@/lib/access";
-import { guardarRolSimulado, puedeSimular } from "@/lib/role-simulation";
+} from "@/lib/access/access";
+import { guardarRolSimulado, puedeSimular } from "@/lib/access/role-simulation";
 
 /**
  * Modo de simulación de rol (solo owner/admin): cambia únicamente lo que muestra

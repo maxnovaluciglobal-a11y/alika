@@ -20,7 +20,7 @@ import {
   listBranchesForReviewLinks,
   updateBranchGoogleReviewUrl,
 } from "@/lib/clinic-catalog.functions";
-import { hasPermission } from "@/lib/access";
+import { hasPermission } from "@/lib/access/access";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/preferencias")({

@@ -18,8 +18,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { requirePermission } from "@/lib/route-guards";
-import { hasPermission } from "@/lib/access";
+import { requirePermission } from "@/lib/access/route-guards";
+import { hasPermission } from "@/lib/access/access";
 import { etiquetaEstadoPaciente, type EstadoPaciente } from "@/lib/clinic-data";
 import { formatMoney } from "@/lib/finance/finance";
 import { listBranches, listProfessionals } from "@/lib/clinic-catalog.functions";

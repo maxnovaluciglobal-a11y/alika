@@ -34,7 +34,7 @@ import {
   type CommissionKind,
 } from "@/lib/finance/commissions.functions";
 import { formatMoney, fromCents, toCents } from "@/lib/finance/finance";
-import { requirePermission } from "@/lib/route-guards";
+import { requirePermission } from "@/lib/access/route-guards";
 
 function inputClass() {
   return "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";

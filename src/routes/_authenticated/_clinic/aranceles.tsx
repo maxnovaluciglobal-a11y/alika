@@ -19,7 +19,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { SearchField, FilterBar, SelectField } from "@/components/filters";
 import { MoneyInput } from "@/components/money-input";
-import { requirePermission } from "@/lib/route-guards";
+import { requirePermission } from "@/lib/access/route-guards";
 import { formatMoney, fromCents, toCents, type Procedure } from "@/lib/finance/finance";
 import { parseArancelCsv, type ArancelCsvResult } from "@/lib/arancel-csv";
 import {

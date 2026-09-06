@@ -3,8 +3,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
-import { ACCESS_QUERY_KEY, type ClinicAccess } from "@/lib/access";
-import { getMyAccess, setActiveClinic } from "@/lib/access.functions";
+import { ACCESS_QUERY_KEY, type ClinicAccess } from "@/lib/access/access";
+import { getMyAccess, setActiveClinic } from "@/lib/access/access.functions";
 
 /**
  * Selector de clínica activa (progresivo #7, plan Carlos 05-sep-2026). Solo

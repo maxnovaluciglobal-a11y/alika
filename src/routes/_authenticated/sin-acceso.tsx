@@ -1,9 +1,9 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ShieldAlert } from "lucide-react";
 
-import { ROLE_LABELS, type ClinicAccess } from "@/lib/access";
-import { getMyAccess } from "@/lib/access.functions";
-import { guardarRolSimulado, leerRolSimulado, puedeSimular } from "@/lib/role-simulation";
+import { ROLE_LABELS, type ClinicAccess } from "@/lib/access/access";
+import { getMyAccess } from "@/lib/access/access.functions";
+import { guardarRolSimulado, leerRolSimulado, puedeSimular } from "@/lib/access/role-simulation";
 
 export const Route = createFileRoute("/_authenticated/sin-acceso")({
   loader: () => getMyAccess({}),

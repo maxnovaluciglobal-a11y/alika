@@ -17,7 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { requirePermission } from "@/lib/route-guards";
+import { requirePermission } from "@/lib/access/route-guards";
 import {
   CLINIC_ROLES,
   ROLE_DESCRIPTIONS,
@@ -26,13 +26,13 @@ import {
   permissionsForRole,
   type ClinicMember,
   type ClinicRole,
-} from "@/lib/access";
+} from "@/lib/access/access";
 import {
   inviteMember,
   listClinicMembers,
   removeMember,
   updateMemberRole,
-} from "@/lib/access.functions";
+} from "@/lib/access/access.functions";
 
 const INVITABLE_ROLES = CLINIC_ROLES.filter((r) => r !== "owner");
 

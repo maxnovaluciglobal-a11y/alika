@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { hasPermission } from "@/lib/access";
+import { hasPermission } from "@/lib/access/access";
 import { listBranches } from "@/lib/clinic-catalog.functions";
 import { listStockByWarehouse, listWarehouses } from "@/lib/clinic-operations.functions";
 import type { Sucursal } from "@/lib/clinic-data";
@@ -41,7 +41,7 @@ import {
   type InventoryItem,
   type InventoryMovementKind,
 } from "@/lib/inventory.functions";
-import { requirePermission } from "@/lib/route-guards";
+import { requirePermission } from "@/lib/access/route-guards";
 
 const MOVEMENT_LABELS: Record<InventoryMovementKind, string> = {
   entrada: "Entrada",

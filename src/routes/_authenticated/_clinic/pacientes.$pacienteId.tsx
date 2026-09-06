@@ -7,7 +7,7 @@ import { ArrowLeft, CalendarClock, Mail, Phone, ShieldAlert, Tag } from "lucide-
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
-import { requirePermission } from "@/lib/route-guards";
+import { requirePermission } from "@/lib/access/route-guards";
 import { PacienteTimeline } from "@/components/paciente-timeline";
 import { NotasClinicas } from "@/components/notas-clinicas";
 import { AllergyAlertBanner, MedicalHistoryCard } from "@/components/medical-history-card";
@@ -22,7 +22,7 @@ import { MessagesHistory } from "@/components/messages-history";
 import { WhatsAppOptInToggle } from "@/components/whatsapp-opt-in-toggle";
 import { PortalLinkButton, RevokePortalAccessButton } from "@/components/portal-link-button";
 import { ReferralCodeCard } from "@/components/referral-code-card";
-import { hasPermission } from "@/lib/access";
+import { hasPermission } from "@/lib/access/access";
 import type { Paciente } from "@/lib/clinic-data";
 import { formatMoney } from "@/lib/finance/finance";
 import { getPatient } from "@/lib/patients.functions";

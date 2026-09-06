@@ -1,4 +1,4 @@
-import type { ClinicRole } from "../access";
+import type { ClinicRole } from "../access/access";
 
 /** Estado combinado de una nota clínica (firma + flujo de revisión). */
 export const NOTE_STATES = [

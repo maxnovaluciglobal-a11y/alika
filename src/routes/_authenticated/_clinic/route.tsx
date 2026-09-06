@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
 
-import { getMyAccess } from "@/lib/access.functions";
-import { ACCESS_QUERY_KEY, type ClinicAccess } from "@/lib/access";
+import { getMyAccess } from "@/lib/access/access.functions";
+import { ACCESS_QUERY_KEY, type ClinicAccess } from "@/lib/access/access";
 import { getMySubscription } from "@/lib/billing.functions";
 import { isSubscriptionActive } from "@/lib/billing";
-import { leerRolSimulado, puedeSimular } from "@/lib/role-simulation";
+import { leerRolSimulado, puedeSimular } from "@/lib/access/role-simulation";
 import { ensureOfflineCacheHydrated } from "@/lib/offline-cache";
 import { AppShell } from "@/components/app-shell";
 import { reportBoundaryError } from "@/lib/error-reporting";

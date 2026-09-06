@@ -5,7 +5,7 @@ import { FlaskConical, ShieldAlert, ShieldCheck, Siren } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
-import { requirePermission } from "@/lib/route-guards";
+import { requirePermission } from "@/lib/access/route-guards";
 import {
   getEmailSandboxConfig,
   setEmailSandboxConfig,

@@ -1,6 +1,6 @@
 import { redirect } from "@tanstack/react-router";
 
-import { hasPermission, type ClinicAccess, type Permission } from "@/lib/access";
+import { hasPermission, type ClinicAccess, type Permission } from "@/lib/access/access";
 
 /**
  * Guard de ruta por permiso. El contexto `access` lo provee el layout
