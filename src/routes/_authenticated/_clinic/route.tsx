@@ -6,7 +6,7 @@ import { ACCESS_QUERY_KEY, type ClinicAccess } from "@/lib/access/access";
 import { getMySubscription } from "@/lib/billing.functions";
 import { isSubscriptionActive } from "@/lib/billing";
 import { leerRolSimulado, puedeSimular } from "@/lib/access/role-simulation";
-import { ensureOfflineCacheHydrated } from "@/lib/offline-cache";
+import { ensureOfflineCacheHydrated } from "@/lib/offline/offline-cache";
 import { AppShell } from "@/components/app-shell";
 import { reportBoundaryError } from "@/lib/error-reporting";
 import { captureException } from "@/lib/sentry";

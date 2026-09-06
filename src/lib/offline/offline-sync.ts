@@ -17,7 +17,7 @@ import {
   quitarDeCola,
   type ItemCola,
   type OperacionKind,
-} from "@/lib/offline-queue";
+} from "@/lib/offline/offline-queue";
 
 /**
  * Cómo se reproduce cada operación al recuperar conexión.
