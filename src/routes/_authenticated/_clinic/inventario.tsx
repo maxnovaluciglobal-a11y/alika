@@ -44,6 +44,7 @@ import {
   type InventoryItem,
   type InventoryMovementKind,
 } from "@/lib/clinic-operations/inventory.functions";
+import type { ConsumptionType } from "@/lib/clinic-operations/procedure-supply-consumption";
 import { requirePermission } from "@/lib/access/route-guards";
 
 const MOVEMENT_LABELS: Record<InventoryMovementKind, string> = {
@@ -59,6 +60,64 @@ const MOVEMENT_ROLES = new Set(["owner", "admin", "dentist", "assistant"]);
 
 function inputClass() {
   return "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
+}
+
+const CONSUMPTION_TYPE_LABELS: Record<ConsumptionType, string> = {
+  fixed: "Uso único (guante, aguja, cartucho)",
+  variable: "Fraccionable (gasas, algodón, gel)",
+  shared: "Compartido, no ligado a un procedimiento",
+};
+
+/** Select de tipo de consumo + rendimiento — compartido entre crear/editar
+ * para no repetir el mismo bloque dos veces. */
+function ConsumoFields({
+  idPrefix,
+  consumptionType,
+  onConsumptionTypeChange,
+  yieldPct,
+  onYieldPctChange,
+}: {
+  idPrefix: string;
+  consumptionType: ConsumptionType;
+  onConsumptionTypeChange: (v: ConsumptionType) => void;
+  yieldPct: string;
+  onYieldPctChange: (v: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-1.5">
+        <Label htmlFor={`${idPrefix}-tipo`}>Tipo de consumo</Label>
+        <select
+          id={`${idPrefix}-tipo`}
+          value={consumptionType}
+          onChange={(e) => onConsumptionTypeChange(e.target.value as ConsumptionType)}
+          className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
+          {(Object.entries(CONSUMPTION_TYPE_LABELS) as [ConsumptionType, string][]).map(
+            ([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ),
+          )}
+        </select>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor={`${idPrefix}-rendimiento`}>Rendimiento esperado (%)</Label>
+        <input
+          id={`${idPrefix}-rendimiento`}
+          type="number"
+          min={1}
+          max={100}
+          step="0.01"
+          value={yieldPct}
+          onChange={(e) => onYieldPctChange(e.target.value)}
+          className={inputClass()}
+          placeholder="100 = sin merma"
+        />
+      </div>
+    </div>
+  );
 }
 
 function CrearItemDialog({
@@ -78,6 +137,8 @@ function CrearItemDialog({
   const [costPesos, setCostPesos] = useState("");
   const [notes, setNotes] = useState("");
   const [branchId, setBranchId] = useState("");
+  const [consumptionType, setConsumptionType] = useState<ConsumptionType>("fixed");
+  const [yieldPct, setYieldPct] = useState("100");
 
   const queryClient = useQueryClient();
   const createFn = useServerFn(createInventoryItem);
@@ -93,6 +154,8 @@ function CrearItemDialog({
           costCents: costPesos.trim() === "" ? null : toCents(Number(costPesos), currency),
           notes: notes.trim() || undefined,
           branchId: sucursales.length > 1 ? branchId || null : undefined,
+          consumptionType,
+          yieldPct: yieldPct.trim() === "" ? 100 : Number(yieldPct),
         },
       }),
     onSuccess: () => {
@@ -105,6 +168,8 @@ function CrearItemDialog({
       setCostPesos("");
       setNotes("");
       setBranchId("");
+      setConsumptionType("fixed");
+      setYieldPct("100");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -171,6 +236,13 @@ function CrearItemDialog({
               placeholder="Sin costo cargado"
             />
           </div>
+          <ConsumoFields
+            idPrefix="inv"
+            consumptionType={consumptionType}
+            onConsumptionTypeChange={setConsumptionType}
+            yieldPct={yieldPct}
+            onYieldPctChange={setYieldPct}
+          />
           <div className="space-y-1.5">
             <Label htmlFor="inv-notas">Notas (opcional)</Label>
             <input
@@ -202,7 +274,12 @@ function CrearItemDialog({
         <DialogFooter>
           <Button
             onClick={() => crear.mutate()}
-            disabled={crear.isPending || !name.trim() || !unit.trim()}
+            disabled={
+              crear.isPending ||
+              !name.trim() ||
+              !unit.trim() ||
+              !(Number(yieldPct) > 0 && Number(yieldPct) <= 100)
+            }
           >
             {crear.isPending && <Loader2 className="size-3.5 animate-spin" />}
             Crear ítem
@@ -234,6 +311,8 @@ function EditarItemDialog({
   const [notes, setNotes] = useState(item.notes ?? "");
   const [isActive, setIsActive] = useState(item.isActive);
   const [branchId, setBranchId] = useState(item.branchId ?? "");
+  const [consumptionType, setConsumptionType] = useState<ConsumptionType>(item.consumptionType);
+  const [yieldPct, setYieldPct] = useState(String(item.yieldPct));
 
   const queryClient = useQueryClient();
   const updateFn = useServerFn(updateInventoryItem);
@@ -251,6 +330,8 @@ function EditarItemDialog({
           notes: notes.trim() || undefined,
           isActive,
           branchId: sucursales.length > 1 ? branchId || null : undefined,
+          consumptionType,
+          yieldPct: yieldPct.trim() === "" ? 100 : Number(yieldPct),
         },
       }),
     onSuccess: () => {
@@ -321,6 +402,13 @@ function EditarItemDialog({
               placeholder="Sin costo cargado"
             />
           </div>
+          <ConsumoFields
+            idPrefix={`ei-${item.id}`}
+            consumptionType={consumptionType}
+            onConsumptionTypeChange={setConsumptionType}
+            yieldPct={yieldPct}
+            onYieldPctChange={setYieldPct}
+          />
           <div className="space-y-1.5">
             <Label htmlFor={`ei-notas-${item.id}`}>Notas</Label>
             <input
@@ -360,7 +448,12 @@ function EditarItemDialog({
         <DialogFooter>
           <Button
             onClick={() => guardar.mutate()}
-            disabled={guardar.isPending || !name.trim() || !unit.trim()}
+            disabled={
+              guardar.isPending ||
+              !name.trim() ||
+              !unit.trim() ||
+              !(Number(yieldPct) > 0 && Number(yieldPct) <= 100)
+            }
           >
             {guardar.isPending && <Loader2 className="size-3.5 animate-spin" />}
             Guardar

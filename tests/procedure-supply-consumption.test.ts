@@ -1,9 +1,24 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyYield,
   computeReversalLines,
   shouldConsumeSupplies,
   shouldReverseSupplies,
 } from "@/lib/clinic-operations/procedure-supply-consumption";
+
+describe("applyYield", () => {
+  it("con rendimiento 100% no cambia la cantidad de la receta", () => {
+    expect(applyYield(2, 100)).toBe(2);
+  });
+
+  it("con rendimiento 80% aumenta la cantidad para compensar la merma esperada", () => {
+    expect(applyYield(2, 80)).toBeCloseTo(2.5);
+  });
+
+  it("con rendimiento 50% duplica la cantidad", () => {
+    expect(applyYield(1, 50)).toBeCloseTo(2);
+  });
+});
 
 describe("shouldConsumeSupplies", () => {
   it("true cuando pasa de pending a completed", () => {

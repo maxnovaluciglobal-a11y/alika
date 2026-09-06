@@ -409,7 +409,11 @@ function RecetaDialog({
     setNuevaCantidad(null);
   };
 
-  const itemsDisponibles = items.filter((i) => !lineas.some((l) => l.itemId === i.id));
+  // "shared" (desinfectante de sillón, etc.) no correlaciona 1:1 con un
+  // procedimiento — no se ofrece como opción de receta.
+  const itemsDisponibles = items.filter(
+    (i) => i.consumptionType !== "shared" && !lineas.some((l) => l.itemId === i.id),
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

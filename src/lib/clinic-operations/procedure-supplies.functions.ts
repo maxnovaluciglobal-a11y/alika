@@ -4,9 +4,11 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
-import { mensajeDb } from "@/lib/db-errors";
+import { isUndefinedColumnError, mensajeDb } from "@/lib/db-errors";
 import {
+  applyYield,
   computeReversalLines,
+  type ConsumptionType,
   type SupplyMovementRecord,
 } from "@/lib/clinic-operations/procedure-supply-consumption";
 
@@ -15,10 +17,15 @@ export type ProcedureSupply = {
   itemName: string;
   unit: string;
   quantity: number;
+  consumptionType: ConsumptionType;
+  /** `quantity` ya ajustada por el rendimiento del insumo (Tanda 2) — la
+   * cantidad real que se descuenta si nadie la edita a mano. */
+  adjustedQuantity: number;
 };
 
-/** Receta de insumos de un procedimiento, con nombre/unidad del insumo para
- * mostrar en la UI. RLS: mismo set operativo que inventory_items (SELECT). */
+/** Receta de insumos de un procedimiento, con nombre/unidad/tipo del insumo
+ * para mostrar en la UI. RLS: mismo set operativo que inventory_items
+ * (SELECT). */
 export const listProcedureSupplies = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -34,11 +41,33 @@ export const listProcedureSupplies = createServerFn({ method: "GET" })
     if (!rows || rows.length === 0) return { supplies: [] };
 
     const itemIds = rows.map((r) => r.item_id);
-    const { data: items, error: itemsError } = await context.supabase
+    type InventoryItemLookupRow = {
+      id: string;
+      name: string;
+      unit: string;
+      consumption_type?: string | null;
+      yield_pct?: number | null;
+    };
+    const first = await context.supabase
       .from("inventory_items")
-      .select("id, name, unit")
+      .select("id, name, unit, consumption_type, yield_pct")
       .eq("clinic_id", data.clinicId)
       .in("id", itemIds);
+    let items: InventoryItemLookupRow[] | null = first.data;
+    let itemsError = first.error;
+    if (itemsError && isUndefinedColumnError(itemsError)) {
+      // Pre-migración (Tanda 2): consumption_type/yield_pct todavía no se
+      // aplicaron al Supabase real — degradar a fixed/100 (mismo default de
+      // las columnas) en vez de romper "marcar como realizado" para
+      // procedimientos con receta ya configurada (Tanda 1, en producción).
+      const fallback = await context.supabase
+        .from("inventory_items")
+        .select("id, name, unit")
+        .eq("clinic_id", data.clinicId)
+        .in("id", itemIds);
+      items = fallback.data;
+      itemsError = fallback.error;
+    }
     if (itemsError)
       throw new Error(mensajeDb(itemsError, "No pudimos cargar la receta del procedimiento."));
     const itemById = new Map((items ?? []).map((i) => [i.id, i]));
@@ -47,7 +76,16 @@ export const listProcedureSupplies = createServerFn({ method: "GET" })
       .map((r) => {
         const item = itemById.get(r.item_id);
         if (!item) return null;
-        return { itemId: r.item_id, itemName: item.name, unit: item.unit, quantity: r.quantity };
+        const consumptionType = (item.consumption_type as ConsumptionType | null) ?? "fixed";
+        const yieldPct = item.yield_pct ?? 100;
+        return {
+          itemId: r.item_id,
+          itemName: item.name,
+          unit: item.unit,
+          quantity: r.quantity,
+          consumptionType,
+          adjustedQuantity: applyYield(r.quantity, yieldPct),
+        };
       })
       .filter((x): x is ProcedureSupply => x !== null);
     return { supplies };
@@ -105,6 +143,13 @@ export const setProcedureSupplies = createServerFn({ method: "POST" })
  * configurada para ese procedimiento, no hace nada — es el caso normal
  * (`treatment_items.procedure_id` es nullable), no un error.
  *
+ * `overrides` (Tanda 2): cantidad final por insumo, tal como la confirmó el
+ * dentista en el diálogo de ajuste (solo se le muestran los insumos
+ * `variable`). Si un insumo no tiene override, se calcula con la receta
+ * ajustada por rendimiento (`applyYield`) — el camino sin fricción de la
+ * Tanda 1 para insumos `fixed`, o cuando no hubo diálogo porque la receta
+ * completa era `fixed`.
+ *
  * Si algún insumo queda con stock negativo, ese movimiento puntual se omite
  * en vez de abortar todo (mismo principio que el descuento de stock en
  * DypOS): completar la atención al paciente no puede depender de que el
@@ -113,7 +158,12 @@ export const setProcedureSupplies = createServerFn({ method: "POST" })
  */
 export async function applyTreatmentItemSupplyConsumption(
   supabase: SupabaseClient<Database>,
-  params: { clinicId: string; treatmentItemId: string; procedureId: string | null },
+  params: {
+    clinicId: string;
+    treatmentItemId: string;
+    procedureId: string | null;
+    overrides?: Record<string, number>;
+  },
 ): Promise<{ skippedCount: number }> {
   if (!params.procedureId) return { skippedCount: 0 };
 
@@ -126,13 +176,43 @@ export async function applyTreatmentItemSupplyConsumption(
     throw new Error(mensajeDb(error, "No pudimos leer la receta de insumos del procedimiento."));
   if (!supplies || supplies.length === 0) return { skippedCount: 0 };
 
+  const itemIds = supplies.map((s) => s.item_id);
+  type YieldLookupRow = { id: string; yield_pct?: number | null };
+  const first = await supabase
+    .from("inventory_items")
+    .select("id, yield_pct")
+    .eq("clinic_id", params.clinicId)
+    .in("id", itemIds);
+  let items: YieldLookupRow[] | null = first.data;
+  let itemsError = first.error;
+  if (itemsError && isUndefinedColumnError(itemsError)) {
+    // Pre-migración (Tanda 2): yield_pct todavía no existe — cada insumo
+    // consume la cantidad de receta sin ajuste (100 = sin merma, el mismo
+    // default que tendrá la columna una vez migrada).
+    const fallback = await supabase
+      .from("inventory_items")
+      .select("id")
+      .eq("clinic_id", params.clinicId)
+      .in("id", itemIds);
+    items = fallback.data;
+    itemsError = fallback.error;
+  }
+  if (itemsError)
+    throw new Error(
+      mensajeDb(itemsError, "No pudimos leer la receta de insumos del procedimiento."),
+    );
+  const yieldByItem = new Map((items ?? []).map((i) => [i.id, i.yield_pct ?? 100]));
+
   let skippedCount = 0;
   for (const supply of supplies) {
+    const override = params.overrides?.[supply.item_id];
+    const quantity =
+      override ?? applyYield(supply.quantity, yieldByItem.get(supply.item_id) ?? 100);
     const { error: insertError } = await supabase.from("inventory_movements").insert({
       clinic_id: params.clinicId,
       item_id: supply.item_id,
       kind: "salida",
-      quantity: supply.quantity,
+      quantity,
       reason: "Consumo automático por procedimiento",
       treatment_item_id: params.treatmentItemId,
     });

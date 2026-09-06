@@ -2,7 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { mensajeDb } from "@/lib/db-errors";
+import { isUndefinedColumnError, mensajeDb } from "@/lib/db-errors";
+import type { ConsumptionType } from "@/lib/clinic-operations/procedure-supply-consumption";
 
 export type InventoryMovementKind = "entrada" | "salida" | "ajuste";
 
@@ -25,6 +26,11 @@ export type InventoryItem = {
    * o la migración `20260827050000_inventory_branch_segmentation` todavía
    * no se aplicó — ver degradación null-safe en listInventoryItems). */
   branchId: string | null;
+  /** Tanda 2. Default "fixed" si la migración `20260906130000` todavía no
+   * se aplicó — mismo criterio de degradación que branchId. */
+  consumptionType: ConsumptionType;
+  /** 100 = sin merma. Mismo default que la columna. */
+  yieldPct: number;
 };
 
 export type InventoryMovement = {
@@ -52,10 +58,13 @@ export type ExpiringLot = {
 const INVENTORY_ITEM_COLUMNS =
   "id, name, unit, current_stock, min_stock, cost_cents, notes, is_active, created_at";
 
-/** Postgres "undefined_column" — la migración de branch_id todavía no se
- * aplicó al Supabase real. No es un error real de la request, es el estado
- * "pre-migración" descrito en CLAUDE.md: degradar sin romper la página. */
-const UNDEFINED_COLUMN = "42703";
+/** Columnas agregadas después de la creación original de la tabla — cada
+ * una puede faltar todavía si su migración no se aplicó. Un solo fallback
+ * cubre las tres: si cualquiera falta, se cae al SELECT mínimo de arriba
+ * (ver listInventoryItems). No distingue cuál falta exactamente, pero es
+ * una ventana transitoria de minutos entre pushear el código y aplicar la
+ * migración, no un estado sostenido en producción. */
+const INVENTORY_ITEM_COLUMNS_FULL = `${INVENTORY_ITEM_COLUMNS}, branch_id, consumption_type, yield_pct`;
 
 type InventoryItemRow = {
   id: string;
@@ -68,6 +77,8 @@ type InventoryItemRow = {
   is_active: boolean;
   created_at: string;
   branch_id?: string | null;
+  consumption_type?: string | null;
+  yield_pct?: number | null;
 };
 
 function mapInventoryItemRow(row: InventoryItemRow): InventoryItem {
@@ -83,6 +94,8 @@ function mapInventoryItemRow(row: InventoryItemRow): InventoryItem {
     createdAt: row.created_at,
     belowMinStock: row.min_stock != null && row.current_stock <= row.min_stock,
     branchId: row.branch_id ?? null,
+    consumptionType: (row.consumption_type as ConsumptionType | undefined) ?? "fixed",
+    yieldPct: row.yield_pct ?? 100,
   };
 }
 
@@ -104,7 +117,7 @@ export const listInventoryItems = createServerFn({ method: "GET" })
   .handler(async ({ data, context }): Promise<{ items: InventoryItem[] }> => {
     let query = context.supabase
       .from("inventory_items")
-      .select(`${INVENTORY_ITEM_COLUMNS}, branch_id`)
+      .select(INVENTORY_ITEM_COLUMNS_FULL)
       .eq("clinic_id", data.clinicId);
     if (data.branchId) query = query.eq("branch_id", data.branchId);
 
@@ -112,9 +125,11 @@ export const listInventoryItems = createServerFn({ method: "GET" })
     let rows: InventoryItemRow[] | null = first.data as InventoryItemRow[] | null;
     let error = first.error;
 
-    if (error?.code === UNDEFINED_COLUMN) {
-      // Pre-migración: reintentar sin branch_id, ignorando el filtro (no
-      // hay columna que filtrar todavía).
+    if (error && isUndefinedColumnError(error)) {
+      // Pre-migración: reintentar con el mínimo común, ignorando el filtro
+      // de sucursal (no hay columna que filtrar todavía) — degrada a
+      // consumptionType/yieldPct/branchId por default en vez de romper la
+      // página, ver mapInventoryItemRow.
       const fallback = await context.supabase
         .from("inventory_items")
         .select(INVENTORY_ITEM_COLUMNS)
@@ -145,6 +160,10 @@ export const createInventoryItem = createServerFn({ method: "POST" })
         // product-2: solo lo manda la UI cuando la clínica tiene >1 sucursal
         // activa. null = sin sucursal asignada (compartido).
         branchId: z.string().uuid().nullable().optional(),
+        // Tanda 2: por default todo insumo nuevo es "fixed" (uso único, la
+        // receta ya es exacta) sin merma — el caso más común.
+        consumptionType: z.enum(["fixed", "variable", "shared"]).default("fixed"),
+        yieldPct: z.number().gt(0).lte(100).default(100),
       })
       .parse(input),
   )
@@ -159,14 +178,16 @@ export const createInventoryItem = createServerFn({ method: "POST" })
         cost_cents: data.costCents ?? null,
         notes: data.notes || null,
         branch_id: data.branchId ?? null,
+        consumption_type: data.consumptionType,
+        yield_pct: data.yieldPct,
       })
       .select("id")
       .single();
 
     if (error) {
-      if (error.code === UNDEFINED_COLUMN) {
+      if (isUndefinedColumnError(error)) {
         throw new Error(
-          "No pudimos guardar la sucursal del ítem: la migración de sucursales en inventario todavía no se aplicó. Avisale a Walter.",
+          "No pudimos guardar el ítem: falta aplicar una migración de inventario (sucursales o tipo de consumo). Avisale a Walter.",
         );
       }
       throw new Error(mensajeDb(error, "No pudimos crear el ítem de inventario."));
@@ -194,6 +215,8 @@ export const updateInventoryItem = createServerFn({ method: "POST" })
         // product-2: solo lo manda la UI cuando la clínica tiene >1 sucursal
         // activa. null = sin sucursal asignada (compartido).
         branchId: z.string().uuid().nullable().optional(),
+        consumptionType: z.enum(["fixed", "variable", "shared"]),
+        yieldPct: z.number().gt(0).lte(100),
       })
       .parse(input),
   )
@@ -207,15 +230,17 @@ export const updateInventoryItem = createServerFn({ method: "POST" })
         cost_cents: data.costCents ?? null,
         notes: data.notes || null,
         is_active: data.isActive,
+        consumption_type: data.consumptionType,
+        yield_pct: data.yieldPct,
         ...(data.branchId !== undefined ? { branch_id: data.branchId } : {}),
       })
       .eq("id", data.itemId)
       .eq("clinic_id", data.clinicId);
 
     if (error) {
-      if (error.code === UNDEFINED_COLUMN) {
+      if (isUndefinedColumnError(error)) {
         throw new Error(
-          "No pudimos guardar la sucursal del ítem: la migración de sucursales en inventario todavía no se aplicó. Avisale a Walter.",
+          "No pudimos guardar el ítem: falta aplicar una migración de inventario (sucursales o tipo de consumo). Avisale a Walter.",
         );
       }
       throw new Error(mensajeDb(error, "No pudimos actualizar el ítem de inventario."));

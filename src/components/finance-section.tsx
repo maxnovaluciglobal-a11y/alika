@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -39,6 +39,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
 import { SignaturePad } from "@/components/signature-pad";
 import {
@@ -86,6 +87,7 @@ import { MoneyInput } from "@/components/money-input";
 import { cn } from "@/lib/utils";
 import { listPaymentMethods } from "@/lib/finance/clinic-finance.functions";
 import { useOfflineMutation } from "@/hooks/use-offline-mutation";
+import { listProcedureSupplies } from "@/lib/clinic-operations/procedure-supplies.functions";
 
 interface Props {
   clinicId: string;
@@ -1213,6 +1215,101 @@ function AceptarPresupuestoDialog({
   );
 }
 
+/** Tanda 2 — receta de insumos: se abre solo cuando el procedimiento tiene
+ * al menos un insumo `variable` (el padre ya filtró eso, ver FinanceSection).
+ * Colapsado por default — un clic en "Confirmar" alcanza para el camino
+ * feliz, "Ajustar cantidades" expande el detalle editable. Nunca bloquea:
+ * "Cancelar" deja el ítem en su estado anterior sin tocar nada. */
+function ConfirmarConsumoDialog({
+  clinicId,
+  pending,
+  onClose,
+  onConfirm,
+  confirming,
+}: {
+  clinicId: string;
+  pending: { itemId: string; procedureId: string; nombreItem: string };
+  onClose: () => void;
+  onConfirm: (overrides: Record<string, number>) => void;
+  confirming: boolean;
+}) {
+  const fetchSupplies = useServerFn(listProcedureSupplies);
+  const { data, isPending } = useQuery({
+    queryKey: ["procedure-supplies", clinicId, pending.procedureId],
+    queryFn: () => fetchSupplies({ data: { clinicId, procedureId: pending.procedureId } }),
+  });
+
+  const variables = useMemo(
+    () => (data?.supplies ?? []).filter((s) => s.consumptionType === "variable"),
+    [data],
+  );
+  const [expanded, setExpanded] = useState(false);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    setQuantities(Object.fromEntries(variables.map((s) => [s.itemId, s.adjustedQuantity])));
+  }, [variables]);
+
+  return (
+    <Dialog open onOpenChange={(next) => !next && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Completar &ldquo;{pending.nombreItem}&rdquo;</DialogTitle>
+          <DialogDescription>
+            {isPending
+              ? "Revisando la receta de insumos…"
+              : `Se van a descontar ${variables.length} insumo${variables.length === 1 ? "" : "s"} fraccionable${variables.length === 1 ? "" : "s"} del inventario, más los de uso único de la receta.`}
+          </DialogDescription>
+        </DialogHeader>
+
+        {!isPending && variables.length > 0 && (
+          <Collapsible open={expanded} onOpenChange={setExpanded}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm">
+                {expanded ? "Ocultar cantidades" : "Ajustar cantidades"}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-2 pt-2">
+              {variables.map((s) => (
+                <div key={s.itemId} className="flex items-center justify-between gap-3 text-sm">
+                  <span className="min-w-0 flex-1 truncate">{s.itemName}</span>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      aria-label={`Cantidad de ${s.itemName}`}
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={quantities[s.itemId] ?? s.adjustedQuantity}
+                      onChange={(e) =>
+                        setQuantities((prev) => ({
+                          ...prev,
+                          [s.itemId]: Number(e.target.value),
+                        }))
+                      }
+                      className="w-20 rounded-md border border-hairline bg-transparent px-2 py-1 text-right text-sm"
+                    />
+                    <span className="text-xs text-muted-foreground">{s.unit}</span>
+                  </div>
+                </div>
+              ))}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={confirming}>
+            Cancelar
+          </Button>
+          <Button onClick={() => onConfirm(quantities)} disabled={isPending || confirming}>
+            {confirming && <Loader2 className="size-3.5 animate-spin" />}
+            Confirmar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function FinanceSection({
   clinicId,
   clinicaNombre,
@@ -1341,7 +1438,11 @@ export function FinanceSection({
   });
 
   const setItem = useMutation({
-    mutationFn: (v: { itemId: string; status: TreatmentItemStatus }) => setItemFn({ data: v }),
+    mutationFn: (v: {
+      itemId: string;
+      status: TreatmentItemStatus;
+      supplyOverrides?: Record<string, number>;
+    }) => setItemFn({ data: v }),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["treatment-plans", clinicId, patientId] });
       // Tanda 1 — receta de insumos: el tratamiento se completa igual aunque
@@ -1357,6 +1458,38 @@ export function FinanceSection({
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  // Tanda 2 — antes de completar un ítem con procedimiento, chequeamos en
+  // silencio (sin abrir nada todavía) si su receta tiene algún insumo
+  // `variable`. Mismo queryKey que ConfirmarConsumoDialog: React Query
+  // dedupe la request, así que esto no duplica tráfico de red.
+  const [pendingCompletion, setPendingCompletion] = useState<{
+    itemId: string;
+    procedureId: string;
+    nombreItem: string;
+  } | null>(null);
+  const fetchSuppliesGate = useServerFn(listProcedureSupplies);
+  const { data: gateSupplies } = useQuery({
+    queryKey: ["procedure-supplies", clinicId, pendingCompletion?.procedureId],
+    enabled: pendingCompletion !== null,
+    queryFn: () =>
+      fetchSuppliesGate({
+        data: { clinicId, procedureId: pendingCompletion!.procedureId },
+      }),
+  });
+  const pendingHasVariableSupplies = (gateSupplies?.supplies ?? []).some(
+    (s) => s.consumptionType === "variable",
+  );
+
+  useEffect(() => {
+    // Receta toda `fixed` (o sin receta): nada que ajustar, se completa
+    // directo — cero fricción, mismo comportamiento que la Tanda 1.
+    if (pendingCompletion && gateSupplies && !pendingHasVariableSupplies) {
+      setItem.mutate({ itemId: pendingCompletion.itemId, status: "completed" });
+      setPendingCompletion(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingCompletion, gateSupplies, pendingHasVariableSupplies]);
 
   const isLoading = qLoading || pLoading;
   // `useQuery` con `data = []` por defecto convierte un error del servidor en
@@ -1540,7 +1673,21 @@ export function FinanceSection({
                                     nombreItem={it.nameSnapshot}
                                     current={it.status}
                                     disabled={!puedeEditar}
-                                    onChange={(s) => setItem.mutate({ itemId: it.id, status: s })}
+                                    onChange={(s) => {
+                                      // Tanda 2: completar con procedimiento
+                                      // pasa primero por el gate de la
+                                      // receta — cualquier otra transición
+                                      // (o sin procedimiento) sigue directo.
+                                      if (s === "completed" && it.procedureId) {
+                                        setPendingCompletion({
+                                          itemId: it.id,
+                                          procedureId: it.procedureId,
+                                          nombreItem: it.nameSnapshot,
+                                        });
+                                      } else {
+                                        setItem.mutate({ itemId: it.id, status: s });
+                                      }
+                                    }}
                                   />
                                 </div>
                               ))}
@@ -1813,6 +1960,23 @@ export function FinanceSection({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {pendingCompletion && gateSupplies && pendingHasVariableSupplies && (
+        <ConfirmarConsumoDialog
+          clinicId={clinicId}
+          pending={pendingCompletion}
+          onClose={() => setPendingCompletion(null)}
+          onConfirm={(overrides) => {
+            setItem.mutate({
+              itemId: pendingCompletion.itemId,
+              status: "completed",
+              supplyOverrides: overrides,
+            });
+            setPendingCompletion(null);
+          }}
+          confirming={setItem.isPending}
+        />
+      )}
     </div>
   );
 }

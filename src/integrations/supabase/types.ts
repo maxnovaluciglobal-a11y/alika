@@ -1149,6 +1149,7 @@ export type Database = {
         Row: {
           branch_id: string | null;
           clinic_id: string;
+          consumption_type: string;
           cost_cents: number | null;
           created_at: string;
           created_by: string;
@@ -1160,10 +1161,12 @@ export type Database = {
           notes: string | null;
           sale_price_cents: number | null;
           unit: string;
+          yield_pct: number;
         };
         Insert: {
           branch_id?: string | null;
           clinic_id: string;
+          consumption_type?: string;
           cost_cents?: number | null;
           created_at?: string;
           created_by?: string;
@@ -1175,10 +1178,12 @@ export type Database = {
           notes?: string | null;
           sale_price_cents?: number | null;
           unit: string;
+          yield_pct?: number;
         };
         Update: {
           branch_id?: string | null;
           clinic_id?: string;
+          consumption_type?: string;
           cost_cents?: number | null;
           created_at?: string;
           created_by?: string;
@@ -1190,6 +1195,7 @@ export type Database = {
           notes?: string | null;
           sale_price_cents?: number | null;
           unit?: string;
+          yield_pct?: number;
         };
         Relationships: [
           {

@@ -23,3 +23,19 @@ export function mensajeDb(
   }
   return fallback;
 }
+
+/**
+ * Una columna opcional todavía no se aplicó al Supabase real — estado
+ * "pre-migración" transitorio (ver CLAUDE.md regla 5), no un error real de
+ * la request. Postgres devuelve `42703` (undefined_column) cuando la
+ * columna falta en un SELECT. Pero en un INSERT/UPDATE, PostgREST valida el
+ * payload contra su propio caché de esquema *antes* de tocar Postgres, y si
+ * no encuentra la columna ahí devuelve su propio error `PGRST204` ("Could
+ * not find the 'x' column of 'y' in the schema cache") — nunca un 42703.
+ * Sin chequear los dos códigos, ese mensaje técnico en inglés de PostgREST
+ * llega directo a un toast en vez del aviso en español (mismo problema que
+ * mensajeDb ya resuelve para los patrones de Postgres).
+ */
+export function isUndefinedColumnError(error: { code?: string } | null | undefined): boolean {
+  return error?.code === "42703" || error?.code === "PGRST204";
+}

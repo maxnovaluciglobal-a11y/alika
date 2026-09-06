@@ -1182,7 +1182,16 @@ export const listClinicTreatmentPlans = createServerFn({ method: "GET" })
 export const setTreatmentItemStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ itemId: z.string().uuid(), status: z.enum(TREATMENT_ITEM_STATUSES) }).parse(input),
+    z
+      .object({
+        itemId: z.string().uuid(),
+        status: z.enum(TREATMENT_ITEM_STATUSES),
+        // Tanda 2: cantidad final por insumo `variable`, confirmada por el
+        // dentista en el diálogo de ajuste. Sin esto, cada insumo se
+        // descuenta con la receta estándar ajustada por rendimiento.
+        supplyOverrides: z.record(z.string().uuid(), z.number().positive()).optional(),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
@@ -1216,6 +1225,7 @@ export const setTreatmentItemStatus = createServerFn({ method: "POST" })
         clinicId: current.clinic_id,
         treatmentItemId: data.itemId,
         procedureId: current.procedure_id,
+        overrides: data.supplyOverrides,
       });
       skippedSupplyCount = result.skippedCount;
     } else if (shouldReverseSupplies(current.status, data.status)) {
