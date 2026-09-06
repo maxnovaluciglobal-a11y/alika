@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { HORA_INICIO, type Cita, type EstadoCita } from "@/lib/clinic-data";
+import { HORA_INICIO, type Cita, type EstadoCita } from "@/lib/clinic-operations/clinic-data";
 import { mensajeDb } from "@/lib/db-errors";
 import { filaYaCreada } from "@/lib/idempotency";
 import { fetchPatientBalances } from "@/lib/patients.functions";

@@ -31,7 +31,7 @@ import {
 } from "@/lib/finance/finance.functions";
 import { coincide, str } from "@/lib/search";
 import { exportarCsv } from "@/lib/csv-export";
-import { hoyISO } from "@/lib/clinic-data";
+import { hoyISO } from "@/lib/clinic-operations/clinic-data";
 import { cn } from "@/lib/utils";
 
 interface ArancelesSearch {

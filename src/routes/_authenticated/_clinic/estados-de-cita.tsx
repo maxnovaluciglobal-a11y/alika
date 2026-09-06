@@ -23,7 +23,7 @@ import {
   setAppointmentStatusActive,
   upsertAppointmentStatus,
   type AppointmentStatusOption,
-} from "@/lib/clinic-operations.functions";
+} from "@/lib/clinic-operations/clinic-operations.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/estados-de-cita")({

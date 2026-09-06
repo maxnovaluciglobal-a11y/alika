@@ -17,7 +17,12 @@ import { Calendar } from "@/components/ui/calendar";
 import { HolidayNotice } from "@/components/holiday-notice";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { usePublicHolidays } from "@/hooks/use-public-holidays";
-import { fechaAISO, formatoFechaLarga, hoyISO, parseIsoDate } from "@/lib/clinic-data";
+import {
+  fechaAISO,
+  formatoFechaLarga,
+  hoyISO,
+  parseIsoDate,
+} from "@/lib/clinic-operations/clinic-data";
 import { formatMoney } from "@/lib/finance/finance";
 import { COUNTRIES } from "@/lib/onboarding-types";
 import {

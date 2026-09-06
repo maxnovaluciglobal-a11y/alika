@@ -23,7 +23,7 @@ import { WhatsAppOptInToggle } from "@/components/whatsapp-opt-in-toggle";
 import { PortalLinkButton, RevokePortalAccessButton } from "@/components/portal-link-button";
 import { ReferralCodeCard } from "@/components/referral-code-card";
 import { hasPermission } from "@/lib/access/access";
-import type { Paciente } from "@/lib/clinic-data";
+import type { Paciente } from "@/lib/clinic-operations/clinic-data";
 import { formatMoney } from "@/lib/finance/finance";
 import { getPatient } from "@/lib/patients.functions";
 

@@ -27,9 +27,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { hasPermission } from "@/lib/access/access";
-import { listBranches } from "@/lib/clinic-catalog.functions";
-import { listStockByWarehouse, listWarehouses } from "@/lib/clinic-operations.functions";
-import type { Sucursal } from "@/lib/clinic-data";
+import { listBranches } from "@/lib/clinic-operations/clinic-catalog.functions";
+import {
+  listStockByWarehouse,
+  listWarehouses,
+} from "@/lib/clinic-operations/clinic-operations.functions";
+import type { Sucursal } from "@/lib/clinic-operations/clinic-data";
 import { formatMoney, fromCents, toCents } from "@/lib/finance/finance";
 import {
   createInventoryItem,
@@ -40,7 +43,7 @@ import {
   updateInventoryItem,
   type InventoryItem,
   type InventoryMovementKind,
-} from "@/lib/inventory.functions";
+} from "@/lib/clinic-operations/inventory.functions";
 import { requirePermission } from "@/lib/access/route-guards";
 
 const MOVEMENT_LABELS: Record<InventoryMovementKind, string> = {

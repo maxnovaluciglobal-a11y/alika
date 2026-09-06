@@ -7,8 +7,11 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/access/route-guards";
-import { etiquetaEstado, formatoFechaLarga, hoyISO } from "@/lib/clinic-data";
-import { listAppointments, setAppointmentStatus } from "@/lib/appointments.functions";
+import { etiquetaEstado, formatoFechaLarga, hoyISO } from "@/lib/clinic-operations/clinic-data";
+import {
+  listAppointments,
+  setAppointmentStatus,
+} from "@/lib/clinic-operations/appointments.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/mi-agenda")({

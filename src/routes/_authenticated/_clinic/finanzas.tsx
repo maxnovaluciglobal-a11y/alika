@@ -6,7 +6,7 @@ import { CircleDollarSign, Receipt, TrendingUp } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { DateField, FilterBar } from "@/components/filters";
 import { requirePermission } from "@/lib/access/route-guards";
-import { hoyISO } from "@/lib/clinic-data";
+import { hoyISO } from "@/lib/clinic-operations/clinic-data";
 import { formatMoney, PAYMENT_METHOD_LABELS, type PaymentMethod } from "@/lib/finance/finance";
 import {
   getFinanceSummary,

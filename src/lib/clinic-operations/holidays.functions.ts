@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { fetchPublicHolidays, type PublicHoliday } from "@/lib/holidays";
+import { fetchPublicHolidays, type PublicHoliday } from "@/lib/clinic-operations/holidays";
 
 /**
  * Feriados públicos del país de la clínica (Nager.Date), para marcar el

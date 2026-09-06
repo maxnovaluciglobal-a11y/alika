@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Profesional, Sucursal } from "@/lib/clinic-data";
+import type { Profesional, Sucursal } from "@/lib/clinic-operations/clinic-data";
 import { mensajeDb } from "@/lib/db-errors";
 
 /** Sucursales de la clínica. RLS: solo las de clínicas donde el usuario es miembro. */

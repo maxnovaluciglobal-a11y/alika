@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * lógica interna de esas server functions (esa es responsabilidad de otro
  * test / de RLS).
  */
-vi.mock("@/lib/appointments.functions", () => ({
+vi.mock("@/lib/clinic-operations/appointments.functions", () => ({
   createAppointment: vi.fn(),
   setAppointmentStatus: vi.fn(),
 }));
@@ -24,7 +24,10 @@ vi.mock("@/lib/clinical/odontogram.functions", () => ({
   setOdontogramMark: vi.fn(),
 }));
 
-import { createAppointment, setAppointmentStatus } from "@/lib/appointments.functions";
+import {
+  createAppointment,
+  setAppointmentStatus,
+} from "@/lib/clinic-operations/appointments.functions";
 import { registerPayment } from "@/lib/finance/finance.functions";
 import { saveClinicalNote, restoreNoteVersion } from "@/lib/clinical/clinical-notes.functions";
 import { setOdontogramMark } from "@/lib/clinical/odontogram.functions";

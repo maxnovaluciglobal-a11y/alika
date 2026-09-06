@@ -6,7 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { AppShell } from "@/components/app-shell";
 import { DateField, FilterBar, Paginacion, SearchField, SelectField } from "@/components/filters";
 import { requirePermission } from "@/lib/access/route-guards";
-import { formatoFecha } from "@/lib/clinic-data";
+import { formatoFecha } from "@/lib/clinic-operations/clinic-data";
 import {
   TREATMENT_PLAN_STATUSES,
   TREATMENT_PLAN_STATUS_LABELS,

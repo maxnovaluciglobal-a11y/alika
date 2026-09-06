@@ -19,7 +19,7 @@ import {
 import {
   listBranchesForReviewLinks,
   updateBranchGoogleReviewUrl,
-} from "@/lib/clinic-catalog.functions";
+} from "@/lib/clinic-operations/clinic-catalog.functions";
 import { hasPermission } from "@/lib/access/access";
 import { cn } from "@/lib/utils";
 

@@ -7,8 +7,13 @@ import {
   etiquetaEstado,
   type Cita,
   type Profesional,
-} from "@/lib/clinic-data";
-import { esMismoMesISO, monthGridISO, nroDiaISO, weekDaysISO } from "@/lib/agenda-fechas";
+} from "@/lib/clinic-operations/clinic-data";
+import {
+  esMismoMesISO,
+  monthGridISO,
+  nroDiaISO,
+  weekDaysISO,
+} from "@/lib/clinic-operations/agenda-fechas";
 import { cn } from "@/lib/utils";
 
 // El borde izquierdo identifica al profesional (color guardado en
