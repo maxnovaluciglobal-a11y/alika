@@ -31,8 +31,8 @@ import {
 import { registerPayment } from "@/lib/finance/finance.functions";
 import { saveClinicalNote, restoreNoteVersion } from "@/lib/clinical/clinical-notes.functions";
 import { setOdontogramMark } from "@/lib/clinical/odontogram.functions";
-import { encolar, leerCola, type ItemCola } from "@/lib/offline-queue";
-import { describirItem, resolverConflicto, sincronizarCola } from "@/lib/offline-sync";
+import { encolar, leerCola, type ItemCola } from "@/lib/offline/offline-queue";
+import { describirItem, resolverConflicto, sincronizarCola } from "@/lib/offline/offline-sync";
 
 // Mismo truco que en offline-queue.test.ts: reemplaza idb-keyval por un
 // mapa en memoria para que offline-queue (usado internamente por

@@ -46,9 +46,9 @@ import { DemoBanner } from "@/components/demo-banner";
 import { OfflineBanner } from "@/components/offline-banner";
 import { PendingSyncBanner } from "@/components/pending-sync-banner";
 import { supabase } from "@/integrations/supabase/client";
-import { resetOfflineCache } from "@/lib/offline-cache";
+import { resetOfflineCache } from "@/lib/offline/offline-cache";
 import { useSincronizacionAutomatica } from "@/hooks/use-offline-mutation";
-import { leerCola, pendientes } from "@/lib/offline-queue";
+import { leerCola, pendientes } from "@/lib/offline/offline-queue";
 import {
   hasPermission,
   ROLE_LABELS,

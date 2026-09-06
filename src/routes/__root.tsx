@@ -14,8 +14,8 @@ import { reportBoundaryError } from "../lib/error-reporting";
 import { siteJsonLdScripts } from "@/lib/seo";
 import { supabase } from "@/integrations/supabase/client";
 import { captureException, initSentry } from "@/lib/sentry";
-import { attachOfflineCache, resetOfflineCache } from "@/lib/offline-cache";
-import { registerServiceWorker } from "@/lib/register-sw";
+import { attachOfflineCache, resetOfflineCache } from "@/lib/offline/offline-cache";
+import { registerServiceWorker } from "@/lib/offline/register-sw";
 import { Toaster } from "@/components/ui/sonner";
 
 // Se ejecuta una sola vez al importar el módulo raíz. No-op (y sin descargar

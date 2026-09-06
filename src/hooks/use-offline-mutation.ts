@@ -13,8 +13,8 @@ import {
   fallidos,
   type ItemCola,
   type OperacionKind,
-} from "@/lib/offline-queue";
-import { sincronizarCola } from "@/lib/offline-sync";
+} from "@/lib/offline/offline-queue";
+import { sincronizarCola } from "@/lib/offline/offline-sync";
 
 type Opciones<P> = {
   kind: OperacionKind;

@@ -38,7 +38,7 @@ import {
   suscribirCola,
   contarIntento,
   type ItemCola,
-} from "@/lib/offline-queue";
+} from "@/lib/offline/offline-queue";
 
 async function limpiarCola() {
   const { __memoria } = (await import("idb-keyval")) as unknown as {
