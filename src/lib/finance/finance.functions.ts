@@ -9,6 +9,14 @@ import { mensajeDb } from "@/lib/db-errors";
 import { TOOTH_SURFACES } from "@/lib/clinical/odontogram";
 import { filaYaCreada } from "@/lib/idempotency";
 import {
+  applyTreatmentItemSupplyConsumption,
+  reverseTreatmentItemSupplyConsumption,
+} from "@/lib/clinic-operations/procedure-supplies.functions";
+import {
+  shouldConsumeSupplies,
+  shouldReverseSupplies,
+} from "@/lib/clinic-operations/procedure-supply-consumption";
+import {
   PAYMENT_METHODS,
   QUOTE_STATUSES,
   TREATMENT_ITEM_STATUSES,
@@ -1178,6 +1186,18 @@ export const setTreatmentItemStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
+
+    // Necesitamos el status ANTERIOR para saber si esta es una transición
+    // real hacia/desde "completed" — Tanda 1, receta de insumos: sin esto
+    // no hay forma de distinguir "recién se completó" (hay que consumir) de
+    // "ya estaba completo" (no volver a descontar).
+    const { data: current, error: currentError } = await context.supabase
+      .from("treatment_items")
+      .select("clinic_id, status, procedure_id")
+      .eq("id", data.itemId)
+      .single();
+    if (currentError) throw new Error("No pudimos actualizar el ítem.");
+
     const isCompleted = data.status === "completed";
     // Al completar registramos quién y cuándo. Al des-completar limpiamos
     // ambos campos para no dejar auditoría inconsistente.
@@ -1189,7 +1209,23 @@ export const setTreatmentItemStatus = createServerFn({ method: "POST" })
       .update(patch)
       .eq("id", data.itemId);
     if (error) throw new Error("No pudimos actualizar el ítem.");
-    return { ok: true };
+
+    let skippedSupplyCount = 0;
+    if (shouldConsumeSupplies(current.status, data.status)) {
+      const result = await applyTreatmentItemSupplyConsumption(context.supabase, {
+        clinicId: current.clinic_id,
+        treatmentItemId: data.itemId,
+        procedureId: current.procedure_id,
+      });
+      skippedSupplyCount = result.skippedCount;
+    } else if (shouldReverseSupplies(current.status, data.status)) {
+      await reverseTreatmentItemSupplyConsumption(context.supabase, {
+        clinicId: current.clinic_id,
+        treatmentItemId: data.itemId,
+      });
+    }
+
+    return { ok: true, skippedSupplyCount };
   });
 
 export const setTreatmentPlanStatus = createServerFn({ method: "POST" })

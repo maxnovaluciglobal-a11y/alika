@@ -1220,6 +1220,7 @@ export type Database = {
           reason: string | null;
           recorded_at: string;
           recorded_by: string;
+          treatment_item_id: string | null;
           unit_cost_cents: number | null;
           warehouse_id: string | null;
         };
@@ -1234,6 +1235,7 @@ export type Database = {
           reason?: string | null;
           recorded_at?: string;
           recorded_by?: string;
+          treatment_item_id?: string | null;
           unit_cost_cents?: number | null;
           warehouse_id?: string | null;
         };
@@ -1248,6 +1250,7 @@ export type Database = {
           reason?: string | null;
           recorded_at?: string;
           recorded_by?: string;
+          treatment_item_id?: string | null;
           unit_cost_cents?: number | null;
           warehouse_id?: string | null;
         };
@@ -1264,6 +1267,13 @@ export type Database = {
             columns: ["item_id"];
             isOneToOne: false;
             referencedRelation: "inventory_items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inventory_movements_treatment_item_id_fkey";
+            columns: ["treatment_item_id"];
+            isOneToOne: false;
+            referencedRelation: "treatment_items";
             referencedColumns: ["id"];
           },
         ];
@@ -2460,6 +2470,58 @@ export type Database = {
             columns: ["clinic_id"];
             isOneToOne: false;
             referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      procedure_supplies: {
+        Row: {
+          clinic_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          item_id: string;
+          procedure_id: string;
+          quantity: number;
+        };
+        Insert: {
+          clinic_id: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          item_id: string;
+          procedure_id: string;
+          quantity: number;
+        };
+        Update: {
+          clinic_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          item_id?: string;
+          procedure_id?: string;
+          quantity?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "procedure_supplies_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "procedure_supplies_procedure_id_fkey";
+            columns: ["procedure_id"];
+            isOneToOne: false;
+            referencedRelation: "procedures";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "procedure_supplies_item_id_fkey";
+            columns: ["item_id"];
+            isOneToOne: false;
+            referencedRelation: "inventory_items";
             referencedColumns: ["id"];
           },
         ];

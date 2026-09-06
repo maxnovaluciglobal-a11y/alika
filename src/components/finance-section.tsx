@@ -1342,8 +1342,19 @@ export function FinanceSection({
 
   const setItem = useMutation({
     mutationFn: (v: { itemId: string; status: TreatmentItemStatus }) => setItemFn({ data: v }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["treatment-plans", clinicId, patientId] }),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["treatment-plans", clinicId, patientId] });
+      // Tanda 1 — receta de insumos: el tratamiento se completa igual aunque
+      // algún insumo no se haya podido descontar por falta de stock, pero
+      // avisamos en vez de dejarlo pasar en silencio.
+      if (result.skippedSupplyCount > 0) {
+        toast.warning(
+          result.skippedSupplyCount === 1
+            ? "Se completó el tratamiento, pero un insumo no se pudo descontar por falta de stock."
+            : `Se completó el tratamiento, pero ${result.skippedSupplyCount} insumos no se pudieron descontar por falta de stock.`,
+        );
+      }
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 

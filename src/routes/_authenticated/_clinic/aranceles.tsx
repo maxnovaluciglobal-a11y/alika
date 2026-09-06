@@ -1,8 +1,8 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Download, Loader2, Pencil, Plus, Upload } from "lucide-react";
+import { Boxes, Download, Loader2, Pencil, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -29,6 +29,14 @@ import {
   setProcedureActive,
   updateProcedure,
 } from "@/lib/finance/finance.functions";
+import {
+  listInventoryItems,
+  type InventoryItem,
+} from "@/lib/clinic-operations/inventory.functions";
+import {
+  listProcedureSupplies,
+  setProcedureSupplies,
+} from "@/lib/clinic-operations/procedure-supplies.functions";
 import { coincide, str } from "@/lib/search";
 import { exportarCsv } from "@/lib/csv-export";
 import { hoyISO } from "@/lib/clinic-operations/clinic-data";
@@ -327,6 +335,202 @@ function PrestacionDialog({
   );
 }
 
+/** Línea de receta en edición dentro del diálogo — no persiste hasta "Guardar receta". */
+interface LineaReceta {
+  itemId: string;
+  quantity: number;
+}
+
+/**
+ * Receta de insumos por procedimiento (Tanda 1). Reemplaza la receta
+ * completa al guardar — son pocas líneas de configuración, no vale la pena
+ * un diff incremental línea por línea.
+ */
+function RecetaDialog({
+  clinicId,
+  procedure,
+  items,
+}: {
+  clinicId: string;
+  procedure: Procedure;
+  items: InventoryItem[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [lineas, setLineas] = useState<LineaReceta[]>([]);
+  const [nuevoItemId, setNuevoItemId] = useState("");
+  const [nuevaCantidad, setNuevaCantidad] = useState<number | null>(null);
+  const queryClient = useQueryClient();
+
+  const fetchSupplies = useServerFn(listProcedureSupplies);
+  const saveFn = useServerFn(setProcedureSupplies);
+
+  // `retry: false`: un error acá es de configuración (tabla/columna
+  // faltante, permisos), no algo transitorio — reintentar con backoff solo
+  // demora mostrar el aviso real. `isPending` en vez de `isLoading`: en
+  // React Query v5, `isLoading` puede volver a false durante la pausa ENTRE
+  // reintentos (antes de que la query resuelva de verdad), dejando un hueco
+  // donde no se ve ni el spinner ni el error — `isPending` se mantiene true
+  // hasta que la query realmente termina.
+  const { data, isPending, error } = useQuery({
+    queryKey: ["procedure-supplies", clinicId, procedure.id],
+    enabled: open,
+    retry: false,
+    queryFn: () => fetchSupplies({ data: { clinicId, procedureId: procedure.id } }),
+  });
+
+  // Solo re-sembramos el borrador cuando llega una carga nueva del server —
+  // si dependiéramos de `data` en el array de deps, cada tecleo del usuario
+  // (que no toca `data`) igual sería estable, pero re-declarar `lineas` acá
+  // dejaría el efecto corriendo en cada apertura del diálogo sin necesidad.
+  useEffect(() => {
+    if (data) setLineas(data.supplies.map((s) => ({ itemId: s.itemId, quantity: s.quantity })));
+  }, [data]);
+
+  const itemById = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
+
+  const guardar = useMutation({
+    mutationFn: () => saveFn({ data: { clinicId, procedureId: procedure.id, supplies: lineas } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["procedure-supplies", clinicId, procedure.id] });
+      toast.success("Receta de insumos guardada");
+      setOpen(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const agregarLinea = () => {
+    if (!nuevoItemId || nuevaCantidad === null || nuevaCantidad <= 0) return;
+    if (lineas.some((l) => l.itemId === nuevoItemId)) {
+      toast.error("Ese insumo ya está en la receta.");
+      return;
+    }
+    setLineas((prev) => [...prev, { itemId: nuevoItemId, quantity: nuevaCantidad }]);
+    setNuevoItemId("");
+    setNuevaCantidad(null);
+  };
+
+  const itemsDisponibles = items.filter((i) => !lineas.some((l) => l.itemId === i.id));
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm">
+          <Boxes className="size-3.5" /> Receta
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Receta de insumos — {procedure.name}</DialogTitle>
+          <DialogDescription>
+            Insumos que se descuentan automáticamente del inventario al marcar este tratamiento como
+            realizado. Sin líneas acá, no se descuenta nada.
+          </DialogDescription>
+        </DialogHeader>
+
+        {isPending ? (
+          <p className="text-sm text-muted-foreground">Cargando receta…</p>
+        ) : error ? (
+          // Mismo criterio que loadError en FinanceSection: un error del
+          // server no puede leerse como "sin insumos" — acá se editaría la
+          // receta a ciegas, sobre datos que en realidad no se pudieron traer.
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-xs text-destructive">
+            No pudimos cargar la receta: {(error as Error).message}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {lineas.length === 0 && (
+              <p className="text-sm text-muted-foreground">Todavía no tiene insumos asociados.</p>
+            )}
+            {lineas.length > 0 && (
+              <ul className="space-y-1.5">
+                {lineas.map((l) => {
+                  const item = itemById.get(l.itemId);
+                  return (
+                    <li
+                      key={l.itemId}
+                      className="flex items-center justify-between gap-2 rounded-lg border border-hairline px-3 py-1.5 text-sm"
+                    >
+                      <span>{item?.name ?? "Insumo eliminado"}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="font-mono tabular-nums text-muted-foreground">
+                          {l.quantity} {item?.unit}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            setLineas((prev) => prev.filter((x) => x.itemId !== l.itemId))
+                          }
+                        >
+                          Quitar
+                        </Button>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            <div className="flex items-end gap-2 border-t border-hairline pt-3">
+              <div className="flex-1 space-y-1.5">
+                <Label htmlFor="receta-item">Insumo</Label>
+                <select
+                  id="receta-item"
+                  value={nuevoItemId}
+                  onChange={(e) => setNuevoItemId(e.target.value)}
+                  className={INPUT}
+                  disabled={itemsDisponibles.length === 0}
+                >
+                  <option value="">
+                    {itemsDisponibles.length === 0 ? "Sin insumos disponibles" : "Elegir…"}
+                  </option>
+                  {itemsDisponibles.map((i) => (
+                    <option key={i.id} value={i.id}>
+                      {i.name} ({i.unit})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="w-28 space-y-1.5">
+                <Label htmlFor="receta-cant">Cantidad</Label>
+                <input
+                  id="receta-cant"
+                  type="number"
+                  min={0}
+                  step="any"
+                  value={nuevaCantidad ?? ""}
+                  onChange={(e) =>
+                    setNuevaCantidad(e.target.value === "" ? null : Number(e.target.value))
+                  }
+                  className={INPUT}
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={agregarLinea}
+                disabled={!nuevoItemId || nuevaCantidad === null || nuevaCantidad <= 0}
+              >
+                Agregar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button
+            onClick={() => guardar.mutate()}
+            disabled={isPending || Boolean(error) || guardar.isPending}
+          >
+            {guardar.isPending && <Loader2 className="size-3.5 animate-spin" />}
+            Guardar receta
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function ImportarCsvDialog({ clinicId, currency }: { clinicId: string; currency: string }) {
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState<ArancelCsvResult | null>(null);
@@ -458,12 +662,22 @@ function ArancelesPage() {
 
   const fetchProcedures = useServerFn(listProcedures);
   const setActiveFn = useServerFn(setProcedureActive);
+  const fetchInventoryItems = useServerFn(listInventoryItems);
 
   const { data: procedures = [], isLoading } = useQuery({
     queryKey: ["procedures", clinicId, "todas"],
     enabled: Boolean(clinicId),
     queryFn: () => fetchProcedures({ data: { clinicId: clinicId!, incluirInactivas: true } }),
   });
+
+  // Cargado una vez a nivel página, no por diálogo — todas las filas de
+  // "Receta" comparten el mismo catálogo de insumos de la clínica.
+  const { data: inventoryData } = useQuery({
+    queryKey: ["inventory-items", clinicId],
+    enabled: Boolean(clinicId),
+    queryFn: () => fetchInventoryItems({ data: { clinicId: clinicId!, branchId: null } }),
+  });
+  const inventoryItems = inventoryData?.items ?? [];
 
   const setActive = useMutation({
     mutationFn: (v: { procedureId: string; isActive: boolean }) =>
@@ -642,6 +856,11 @@ function ArancelesPage() {
                         </td>
                         <td className="px-3 py-2 text-right">
                           <div className="flex justify-end gap-1">
+                            <RecetaDialog
+                              clinicId={clinicId!}
+                              procedure={p}
+                              items={inventoryItems}
+                            />
                             <PrestacionDialog
                               clinicId={clinicId!}
                               currency={currency}
