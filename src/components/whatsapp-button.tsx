@@ -4,8 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { Loader2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
-import { sendWhatsAppFromTemplate } from "@/lib/messaging.functions";
-import type { MessageTemplateKind } from "@/lib/messaging";
+import { sendWhatsAppFromTemplate } from "@/lib/messaging/messaging.functions";
+import type { MessageTemplateKind } from "@/lib/messaging/messaging";
 import { cn } from "@/lib/utils";
 
 interface Props {

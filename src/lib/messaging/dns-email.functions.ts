@@ -11,7 +11,7 @@ import {
   normalizarDominio,
   type DnsCheckResult,
   type DnsVerification,
-} from "@/lib/dns-email";
+} from "@/lib/messaging/dns-email";
 
 /**
  * Consulta real de los registros de autenticación de email vía DNS-over-HTTPS.

@@ -14,11 +14,11 @@ import {
   type Message,
   type MessageTemplate,
   type OutreachTemplateKind,
-} from "@/lib/messaging";
-import { tryMetaTemplateSend } from "@/lib/whatsapp.functions";
-import { sendEmail } from "@/lib/email.server";
-import { DEFAULT_EMAIL_SANDBOX, clampMinEntregas } from "@/lib/email-sandbox";
-import type { EmailSandboxConfig } from "@/lib/email-sandbox";
+} from "@/lib/messaging/messaging";
+import { tryMetaTemplateSend } from "@/lib/messaging/whatsapp.functions";
+import { sendEmail } from "@/lib/messaging/email.server";
+import { DEFAULT_EMAIL_SANDBOX, clampMinEntregas } from "@/lib/messaging/email-sandbox";
+import type { EmailSandboxConfig } from "@/lib/messaging/email-sandbox";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 

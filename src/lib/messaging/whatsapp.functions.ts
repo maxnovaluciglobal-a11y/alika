@@ -5,13 +5,13 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import { mensajeDb } from "@/lib/db-errors";
-import { normalizeToWaMe } from "@/lib/messaging";
+import { normalizeToWaMe } from "@/lib/messaging/messaging";
 import {
   buildMetaTemplateParams,
   hasMetaTemplateMapping,
   type WhatsAppAccount,
   type WhatsAppAccountStatus,
-} from "@/lib/whatsapp";
+} from "@/lib/messaging/whatsapp";
 
 type WhatsAppAccountRow = {
   id: string;

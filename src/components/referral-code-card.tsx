@@ -4,8 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { Check, Copy, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { buildWaMeUrl } from "@/lib/messaging";
-import { getWhatsAppAccountStatus } from "@/lib/whatsapp.functions";
+import { buildWaMeUrl } from "@/lib/messaging/messaging";
+import { getWhatsAppAccountStatus } from "@/lib/messaging/whatsapp.functions";
 import { cn } from "@/lib/utils";
 
 interface Props {

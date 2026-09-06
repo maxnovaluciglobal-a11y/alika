@@ -11,13 +11,17 @@
  * exige un preflight aprobado.
  */
 
-import { puedeActivarProduccion, verificacionVigente, type DnsVerification } from "@/lib/dns-email";
+import {
+  puedeActivarProduccion,
+  verificacionVigente,
+  type DnsVerification,
+} from "@/lib/messaging/dns-email";
 import {
   isValidEmail,
   normalizeEmail,
   resolveEmailRecipient,
   type EmailSandboxConfig,
-} from "@/lib/email-sandbox";
+} from "@/lib/messaging/email-sandbox";
 import {
   definicionPlantilla,
   extraerMarcadores,
@@ -25,7 +29,7 @@ import {
   type EmailChannelStatus,
   type EmailTemplateData,
   type EmailTestTemplate,
-} from "@/lib/email-test-log";
+} from "@/lib/messaging/email-test-log";
 
 export type PreflightState = "pass" | "warn" | "fail";
 

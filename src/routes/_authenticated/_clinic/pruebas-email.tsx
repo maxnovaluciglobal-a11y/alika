@@ -15,13 +15,13 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/route-guards";
 import { useServerFn } from "@tanstack/react-start";
-import { leerVerificacion, type DnsVerification } from "@/lib/dns-email";
-import { getEmailSandboxConfig } from "@/lib/email-config.functions";
+import { leerVerificacion, type DnsVerification } from "@/lib/messaging/dns-email";
+import { getEmailSandboxConfig } from "@/lib/messaging/email-config.functions";
 import {
   DEFAULT_EMAIL_SANDBOX,
   resumenSandbox,
   type EmailSandboxConfig,
-} from "@/lib/email-sandbox";
+} from "@/lib/messaging/email-sandbox";
 import {
   GRUPO_LABEL,
   ejecutarPreflight,
@@ -29,7 +29,7 @@ import {
   type PreflightGroup,
   type PreflightReport,
   type PreflightState,
-} from "@/lib/email-preflight";
+} from "@/lib/messaging/email-preflight";
 import {
   CANAL_SIN_DOMINIO,
   EMAIL_TEST_TEMPLATES,
@@ -46,7 +46,7 @@ import {
   type EmailTestEntry,
   type EmailTestStatus,
   type EmailTestTemplate,
-} from "@/lib/email-test-log";
+} from "@/lib/messaging/email-test-log";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/pruebas-email")({

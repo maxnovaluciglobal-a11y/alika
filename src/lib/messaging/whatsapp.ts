@@ -1,4 +1,4 @@
-import type { OutreachTemplateKind } from "@/lib/messaging";
+import type { OutreachTemplateKind } from "@/lib/messaging/messaging";
 
 /**
  * Estado del número conectado. `connected` es el único que puede enviar.

@@ -23,8 +23,8 @@ import {
   listPendingReminders,
   type PendingOutreachItem,
   type PendingReminder,
-} from "@/lib/messaging.functions";
-import type { OutreachTemplateKind } from "@/lib/messaging";
+} from "@/lib/messaging/messaging.functions";
+import type { OutreachTemplateKind } from "@/lib/messaging/messaging";
 import { formatMoney } from "@/lib/finance/finance";
 import { cn } from "@/lib/utils";
 

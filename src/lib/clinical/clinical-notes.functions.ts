@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { filaYaCreada } from "@/lib/idempotency";
 import { mensajeDb } from "@/lib/db-errors";
-import { createNotification } from "@/lib/notifications.functions";
+import { createNotification } from "@/lib/messaging/notifications.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 type SupabaseCtx = SupabaseClient<Database>;
