@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/app-shell";
 import { ComplianceExport } from "@/components/compliance-export";
-import { requirePermission } from "@/lib/route-guards";
+import { requirePermission } from "@/lib/access/route-guards";
 
 export const Route = createFileRoute("/_authenticated/_clinic/compliance")({
   beforeLoad: requirePermission("team:manage"),

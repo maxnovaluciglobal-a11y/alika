@@ -6,7 +6,7 @@ import { CalendarCheck, CircleCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
-import { requirePermission } from "@/lib/route-guards";
+import { requirePermission } from "@/lib/access/route-guards";
 import { etiquetaEstado, formatoFechaLarga, hoyISO } from "@/lib/clinic-data";
 import { listAppointments, setAppointmentStatus } from "@/lib/appointments.functions";
 import { cn } from "@/lib/utils";

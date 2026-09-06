@@ -44,8 +44,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
-import { requirePermission } from "@/lib/route-guards";
-import { hasPermission, type ClinicAccess } from "@/lib/access";
+import { requirePermission } from "@/lib/access/route-guards";
+import { hasPermission, type ClinicAccess } from "@/lib/access/access";
 import {
   etiquetaEstado,
   formatoFechaLarga,

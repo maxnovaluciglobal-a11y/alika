@@ -9,7 +9,7 @@ import {
   type ClinicAccess,
   type ClinicMember,
   type ClinicRole,
-} from "@/lib/access";
+} from "@/lib/access/access";
 import { mensajeDb } from "@/lib/db-errors";
 
 const ACTIVE_CLINIC_COOKIE_NAME = "alika_active_clinic";

@@ -6,8 +6,8 @@ import { CalendarClock, CircleAlert } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { PanelDesempeno } from "@/components/panel-desempeno";
-import { requirePermission } from "@/lib/route-guards";
-import { hasPermission } from "@/lib/access";
+import { requirePermission } from "@/lib/access/route-guards";
+import { hasPermission } from "@/lib/access/access";
 import { AgendaGrid } from "@/components/agenda-grid";
 import { formatoFecha, hoyISO } from "@/lib/clinic-data";
 import { listProfessionals } from "@/lib/clinic-catalog.functions";

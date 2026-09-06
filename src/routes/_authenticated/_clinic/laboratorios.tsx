@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { FilterBar, SelectField } from "@/components/filters";
 import { PatientCombobox } from "@/components/patient-combobox";
 import { MoneyInput } from "@/components/money-input";
-import { requirePermission } from "@/lib/route-guards";
+import { requirePermission } from "@/lib/access/route-guards";
 import { hoyISO, formatoFecha } from "@/lib/clinic-data";
 import {
   LAB_ORDER_STATUSES,

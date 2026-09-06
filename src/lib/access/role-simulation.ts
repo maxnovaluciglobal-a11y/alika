@@ -1,4 +1,4 @@
-import { CLINIC_ROLES, type ClinicRole } from "@/lib/access";
+import { CLINIC_ROLES, type ClinicRole } from "@/lib/access/access";
 
 const STORAGE_KEY = "alika:sim-role";
 

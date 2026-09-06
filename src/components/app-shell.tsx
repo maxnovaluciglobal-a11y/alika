@@ -49,7 +49,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { resetOfflineCache } from "@/lib/offline-cache";
 import { useSincronizacionAutomatica } from "@/hooks/use-offline-mutation";
 import { leerCola, pendientes } from "@/lib/offline-queue";
-import { hasPermission, ROLE_LABELS, type ClinicAccess, type Permission } from "@/lib/access";
+import {
+  hasPermission,
+  ROLE_LABELS,
+  type ClinicAccess,
+  type Permission,
+} from "@/lib/access/access";
 import { listPendingOutreach, listPendingReminders } from "@/lib/messaging/messaging.functions";
 import { cn } from "@/lib/utils";
 

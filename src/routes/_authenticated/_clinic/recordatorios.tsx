@@ -17,7 +17,7 @@ import {
 import { AppShell } from "@/components/app-shell";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import { EmailButton } from "@/components/email-button";
-import { requirePermission } from "@/lib/route-guards";
+import { requirePermission } from "@/lib/access/route-guards";
 import {
   listPendingOutreach,
   listPendingReminders,

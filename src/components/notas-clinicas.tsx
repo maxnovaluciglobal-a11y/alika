@@ -57,10 +57,10 @@ import { VersionDiffDialog } from "@/components/version-diff-dialog";
 import { DevDiagnosticsPanel } from "@/components/dev-diagnostics-panel";
 import { estadoNota, reportarBloqueo } from "@/lib/block-diagnostics";
 import type { NoteAction } from "@/lib/clinical/note-permissions";
-import { leerRolSimulado } from "@/lib/role-simulation";
+import { leerRolSimulado } from "@/lib/access/role-simulation";
 import { exportarNotaPdf } from "@/lib/clinical/note-pdf";
 
-import type { ClinicRole } from "@/lib/access";
+import type { ClinicRole } from "@/lib/access/access";
 import type { Paciente } from "@/lib/clinic-data";
 
 const REVIEW_BADGE: Record<NoteReviewStatus, string> = {

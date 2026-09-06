@@ -17,7 +17,7 @@ import {
   type NoteState,
   type Resultado,
 } from "./clinical/note-permissions";
-import type { ClinicRole } from "./access";
+import type { ClinicRole } from "./access/access";
 
 export type { NoteAction, NoteState };
 

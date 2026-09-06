@@ -8,7 +8,7 @@ import {
   ROLE_LABELS,
   hasPermission,
   type Permission,
-} from "@/lib/access";
+} from "@/lib/access/access";
 import {
   NOTE_ACTIONS,
   NOTE_ACTION_LABELS,

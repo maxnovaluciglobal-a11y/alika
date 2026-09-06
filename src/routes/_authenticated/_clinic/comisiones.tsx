@@ -27,8 +27,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { requireAnyPermission } from "@/lib/route-guards";
-import { hasPermission } from "@/lib/access";
+import { requireAnyPermission } from "@/lib/access/route-guards";
+import { hasPermission } from "@/lib/access/access";
 import { hoyISO } from "@/lib/clinic-data";
 import { formatMoney } from "@/lib/finance/finance";
 import {

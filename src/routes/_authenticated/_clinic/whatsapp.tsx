@@ -16,7 +16,7 @@ import {
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
-import { requirePermission } from "@/lib/route-guards";
+import { requirePermission } from "@/lib/access/route-guards";
 import { normalizeToWaMe } from "@/lib/messaging/messaging";
 import {
   completeWhatsAppEmbeddedSignup,
