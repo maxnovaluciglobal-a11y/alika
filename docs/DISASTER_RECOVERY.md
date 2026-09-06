@@ -119,6 +119,9 @@ Sin SLA firmado con ninguna clínica todavía; estos son los objetivos internos 
 | Deploy Vercel roto (#2)             | 0 (sin pérdida de datos) | 0                              | 15 min       | ~15 min (rollback a deploy anterior vía dashboard)            |
 | Credenciales comprometidas (#3)     | 0                        | 0                              | 1 h          | Sin validar                                                   |
 | Vercel caído/cuenta suspendida (#5) | 0                        | 0                              | 4 h          | Sin validar — depende de comprar el dominio (pendiente)       |
+| Ataque de rate limit/DDoS (#7)      | 0 (sin pérdida de datos) | 0                              | 30 min       | Sin validar — nunca se probó bajo tráfico real de ataque      |
+
+Los escenarios #4 (sync con Lovable) y #6 (cierre de Lovable Cloud) quedan fuera de esta tabla a propósito: no son escenarios de pérdida de datos ni de caída del sitio — Lovable hoy es un editor visual secundario desacoplado (`docs/DESACOPLE_LOVABLE.md`), no el runtime de producción, así que no tienen un RTO/RPO comparable al resto.
 
 **Por qué el RTO de DB no está validado:** el backup existe y se verificó por round-trip (descifrar + descomprimir + confirmar filas), pero eso no es lo mismo que reconstruir una base desde cero y confirmar que la app vuelve a andar — ese ensayo nunca se hizo. Hasta que se haga, "4 horas" es una meta, no un número con el que se pueda comprometer una clínica piloto.
 
