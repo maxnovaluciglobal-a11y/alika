@@ -99,11 +99,21 @@ export function isClinicRole(value: string): value is ClinicRole {
   return (CLINIC_ROLES as readonly string[]).includes(value);
 }
 
+/** Query key de getMyAccess — compartida entre el route loader y cualquier
+ * UI que necesite invalidarla después de escribir (ej. cambiar de clínica
+ * activa, ver clinic-switcher.tsx). Cambia poquísimo, y sin esto no se abre
+ * ninguna pantalla. */
+export const ACCESS_QUERY_KEY = ["my-access"] as const;
+
 export type ClinicAccess = {
   userId: string;
   fullName: string | null;
   email: string | null;
   avatarUrl: string | null;
+  /** Todas las clínicas de las que el usuario es miembro (para el selector
+   * de clínica activa). Casi siempre 1 elemento — el switcher solo se
+   * muestra con 2+. */
+  memberships: { clinicId: string; clinicName: string }[];
   clinic: {
     id: string;
     name: string;

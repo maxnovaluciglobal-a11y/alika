@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
 
 import { getMyAccess } from "@/lib/access.functions";
-import type { ClinicAccess } from "@/lib/access";
+import { ACCESS_QUERY_KEY, type ClinicAccess } from "@/lib/access";
 import { getMySubscription } from "@/lib/billing.functions";
 import { isSubscriptionActive } from "@/lib/billing";
 import { leerRolSimulado, puedeSimular } from "@/lib/role-simulation";
@@ -10,9 +10,6 @@ import { ensureOfflineCacheHydrated } from "@/lib/offline-cache";
 import { AppShell } from "@/components/app-shell";
 import { reportBoundaryError } from "@/lib/error-reporting";
 import { captureException } from "@/lib/sentry";
-
-/** Quién soy y en qué clínica: cambia poquísimo, y sin esto no se abre ninguna pantalla. */
-const ACCESS_KEY = ["my-access"] as const;
 
 export const Route = createFileRoute("/_authenticated/_clinic")({
   beforeLoad: async ({ location, context }): Promise<{ access: ClinicAccess }> => {
@@ -34,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/_clinic")({
     let access: ClinicAccess;
     try {
       access = await queryClient.ensureQueryData({
-        queryKey: ACCESS_KEY,
+        queryKey: ACCESS_QUERY_KEY,
         queryFn: () => getMyAccess({}),
         staleTime: 5 * 60 * 1000,
       });
@@ -45,7 +42,7 @@ export const Route = createFileRoute("/_authenticated/_clinic")({
       // vuelo, `getQueryData` daría un falso "no hay nada" y mandaría al
       // login a alguien con una sesión offline perfectamente válida.
       await hydratePromise;
-      const conocido = queryClient.getQueryData<ClinicAccess>(ACCESS_KEY);
+      const conocido = queryClient.getQueryData<ClinicAccess>(ACCESS_QUERY_KEY);
       if (!conocido) throw err;
       access = conocido;
     }

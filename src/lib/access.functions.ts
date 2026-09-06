@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -10,6 +11,40 @@ import {
   type ClinicRole,
 } from "@/lib/access";
 import { mensajeDb } from "@/lib/db-errors";
+
+const ACTIVE_CLINIC_COOKIE_NAME = "alika_active_clinic";
+const ACTIVE_CLINIC_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
+
+/** Selector de clínica activa (progresivo #7, plan Carlos 05-sep-2026): cuál
+ * membresía usar cuando el mismo usuario pertenece a 2+ clínicas. Cookie y
+ * no localStorage a propósito — `getMyAccess` corre en el servidor durante
+ * SSR y necesita saber la clínica correcta ANTES del primer render; con
+ * localStorage el server no vería la preferencia hasta hidratar, mostrando
+ * la clínica equivocada un instante (mismo problema que no tiene la
+ * simulación de rol, que sí es solo cosmética y puede esperar al cliente). */
+function readActiveClinicCookie(): string | null {
+  const req = getRequest();
+  const cookieHeader = req?.headers.get("cookie") ?? "";
+  // Ancla el nombre a inicio de string o justo después de "; " — sin esto,
+  // una cookie hipotética que solo TERMINE en "alika_active_clinic" (ej.
+  // "x_alika_active_clinic") matchearía igual (revisión de código, 06-sep-2026).
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${ACTIVE_CLINIC_COOKIE_NAME}=([^;]+)`));
+  return match ? decodeURIComponent(match[1]!) : null;
+}
+
+/** Pura y exportada para poder testearla sin una conexión real a Supabase:
+ * dada la lista de membresías (algunas pueden tener `clinics: null` si la
+ * clínica se borró) y una preferencia (de la cookie), decide cuál es la
+ * activa. Si la preferida no matchea ninguna membresía real, cae a la
+ * primera — mismo comportamiento que antes de que existiera el selector. */
+export function resolveActiveMembership<T extends { clinics: { id: string } | null }>(
+  memberships: T[],
+  preferredClinicId: string | null,
+): T | null {
+  const validas = memberships.filter((m) => m.clinics);
+  const preferida = preferredClinicId && validas.find((m) => m.clinics!.id === preferredClinicId);
+  return preferida || validas[0] || null;
+}
 
 /** Sesión + clínica activa + rol del usuario autenticado. */
 export const getMyAccess = createServerFn({ method: "GET" })
@@ -34,7 +69,8 @@ export const getMyAccess = createServerFn({ method: "GET" })
 
     if (error) throw new Error(mensajeDb(error, "No pudimos cargar tu acceso a la clínica."));
 
-    const membership = (memberships ?? []).find((m) => m.clinics) ?? null;
+    const membresiasValidas = (memberships ?? []).filter((m) => m.clinics);
+    const membership = resolveActiveMembership(membresiasValidas, readActiveClinicCookie());
     const role =
       membership && isClinicRole(membership.role) ? (membership.role as ClinicRole) : null;
 
@@ -58,6 +94,10 @@ export const getMyAccess = createServerFn({ method: "GET" })
       fullName: profile?.full_name ?? null,
       email: profile?.email ?? null,
       avatarUrl: profile?.avatar_url ?? null,
+      memberships: membresiasValidas.map((m) => ({
+        clinicId: m.clinics!.id,
+        clinicName: m.clinics!.name,
+      })),
       clinic: membership?.clinics
         ? {
             id: membership.clinics.id,
@@ -71,6 +111,33 @@ export const getMyAccess = createServerFn({ method: "GET" })
         : null,
       role,
     };
+  });
+
+/** Cambia cuál de las clínicas del usuario es la activa (progresivo #7). Solo
+ * tiene efecto real con 2+ membresías; con una sola, `getMyAccess` ya la
+ * resuelve sola. Valida membresía real antes de aceptar el cambio — la
+ * cookie es solo una preferencia de UI, nunca una fuente de autorización. */
+export const setActiveClinic = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { supabase, userId } = context;
+
+    const { data: membership, error } = await supabase
+      .from("clinic_members")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("clinic_id", data.clinicId)
+      .maybeSingle();
+    if (error) throw new Error(mensajeDb(error, "No pudimos verificar tu acceso a esa clínica."));
+    if (!membership) throw new Error("No formas parte de esa clínica.");
+
+    const secureFlag = process.env.NODE_ENV === "production" ? "; Secure" : "";
+    setResponseHeader(
+      "Set-Cookie",
+      `${ACTIVE_CLINIC_COOKIE_NAME}=${encodeURIComponent(data.clinicId)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${ACTIVE_CLINIC_COOKIE_MAX_AGE_SECONDS}${secureFlag}`,
+    );
+    return { ok: true };
   });
 
 /** Integrantes de una clínica. RLS solo devuelve filas de clínicas donde el usuario es miembro. */
