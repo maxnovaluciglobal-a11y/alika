@@ -89,51 +89,70 @@ function SerieMensual({ serie, currency }: { serie: PanelMes[]; currency: string
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <svg
-            viewBox={`0 0 100 ${alto + 14}`}
-            className="h-40 w-full min-w-[32rem]"
-            role="img"
-            aria-label={`Producción y cobros de los últimos doce meses. Producción total ${formatMoney(totalVentas, currency)}, cobrado ${formatMoney(totalRecaudacion, currency)}.`}
-            preserveAspectRatio="none"
-          >
-            {serie.map((m, i) => {
-              const x = i * (anchoBarra * 3);
-              const hv = (m.ventasCents / max) * alto;
-              const hr = (m.recaudacionCents / max) * alto;
-              return (
-                <g key={m.mes}>
-                  <title>
-                    {`${m.mes}: producción ${formatMoney(m.ventasCents, currency)}, cobrado ${formatMoney(m.recaudacionCents, currency)}`}
-                  </title>
-                  <rect
-                    x={x}
-                    y={alto - hv}
-                    width={anchoBarra}
-                    height={hv}
-                    className="fill-brand"
-                    rx={0.4}
-                  />
-                  <rect
-                    x={x + anchoBarra + 0.4}
-                    y={alto - hr}
-                    width={anchoBarra}
-                    height={hr}
-                    className="fill-success"
-                    rx={0.4}
-                  />
-                  <text
-                    x={x + anchoBarra}
-                    y={alto + 10}
-                    textAnchor="middle"
-                    className="fill-muted-foreground"
-                    style={{ fontSize: 4 }}
+          {/* min-w en el wrapper, no en el svg: el svg y la fila de meses
+           * tienen que compartir el mismo ancho para que el scroll horizontal
+           * no los desalinee. */}
+          <div className="min-w-[32rem]">
+            <svg
+              viewBox={`0 0 100 ${alto}`}
+              className="h-32 w-full"
+              role="img"
+              aria-label={`Producción y cobros de los últimos doce meses. Producción total ${formatMoney(totalVentas, currency)}, cobrado ${formatMoney(totalRecaudacion, currency)}.`}
+              preserveAspectRatio="none"
+            >
+              {serie.map((m, i) => {
+                const x = i * (anchoBarra * 3);
+                const hv = (m.ventasCents / max) * alto;
+                const hr = (m.recaudacionCents / max) * alto;
+                return (
+                  <g key={m.mes}>
+                    <title>
+                      {`${m.mes}: producción ${formatMoney(m.ventasCents, currency)}, cobrado ${formatMoney(m.recaudacionCents, currency)}`}
+                    </title>
+                    <rect
+                      x={x}
+                      y={alto - hv}
+                      width={anchoBarra}
+                      height={hv}
+                      className="fill-brand"
+                      rx={0.4}
+                    />
+                    <rect
+                      x={x + anchoBarra + 0.4}
+                      y={alto - hr}
+                      width={anchoBarra}
+                      height={hr}
+                      className="fill-success"
+                      rx={0.4}
+                    />
+                  </g>
+                );
+              })}
+            </svg>
+            {/* Los meses van en HTML, no en el <text> del SVG de arriba:
+             * `preserveAspectRatio="none"` estira el svg sin mantener la
+             * proporción para que las barras siempre llenen el ancho
+             * disponible, y ese mismo estiramiento no-uniforme deforma el
+             * texto (letras aplastadas/superpuestas) porque el tamaño de
+             * fuente se define en unidades del viewBox, no en píxeles. Texto
+             * HTML normal, posicionado con el mismo % que ya usa el svg
+             * (viewBox de 100 de ancho = cada unidad es 1% del contenedor). */}
+            <div className="relative mt-1 h-4">
+              {serie.map((m, i) => {
+                const x = i * (anchoBarra * 3);
+                const centro = x + anchoBarra;
+                return (
+                  <span
+                    key={m.mes}
+                    className="absolute -translate-x-1/2 text-[9px] text-muted-foreground"
+                    style={{ left: `${centro}%` }}
                   >
                     {mesCorto(m.mes)}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
+                  </span>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
     </div>
