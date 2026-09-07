@@ -3,7 +3,8 @@
 ## Qué respalda y qué no
 
 - **Esquema** (tablas, columnas, triggers, RLS, funciones): ya vive versionado en `supabase/migrations/` — eso es su backup, no hace falta duplicarlo.
-- **Data** (pacientes, citas, notas clínicas, pagos, todo lo que no está en git): la respalda `scripts/backup-data.mjs`, que exporta las 33 tablas de negocio vía la API REST de Supabase (service role, no necesita la contraseña directa de Postgres).
+- **Data** (pacientes, citas, notas clínicas, pagos, todo lo que no está en git): la respalda `scripts/backup-data.mjs`, que exporta las tablas de negocio vía la API REST de Supabase (service role, no necesita la contraseña directa de Postgres). La lista vive en `scripts/backup-tables.mjs`.
+- **Que la lista esté completa no depende de que alguien se acuerde**: `tests/backup-tables-sync.test.ts` compara esa lista contra los `CREATE TABLE` de `supabase/migrations/` y falla el CI nombrando la tabla que falte. Se agregó el 06-sep-2026, después de que el mismo olvido pasara dos veces (`procedure_supplies` e `inventory_counts` se crearon ese día y quedaron fuera del backup, con el workflow en verde). Si alguna tabla no se debe respaldar, va en `EXCLUDED_TABLES` con el motivo escrito.
 
 ## Cómo funciona el automático
 
