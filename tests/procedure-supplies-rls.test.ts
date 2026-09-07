@@ -17,11 +17,12 @@ import {
  * evaluando directamente las funciones que usan las policies
  * (`is_clinic_member`, `has_clinic_role`), no por enforcement real.
  *
- * ⚠️ NOTA para quien retome esto: este archivo no se pudo ejecutar en la
- * sesión donde se escribió — no había conexión Postgres disponible en ese
- * entorno (ECONNREFUSED localhost:5432, sin PGHOST/PGUSER/etc. en el shell).
- * Correr `npm test -- procedure-supplies-rls` localmente antes de dar la
- * Tanda 1 por cerrada.
+ * Historia: este archivo se mergeó sin haberse ejecutado nunca (en la sesión
+ * que lo escribió no había Postgres disponible) y dejó el CI en rojo 4
+ * corridas seguidas: el test de ON DELETE SET NULL registraba una 'salida'
+ * sobre un ítem recién creado, o sea con current_stock = 0, y el CHECK
+ * `inventory_items_stock_non_negative` la rechazaba con razón. Se corrigió
+ * reponiendo stock antes de consumir, no tocando el constraint.
  */
 describe("procedure_supplies — RLS y constraints", () => {
   let client: Client;
@@ -171,6 +172,43 @@ describe("procedure_supplies — RLS y constraints", () => {
     expect(msg).toMatch(/duplicate key|unique/i);
   });
 
+  // Invariante de negocio, no detalle de implementación: el stock no puede
+  // quedar negativo. `consumeSuppliesForTreatmentItem` depende de que la base
+  // rechace la salida (captura el 23514 y omite ese insumo en vez de completar
+  // el tratamiento con stock fantasma). Si alguien alguna vez "arregla" un test
+  // relajando `inventory_items_stock_non_negative`, este test lo frena.
+  describe("CHECK constraint: stock no negativo", () => {
+    it("rechaza una salida mayor al stock disponible", async () => {
+      const msg = await esperaError(client, () =>
+        client.query(
+          `INSERT INTO public.inventory_movements (clinic_id, item_id, kind, quantity, recorded_by)
+           VALUES ($1, $2, 'salida', 2, $3)`,
+          [clinicId, itemId, usuarios.owner],
+        ),
+      );
+      expect(msg).toMatch(/inventory_items_stock_non_negative/);
+    });
+
+    it("acepta la salida cuando hay stock repuesto antes", async () => {
+      await client.query(
+        `INSERT INTO public.inventory_movements (clinic_id, item_id, kind, quantity, recorded_by)
+         VALUES ($1, $2, 'entrada', 5, $3)`,
+        [clinicId, itemId, usuarios.owner],
+      );
+      await client.query(
+        `INSERT INTO public.inventory_movements (clinic_id, item_id, kind, quantity, recorded_by)
+         VALUES ($1, $2, 'salida', 2, $3)`,
+        [clinicId, itemId, usuarios.owner],
+      );
+      const filas = await client.query<{ current_stock: string }>(
+        `SELECT current_stock FROM public.inventory_items WHERE id = $1`,
+        [itemId],
+      );
+      // 5 - 2 = 3. Si el trigger aplicara el movimiento dos veces, sería 1.
+      expect(Number(filas.rows[0].current_stock)).toBe(3);
+    });
+  });
+
   describe("inventory_movements.treatment_item_id", () => {
     it("acepta NULL — un movimiento manual sigue sin cambios", async () => {
       const res = await client.query<{ id: string }>(
@@ -198,6 +236,18 @@ describe("procedure_supplies — RLS y constraints", () => {
         [clinicId, plan.rows[0].id, procedureId],
       );
       const treatmentItemId = item.rows[0].id;
+
+      // El ítem nace con current_stock = 0 (default de inventory_items), así que
+      // hay que reponer antes de consumir: una 'salida' de 2 sobre stock 0 la
+      // rechaza `inventory_items_stock_non_negative`, y hace bien — no se puede
+      // descontar lo que no hay. Es el mismo orden que en la clínica real
+      // (compra → uso), y el invariante del que depende
+      // `consumeSuppliesForTreatmentItem` para omitir insumos sin stock (23514).
+      await client.query(
+        `INSERT INTO public.inventory_movements (clinic_id, item_id, kind, quantity, recorded_by)
+         VALUES ($1, $2, 'entrada', 5, $3)`,
+        [clinicId, itemId, usuarios.owner],
+      );
 
       const movement = await client.query<{ id: string }>(
         `INSERT INTO public.inventory_movements (clinic_id, item_id, kind, quantity, recorded_by, treatment_item_id)
