@@ -88,6 +88,20 @@ export function sinResponder(c: Pick<ConversationSummary, "lastMessageDirection"
   return c.lastMessageDirection === "inbound";
 }
 
+export type EstadoOptIn = "activo" | "sin_opt_in" | "dado_de_baja";
+
+/**
+ * `wa_opt_in = false` sin `wa_opt_out_at` NO es "pidió la baja": es que nunca
+ * dio el consentimiento (el default de la columna es false). Son dos cosas
+ * distintas — nunca haber consentido vs. haber retirado el consentimiento— y
+ * mostrarlas iguales le pone un cartel rojo de rechazo a un paciente que
+ * simplemente todavía no firmó nada.
+ */
+export function estadoOptIn(c: Pick<ConversationSummary, "waOptIn" | "waOptOutAt">): EstadoOptIn {
+  if (c.waOptOutAt) return "dado_de_baja";
+  return c.waOptIn ? "activo" : "sin_opt_in";
+}
+
 /**
  * Agrupa mensajes (ya ordenados de más nuevo a más viejo) en un resumen por
  * paciente. Vive acá y no en la server function para poder testearla sin DB.

@@ -21,6 +21,7 @@ import { AppShell } from "@/components/app-shell";
 import { requirePermission } from "@/lib/access/route-guards";
 import { MESSAGE_TEMPLATE_KIND_LABELS, type MessageTemplateKind } from "@/lib/messaging/messaging";
 import {
+  estadoOptIn,
   formatVentana,
   sinResponder,
   type ConversationMessage,
@@ -238,7 +239,7 @@ function ListaConversaciones({
                     {c.inboundStreak} mensajes sin responder
                   </span>
                 )}
-                {!c.waOptIn && (
+                {estadoOptIn(c) === "dado_de_baja" && (
                   <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-destructive">
                     <BellOff className="size-3" /> pidió baja
                   </span>
@@ -329,7 +330,7 @@ function Hilo({
         </Link>
       </header>
 
-      {!hilo.waOptIn && (
+      {estadoOptIn(hilo) === "dado_de_baja" && (
         <p className="flex items-start gap-2 border-b border-hairline bg-destructive/10 p-3 text-xs text-destructive">
           <BellOff className="mt-px size-3.5 shrink-0" />
           <span>
@@ -337,6 +338,16 @@ function Hilo({
             {hilo.waOptOutAt && ` el ${new Date(hilo.waOptOutAt).toLocaleDateString("es-CL")}`}. No
             recibe recordatorios automáticos. Responder a mano a algo que él mismo escribió está
             bien; volver a incluirlo en envíos masivos, no.
+          </span>
+        </p>
+      )}
+      {estadoOptIn(hilo) === "sin_opt_in" && (
+        <p className="flex items-start gap-2 border-b border-hairline bg-warning-soft p-3 text-xs text-warning">
+          <BellOff className="mt-px size-3.5 shrink-0" />
+          <span>
+            Todavía no dio consentimiento para recibir mensajes automáticos — no es lo mismo que
+            haber pedido la baja. Podés contestarle lo que él mismo escribió; para incluirlo en
+            recordatorios, primero activá el opt-in desde su ficha.
           </span>
         </p>
       )}
