@@ -4,6 +4,7 @@ import {
   comoUsuario,
   conectar,
   esperaError,
+  esperaFallo,
   evaluarPolitica,
   sembrarEscenario,
 } from "./helpers/db";
@@ -172,21 +173,28 @@ describe("procedure_supplies — RLS y constraints", () => {
     expect(msg).toMatch(/duplicate key|unique/i);
   });
 
-  // Invariante de negocio, no detalle de implementación: el stock no puede
-  // quedar negativo. `consumeSuppliesForTreatmentItem` depende de que la base
-  // rechace la salida (captura el 23514 y omite ese insumo en vez de completar
-  // el tratamiento con stock fantasma). Si alguien alguna vez "arregla" un test
-  // relajando `inventory_items_stock_non_negative`, este test lo frena.
-  describe("CHECK constraint: stock no negativo", () => {
-    it("rechaza una salida mayor al stock disponible", async () => {
-      const msg = await esperaError(client, () =>
+  // Invariante de negocio: el stock no puede quedar negativo.
+  // `consumeSuppliesForTreatmentItem` depende de que la base rechace la salida
+  // y de que lo haga con SQLSTATE 23514 — con ese código omite ese insumo, con
+  // cualquier otro revienta el tratamiento entero.
+  //
+  // El test afirmaba el nombre del constraint (`inventory_items_stock_non_negative`)
+  // aunque su propio comentario decía que fijaba comportamiento y no
+  // implementación. Desde que el total del ítem se deriva de la suma de las
+  // bodegas, ese CHECK ya no puede dispararse en una salida: quien rechaza es
+  // el trigger. El comportamiento y el código son los mismos; el mecanismo
+  // cambió, y era lo único que este test miraba.
+  describe("salida sin stock suficiente", () => {
+    it("rechaza una salida mayor al stock disponible, con el código que espera el llamador", async () => {
+      const fallo = await esperaFallo(client, () =>
         client.query(
           `INSERT INTO public.inventory_movements (clinic_id, item_id, kind, quantity, recorded_by)
            VALUES ($1, $2, 'salida', 2, $3)`,
           [clinicId, itemId, usuarios.owner],
         ),
       );
-      expect(msg).toMatch(/inventory_items_stock_non_negative/);
+      expect(fallo.code).toBe("23514");
+      expect(fallo.message).toMatch(/no puede|pide|stock|bodega/i);
     });
 
     it("acepta la salida cuando hay stock repuesto antes", async () => {

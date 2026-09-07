@@ -217,11 +217,13 @@ export async function applyTreatmentItemSupplyConsumption(
       treatment_item_id: params.treatmentItemId,
     });
     if (insertError) {
-      // 23514 = check_violation: esa salida hubiese dejado el stock en
-      // negativo (inventory_items.current_stock >= 0). Se omite ese insumo
-      // puntual, no todo el consumo — mismo criterio que registerInventoryMovement
-      // usa para el mensaje al usuario, pero acá no hay usuario esperando en
-      // un diálogo: el tratamiento se completa igual.
+      // 23514 = check_violation: la clínica no tenía ese insumo en ninguna
+      // bodega. El movimiento no manda warehouse_id, así que el trigger lo
+      // descuenta de las bodegas con saldo en orden de posición y solo
+      // rechaza cuando no alcanza el total — no cuando falta en una bodega
+      // puntual. Se omite ese insumo, no todo el consumo: mismo criterio que
+      // registerInventoryMovement usa para el mensaje al usuario, pero acá no
+      // hay usuario esperando en un diálogo, el tratamiento se completa igual.
       if (insertError.code === "23514") {
         skippedCount += 1;
         continue;

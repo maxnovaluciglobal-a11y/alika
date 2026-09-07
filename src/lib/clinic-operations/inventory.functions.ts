@@ -249,11 +249,13 @@ export const updateInventoryItem = createServerFn({ method: "POST" })
   });
 
 /** Registra un movimiento de stock (entrada/salida/ajuste). El trigger
- * `apply_inventory_movement` aplica el efecto sobre `current_stock` — esta
- * función nunca lo toca directamente. RLS ya restringe el INSERT a los
- * roles que tocan insumos en el día a día (owner/admin/dentist/assistant).
- * Si `kind='salida'` deja el stock en negativo, el CHECK de la tabla revierte
- * todo el INSERT y este handler propaga ese error. */
+ * `apply_inventory_movement` aplica el efecto sobre el saldo de la bodega y
+ * deriva de ahí el total del ítem — esta función nunca los toca directamente.
+ * RLS ya restringe el INSERT a los roles que tocan insumos en el día a día
+ * (owner/admin/dentist/assistant).
+ * Una salida que no alcanza —en la bodega elegida, o en toda la clínica si no
+ * se eligió ninguna— hace que el trigger revierta todo el INSERT y este
+ * handler propaga su mensaje. */
 export const registerInventoryMovement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -295,14 +297,19 @@ export const registerInventoryMovement = createServerFn({ method: "POST" })
       .single();
 
     if (error) {
-      // 23514 = check_violation. El trigger que aplica el movimiento a
-      // current_stock corre dentro de este INSERT — si una salida deja el
-      // stock en negativo, el CHECK de inventory_items revienta acá.
-      // Mismo criterio que ya usa el repo para odontogram (23505 -> mensaje
-      // claro, ver CLAUDE.md) en vez de mostrar el error crudo de Postgres.
+      // 23514 = check_violation. El trigger que aplica el movimiento corre
+      // dentro de este INSERT y rechaza con ese código la salida que no
+      // alcanza, con un mensaje que ya dice qué bodega es y cuánto tiene.
+      // `mensajeDb` lo deja pasar tal cual y solo cae en el texto genérico si
+      // el 23514 vino de un CHECK crudo de la tabla. Mismo criterio que ya
+      // usa el repo para odontogram (23505 -> mensaje claro, ver CLAUDE.md)
+      // en vez de mostrar el error crudo de Postgres.
       if (error.code === "23514") {
         throw new Error(
-          "Esa salida deja el stock en negativo — revisá la cantidad o registrá antes un ajuste con el conteo real.",
+          mensajeDb(
+            error,
+            "Esa salida deja el stock en negativo — revisá la cantidad o registrá antes un ajuste con el conteo real.",
+          ),
         );
       }
       throw new Error(mensajeDb(error, "No pudimos registrar el movimiento de inventario."));

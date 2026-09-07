@@ -88,6 +88,28 @@ export async function esperaError(client: Client, fn: () => Promise<unknown>): P
 }
 
 /**
+ * Igual que `esperaError`, pero devuelve también el SQLSTATE del fallo.
+ * Hay contratos que dependen del código y no del texto: `consumirInsumos`
+ * saltea un insumo puntual cuando el error es 23514 y revienta el tratamiento
+ * entero con cualquier otro, así que un cambio de código lo rompe en silencio.
+ */
+export async function esperaFallo(
+  client: Client,
+  fn: () => Promise<unknown>,
+): Promise<{ code: string; message: string }> {
+  await client.query("SAVEPOINT sp_fallo");
+  try {
+    await fn();
+  } catch (e) {
+    await client.query("ROLLBACK TO SAVEPOINT sp_fallo");
+    const err = e as Error & { code?: string };
+    return { code: err.code ?? "", message: err.message };
+  }
+  await client.query("RELEASE SAVEPOINT sp_fallo");
+  throw new Error("Se esperaba que la operación fallara y fue aceptada.");
+}
+
+/**
  * Crea una clínica con un miembro por rol, una nota clínica y su espejo temporal.
  * Todo ocurre dentro de la transacción abierta por el test (se revierte al final).
  */

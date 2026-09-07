@@ -540,8 +540,9 @@ function RegistrarMovimientoDialog({
         <DialogHeader>
           <DialogTitle>Registrar movimiento — {item.name}</DialogTitle>
           <DialogDescription>
-            Stock actual: {item.currentStock} {item.unit}. Un movimiento no se puede editar después
-            — un error se corrige con un ajuste nuevo.
+            Stock actual: {item.currentStock} {item.unit}
+            {multiBodega ? " en total, sumando todas las bodegas" : ""}. Un movimiento no se puede
+            editar después — un error se corrige con un ajuste nuevo.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
@@ -562,7 +563,9 @@ function RegistrarMovimientoDialog({
             {kind === "ajuste" && (
               <p className="text-xs text-muted-foreground">
                 El ajuste fija el stock al valor contado (recuento físico), no lo suma ni lo resta.
-                Para un conteo de una bodega puntual, usá "Conteo físico" en vez de esto.
+                {multiBodega
+                  ? " Fija el stock de la bodega elegida; las demás quedan como están y el total pasa a ser la suma. Para conciliar la clínica entera, usá “Conteo físico”."
+                  : ' Para un conteo de una bodega puntual, usá "Conteo físico" en vez de esto.'}
               </p>
             )}
           </div>
@@ -575,13 +578,21 @@ function RegistrarMovimientoDialog({
                 onChange={(e) => setWarehouseId(e.target.value)}
                 className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
-                <option value="">Bodega general</option>
+                <option value="">
+                  {kind === "salida" ? "Sin elegir — de donde haya" : "Bodega general"}
+                </option>
                 {bodegas.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name}
                   </option>
                 ))}
               </select>
+              {kind === "salida" && (
+                <p className="text-xs text-muted-foreground">
+                  Elegir una bodega ata la salida a esa: se rechaza si no le alcanza, aunque la
+                  clínica tenga stock en otra. Sin elegir, sale de las bodegas que tengan saldo.
+                </p>
+              )}
             </div>
           )}
           <div className="space-y-1.5">
@@ -725,7 +736,7 @@ function ConteoFisicoDialog({
                 onChange={(e) => setWarehouseId(e.target.value)}
                 className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
-                <option value="">Bodega general</option>
+                <option value="">Toda la clínica</option>
                 {bodegas.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name}
