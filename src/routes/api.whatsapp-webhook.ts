@@ -7,6 +7,7 @@ import { isClinicOpenNow } from "@/lib/messaging/whatsapp";
 import { sendMetaTextMessage } from "@/lib/messaging/whatsapp.functions";
 import { notifyClinicStaff, ROLES_BANDEJA } from "@/lib/messaging/notifications.functions";
 import { esConfirmacionDePaciente } from "@/lib/messaging/patient-confirmation";
+import { hoyEnLaClinica, interpretarMensajeDeAgenda } from "@/lib/messaging/intencion-de-agenda";
 import { captureException } from "@/lib/sentry";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -234,6 +235,15 @@ async function applyInboundMessage(
     ? null
     : await anotarConfirmacionDelPaciente(supabaseAdmin, clinicId, patient.id, bodyText);
 
+  // F4: si el mensaje pide, mueve o cancela una hora, se anota como solicitud
+  // en vez de quedar como texto suelto que alguien tiene que releer. El orden
+  // importa: baja y confirmación mandan, porque "CANCELAR" pelado es una baja
+  // y "sí" es un aviso de asistencia, no un pedido de hora.
+  const solicitud =
+    esBaja || citaConfirmada
+      ? null
+      : await anotarSolicitudDeAgenda(supabaseAdmin, clinicId, patient.id, bodyText);
+
   // Hasta acá el mensaje quedaba guardado y NADIE se enteraba: no había
   // pantalla que lo mostrara ni aviso que lo anunciara. El link apunta al
   // hilo ya abierto para que el aviso sea accionable de un click.
@@ -245,20 +255,88 @@ async function applyInboundMessage(
       ? "patient_opt_out"
       : citaConfirmada
         ? "patient_confirmed_appointment"
-        : "inbound_message",
+        : solicitud
+          ? "appointment_request"
+          : "inbound_message",
     title: esBaja
       ? `${nombre} pidió la baja de WhatsApp`
       : citaConfirmada
         ? `${nombre} avisó que viene`
-        : `${nombre} te escribió`,
+        : solicitud
+          ? `${nombre}: ${solicitud.titulo}`
+          : `${nombre} te escribió`,
     body: esBaja
       ? "Deja de recibir recordatorios automáticos. El mensaje quedó en su conversación."
       : citaConfirmada
         ? `Cita del ${citaConfirmada}. Sigue haciendo falta que el profesional la acepte para que quede confirmada.`
-        : recorte(textoGuardado),
-    link: `/conversaciones?paciente=${patient.id}`,
+        : solicitud
+          ? `${solicitud.detalle} — texto original: ${recorte(textoGuardado)}`
+          : recorte(textoGuardado),
+    // Una solicitud se resuelve en la agenda, no leyendo el hilo otra vez.
+    link: solicitud ? "/agenda" : `/conversaciones?paciente=${patient.id}`,
     patientRef: patient.id,
   });
+}
+
+const ETIQUETA_DE_INTENCION = {
+  agendar: "pide una hora",
+  reagendar: "quiere mover su hora",
+  cancelar: "quiere cancelar su hora",
+} as const;
+
+/**
+ * Anota lo que el paciente pidió sobre su agenda, si se puede leer con
+ * reglas. Devuelve null cuando no — y ese null es a propósito el lugar donde
+ * entrará el modelo de lenguaje cuando existan las API keys (ver
+ * `intencion-de-agenda.ts`). Mientras tanto el mensaje cae en el aviso
+ * genérico de siempre, o sea que no se pierde nada.
+ *
+ * Sólo se crea una fila en `appointment_requests` para el caso `agendar`
+ * **con fecha**: es el único donde el circuito que ya existe (el del portal)
+ * puede resolverlo sin adivinar. Mover o cancelar tocan una cita concreta que
+ * hay que elegir, y eso es decisión de la clínica, no del webhook.
+ */
+async function anotarSolicitudDeAgenda(
+  supabaseAdmin: SupabaseAdminClient,
+  clinicId: string,
+  patientId: string,
+  bodyText: string,
+): Promise<{ titulo: string; detalle: string } | null> {
+  // El huso de la clínica, no el del servidor: este handler corre en UTC y
+  // "mañana" escrito a las 22:00 en Santiago cae al día siguiente en UTC.
+  const { data: clinica } = await supabaseAdmin
+    .from("clinics")
+    .select("timezone")
+    .eq("id", clinicId)
+    .maybeSingle();
+  const lectura = interpretarMensajeDeAgenda(
+    bodyText,
+    hoyEnLaClinica(clinica?.timezone ?? "America/Santiago"),
+  );
+  if (!lectura) return null;
+
+  const cuando = lectura.fecha
+    ? `para el ${lectura.fecha}${lectura.franja === "manana" ? " por la mañana" : lectura.franja === "tarde" ? " por la tarde" : ""}`
+    : "sin fecha indicada";
+
+  if (lectura.intencion === "agendar" && lectura.fecha) {
+    const { error } = await supabaseAdmin.from("appointment_requests").insert({
+      clinic_id: clinicId,
+      patient_id: patientId,
+      preferred_date: lectura.fecha,
+      reason: recorte(bodyText),
+      source: "whatsapp",
+      status: "pending",
+    });
+    // Si falla, el aviso igual sale: perder el aviso por no poder anotar la
+    // solicitud sería peor que tener el aviso sin la fila.
+    if (error) console.error("[whatsapp] no se pudo anotar la solicitud:", error.message);
+  }
+
+  return {
+    titulo: ETIQUETA_DE_INTENCION[lectura.intencion],
+    detalle: `${ETIQUETA_DE_INTENCION[lectura.intencion]} ${cuando}`,
+  };
 }
 
 /** Ventana en la que un "sí" suelto se puede atribuir a una cita concreta. */
