@@ -95,15 +95,29 @@ export async function initSentry(): Promise<void> {
     // ⚠️ CHECKLIST OBLIGATORIO antes de setear VITE_SENTRY_DSN en producción
     // (hoy no está seteado, así que este hook no tiene efecto todavía — esto
     // es preparación, ver docs/DEPLOY_PRODUCTION.md):
-    //   1. Confirmar que este redactado de `error.message` cubre los mensajes
-    //      reales que tira Supabase/Postgres en este proyecto (correr algunos
-    //      errores conocidos — unique violation, FK violation — contra este
-    //      hook antes de habilitar el DSN).
-    //   2. Revisar `event.exception.values[].value` además de `event.message`
-    //      si en algún momento se agregan breadcrumbs o contexto custom que
-    //      puedan traer valores de columnas.
-    //   3. Evaluar si hace falta filtrar también `event.extra` / `event.contexts`
-    //      cuando se empiecen a adjuntar datos custom a los eventos.
+    //
+    //   1. ✅ CORRIDO el 07-sep-2026 contra el esquema real (unique, FK, NOT
+    //      NULL y CHECK violations con PII sintética). Resultado: el redactado
+    //      no se dispara nunca, porque `err.message` de node-postgres NO trae
+    //      los valores — solo "duplicate key value violates unique constraint
+    //      \"x\"". Los literales viven en `err.detail` (`error.details` en
+    //      supabase-js), que este hook no lee y que hoy NO llega a Sentry: la
+    //      única integración activa es browserTracing, sin
+    //      extraErrorDataIntegration, y nadie mete `.details` en un mensaje.
+    //      O sea: no hay fuga hoy, y este hook es un no-op en la práctica.
+    //      Dos huecos si eso cambia (agregar esa integración, o incluir
+    //      `details` en un mensaje):
+    //        a) el hook tendría que mirar también ese campo;
+    //        b) POSTGRES_KEY_VALUE_PATTERN solo matchea `(col)=(val)`. Las
+    //           violaciones de NOT NULL y CHECK — las más probables sobre
+    //           `patients` — emiten "Failing row contains (v1, v2, ...)", que
+    //           el regex NO matchea y que trae la FILA ENTERA. Verificado:
+    //           filtraba nombre, teléfono y email.
+    //   2. ✅ Ya cubierto: `redactPostgresLiterals` recorre
+    //      `event.exception.values[].value` además de `event.message`.
+    //   3. ⏳ Al 07-sep el único `extra` que se adjunta es
+    //      `{ clinicId, leadId }` en api.whatsapp-webhook.ts:381 — UUIDs, sin
+    //      PII. Revisar de nuevo cuando se adjunte cualquier otro dato custom.
     beforeSend(event) {
       if (event.request?.cookies) delete event.request.cookies;
       if (event.user) event.user = { id: event.user.id }; // solo id, no email/nombre
