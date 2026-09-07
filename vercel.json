@@ -12,6 +12,10 @@
     {
       "path": "/api/demo-reset",
       "schedule": "5 5 * * *"
+    },
+    {
+      "path": "/api/daily-digest",
+      "schedule": "0 * * * *"
     }
   ],
   "headers": [

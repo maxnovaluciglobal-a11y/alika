@@ -20,6 +20,7 @@ export const NOTIFICATION_KIND_LABELS: Record<string, string> = {
   patient_opt_out: "Un paciente pidió la baja",
   whatsapp_lead: "Contacto nuevo por WhatsApp",
   patient_confirmed_appointment: "Un paciente avisó que viene",
+  daily_digest: "Resumen del día",
 };
 
 /** Formatea la antigüedad de una notificación en lenguaje natural. */
