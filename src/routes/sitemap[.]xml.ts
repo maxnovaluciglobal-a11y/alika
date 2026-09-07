@@ -24,6 +24,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         // no tiene sentido listarla acá, generaba una contradicción con el meta tag.
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
+          { path: "/software-dental-latam", changefreq: "monthly", priority: "0.8" },
           { path: "/faq", changefreq: "monthly", priority: "0.6" },
           { path: "/nosotros", changefreq: "monthly", priority: "0.4" },
           { path: "/docs", changefreq: "monthly", priority: "0.5" },

@@ -19,6 +19,7 @@ import { Route as NosotrosRouteImport } from './routes/nosotros'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SoftwareDentalLatamRouteImport } from './routes/software-dental-latam'
 import { Route as TerminosRouteImport } from './routes/terminos'
 import { Route as AuthenticatedClinicRouteRouteImport } from './routes/_authenticated/_clinic/route'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -114,6 +115,11 @@ const PrivacidadRoute = PrivacidadRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SoftwareDentalLatamRoute = SoftwareDentalLatamRouteImport.update({
+  id: '/software-dental-latam',
+  path: '/software-dental-latam',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TerminosRoute = TerminosRouteImport.update({
@@ -392,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/portal': typeof PortalRouteWithChildren
   '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/software-dental-latam': typeof SoftwareDentalLatamRoute
   '/terminos': typeof TerminosRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
@@ -447,6 +454,7 @@ export interface FileRoutesByTo {
   '/nosotros': typeof NosotrosRoute
   '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/software-dental-latam': typeof SoftwareDentalLatamRoute
   '/terminos': typeof TerminosRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
@@ -506,6 +514,7 @@ export interface FileRoutesById {
   '/portal': typeof PortalRouteWithChildren
   '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/software-dental-latam': typeof SoftwareDentalLatamRoute
   '/terminos': typeof TerminosRoute
   '/_authenticated/_clinic': typeof AuthenticatedClinicRouteRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
@@ -566,6 +575,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/privacidad'
     | '/sitemap.xml'
+    | '/software-dental-latam'
     | '/terminos'
     | '/onboarding'
     | '/sin-acceso'
@@ -621,6 +631,7 @@ export interface FileRouteTypes {
     | '/nosotros'
     | '/privacidad'
     | '/sitemap.xml'
+    | '/software-dental-latam'
     | '/terminos'
     | '/onboarding'
     | '/sin-acceso'
@@ -679,6 +690,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/privacidad'
     | '/sitemap.xml'
+    | '/software-dental-latam'
     | '/terminos'
     | '/_authenticated/_clinic'
     | '/_authenticated/onboarding'
@@ -739,6 +751,7 @@ export interface RootRouteChildren {
   PortalRoute: typeof PortalRouteWithChildren
   PrivacidadRoute: typeof PrivacidadRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SoftwareDentalLatamRoute: typeof SoftwareDentalLatamRoute
   TerminosRoute: typeof TerminosRoute
   ApiDailyDigestRoute: typeof ApiDailyDigestRoute
   ApiDemoResetRoute: typeof ApiDemoResetRoute
@@ -817,6 +830,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/software-dental-latam': {
+      id: '/software-dental-latam'
+      path: '/software-dental-latam'
+      fullPath: '/software-dental-latam'
+      preLoaderRoute: typeof SoftwareDentalLatamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terminos': {
@@ -1290,6 +1310,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortalRoute: PortalRouteWithChildren,
   PrivacidadRoute: PrivacidadRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SoftwareDentalLatamRoute: SoftwareDentalLatamRoute,
   TerminosRoute: TerminosRoute,
   ApiDailyDigestRoute: ApiDailyDigestRoute,
   ApiDemoResetRoute: ApiDemoResetRoute,
