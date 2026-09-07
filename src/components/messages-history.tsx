@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { MessageCircle } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 
 import { MESSAGE_STATUS_LABELS, MESSAGE_TEMPLATE_KIND_LABELS } from "@/lib/messaging/messaging";
+import { Link } from "@tanstack/react-router";
+import { cn } from "@/lib/utils";
 import { listMessages } from "@/lib/messaging/messaging.functions";
 
 interface Props {
@@ -25,9 +27,16 @@ export function MessagesHistory({ clinicId, patientId }: Props) {
         <div>
           <h3 className="font-display text-lg font-semibold">Comunicaciones</h3>
           <p className="text-xs text-muted-foreground">
-            Historial de mensajes enviados al paciente.
+            Mensajes enviados al paciente y respuestas suyas.
           </p>
         </div>
+        <Link
+          to="/conversaciones"
+          search={{ paciente: patientId }}
+          className="shrink-0 rounded-md border border-hairline px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-muted"
+        >
+          Abrir conversación
+        </Link>
       </div>
 
       {isLoading && <p className="text-xs text-muted-foreground">Cargando…</p>}
@@ -41,21 +50,38 @@ export function MessagesHistory({ clinicId, patientId }: Props) {
 
       {!isLoading && messages.length > 0 && (
         <div className="space-y-2">
-          {messages.map((m) => (
-            <div key={m.id} className="rounded-lg border border-hairline p-3">
-              <div className="mb-1 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <MessageCircle className="size-3.5 text-brand" />
-                  <span className="font-medium uppercase tracking-wide">{m.channel}</span>
-                  {m.templateKind && <span>· {MESSAGE_TEMPLATE_KIND_LABELS[m.templateKind]}</span>}
-                  <span>· {MESSAGE_STATUS_LABELS[m.status]}</span>
+          {messages.map((m) => {
+            const entrante = m.direction === "inbound";
+            return (
+              <div
+                key={m.id}
+                className={cn(
+                  "rounded-lg border p-3",
+                  entrante ? "border-brand/30 bg-brand-soft/40" : "border-hairline",
+                )}
+              >
+                <div className="mb-1 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    {entrante ? (
+                      <ArrowDownLeft className="size-3.5 text-brand" />
+                    ) : (
+                      <ArrowUpRight className="size-3.5 text-muted-foreground" />
+                    )}
+                    <span className="font-medium uppercase tracking-wide">{m.channel}</span>
+                    {m.templateKind && (
+                      <span>· {MESSAGE_TEMPLATE_KIND_LABELS[m.templateKind]}</span>
+                    )}
+                    {!entrante && <span>· {MESSAGE_STATUS_LABELS[m.status]}</span>}
+                  </div>
+                  <span>{new Date(m.createdAt).toLocaleString("es-CL")}</span>
                 </div>
-                <span>{new Date(m.createdAt).toLocaleString("es-CL")}</span>
+                <p className="mt-1 whitespace-pre-wrap text-xs text-foreground/90">{m.body}</p>
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  {entrante ? `del paciente · ${m.recipient}` : `a ${m.recipient}`}
+                </p>
               </div>
-              <p className="mt-1 whitespace-pre-wrap text-xs text-foreground/90">{m.body}</p>
-              <p className="mt-1 text-[10px] text-muted-foreground">a {m.recipient}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

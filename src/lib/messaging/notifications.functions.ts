@@ -6,6 +6,7 @@ import type { AppNotification } from "@/lib/messaging/notifications";
 import type { Database } from "@/integrations/supabase/types";
 
 type SupabaseCtx = SupabaseClient<Database>;
+type AppRole = Database["public"]["Enums"]["app_role"];
 
 /**
  * Crea una notificación in-app para un integrante de la clínica (best-effort:
@@ -24,6 +25,8 @@ export async function createNotification(
     body?: string | null;
     noteId?: string | null;
     patientRef?: string | null;
+    /** Sobrescribe el link por defecto (`/pacientes/<ref>`). */
+    link?: string | null;
   },
 ) {
   if (!payload.recipientId || payload.recipientId === payload.actorId) return;
@@ -34,10 +37,72 @@ export async function createNotification(
     kind: payload.kind,
     title: payload.title,
     body: payload.body ?? null,
-    link: payload.patientRef ? `/pacientes/${payload.patientRef}` : null,
+    link: payload.link ?? (payload.patientRef ? `/pacientes/${payload.patientRef}` : null),
     note_id: payload.noteId ?? null,
     patient_ref: payload.patientRef ?? null,
   });
+}
+
+/**
+ * Roles que reciben los avisos de la bandeja de conversaciones. Es el mismo
+ * conjunto que la política de escritura de `messages` en RLS: avisar a
+ * alguien de algo que después no va a poder contestar sería ruido.
+ */
+export const ROLES_BANDEJA: readonly AppRole[] = ["owner", "admin", "dentist", "reception"];
+
+/**
+ * Aviso in-app para TODO el equipo con alguno de los roles pedidos.
+ *
+ * Existe aparte de `createNotification` porque el disparador no es una
+ * persona: lo llama el webhook de WhatsApp con el cliente service_role
+ * cuando escribe un paciente. Por eso `actor_id` queda en null (no hay
+ * usuario que haya hecho la acción) y no aplica el "no te avises a vos
+ * mismo" — nadie del equipo es el actor.
+ *
+ * Best-effort a propósito: si el aviso falla, el mensaje del paciente YA se
+ * guardó y aparece en la bandeja igual. Romper el webhook haría que Meta
+ * reintente y duplique el mensaje, que es peor que un aviso perdido.
+ */
+export async function notifyClinicStaff(
+  supabaseAdmin: SupabaseCtx,
+  payload: {
+    clinicId: string;
+    roles: readonly AppRole[];
+    kind: string;
+    title: string;
+    body?: string | null;
+    link?: string | null;
+    patientRef?: string | null;
+  },
+): Promise<number> {
+  const { data: miembros, error } = await supabaseAdmin
+    .from("clinic_members")
+    .select("user_id")
+    .eq("clinic_id", payload.clinicId)
+    .in("role", payload.roles);
+  if (error || !miembros || miembros.length === 0) return 0;
+
+  // clinic_members es UNIQUE(clinic_id, user_id, role): alguien con dos roles
+  // aparece dos veces y recibiría el aviso duplicado.
+  const destinatarios = [...new Set(miembros.map((m) => m.user_id))];
+
+  const { error: errIns } = await supabaseAdmin.from("notifications").insert(
+    destinatarios.map((recipientId) => ({
+      clinic_id: payload.clinicId,
+      recipient_id: recipientId,
+      actor_id: null,
+      kind: payload.kind,
+      title: payload.title,
+      body: payload.body ?? null,
+      link: payload.link ?? null,
+      patient_ref: payload.patientRef ?? null,
+    })),
+  );
+  if (errIns) {
+    console.error("[notifications] no se pudo avisar al equipo:", errIns.message);
+    return 0;
+  }
+  return destinatarios.length;
 }
 
 /** Lista las notificaciones del usuario autenticado, más recientes primero. */

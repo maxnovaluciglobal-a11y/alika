@@ -23,6 +23,7 @@ import {
   Sun,
   LifeBuoy,
   MessageCircleMore,
+  MessagesSquare,
   Merge,
   MessageCircle,
   Landmark,
@@ -56,6 +57,7 @@ import {
   type Permission,
 } from "@/lib/access/access";
 import { listPendingOutreach, listPendingReminders } from "@/lib/messaging/messaging.functions";
+import { countConversacionesSinResponder } from "@/lib/messaging/conversations.functions";
 import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; label: string; icon: typeof Users; permission: Permission };
@@ -77,6 +79,12 @@ const navGroups: { section: string; items: readonly NavItem[] }[] = [
         label: "Mi agenda",
         icon: CalendarCheck,
         permission: "agenda:view",
+      },
+      {
+        to: "/conversaciones",
+        label: "Conversaciones",
+        icon: MessagesSquare,
+        permission: "agenda:manage",
       },
       {
         to: "/recordatorios",
@@ -294,6 +302,29 @@ export function AppShell({
   });
   const recordatoriosBadge = recordatoriosPendientes.length + outreachPendiente.length;
 
+  // Badge de "Conversaciones": cuántos hilos terminan con un mensaje del
+  // paciente. Query propia y liviana (no comparte cache con la pantalla) —
+  // solo pide patient_id y direction, sin el cuerpo del mensaje, porque esto
+  // se recalcula en toda pestaña abierta. 2 min y no 5 como recordatorios:
+  // que alguien escriba y nadie conteste es más urgente que una cola de
+  // avisos que vencen por tiempo.
+  const fetchSinResponder = useServerFn(countConversacionesSinResponder);
+  const { data: conversacionesBadge = 0 } = useQuery({
+    queryKey: ["conversations-pendientes", clinicId],
+    enabled: puedeVerRecordatorios,
+    queryFn: () => fetchSinResponder({ data: { clinicId: clinicId! } }),
+    refetchInterval: 2 * 60_000,
+  });
+
+  // Una sola tabla ruta→número, consumida por los dos navs (escritorio y
+  // móvil). Antes el badge era un `to === "/recordatorios" && ...` repetido
+  // en ambos: agregar un segundo contador significaba cuatro condicionales
+  // que se desincronizan solos.
+  const badgePorRuta: Record<string, number> = {
+    "/recordatorios": recordatoriosBadge,
+    "/conversaciones": conversacionesBadge,
+  };
+
   async function handleSignOut() {
     // La cola NO se borra al salir (son cobros ya hechos), pero quien se va
     // tiene que enterarse de que quedó algo sin subir.
@@ -355,9 +386,9 @@ export function AppShell({
                     >
                       <Icon className="size-4" />
                       <span>{label}</span>
-                      {to === "/recordatorios" && recordatoriosBadge > 0 && (
+                      {(badgePorRuta[to] ?? 0) > 0 && (
                         <span className="ml-auto min-w-4 rounded-full bg-brand px-1 text-[10px] font-semibold leading-4 text-brand-foreground">
-                          {recordatoriosBadge > 9 ? "9+" : recordatoriosBadge}
+                          {badgePorRuta[to] > 9 ? "9+" : badgePorRuta[to]}
                         </span>
                       )}
                     </Link>
@@ -473,9 +504,9 @@ export function AppShell({
                 )}
               >
                 {label}
-                {to === "/recordatorios" && recordatoriosBadge > 0 && (
+                {(badgePorRuta[to] ?? 0) > 0 && (
                   <span className="min-w-4 rounded-full bg-brand px-1 text-[10px] font-semibold leading-4 text-brand-foreground">
-                    {recordatoriosBadge > 9 ? "9+" : recordatoriosBadge}
+                    {badgePorRuta[to] > 9 ? "9+" : badgePorRuta[to]}
                   </span>
                 )}
               </Link>

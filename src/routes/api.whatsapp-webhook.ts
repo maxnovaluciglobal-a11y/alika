@@ -5,6 +5,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { normalizeToWaMe } from "@/lib/messaging/messaging";
 import { isClinicOpenNow } from "@/lib/messaging/whatsapp";
 import { sendMetaTextMessage } from "@/lib/messaging/whatsapp.functions";
+import { notifyClinicStaff, ROLES_BANDEJA } from "@/lib/messaging/notifications.functions";
 import { captureException } from "@/lib/sentry";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -19,11 +20,14 @@ type SupabaseAdminClient = SupabaseClient<Database>;
  * GET  = verificación de suscripción (una vez, al configurar el webhook en
  *        Meta Business Manager).
  * POST = eventos reales: status callbacks (delivered/read/failed) y
- *        mensajes entrantes. Si el número coincide con un paciente: SÍ
- *        confirma la próxima cita, BAJA/STOP corta el opt-in (Fase 1). Si
- *        es un desconocido: se captura como lead + auto-respuesta con texto
- *        libre, sin plantilla — válido porque el desconocido acaba de abrir
- *        la ventana de servicio de 24h al escribir primero (Fase 3).
+ *        mensajes entrantes. Si el número coincide con un paciente: se
+ *        guarda el mensaje, se avisa al equipo, y BAJA/STOP corta el opt-in
+ *        (Fase 1). **NO confirma citas** — este archivo no toca
+ *        `appointments` en ninguna línea; el auto-confirm por "SI" existió y
+ *        se removió a propósito en `505eb7d`. Si es un desconocido: se
+ *        captura como lead + auto-respuesta con texto libre, sin plantilla —
+ *        válido porque el desconocido acaba de abrir la ventana de servicio
+ *        de 24h al escribir primero (Fase 3).
  */
 export const Route = createFileRoute("/api/whatsapp-webhook")({
   server: {
@@ -201,6 +205,7 @@ async function applyInboundMessage(
     await handleUnknownSender(supabaseAdmin, clinicId, fromNormalized, bodyText, contactName);
     return;
   }
+  const textoGuardado = bodyText || `[${message.type}]`;
   await supabaseAdmin.from("messages").insert({
     clinic_id: clinicId,
     patient_id: patient.id,
@@ -208,17 +213,52 @@ async function applyInboundMessage(
     direction: "inbound",
     status: "delivered",
     recipient: fromNormalized,
-    body: bodyText || `[${message.type}]`,
+    body: textoGuardado,
     external_id: message.id,
   });
 
   const normalized = bodyText.trim().toUpperCase();
-  if (OPT_OUT_WORDS.has(normalized)) {
+  const esBaja = OPT_OUT_WORDS.has(normalized);
+  if (esBaja) {
     await supabaseAdmin
       .from("patients")
       .update({ wa_opt_in: false, wa_opt_out_at: new Date().toISOString() })
       .eq("id", patient.id);
   }
+
+  // Hasta acá el mensaje quedaba guardado y NADIE se enteraba: no había
+  // pantalla que lo mostrara ni aviso que lo anunciara. El link apunta al
+  // hilo ya abierto para que el aviso sea accionable de un click.
+  const nombre = await nombreDePaciente(supabaseAdmin, patient.id);
+  await notifyClinicStaff(supabaseAdmin, {
+    clinicId,
+    roles: ROLES_BANDEJA,
+    kind: esBaja ? "patient_opt_out" : "inbound_message",
+    title: esBaja ? `${nombre} pidió la baja de WhatsApp` : `${nombre} te escribió`,
+    body: esBaja
+      ? "Deja de recibir recordatorios automáticos. El mensaje quedó en su conversación."
+      : recorte(textoGuardado),
+    link: `/conversaciones?paciente=${patient.id}`,
+    patientRef: patient.id,
+  });
+}
+
+/** Recorta el cuerpo del mensaje para que entre en el aviso sin desbordarlo. */
+function recorte(texto: string, max = 140): string {
+  const limpio = texto.replace(/\s+/g, " ").trim();
+  return limpio.length <= max ? limpio : `${limpio.slice(0, max - 1)}…`;
+}
+
+async function nombreDePaciente(
+  supabaseAdmin: SupabaseAdminClient,
+  patientId: string,
+): Promise<string> {
+  const { data } = await supabaseAdmin
+    .from("patients")
+    .select("full_name")
+    .eq("id", patientId)
+    .maybeSingle();
+  return data?.full_name?.trim() || "Un paciente";
 }
 
 /**
@@ -277,6 +317,18 @@ async function handleUnknownSender(
     .select("id")
     .single();
   if (error || !inserted) return;
+
+  // Mismo problema que tenían los mensajes de pacientes: el lead se guardaba
+  // en /whatsapp y nadie recibía un aviso. Un contacto nuevo que nadie mira
+  // es captación perdida, que es lo único que este flujo existe para evitar.
+  await notifyClinicStaff(supabaseAdmin, {
+    clinicId,
+    roles: ROLES_BANDEJA,
+    kind: "whatsapp_lead",
+    title: contactName ? `${contactName} escribió por primera vez` : "Contacto nuevo por WhatsApp",
+    body: recorte(bodyText || "[mensaje sin texto]"),
+    link: "/whatsapp",
+  });
 
   try {
     const [{ data: account }, { data: branches }, { data: clinic }] = await Promise.all([

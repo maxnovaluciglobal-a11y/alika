@@ -247,16 +247,41 @@ BEGIN
   UPDATE public.quotes SET status = 'rejected' WHERE id = v_quote_agustin;
 
   -- Mensajería: historial de WhatsApp enviados.
-  INSERT INTO public.messages (clinic_id, patient_id, channel, direction, status, recipient, body, template_kind, sent_at, sent_by) VALUES
+  -- `created_at` va EXPLÍCITO y no solo `sent_at`: el default de created_at es
+  -- now(), así que sin esto los tres recordatorios "viejos" quedaban como el
+  -- mensaje MÁS NUEVO de cada hilo y /conversaciones mostraba toda la demo
+  -- como ya respondida — el contrario exacto de lo que tiene que enseñar.
+  INSERT INTO public.messages (clinic_id, patient_id, channel, direction, status, recipient, body, template_kind, created_at, sent_at, sent_by) VALUES
     (v_clinic_id, v_pat_valentina, 'whatsapp', 'outbound', 'delivered', '+56961234501',
      'Hola Valentina, te recordamos tu cita de Control y limpieza mañana a las 10:00. Para confirmar respondé SÍ. — Clínica Demo Alika',
-     'appointment_reminder', now() - interval '9 days', v_owner_id),
+     'appointment_reminder', now() - interval '1 days 3 hours', now() - interval '1 days 3 hours', v_owner_id),
     (v_clinic_id, v_pat_josefina, 'whatsapp', 'outbound', 'read', '+56961234505',
      'Hola Josefina, te comparto el presupuesto DEMO-0002 por $180.000. Cualquier duda me decís. — Clínica Demo Alika',
-     'quote_sent', now() - interval '6 days', v_owner_id),
+     'quote_sent', now() - interval '6 days', now() - interval '6 days', v_owner_id),
     (v_clinic_id, v_pat_benjamin, 'whatsapp', 'outbound', 'sent', '+56961234502',
      'Hola Benjamín, en unas horas es tu cita de Instalación de brackets a las 10:00 en Sucursal Providencia. ¡Te esperamos!',
-     'appointment_reminder', now() - interval '1 days', v_owner_id);
+     'appointment_reminder', now() - interval '2 days', now() - interval '2 days', v_owner_id);
+
+  -- Mensajes ENTRANTES: sin esto la bandeja de /conversaciones se ve vacía en
+  -- la demo, que es justo la pantalla que muestra por qué Alika no es solo un
+  -- historial de envíos. Se siembran tres situaciones distintas a propósito:
+  --   · Valentina  → escribió hace 2h y nadie contestó: SIN RESPONDER, ventana de 24h ABIERTA.
+  --   · Benjamín   → dos mensajes seguidos sin respuesta: muestra el contador de racha.
+  --   · Tomás      → escribió hace 3 días y la clínica ya respondió: ventana CERRADA, hilo resuelto.
+  INSERT INTO public.messages (clinic_id, patient_id, channel, direction, status, recipient, body, created_at) VALUES
+    (v_clinic_id, v_pat_valentina, 'whatsapp', 'inbound', 'delivered', '56961234501',
+     'Hola! Sí, ahí voy. Una consulta: ¿puedo llevar a mi hijo o mejor lo dejo?', now() - interval '2 hours'),
+    (v_clinic_id, v_pat_benjamin, 'whatsapp', 'inbound', 'delivered', '56961234502',
+     'Buenas, se me complicó el horario de mañana', now() - interval '5 hours'),
+    (v_clinic_id, v_pat_benjamin, 'whatsapp', 'inbound', 'delivered', '56961234502',
+     '¿Habrá algo por la tarde esta semana?', now() - interval '4 hours');
+
+  INSERT INTO public.messages (clinic_id, patient_id, channel, direction, status, recipient, body, created_at, sent_at, sent_by) VALUES
+    (v_clinic_id, v_pat_tomas, 'whatsapp', 'inbound', 'delivered', '56961234504',
+     '¿Atienden los sábados?', now() - interval '3 days 2 hours', NULL, NULL),
+    (v_clinic_id, v_pat_tomas, 'whatsapp', 'outbound', 'read', '56961234504',
+     'Hola Tomás, sí: sábados de 9:00 a 14:00 en Sucursal Providencia. ¿Te reservo una hora?',
+     now() - interval '3 days 1 hour', now() - interval '3 days 1 hour', v_owner_id);
 
   -- Inventario, con 2 ítems deliberadamente bajo el mínimo (demuestra la alerta).
   INSERT INTO public.inventory_items (clinic_id, name, unit, current_stock, min_stock, cost_cents, created_by) VALUES

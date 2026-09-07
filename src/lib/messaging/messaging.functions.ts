@@ -51,11 +51,12 @@ export async function loadEmailSandboxConfig(
 }
 
 const MESSAGE_COLUMNS =
-  "id, appointment_id, quote_id, template_id, template_kind, channel, status, recipient, body, sent_at, created_at";
+  "id, direction, appointment_id, quote_id, template_id, template_kind, channel, status, recipient, body, sent_at, created_at";
 const TEMPLATE_COLUMNS = "id, kind, name, channel, body, is_active";
 
 type MessageRow = {
   id: string;
+  direction: string;
   appointment_id: string | null;
   quote_id: string | null;
   template_id: string | null;
@@ -80,6 +81,7 @@ type TemplateRow = {
 function mapMessage(row: MessageRow): Message {
   return {
     id: row.id,
+    direction: row.direction === "inbound" ? "inbound" : "outbound",
     appointmentId: row.appointment_id,
     quoteId: row.quote_id,
     templateId: row.template_id,

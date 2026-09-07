@@ -99,6 +99,9 @@ export interface MessageTemplate {
 
 export interface Message {
   id: string;
+  /** Quién lo escribió. Sin esto, un "gracias, ahí voy" del paciente se
+   * renderizaba idéntico a un recordatorio de la clínica en la ficha. */
+  direction: "inbound" | "outbound";
   appointmentId: string | null;
   quoteId: string | null;
   templateId: string | null;

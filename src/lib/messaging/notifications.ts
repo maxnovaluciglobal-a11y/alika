@@ -16,6 +16,9 @@ export const NOTIFICATION_KIND_LABELS: Record<string, string> = {
   review_changes_requested: "Cambios solicitados",
   review_comment: "Nuevo comentario",
   review_cancelled: "Revisión cancelada",
+  inbound_message: "Mensaje de un paciente",
+  patient_opt_out: "Un paciente pidió la baja",
+  whatsapp_lead: "Contacto nuevo por WhatsApp",
 };
 
 /** Formatea la antigüedad de una notificación en lenguaje natural. */
