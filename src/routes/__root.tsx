@@ -12,7 +12,6 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportBoundaryError } from "../lib/error-reporting";
 import { siteJsonLdScripts } from "@/lib/seo";
-import { supabase } from "@/integrations/supabase/client";
 import { captureException, initSentry } from "@/lib/sentry";
 import { attachOfflineCache, resetOfflineCache } from "@/lib/offline/offline-cache";
 import { registerServiceWorker } from "@/lib/offline/register-sw";
@@ -206,24 +205,36 @@ function RootComponent() {
       if (!cancelled) detachCache = attachOfflineCache(queryClient, userId);
     }
 
-    void supabase.auth.getSession().then(({ data }) => bindCacheTo(data.session?.user.id));
+    // Import diferido, por la misma razón que en `_authenticated/route.tsx`.
+    // Acá ya estamos en el browser (es un useEffect), así que no hay costo de
+    // SSR. Si la sesión cambiara antes de que resuelva, `getSession()` lo
+    // corrige igual al resolver.
+    let desuscribir: (() => void) | undefined;
 
-    const { data } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      void bindCacheTo(session?.user.id);
-      // Mejores prácticas 01-sep: acá había además un queryClient.invalidateQueries()
-      // sin queryKey — la única de 57 invalidaciones del repo sin scope,
-      // refetch-storm de TODO lo montado en cada evento de auth. router.invalidate()
-      // ya re-corre los loaders (getMyAccess, etc.) y bindCacheTo ya reata el
-      // cache offline al usuario correcto — cubren el caso real de cambio de
-      // identidad sin pagar el costo de invalidar todo React Query.
-      router.invalidate();
+    void import("@/integrations/supabase/client").then(({ supabase }) => {
+      if (cancelled) return;
+      void supabase.auth.getSession().then(({ data }) => bindCacheTo(data.session?.user.id));
+
+      const { data } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+        void bindCacheTo(session?.user.id);
+        // Mejores prácticas 01-sep: acá había además un queryClient.invalidateQueries()
+        // sin queryKey — la única de 57 invalidaciones del repo sin scope,
+        // refetch-storm de TODO lo montado en cada evento de auth. router.invalidate()
+        // ya re-corre los loaders (getMyAccess, etc.) y bindCacheTo ya reata el
+        // cache offline al usuario correcto — cubren el caso real de cambio de
+        // identidad sin pagar el costo de invalidar todo React Query.
+        router.invalidate();
+      });
+      desuscribir = () => data.subscription.unsubscribe();
+      // Si el efecto se desmontó mientras resolvía el import, soltamos ya.
+      if (cancelled) desuscribir();
     });
 
     return () => {
       cancelled = true;
       detachCache?.();
-      data.subscription.unsubscribe();
+      desuscribir?.();
     };
   }, [router, queryClient]);
 

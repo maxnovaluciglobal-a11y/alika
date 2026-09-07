@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "@/integrations/supabase/lazy";
 
 function GoogleIcon() {
   return (
@@ -65,19 +65,47 @@ function AuthPage() {
   // supabase-js la detecta y establece automáticamente (detectSessionInUrl,
   // default true) — este listener solo reacciona una vez que ya está lista.
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN") {
-        router.invalidate().then(() => navigate({ to: "/dashboard" }));
+    let desuscribir: (() => void) | undefined;
+    let cancelado = false;
+
+    void getSupabase().then((supabase) => {
+      if (cancelado) return;
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((event) => {
+        if (event === "SIGNED_IN") {
+          router.invalidate().then(() => navigate({ to: "/dashboard" }));
+        }
+      });
+      desuscribir = () => subscription.unsubscribe();
+      if (cancelado) {
+        desuscribir();
+        return;
+      }
+
+      // Red de seguridad para el retorno de Google: `detectSessionInUrl` puede
+      // haber consumido el hash antes de que este listener existiera, y ahí el
+      // SIGNED_IN no llega nunca. Sólo se consulta cuando el hash trae un
+      // token — así un usuario ya logueado que entra a /auth a propósito sigue
+      // viendo el formulario en vez de rebotar al dashboard.
+      if (window.location.hash.includes("access_token")) {
+        void supabase.auth.getSession().then(({ data }) => {
+          if (cancelado || !data.session) return;
+          router.invalidate().then(() => navigate({ to: "/dashboard" }));
+        });
       }
     });
-    return () => subscription.unsubscribe();
+
+    return () => {
+      cancelado = true;
+      desuscribir?.();
+    };
   }, [navigate, router]);
 
   async function handleGoogle() {
     setError(null);
     setGoogleLoading(true);
+    const supabase = await getSupabase();
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.origin + "/auth" },
@@ -94,6 +122,7 @@ function AuthPage() {
     setLoading(true);
     setError(null);
     setMessage(null);
+    const supabase = await getSupabase();
 
     if (mode === "signup") {
       const { error: signUpError } = await supabase.auth.signUp({

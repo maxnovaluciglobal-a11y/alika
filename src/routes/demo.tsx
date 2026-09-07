@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "@/integrations/supabase/lazy";
 import { ensureDemoClinicFresh } from "@/lib/demo.functions";
 
 // Credenciales de la clínica demo pública, de solo lectura (bloqueo por
@@ -34,6 +34,7 @@ function DemoPage() {
       const freshPromise = ensureFresh().catch((e: Error) => {
         console.error("[demo] ensureDemoClinicFresh failed", e.message);
       });
+      const supabase = await getSupabase();
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: DEMO_EMAIL,
         password: DEMO_PASSWORD,

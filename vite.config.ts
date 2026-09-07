@@ -64,6 +64,21 @@ export default defineConfig(async ({ command, mode }) => {
 
   return {
     define: envDefine,
+    build: {
+      rollupOptions: {
+        output: {
+          // Rollup iza al chunk de entrada todo lo que comparten varios
+          // chunks. Con los imports de Supabase ya diferidos, esto lo deja
+          // además en un archivo propio: se descarga sólo cuando hace falta y
+          // sobrevive a los deploys en la caché del navegador, porque no
+          // cambia cuando cambia el código de la app.
+          manualChunks(id: string) {
+            if (id.includes("node_modules/@supabase/")) return "supabase";
+            return undefined;
+          },
+        },
+      },
+    },
     css: { transformer: "lightningcss" as const },
     resolve: {
       alias: { "@": `${process.cwd()}/src` },

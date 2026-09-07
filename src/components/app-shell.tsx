@@ -46,7 +46,7 @@ import { TrialBanner } from "@/components/trial-banner";
 import { DemoBanner } from "@/components/demo-banner";
 import { OfflineBanner } from "@/components/offline-banner";
 import { PendingSyncBanner } from "@/components/pending-sync-banner";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "@/integrations/supabase/lazy";
 import { resetOfflineCache } from "@/lib/offline/offline-cache";
 import { useSincronizacionAutomatica } from "@/hooks/use-offline-mutation";
 import { leerCola, pendientes } from "@/lib/offline/offline-queue";
@@ -349,6 +349,7 @@ export function AppShell({
     // defecto de Supabase ("global") revoca el refresh token en el server
     // para TODA sesión de ese user, así que cualquier visitante que cierre
     // sesión echaba de la demo a cualquier otro visitante concurrente.
+    const supabase = await getSupabase();
     await supabase.auth.signOut({ scope: "local" });
     navigate({ to: "/auth", replace: true });
   }

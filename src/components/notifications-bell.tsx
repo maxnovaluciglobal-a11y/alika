@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "@/integrations/supabase/lazy";
 import {
   listMyNotifications,
   markNotificationsRead,
@@ -24,21 +24,33 @@ export function NotificationsBell({ userId }: { userId?: string | null }) {
 
   useEffect(() => {
     if (!userId) return;
-    const channel = supabase
-      .channel(`notifications-${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `recipient_id=eq.${userId}`,
-        },
-        () => queryClient.invalidateQueries({ queryKey }),
-      )
-      .subscribe();
+    let soltar: (() => void) | undefined;
+    let cancelado = false;
+
+    void getSupabase().then((supabase) => {
+      if (cancelado) return;
+      const channel = supabase
+        .channel(`notifications-${userId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: `recipient_id=eq.${userId}`,
+          },
+          () => queryClient.invalidateQueries({ queryKey }),
+        )
+        .subscribe();
+      soltar = () => void supabase.removeChannel(channel);
+      // Si el componente se desmontó mientras resolvía el import, soltamos ya
+      // — si no, el canal queda suscrito para siempre.
+      if (cancelado) soltar();
+    });
+
     return () => {
-      supabase.removeChannel(channel);
+      cancelado = true;
+      soltar?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
