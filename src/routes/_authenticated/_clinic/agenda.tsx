@@ -56,10 +56,6 @@ import {
   type EstadoCita,
 } from "@/lib/clinic-operations/clinic-data";
 
-// Fallback para el default de validateSearch (no tiene acceso al contexto
-// de la ruta ni a la clínica activa). Dentro del componente usamos la
-// timezone real de la clínica vía access.clinic?.timezone.
-const HOY = hoyISO();
 import { listBranches, listProfessionals } from "@/lib/clinic-operations/clinic-catalog.functions";
 import { listProcedures } from "@/lib/finance/finance.functions";
 import { formatMoney } from "@/lib/finance/finance";
@@ -136,7 +132,14 @@ function parseVista(v: unknown): VistaAgenda {
 export const Route = createFileRoute("/_authenticated/_clinic/agenda")({
   validateSearch: (search: Record<string, unknown>): AgendaSearch => ({
     q: str(search.q),
-    fecha: str(search.fecha, HOY),
+    // hoyISO() se llama acá adentro, no en una constante de módulo: el
+    // módulo se carga una sola vez y se queda vivo (un servidor SSR tibio,
+    // una pestaña abierta toda la noche), así que una constante congelaría
+    // la fecha y después de medianoche la agenda abriría en ayer.
+    // Sin timezone de la clínica a propósito: validateSearch no tiene
+    // acceso al contexto de la ruta. El componente sí corrige su "hoy" con
+    // access.clinic?.timezone.
+    fecha: str(search.fecha, hoyISO()),
     vista: parseVista(search.vista),
     sucursal: str(search.sucursal),
     profesional: str(search.profesional),
