@@ -80,7 +80,7 @@ export const listRecipeRecalibrationSuggestions = createServerFn({ method: "GET"
     for (const itemId of unambiguousItemIds) {
       const { data: counts, error: countsError } = await context.supabase
         .from("inventory_counts")
-        .select("difference, counted_at")
+        .select("difference, counted_quantity, theoretical_quantity, counted_at")
         .eq("clinic_id", data.clinicId)
         .eq("item_id", itemId)
         .is("warehouse_id", null)
@@ -107,7 +107,11 @@ export const listRecipeRecalibrationSuggestions = createServerFn({ method: "GET"
       if (!recipeRow || !item) continue;
 
       const suggestion = suggestRecipeRecalibration({
-        recentDifferences: counts.map((c) => c.difference),
+        // Ver la nota en inventory-counts.functions.ts: columna generada, nullable
+        // por catálogo pero nunca null de verdad.
+        recentDifferences: counts.map(
+          (c) => c.difference ?? c.counted_quantity - c.theoretical_quantity,
+        ),
         currentRecipeQuantity: recipeRow.quantity,
         completionsInWindow: completionsInWindow ?? 0,
       });

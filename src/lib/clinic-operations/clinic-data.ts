@@ -21,6 +21,13 @@ export interface Cita {
   duracion: number;
   estado: EstadoCita;
   prioridad?: boolean;
+  /**
+   * El PACIENTE avisó que viene. Eje distinto de `estado: "confirmada"`, que
+   * es el visto bueno del PROFESIONAL. Los dos pueden estar en cualquier
+   * combinación: una cita puede estar aceptada por el dentista y sin
+   * respuesta del paciente, o al revés.
+   */
+  pacienteConfirmo?: boolean;
 }
 
 export interface Profesional {

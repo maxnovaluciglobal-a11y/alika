@@ -62,6 +62,7 @@ type AppointmentRow = {
   ends_at: string;
   status: string;
   is_priority: boolean;
+  patient_confirmed_at: string | null;
 };
 
 function fechaLocal(iso: string, timeZone: string): string {
@@ -101,11 +102,12 @@ function mapAppointmentRow(row: AppointmentRow, pacienteNombre: string, timeZone
     duracion,
     estado: row.status as EstadoCita,
     prioridad: row.is_priority || undefined,
+    pacienteConfirmo: row.patient_confirmed_at ? true : undefined,
   };
 }
 
 const APPOINTMENT_COLUMNS =
-  "id, patient_id, professional_id, branch_id, treatment_label, starts_at, ends_at, status, is_priority";
+  "id, patient_id, professional_id, branch_id, treatment_label, starts_at, ends_at, status, is_priority, patient_confirmed_at";
 
 /**
  * Tope de fila del listado. El filtro de fecha lo sigue aplicando la UI (así
@@ -513,6 +515,42 @@ export const setAppointmentStatus = createServerFn({ method: "POST" })
       .update({ status: data.estado })
       .eq("id", data.appointmentId);
     if (error) throw new Error("No tienes permisos para actualizar esta cita.");
+    return { ok: true };
+  });
+
+/**
+ * Anota (o desanota) que el PACIENTE avisó que viene.
+ *
+ * Es el camino manual del mismo eje que escribe el webhook de WhatsApp: el
+ * paciente llamó por teléfono, o lo dijo en el mostrador. Existe porque sin
+ * él la columna solo se llena con Meta conectado, y recepción ya tiene la
+ * información — lo que le faltaba era dónde anotarla.
+ *
+ * NO toca `status` ni `confirmed_at`: aceptar la cita sigue siendo del
+ * profesional. Cualquier rol de agenda puede anotar el aviso (lo permite la
+ * policy de UPDATE existente), justamente porque no es una confirmación.
+ */
+export const setPatientConfirmation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        appointmentId: z.string().uuid(),
+        confirmado: z.boolean(),
+        via: z.enum(["telefono", "presencial", "portal", "whatsapp"]).default("telefono"),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("appointments")
+      .update(
+        data.confirmado
+          ? { patient_confirmed_at: new Date().toISOString(), patient_confirmed_via: data.via }
+          : { patient_confirmed_at: null, patient_confirmed_via: null },
+      )
+      .eq("id", data.appointmentId);
+    if (error) throw new Error("No pudimos anotar el aviso del paciente.");
     return { ok: true };
   });
 

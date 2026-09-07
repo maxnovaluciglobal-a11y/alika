@@ -6,6 +6,7 @@ import { CalendarCheck, CircleCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { PatientConfirmedBadge } from "@/components/patient-confirmed-badge";
 import { requirePermission } from "@/lib/access/route-guards";
 import { etiquetaEstado, formatoFechaLarga, hoyISO } from "@/lib/clinic-operations/clinic-data";
 import {
@@ -177,17 +178,20 @@ function MiAgendaPage() {
                         <p className="truncate text-sm font-medium">{c.paciente}</p>
                         <p className="truncate text-xs text-muted-foreground">{c.tratamiento}</p>
                       </div>
-                      <span
-                        className={cn(
-                          "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium",
-                          c.estado === "confirmada" || c.estado === "finalizada"
-                            ? "bg-brand-soft text-brand"
-                            : c.estado === "ausente"
-                              ? "bg-destructive/10 text-destructive"
-                              : "bg-ai-soft text-ai",
-                        )}
-                      >
-                        {etiquetaEstado[c.estado]}
+                      <span className="flex shrink-0 items-center gap-1.5">
+                        {c.pacienteConfirmo && <PatientConfirmedBadge />}
+                        <span
+                          className={cn(
+                            "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium",
+                            c.estado === "confirmada" || c.estado === "finalizada"
+                              ? "bg-brand-soft text-brand"
+                              : c.estado === "ausente"
+                                ? "bg-destructive/10 text-destructive"
+                                : "bg-ai-soft text-ai",
+                          )}
+                        >
+                          {etiquetaEstado[c.estado]}
+                        </span>
                       </span>
                     </Link>
                   ))}

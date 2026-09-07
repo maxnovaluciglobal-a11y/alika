@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { PatientConfirmedToggle } from "@/components/patient-confirmed-toggle";
 import { DateField, FilterBar, Paginacion, SearchField, SelectField } from "@/components/filters";
 import { AgendaGrid } from "@/components/agenda-grid";
 import { AgendaMonth, AgendaWeek } from "@/components/agenda-views";
@@ -1351,6 +1352,11 @@ function AgendaPage() {
                       </span>
                       {clinicId && hasPermission(access.role, "agenda:manage") ? (
                         <span className="flex items-center gap-1">
+                          <PatientConfirmedToggle
+                            clinicId={clinicId}
+                            appointmentId={c.id}
+                            confirmado={Boolean(c.pacienteConfirmo)}
+                          />
                           <CambiarEstadoMenu
                             clinicId={clinicId}
                             userId={access.userId}

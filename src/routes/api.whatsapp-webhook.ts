@@ -6,6 +6,7 @@ import { normalizeToWaMe } from "@/lib/messaging/messaging";
 import { isClinicOpenNow } from "@/lib/messaging/whatsapp";
 import { sendMetaTextMessage } from "@/lib/messaging/whatsapp.functions";
 import { notifyClinicStaff, ROLES_BANDEJA } from "@/lib/messaging/notifications.functions";
+import { esConfirmacionDePaciente } from "@/lib/messaging/patient-confirmation";
 import { captureException } from "@/lib/sentry";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -226,6 +227,13 @@ async function applyInboundMessage(
       .eq("id", patient.id);
   }
 
+  // Si el mensaje es un "ahí voy" limpio, se anota en el EJE DEL PACIENTE.
+  // Nunca en `status` ni en `confirmed_at`: eso es del profesional y por
+  // confundirlos hubo que remover esta función en `505eb7d`.
+  const citaConfirmada = esBaja
+    ? null
+    : await anotarConfirmacionDelPaciente(supabaseAdmin, clinicId, patient.id, bodyText);
+
   // Hasta acá el mensaje quedaba guardado y NADIE se enteraba: no había
   // pantalla que lo mostrara ni aviso que lo anunciara. El link apunta al
   // hilo ya abierto para que el aviso sea accionable de un click.
@@ -233,13 +241,82 @@ async function applyInboundMessage(
   await notifyClinicStaff(supabaseAdmin, {
     clinicId,
     roles: ROLES_BANDEJA,
-    kind: esBaja ? "patient_opt_out" : "inbound_message",
-    title: esBaja ? `${nombre} pidió la baja de WhatsApp` : `${nombre} te escribió`,
+    kind: esBaja
+      ? "patient_opt_out"
+      : citaConfirmada
+        ? "patient_confirmed_appointment"
+        : "inbound_message",
+    title: esBaja
+      ? `${nombre} pidió la baja de WhatsApp`
+      : citaConfirmada
+        ? `${nombre} avisó que viene`
+        : `${nombre} te escribió`,
     body: esBaja
       ? "Deja de recibir recordatorios automáticos. El mensaje quedó en su conversación."
-      : recorte(textoGuardado),
+      : citaConfirmada
+        ? `Cita del ${citaConfirmada}. Sigue haciendo falta que el profesional la acepte para que quede confirmada.`
+        : recorte(textoGuardado),
     link: `/conversaciones?paciente=${patient.id}`,
     patientRef: patient.id,
+  });
+}
+
+/** Ventana en la que un "sí" suelto se puede atribuir a una cita concreta. */
+const DIAS_ATRIBUIBLES = 30;
+
+/**
+ * Anota que el paciente avisó que viene a su próxima cita.
+ *
+ * Escribe SOLO `patient_confirmed_at`/`patient_confirmed_via`. `status`,
+ * `confirmed_at` y `confirmed_by` no se tocan: son el visto bueno del
+ * profesional y el paciente no tiene por qué poder moverlos. Ese es
+ * exactamente el error que llevó a remover la confirmación automática.
+ *
+ * Devuelve la fecha legible de la cita anotada, o null si no había ninguna a
+ * la que atribuir el mensaje (y entonces el aviso al equipo es el genérico).
+ */
+async function anotarConfirmacionDelPaciente(
+  supabaseAdmin: SupabaseAdminClient,
+  clinicId: string,
+  patientId: string,
+  bodyText: string,
+): Promise<string | null> {
+  if (!esConfirmacionDePaciente(bodyText)) return null;
+
+  const ahora = new Date();
+  const limite = new Date(ahora.getTime() + DIAS_ATRIBUIBLES * 24 * 60 * 60 * 1000);
+
+  const { data: cita } = await supabaseAdmin
+    .from("appointments")
+    .select("id, starts_at, patient_confirmed_at")
+    .eq("clinic_id", clinicId)
+    .eq("patient_id", patientId)
+    .gt("starts_at", ahora.toISOString())
+    .lt("starts_at", limite.toISOString())
+    .not("status", "in", "(cancelada,ausente,finalizada)")
+    .order("starts_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  // Sin cita próxima el "sí" no se puede atribuir a nada. No se inventa.
+  if (!cita) return null;
+  // Ya estaba anotado: no se pisa la marca original ni se re-avisa al equipo.
+  if (cita.patient_confirmed_at) return null;
+
+  const { error } = await supabaseAdmin
+    .from("appointments")
+    .update({ patient_confirmed_at: ahora.toISOString(), patient_confirmed_via: "whatsapp" })
+    .eq("id", cita.id);
+  if (error) {
+    console.error("[whatsapp-webhook] no se pudo anotar la confirmación:", error.message);
+    return null;
+  }
+
+  return new Date(cita.starts_at).toLocaleString("es-CL", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 

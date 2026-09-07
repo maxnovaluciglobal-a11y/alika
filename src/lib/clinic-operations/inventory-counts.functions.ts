@@ -151,7 +151,11 @@ export const listInventoryCounts = createServerFn({ method: "GET" })
         warehouseId: r.warehouse_id,
         theoreticalQuantity: r.theoretical_quantity,
         countedQuantity: r.counted_quantity,
-        difference: r.difference,
+        // `difference` es GENERATED ALWAYS AS (counted - theoretical) sobre dos
+        // columnas NOT NULL, así que en la práctica nunca es null — pero Postgres
+        // marca nullable a toda columna generada y los tipos lo reflejan. Se deriva
+        // con la misma fórmula en vez de asumir un 0, que diría "no hubo diferencia".
+        difference: r.difference ?? r.counted_quantity - r.theoretical_quantity,
         notes: r.notes,
         countedBy: r.counted_by,
         countedAt: r.counted_at,

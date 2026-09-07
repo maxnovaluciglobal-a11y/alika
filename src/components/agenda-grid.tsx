@@ -11,6 +11,7 @@ import {
   type Cita,
   type Profesional,
 } from "@/lib/clinic-operations/clinic-data";
+import { PatientConfirmedBadge } from "@/components/patient-confirmed-badge";
 import { cn } from "@/lib/utils";
 
 // El borde izquierdo identifica al profesional (color guardado en
@@ -135,8 +136,11 @@ export function AgendaGrid({
                     <span className="truncate">{c.paciente}</span>
                     <AllergyAlertIcon allergies={allergyAlerts?.[c.pacienteId]} />
                   </p>
-                  <span className="shrink-0 rounded bg-card/70 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-tight">
-                    {etiquetaEstado[c.estado]}
+                  <span className="flex shrink-0 items-center gap-1">
+                    {c.pacienteConfirmo && <PatientConfirmedBadge soloIcono />}
+                    <span className="rounded bg-card/70 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-tight">
+                      {etiquetaEstado[c.estado]}
+                    </span>
                   </span>
                 </div>
                 {c.duracion >= 45 && (
