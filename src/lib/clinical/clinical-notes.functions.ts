@@ -316,13 +316,15 @@ export const saveClinicalNote = createServerFn({ method: "POST" })
           if (versionError || !versionInsertada)
             throw new Error(mensajeDb(versionError, "No pudimos guardar tu versión en conflicto."));
 
-          await supabase.from("clinical_note_audit").insert({
-            note_id: noteId!,
-            clinic_id: data.clinicId,
-            patient_ref: data.patientRef,
-            action: "conflict",
-            detail: `v${nuevaVersion} sin conexión chocó con v${vigente} ya guardada`,
-            actor_id: userId,
+          // Un choque de la cola offline no deja rastro en el estado de la
+          // base: ningún trigger puede verlo. Va por la puerta angosta, que
+          // sólo acepta este vocabulario y estampa el actor ella misma.
+          await supabase.rpc("registrar_evento_de_nota", {
+            p_note_id: noteId!,
+            p_clinic_id: data.clinicId,
+            p_patient_ref: data.patientRef,
+            p_action: "conflict",
+            p_detail: `v${nuevaVersion} sin conexión chocó con v${vigente} ya guardada`,
           });
 
           return {
@@ -415,16 +417,9 @@ export const saveClinicalNote = createServerFn({ method: "POST" })
         mensajeDb(versionError, "Guardamos la nota, pero no pudimos registrar la versión."),
       );
 
-    const { error: auditError } = await supabase.from("clinical_note_audit").insert({
-      note_id: noteId!,
-      clinic_id: data.clinicId,
-      patient_ref: data.patientRef,
-      action: accion,
-      detail: `v${version}${data.aiAssisted ? " · con asistencia de IA" : ""}`,
-      actor_id: userId,
-    });
-    if (auditError) console.error("audit insert failed", auditError.message);
-
+    // La auditoría (create/edit) la escribe el trigger note_versions_auditar
+    // a partir de la versión recién insertada. Ver la migración
+    // 20260907200000: la app ya no puede escribir en clinical_note_audit.
     return { noteId: noteId!, version };
   });
 
@@ -462,14 +457,8 @@ export const restoreNoteVersion = createServerFn({ method: "POST" })
       if (reopenError)
         throw new Error(mensajeDb(reopenError, "No tienes permisos para reabrir esta nota."));
 
-      await supabase.from("clinical_note_audit").insert({
-        note_id: version.note_id,
-        clinic_id: version.clinic_id,
-        patient_ref: note.patient_ref ?? "",
-        action: "reopen",
-        detail: `Reabierta para revertir a v${version.version}`,
-        actor_id: userId,
-      });
+      // 'reopen' lo escribe el trigger notes_auditar_estado al ver el cambio
+      // de status, no la app.
     }
 
     const { error: updateError } = await supabase
@@ -506,18 +495,14 @@ export const restoreNoteVersion = createServerFn({ method: "POST" })
       ai_assisted: version.ai_assisted,
       ai_action: version.ai_action,
       author_id: userId,
+      // Que esto sea una reversión deja de ser texto libre en la auditoría y
+      // pasa a ser un dato de la versión. Así el trigger puede distinguirla
+      // de un guardado normal sin creerle nada a la app.
+      origin: "revert",
+      origin_version: version.version,
     });
     if (versionError)
       throw new Error(mensajeDb(versionError, "No pudimos registrar la versión revertida."));
-
-    await supabase.from("clinical_note_audit").insert({
-      note_id: version.note_id,
-      clinic_id: version.clinic_id,
-      patient_ref: note.patient_ref ?? "",
-      action: "revert",
-      detail: `Revirtió a v${version.version} como nuevo borrador v${nueva}`,
-      actor_id: userId,
-    });
 
     return {
       ok: true,
@@ -565,14 +550,7 @@ export const setNoteStatus = createServerFn({ method: "POST" })
     if (error)
       throw new Error(mensajeDb(error, "No tienes permisos para cambiar el estado de la nota."));
 
-    await supabase.from("clinical_note_audit").insert({
-      note_id: data.noteId,
-      clinic_id: note.clinic_id,
-      patient_ref: note.patient_ref,
-      action: data.status === "signed" ? "sign" : "reopen",
-      actor_id: userId,
-    });
-
+    // 'sign'/'reopen' los escribe el trigger notes_auditar_estado.
     return { ok: true };
   });
 
@@ -635,13 +613,14 @@ export const generateNoteText = createServerFn({ method: "POST" })
         : data.input,
     });
 
-    await supabase.from("clinical_note_audit").insert({
-      note_id: data.noteId ?? null,
-      clinic_id: data.clinicId,
-      patient_ref: data.patientRef,
-      action: `ai_${data.action}`,
-      detail: `${data.input.length} caracteres de entrada`,
-      actor_id: userId,
+    // Una llamada al modelo no cambia el estado de la base: va por la puerta
+    // angosta.
+    await supabase.rpc("registrar_evento_de_nota", {
+      p_note_id: data.noteId ?? undefined,
+      p_clinic_id: data.clinicId,
+      p_patient_ref: data.patientRef,
+      p_action: `ai_${data.action}`,
+      p_detail: `${data.input.length} caracteres de entrada`,
     });
 
     return { text };
@@ -794,13 +773,12 @@ export const extractNoteEntities = createServerFn({ method: "POST" })
       }));
     }
 
-    await supabase.from("clinical_note_audit").insert({
-      note_id: data.noteId,
-      clinic_id: data.clinicId,
-      patient_ref: data.patientRef,
-      action: "ai_structure",
-      detail: `${filas.length} campos extraídos`,
-      actor_id: userId,
+    await supabase.rpc("registrar_evento_de_nota", {
+      p_note_id: data.noteId,
+      p_clinic_id: data.clinicId,
+      p_patient_ref: data.patientRef,
+      p_action: "ai_structure",
+      p_detail: `${filas.length} campos extraídos`,
     });
 
     return { entities: insertadas };
@@ -823,15 +801,7 @@ export const confirmNoteEntity = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error || !entity) throw new Error("No tienes permisos para validar este campo.");
 
-    await supabase.from("clinical_note_audit").insert({
-      note_id: entity.note_id,
-      clinic_id: entity.clinic_id,
-      patient_ref: entity.patient_ref,
-      action: "entity_confirm",
-      detail: `${data.confirmed ? "Validó" : "Quitó validación de"} "${entity.term}"`,
-      actor_id: userId,
-    });
-
+    // 'entity_confirm' lo escribe el trigger note_entities_auditar_confirm.
     return { ok: true };
   });
 
@@ -855,15 +825,7 @@ export const deleteNoteEntity = createServerFn({ method: "POST" })
       .eq("id", data.entityId);
     if (error) throw new Error("No tienes permisos para eliminar este campo.");
 
-    await supabase.from("clinical_note_audit").insert({
-      note_id: entity.note_id,
-      clinic_id: entity.clinic_id,
-      patient_ref: entity.patient_ref,
-      action: "entity_delete",
-      detail: entity.term,
-      actor_id: userId,
-    });
-
+    // 'entity_delete' lo escribe el trigger note_entities_auditar_delete.
     return { ok: true };
   });
 
@@ -987,14 +949,8 @@ export const requestNoteReview = createServerFn({ method: "POST" })
       note_version: await versionActual(supabase, data.noteId),
     });
 
-    await supabase.from("clinical_note_audit").insert({
-      note_id: data.noteId,
-      clinic_id: note.clinic_id,
-      patient_ref: note.patient_ref,
-      action: "review_requested",
-      detail: data.comment?.trim() || null,
-      actor_id: userId,
-    });
+    // 'review_requested' lo escribe el trigger note_reviews_auditar a partir
+    // de la fila de revisión recién insertada.
 
     const solicitante = await nombreDe(supabase, userId);
     await createNotification(supabase, {
@@ -1115,14 +1071,7 @@ export const resolveNoteReview = createServerFn({ method: "POST" })
       note_version: await versionActual(supabase, data.noteId),
     });
 
-    await supabase.from("clinical_note_audit").insert({
-      note_id: data.noteId,
-      clinic_id: note.clinic_id,
-      patient_ref: note.patient_ref,
-      action: `review_${data.action}`,
-      detail: comentario,
-      actor_id: userId,
-    });
+    // 'review_*' lo escribe el trigger note_reviews_auditar.
 
     const actor = await nombreDe(supabase, userId);
     const destinatario = note.reviewer_id === userId ? note.review_requested_by : note.reviewer_id;

@@ -708,6 +708,8 @@ export type Database = {
           created_at: string;
           id: string;
           note_id: string;
+          origin: string;
+          origin_version: number | null;
           summary: string | null;
           title: string;
           version: number;
@@ -721,6 +723,8 @@ export type Database = {
           created_at?: string;
           id?: string;
           note_id: string;
+          origin?: string;
+          origin_version?: number | null;
           summary?: string | null;
           title: string;
           version: number;
@@ -734,6 +738,8 @@ export type Database = {
           created_at?: string;
           id?: string;
           note_id?: string;
+          origin?: string;
+          origin_version?: number | null;
           summary?: string | null;
           title?: string;
           version?: number;
@@ -3597,6 +3603,17 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      anotar_auditoria_de_nota: {
+        Args: {
+          p_action: string;
+          p_actor_id: string;
+          p_clinic_id: string;
+          p_detail: string;
+          p_note_id: string;
+          p_patient_ref: string;
+        };
+        Returns: undefined;
+      };
       can_confirm_appointment: {
         Args: { p_clinic_id: string; p_professional_id: string };
         Returns: boolean;
@@ -3651,6 +3668,16 @@ export type Database = {
       next_clinic_counter: {
         Args: { p_clinic_id: string; p_kind: string; p_year: number };
         Returns: number;
+      };
+      registrar_evento_de_nota: {
+        Args: {
+          p_action: string;
+          p_clinic_id: string;
+          p_detail?: string;
+          p_note_id?: string;
+          p_patient_ref?: string;
+        };
+        Returns: undefined;
       };
       reset_demo_clinic: { Args: never; Returns: undefined };
       set_patient_document_id: {

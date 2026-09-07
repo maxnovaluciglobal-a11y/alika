@@ -85,6 +85,14 @@ export const Route = createFileRoute("/api/daily-digest")({
           if (enviados > 0) avisadas += 1;
         }
 
+        // Deja rastro SIEMPRE, también cuando no avisa a nadie. Sin esto
+        // "corrió y no había nada" y "nunca corrió" se ven idénticos desde
+        // afuera, que es el mismo modo de falla que un backup incapaz de
+        // detectar su propia incompletitud.
+        console.log(
+          `[daily-digest] clinicas=${(clinicas ?? []).length} en_horario=${enHorario.length} avisadas=${avisadas}`,
+        );
+
         return new Response(JSON.stringify({ revisadas: enHorario.length, avisadas }), {
           status: 200,
           headers: { "content-type": "application/json" },
