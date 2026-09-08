@@ -32,13 +32,16 @@ export const Route = createFileRoute("/api/ev")({
 
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          await supabaseAdmin.from("marketing_events").insert({
+          const { error } = await supabaseAdmin.from("marketing_events").insert({
             name: parsed.data.name,
             props: parsed.data.props ?? null,
             session_hash: parsed.data.sessionHash ?? null,
           });
-        } catch {
-          // Silencio deliberado.
+          if (error) {
+            console.error("[ev] insert failed:", error.message);
+          }
+        } catch (err) {
+          console.error("[ev] insert threw:", (err as Error).message);
         }
         return new Response(null, { status: 204 });
       },
