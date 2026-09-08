@@ -49,11 +49,16 @@
 // (no `getItem`) porque necesitamos los bytes crudos del binario, no un
 // valor parseado.
 //
-// ⚠️ Esto es sólo inspección de build, NO un deploy real — ver el reporte de
-// esta ronda para el detalle completo. Mismo tipo de gotcha que la CSP con
-// nonce (ver "Gotchas vigentes" en el CLAUDE.md del repo): hace falta
-// confirmarlo bajando el PDF gateado en un preview deploy real de Vercel
-// ANTES de promover esto a producción.
+// ✅ Confirmado además contra un preview deploy real de Vercel (no sólo
+// inspección de build): formulario enviado de verdad en
+// alika-git-worktree-captacion-lead-magnets-*.vercel.app, token de descarga
+// real, `GET /api/recurso/fugas-clinica-dental?token=...` devolvió 200 +
+// `application/pdf` + 157.853 bytes (PDF válido de 5 páginas, magic
+// `%PDF-1.4` — mismo tamaño exacto que la versión local post-fix de
+// `print:hidden`), el mismo token una segunda vez dio 403 ("Token inválido o
+// ya usado"). Mecanismo `serverAssets`/`useStorage` de Nitro verificado
+// funcionando en el bundle serverless real de Vercel, no sólo en la
+// inspección estática del build.
 //
 // `useStorage` SÍ funciona en dev cuando Nitro corre como dev server propio
 // — no es este caso: vite.config.ts excluye el plugin de Nitro del dev
