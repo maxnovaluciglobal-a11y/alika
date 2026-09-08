@@ -5,7 +5,10 @@ import { CircleDollarSign, Receipt, TrendingUp } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { DateField, FilterBar } from "@/components/filters";
+import { TrialDesbloqueo } from "@/components/trial-desbloqueo";
 import { requirePermission } from "@/lib/access/route-guards";
+import { getMySubscription } from "@/lib/billing.functions";
+import { trialInformesBloqueados } from "@/lib/billing";
 import { hoyISO } from "@/lib/clinic-operations/clinic-data";
 import { formatMoney, PAYMENT_METHOD_LABELS, type PaymentMethod } from "@/lib/finance/finance";
 import {
@@ -60,10 +63,19 @@ function FinanzasPage() {
   const navigate = useNavigate({ from: Route.fullPath });
   const clinicId = access.clinic?.id;
 
+  const fetchSubscription = useServerFn(getMySubscription);
+  const { data: sub } = useQuery({
+    queryKey: ["my-subscription", clinicId],
+    queryFn: () => fetchSubscription({ data: { clinicId: clinicId! } }),
+    enabled: Boolean(clinicId),
+    staleTime: 60 * 1000,
+  });
+  const bloqueado = trialInformesBloqueados(sub ?? null);
+
   const fetchSummary = useServerFn(getFinanceSummary);
   const { data: resumen, isLoading } = useQuery({
     queryKey: ["finance-summary", clinicId, search.desde, search.hasta],
-    enabled: Boolean(clinicId),
+    enabled: Boolean(clinicId) && !bloqueado,
     queryFn: () =>
       fetchSummary({ data: { clinicId: clinicId!, desde: search.desde, hasta: search.hasta } }),
   });
@@ -71,7 +83,7 @@ function FinanzasPage() {
   const fetchConversion = useServerFn(getQuoteConversionReport);
   const { data: conversion } = useQuery({
     queryKey: ["quote-conversion", clinicId, search.desde, search.hasta],
-    enabled: Boolean(clinicId),
+    enabled: Boolean(clinicId) && !bloqueado,
     queryFn: () =>
       fetchConversion({ data: { clinicId: clinicId!, desde: search.desde, hasta: search.hasta } }),
   });
@@ -84,256 +96,260 @@ function FinanzasPage() {
 
   return (
     <AppShell title="Finanzas" access={access}>
-      <div className="space-y-6">
-        <FilterBar
-          activos={0}
-          onReset={() =>
-            set({
-              desde: primerDiaDelMes(access.clinic?.timezone),
-              hasta: hoyISO(access.clinic?.timezone),
-            })
-          }
-        >
-          <DateField label="Desde" value={search.desde} onChange={(desde) => set({ desde })} />
-          <DateField label="Hasta" value={search.hasta} onChange={(hasta) => set({ hasta })} />
-        </FilterBar>
+      {bloqueado ? (
+        <TrialDesbloqueo pantalla="Finanzas" />
+      ) : (
+        <div className="space-y-6">
+          <FilterBar
+            activos={0}
+            onReset={() =>
+              set({
+                desde: primerDiaDelMes(access.clinic?.timezone),
+                hasta: hoyISO(access.clinic?.timezone),
+              })
+            }
+          >
+            <DateField label="Desde" value={search.desde} onChange={(desde) => set({ desde })} />
+            <DateField label="Hasta" value={search.hasta} onChange={(hasta) => set({ hasta })} />
+          </FilterBar>
 
-        {isLoading && (
-          <p className="px-1 py-10 text-center text-sm text-muted-foreground">Cargando…</p>
-        )}
+          {isLoading && (
+            <p className="px-1 py-10 text-center text-sm text-muted-foreground">Cargando…</p>
+          )}
 
-        {!isLoading && resumen && (
-          <>
-            {/* Resultado primero: es la única pregunta que un dueño de clínica
+          {!isLoading && resumen && (
+            <>
+              {/* Resultado primero: es la única pregunta que un dueño de clínica
                 se hace al abrir esta pantalla. Lo cobrado y lo gastado quedan
                 como el desglose que lo explica. */}
-            <section className="grid gap-4 sm:grid-cols-3">
-              <div className="card-clinical p-5">
-                <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  <CircleDollarSign className="size-3.5" /> Cobrado
-                </p>
-                <p className="font-display text-2xl font-semibold tabular-nums">
-                  {formatMoney(resumen.totalCents, currency)}
-                </p>
-                {resumen.retentionCents !== null && resumen.retentionCents > 0 && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Entra {formatMoney(resumen.netCents ?? 0, currency)} · retienen{" "}
-                    {formatMoney(resumen.retentionCents, currency)}
+              <section className="grid gap-4 sm:grid-cols-3">
+                <div className="card-clinical p-5">
+                  <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <CircleDollarSign className="size-3.5" /> Cobrado
                   </p>
-                )}
-              </div>
-              <div className="card-clinical p-5">
-                <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  <Receipt className="size-3.5" /> Gastos
-                </p>
-                <p className="font-display text-2xl font-semibold tabular-nums">
-                  {formatMoney(resumen.expensesCents, currency)}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {resumen.expensesCount === 0
-                    ? "Sin gastos cargados"
-                    : `${resumen.expensesCount} ${resumen.expensesCount === 1 ? "gasto" : "gastos"}`}
-                </p>
-              </div>
-              <div className="card-clinical p-5">
-                <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  <TrendingUp className="size-3.5" /> Resultado
-                </p>
-                <p
-                  className={cn(
-                    "font-display text-2xl font-semibold tabular-nums",
-                    resumen.resultCents < 0 && "text-destructive",
+                  <p className="font-display text-2xl font-semibold tabular-nums">
+                    {formatMoney(resumen.totalCents, currency)}
+                  </p>
+                  {resumen.retentionCents !== null && resumen.retentionCents > 0 && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Entra {formatMoney(resumen.netCents ?? 0, currency)} · retienen{" "}
+                      {formatMoney(resumen.retentionCents, currency)}
+                    </p>
                   )}
-                >
-                  {formatMoney(resumen.resultCents, currency)}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {resumen.retentionCents === null
-                    ? "Sobre lo facturado — sin retenciones cargadas"
-                    : "Neto de retenciones, menos gastos"}
-                </p>
-              </div>
-            </section>
-
-            <section className="grid gap-4 sm:grid-cols-2">
-              <div className="card-clinical p-5">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Pagos registrados
-                </p>
-                <p className="font-display text-xl font-semibold tabular-nums">
-                  {resumen.paymentsCount}
-                </p>
-              </div>
-              <div className="card-clinical p-5">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Ticket promedio
-                </p>
-                <p className="font-display text-xl font-semibold tabular-nums">
-                  {formatMoney(resumen.averageTicketCents, currency)}
-                </p>
-              </div>
-            </section>
-
-            {resumen.byExpenseCategory.length > 0 && (
-              <section className="card-clinical p-5">
-                <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Gastos por categoría
-                </p>
-                <div className="space-y-2">
-                  {resumen.byExpenseCategory.map((c) => (
-                    <div key={c.category} className="flex items-center gap-3 text-sm">
-                      <span className="w-40 shrink-0 truncate">{c.category}</span>
-                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
-                        <div
-                          className="h-full rounded-full bg-warning"
-                          style={{
-                            width: `${resumen.expensesCents ? (c.totalCents / resumen.expensesCents) * 100 : 0}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="w-28 shrink-0 text-right font-mono text-xs tabular-nums">
-                        {formatMoney(c.totalCents, currency)}
-                      </span>
-                    </div>
-                  ))}
+                </div>
+                <div className="card-clinical p-5">
+                  <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <Receipt className="size-3.5" /> Gastos
+                  </p>
+                  <p className="font-display text-2xl font-semibold tabular-nums">
+                    {formatMoney(resumen.expensesCents, currency)}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {resumen.expensesCount === 0
+                      ? "Sin gastos cargados"
+                      : `${resumen.expensesCount} ${resumen.expensesCount === 1 ? "gasto" : "gastos"}`}
+                  </p>
+                </div>
+                <div className="card-clinical p-5">
+                  <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TrendingUp className="size-3.5" /> Resultado
+                  </p>
+                  <p
+                    className={cn(
+                      "font-display text-2xl font-semibold tabular-nums",
+                      resumen.resultCents < 0 && "text-destructive",
+                    )}
+                  >
+                    {formatMoney(resumen.resultCents, currency)}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {resumen.retentionCents === null
+                      ? "Sobre lo facturado — sin retenciones cargadas"
+                      : "Neto de retenciones, menos gastos"}
+                  </p>
                 </div>
               </section>
-            )}
 
-            {conversion && conversion.created > 0 && (
-              <section className="card-clinical p-5">
-                <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Conversión de presupuestos
-                </p>
-                <div className="grid gap-4 sm:grid-cols-4">
-                  <div>
-                    <p className="font-display text-2xl font-semibold">
-                      {conversion.conversionRate === null ? "—" : `${conversion.conversionRate}%`}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Tasa de conversión</p>
-                  </div>
-                  <div>
-                    <p className="font-display text-2xl font-semibold text-success">
-                      {conversion.accepted}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Aceptados</p>
-                  </div>
-                  <div>
-                    <p className="font-display text-2xl font-semibold text-destructive">
-                      {conversion.rejected}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Rechazados</p>
-                  </div>
-                  <div>
-                    <p className="font-display text-2xl font-semibold text-muted-foreground">
-                      {conversion.pending}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Pendientes</p>
-                  </div>
+              <section className="grid gap-4 sm:grid-cols-2">
+                <div className="card-clinical p-5">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Pagos registrados
+                  </p>
+                  <p className="font-display text-xl font-semibold tabular-nums">
+                    {resumen.paymentsCount}
+                  </p>
                 </div>
-                <p className="mt-4 border-t border-hairline pt-3 text-xs text-muted-foreground">
-                  {conversion.created} presupuesto{conversion.created === 1 ? "" : "s"} creado
-                  {conversion.created === 1 ? "" : "s"} por{" "}
-                  {formatMoney(conversion.createdTotalCents, currency)} · aceptado por{" "}
-                  <span className="font-medium text-foreground">
-                    {formatMoney(conversion.acceptedTotalCents, currency)}
-                  </span>
-                </p>
+                <div className="card-clinical p-5">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Ticket promedio
+                  </p>
+                  <p className="font-display text-xl font-semibold tabular-nums">
+                    {formatMoney(resumen.averageTicketCents, currency)}
+                  </p>
+                </div>
               </section>
-            )}
 
-            <section className="card-clinical overflow-hidden">
-              <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Caja por día
-              </div>
-              {resumen.byDay.length === 0 ? (
-                <p className="px-5 py-8 text-center text-sm text-muted-foreground">
-                  Sin pagos registrados en este rango.
-                </p>
-              ) : (
-                <div className="space-y-2.5 p-5">
-                  {resumen.byDay.map((d) => (
-                    <div key={d.date} className="flex items-center gap-3">
-                      <span className="w-24 shrink-0 font-mono text-xs text-muted-foreground">
-                        {d.date}
-                      </span>
-                      <div className="h-5 flex-1 overflow-hidden rounded bg-secondary/60">
-                        <div
-                          className="h-full rounded bg-chart-1"
-                          style={{ width: `${Math.max(4, (d.totalCents / maxDia) * 100)}%` }}
-                        />
+              {resumen.byExpenseCategory.length > 0 && (
+                <section className="card-clinical p-5">
+                  <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Gastos por categoría
+                  </p>
+                  <div className="space-y-2">
+                    {resumen.byExpenseCategory.map((c) => (
+                      <div key={c.category} className="flex items-center gap-3 text-sm">
+                        <span className="w-40 shrink-0 truncate">{c.category}</span>
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
+                          <div
+                            className="h-full rounded-full bg-warning"
+                            style={{
+                              width: `${resumen.expensesCents ? (c.totalCents / resumen.expensesCents) * 100 : 0}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="w-28 shrink-0 text-right font-mono text-xs tabular-nums">
+                          {formatMoney(c.totalCents, currency)}
+                        </span>
                       </div>
-                      <span className="w-28 shrink-0 text-right text-xs font-medium tabular-nums">
-                        {formatMoney(d.totalCents, currency)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </section>
               )}
-            </section>
 
-            <section className="grid gap-6 lg:grid-cols-2">
-              <div className="card-clinical overflow-hidden">
-                <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Por método de pago
-                </div>
-                <div className="divide-y divide-hairline">
-                  {resumen.byMethod.length === 0 && (
-                    <p className="px-5 py-8 text-center text-sm text-muted-foreground">
-                      Sin datos en este rango.
-                    </p>
-                  )}
-                  {resumen.byMethod.map((m) => (
-                    <div key={m.method} className="flex items-center justify-between px-5 py-3">
-                      <div>
-                        <p className="text-sm font-medium">
-                          {PAYMENT_METHOD_LABELS[m.method as PaymentMethod] ?? m.method}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {m.count} pago{m.count === 1 ? "" : "s"}
-                        </p>
-                      </div>
-                      <span className="text-sm font-medium tabular-nums">
-                        {formatMoney(m.totalCents, currency)}
-                      </span>
+              {conversion && conversion.created > 0 && (
+                <section className="card-clinical p-5">
+                  <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Conversión de presupuestos
+                  </p>
+                  <div className="grid gap-4 sm:grid-cols-4">
+                    <div>
+                      <p className="font-display text-2xl font-semibold">
+                        {conversion.conversionRate === null ? "—" : `${conversion.conversionRate}%`}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Tasa de conversión</p>
                     </div>
-                  ))}
-                </div>
-              </div>
+                    <div>
+                      <p className="font-display text-2xl font-semibold text-success">
+                        {conversion.accepted}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Aceptados</p>
+                    </div>
+                    <div>
+                      <p className="font-display text-2xl font-semibold text-destructive">
+                        {conversion.rejected}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Rechazados</p>
+                    </div>
+                    <div>
+                      <p className="font-display text-2xl font-semibold text-muted-foreground">
+                        {conversion.pending}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Pendientes</p>
+                    </div>
+                  </div>
+                  <p className="mt-4 border-t border-hairline pt-3 text-xs text-muted-foreground">
+                    {conversion.created} presupuesto{conversion.created === 1 ? "" : "s"} creado
+                    {conversion.created === 1 ? "" : "s"} por{" "}
+                    {formatMoney(conversion.createdTotalCents, currency)} · aceptado por{" "}
+                    <span className="font-medium text-foreground">
+                      {formatMoney(conversion.acceptedTotalCents, currency)}
+                    </span>
+                  </p>
+                </section>
+              )}
 
-              <div className="card-clinical overflow-hidden">
+              <section className="card-clinical overflow-hidden">
                 <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Producción por profesional
+                  Caja por día
                 </div>
-                <div className="divide-y divide-hairline">
-                  {resumen.byProfessional.length === 0 && (
-                    <p className="px-5 py-8 text-center text-sm text-muted-foreground">
-                      Sin ítems completados en este rango.
-                    </p>
-                  )}
-                  {resumen.byProfessional.map((p) => (
-                    <div
-                      key={p.professionalId}
-                      className="flex items-center justify-between px-5 py-3"
-                    >
-                      <div>
-                        <p className="text-sm font-medium">{p.professionalName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {p.itemsCount} ítem{p.itemsCount === 1 ? "" : "s"} completado
-                          {p.itemsCount === 1 ? "" : "s"}
-                        </p>
+                {resumen.byDay.length === 0 ? (
+                  <p className="px-5 py-8 text-center text-sm text-muted-foreground">
+                    Sin pagos registrados en este rango.
+                  </p>
+                ) : (
+                  <div className="space-y-2.5 p-5">
+                    {resumen.byDay.map((d) => (
+                      <div key={d.date} className="flex items-center gap-3">
+                        <span className="w-24 shrink-0 font-mono text-xs text-muted-foreground">
+                          {d.date}
+                        </span>
+                        <div className="h-5 flex-1 overflow-hidden rounded bg-secondary/60">
+                          <div
+                            className="h-full rounded bg-chart-1"
+                            style={{ width: `${Math.max(4, (d.totalCents / maxDia) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="w-28 shrink-0 text-right text-xs font-medium tabular-nums">
+                          {formatMoney(d.totalCents, currency)}
+                        </span>
                       </div>
-                      <span className="text-sm font-medium tabular-nums">
-                        {formatMoney(p.totalCents, currency)}
-                      </span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section className="grid gap-6 lg:grid-cols-2">
+                <div className="card-clinical overflow-hidden">
+                  <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Por método de pago
+                  </div>
+                  <div className="divide-y divide-hairline">
+                    {resumen.byMethod.length === 0 && (
+                      <p className="px-5 py-8 text-center text-sm text-muted-foreground">
+                        Sin datos en este rango.
+                      </p>
+                    )}
+                    {resumen.byMethod.map((m) => (
+                      <div key={m.method} className="flex items-center justify-between px-5 py-3">
+                        <div>
+                          <p className="text-sm font-medium">
+                            {PAYMENT_METHOD_LABELS[m.method as PaymentMethod] ?? m.method}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {m.count} pago{m.count === 1 ? "" : "s"}
+                          </p>
+                        </div>
+                        <span className="text-sm font-medium tabular-nums">
+                          {formatMoney(m.totalCents, currency)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </section>
-          </>
-        )}
-      </div>
+
+                <div className="card-clinical overflow-hidden">
+                  <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Producción por profesional
+                  </div>
+                  <div className="divide-y divide-hairline">
+                    {resumen.byProfessional.length === 0 && (
+                      <p className="px-5 py-8 text-center text-sm text-muted-foreground">
+                        Sin ítems completados en este rango.
+                      </p>
+                    )}
+                    {resumen.byProfessional.map((p) => (
+                      <div
+                        key={p.professionalId}
+                        className="flex items-center justify-between px-5 py-3"
+                      >
+                        <div>
+                          <p className="text-sm font-medium">{p.professionalName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {p.itemsCount} ítem{p.itemsCount === 1 ? "" : "s"} completado
+                            {p.itemsCount === 1 ? "" : "s"}
+                          </p>
+                        </div>
+                        <span className="text-sm font-medium tabular-nums">
+                          {formatMoney(p.totalCents, currency)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            </>
+          )}
+        </div>
+      )}
     </AppShell>
   );
 }

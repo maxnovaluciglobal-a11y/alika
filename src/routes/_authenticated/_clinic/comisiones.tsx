@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { DateField, FilterBar } from "@/components/filters";
+import { TrialDesbloqueo } from "@/components/trial-desbloqueo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +30,8 @@ import {
 } from "@/components/ui/table";
 import { requireAnyPermission } from "@/lib/access/route-guards";
 import { hasPermission } from "@/lib/access/access";
+import { getMySubscription } from "@/lib/billing.functions";
+import { trialInformesBloqueados } from "@/lib/billing";
 import { hoyISO } from "@/lib/clinic-operations/clinic-data";
 import { formatMoney } from "@/lib/finance/finance";
 import {
@@ -92,6 +95,15 @@ function ComisionesPage() {
 
   const [confirmarCierre, setConfirmarCierre] = useState(false);
 
+  const fetchSubscription = useServerFn(getMySubscription);
+  const { data: sub } = useQuery({
+    queryKey: ["my-subscription", clinicId],
+    queryFn: () => fetchSubscription({ data: { clinicId: clinicId! } }),
+    enabled: Boolean(clinicId),
+    staleTime: 60 * 1000,
+  });
+  const bloqueado = trialInformesBloqueados(sub ?? null);
+
   const fetchReport = useServerFn(getCommissionReport);
   const closePeriod = useServerFn(closeCommissionPeriod);
   const markPaid = useServerFn(markCommissionSettlementPaid);
@@ -111,7 +123,7 @@ function ComisionesPage() {
 
   const { data: lineas, isLoading } = useQuery({
     queryKey,
-    enabled: Boolean(clinicId) && (veTodo || Boolean(soloMiProfessionalId)),
+    enabled: Boolean(clinicId) && !bloqueado && (veTodo || Boolean(soloMiProfessionalId)),
     queryFn: () =>
       fetchReport({
         data: {
@@ -156,161 +168,169 @@ function ComisionesPage() {
 
   return (
     <AppShell title="Comisiones" access={access}>
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="font-display text-xl font-semibold">
-              {veTodo ? "Liquidación de comisiones" : "Mi comisión"}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {veTodo
-                ? "Según los procedimientos completados en el período. La comisión se calcula con la regla vigente de cada profesional (se edita en Profesionales)."
-                : "Tu comisión según los procedimientos completados en el período, con la regla vigente configurada por la clínica."}
-            </p>
+      {bloqueado ? (
+        <TrialDesbloqueo pantalla="Comisiones" />
+      ) : (
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-display text-xl font-semibold">
+                {veTodo ? "Liquidación de comisiones" : "Mi comisión"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {veTodo
+                  ? "Según los procedimientos completados en el período. La comisión se calcula con la regla vigente de cada profesional (se edita en Profesionales)."
+                  : "Tu comisión según los procedimientos completados en el período, con la regla vigente configurada por la clínica."}
+              </p>
+            </div>
+
+            {veTodo && puedeGestionar && (
+              <Button
+                variant="outline"
+                onClick={() => setConfirmarCierre(true)}
+                disabled={!clinicId || isLoading || (lineas ?? []).length === 0}
+              >
+                <Lock className="size-3.5" />
+                Cerrar período
+              </Button>
+            )}
           </div>
 
-          {veTodo && puedeGestionar && (
-            <Button
-              variant="outline"
-              onClick={() => setConfirmarCierre(true)}
-              disabled={!clinicId || isLoading || (lineas ?? []).length === 0}
-            >
-              <Lock className="size-3.5" />
-              Cerrar período
-            </Button>
+          <FilterBar
+            activos={0}
+            onReset={() =>
+              set({
+                desde: primerDiaDelMes(access.clinic?.timezone),
+                hasta: hoyISO(access.clinic?.timezone),
+              })
+            }
+          >
+            <DateField label="Desde" value={search.desde} onChange={(desde) => set({ desde })} />
+            <DateField label="Hasta" value={search.hasta} onChange={(hasta) => set({ hasta })} />
+          </FilterBar>
+
+          {isLoading && (
+            <p className="px-1 py-10 text-center text-sm text-muted-foreground">Cargando…</p>
           )}
-        </div>
 
-        <FilterBar
-          activos={0}
-          onReset={() =>
-            set({
-              desde: primerDiaDelMes(access.clinic?.timezone),
-              hasta: hoyISO(access.clinic?.timezone),
-            })
-          }
-        >
-          <DateField label="Desde" value={search.desde} onChange={(desde) => set({ desde })} />
-          <DateField label="Hasta" value={search.hasta} onChange={(hasta) => set({ hasta })} />
-        </FilterBar>
+          {!isLoading && !veTodo && !soloMiProfessionalId && (
+            <p className="rounded-lg border border-warning/30 bg-warning/5 px-4 py-2.5 text-xs text-warning">
+              Todavía no hay una ficha de profesional vinculada a tu cuenta en esta clínica — no
+              podemos mostrarte tu comisión. Pedile a un administrador que revise tu perfil en
+              Profesionales.
+            </p>
+          )}
 
-        {isLoading && (
-          <p className="px-1 py-10 text-center text-sm text-muted-foreground">Cargando…</p>
-        )}
+          {!isLoading && lineas && (
+            <>
+              <section className="grid gap-4 sm:grid-cols-2">
+                <div className="card-clinical p-5">
+                  <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <Percent className="size-3.5" />{" "}
+                    {veTodo ? "Comisión total del período" : "Mi comisión del período"}
+                  </p>
+                  <p className="font-display text-2xl font-semibold">
+                    {formatMoney(totalComision, currency)}
+                  </p>
+                </div>
+                <div className="card-clinical p-5">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Producción {veTodo ? "total" : "mía"}
+                  </p>
+                  <p className="font-display text-2xl font-semibold">
+                    {formatMoney(totalProduccion, currency)}
+                  </p>
+                </div>
+              </section>
 
-        {!isLoading && !veTodo && !soloMiProfessionalId && (
-          <p className="rounded-lg border border-warning/30 bg-warning/5 px-4 py-2.5 text-xs text-warning">
-            Todavía no hay una ficha de profesional vinculada a tu cuenta en esta clínica — no
-            podemos mostrarte tu comisión. Pedile a un administrador que revise tu perfil en
-            Profesionales.
-          </p>
-        )}
-
-        {!isLoading && lineas && (
-          <>
-            <section className="grid gap-4 sm:grid-cols-2">
-              <div className="card-clinical p-5">
-                <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  <Percent className="size-3.5" />{" "}
-                  {veTodo ? "Comisión total del período" : "Mi comisión del período"}
+              {veTodo && sinRegla > 0 && (
+                <p className="rounded-lg border border-warning/30 bg-warning/5 px-4 py-2.5 text-xs text-warning">
+                  {sinRegla} profesional{sinRegla === 1 ? "" : "es"} sin regla de comisión
+                  configurada — no se les calcula nada. Configurá la regla en Profesionales.
                 </p>
-                <p className="font-display text-2xl font-semibold">
-                  {formatMoney(totalComision, currency)}
-                </p>
-              </div>
-              <div className="card-clinical p-5">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Producción {veTodo ? "total" : "mía"}
-                </p>
-                <p className="font-display text-2xl font-semibold">
-                  {formatMoney(totalProduccion, currency)}
-                </p>
-              </div>
-            </section>
+              )}
 
-            {veTodo && sinRegla > 0 && (
-              <p className="rounded-lg border border-warning/30 bg-warning/5 px-4 py-2.5 text-xs text-warning">
-                {sinRegla} profesional{sinRegla === 1 ? "" : "es"} sin regla de comisión configurada
-                — no se les calcula nada. Configurá la regla en Profesionales.
-              </p>
-            )}
-
-            <div className="card-clinical overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Profesional</TableHead>
-                    <TableHead>Regla</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Procedimientos</TableHead>
-                    <TableHead className="text-right">Producción</TableHead>
-                    <TableHead className="text-right">Comisión</TableHead>
-                    {veTodo && puedeGestionar && (
-                      <TableHead className="text-right">Acciones</TableHead>
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {lineas.map((l) => (
-                    <TableRow key={l.professionalId}>
-                      <TableCell className="font-medium">{l.professionalName}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{l.ruleLabel}</TableCell>
-                      <TableCell>
-                        {l.closed ? (
-                          <div className="flex flex-wrap gap-1.5">
-                            <Badge variant="secondary">Cerrado</Badge>
-                            {l.paidAt && <Badge variant="default">Pagado</Badge>}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Abierto</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">{l.procedureCount}</TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatMoney(l.productionCents, currency)}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold tabular-nums">
-                        {l.commissionCents === null
-                          ? "—"
-                          : formatMoney(l.commissionCents, currency)}
-                      </TableCell>
+              <div className="card-clinical overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Profesional</TableHead>
+                      <TableHead>Regla</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="text-right">Procedimientos</TableHead>
+                      <TableHead className="text-right">Producción</TableHead>
+                      <TableHead className="text-right">Comisión</TableHead>
                       {veTodo && puedeGestionar && (
-                        <TableCell className="text-right">
-                          {l.closed && !l.paidAt && l.settlementId && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={marcarPagado.isPending}
-                              onClick={() => marcarPagado.mutate(l.settlementId!)}
-                            >
-                              {marcarPagado.isPending && (
-                                <Loader2 className="size-3.5 animate-spin" />
-                              )}
-                              Marcar pagado
-                            </Button>
-                          )}
-                        </TableCell>
+                        <TableHead className="text-right">Acciones</TableHead>
                       )}
                     </TableRow>
-                  ))}
-                  {lineas.length === 0 && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={veTodo && puedeGestionar ? 7 : 6}
-                        className="py-10 text-center text-sm text-muted-foreground"
-                      >
-                        {veTodo
-                          ? "No hay profesionales cargados."
-                          : "No hay producción registrada a tu nombre en este período."}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </>
-        )}
-      </div>
+                  </TableHeader>
+                  <TableBody>
+                    {lineas.map((l) => (
+                      <TableRow key={l.professionalId}>
+                        <TableCell className="font-medium">{l.professionalName}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {l.ruleLabel}
+                        </TableCell>
+                        <TableCell>
+                          {l.closed ? (
+                            <div className="flex flex-wrap gap-1.5">
+                              <Badge variant="secondary">Cerrado</Badge>
+                              {l.paidAt && <Badge variant="default">Pagado</Badge>}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Abierto</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {l.procedureCount}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {formatMoney(l.productionCents, currency)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold tabular-nums">
+                          {l.commissionCents === null
+                            ? "—"
+                            : formatMoney(l.commissionCents, currency)}
+                        </TableCell>
+                        {veTodo && puedeGestionar && (
+                          <TableCell className="text-right">
+                            {l.closed && !l.paidAt && l.settlementId && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={marcarPagado.isPending}
+                                onClick={() => marcarPagado.mutate(l.settlementId!)}
+                              >
+                                {marcarPagado.isPending && (
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                )}
+                                Marcar pagado
+                              </Button>
+                            )}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                    {lineas.length === 0 && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={veTodo && puedeGestionar ? 7 : 6}
+                          className="py-10 text-center text-sm text-muted-foreground"
+                        >
+                          {veTodo
+                            ? "No hay profesionales cargados."
+                            : "No hay producción registrada a tu nombre en este período."}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       <AlertDialog open={confirmarCierre} onOpenChange={setConfirmarCierre}>
         <AlertDialogContent>

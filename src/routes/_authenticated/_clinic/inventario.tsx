@@ -14,6 +14,7 @@ import {
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { TrialDesbloqueo } from "@/components/trial-desbloqueo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +36,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { hasPermission } from "@/lib/access/access";
+import { getMySubscription } from "@/lib/billing.functions";
+import { trialInformesBloqueados } from "@/lib/billing";
 import { listBranches } from "@/lib/clinic-operations/clinic-catalog.functions";
 import {
   listStockByWarehouse,
@@ -898,6 +901,14 @@ function InventarioPage() {
   const puedeGestionar = hasPermission(access.role, "inventory:manage");
   const puedeRegistrarMovimiento = access.role != null && MOVEMENT_ROLES.has(access.role);
 
+  const fetchSubscription = useServerFn(getMySubscription);
+  const { data: sub } = useQuery({
+    queryKey: ["my-subscription", clinicId],
+    queryFn: () => fetchSubscription({ data: { clinicId } }),
+    staleTime: 60 * 1000,
+  });
+  const bloqueado = trialInformesBloqueados(sub ?? null);
+
   // product-2 (auditoría 360): filtro por sucursal. Solo tiene sentido
   // cuando la clínica tiene más de una sucursal ACTIVA — con 0-1 sucursales
   // (el caso común hoy) no se muestra ni el selector ni la columna, para no
@@ -906,6 +917,7 @@ function InventarioPage() {
   const branchesQuery = useQuery({
     queryKey: ["branches", clinicId],
     queryFn: () => fetchBranches({ data: { clinicId } }),
+    enabled: !bloqueado,
   });
   const sucursales = branchesQuery.data ?? [];
   const multiSucursal = sucursales.length > 1;
@@ -919,6 +931,7 @@ function InventarioPage() {
   const warehousesQuery = useQuery({
     queryKey: ["warehouses", clinicId],
     queryFn: () => fetchWarehouses({ data: { clinicId } }),
+    enabled: !bloqueado,
   });
   const bodegas = warehousesQuery.data ?? [];
   const multiBodega = bodegas.length > 1;
@@ -927,7 +940,7 @@ function InventarioPage() {
   const fetchStock = useServerFn(listStockByWarehouse);
   const stockQuery = useQuery({
     queryKey: ["inventory-stock", clinicId, warehouseFilter],
-    enabled: multiBodega && Boolean(warehouseFilter),
+    enabled: multiBodega && Boolean(warehouseFilter) && !bloqueado,
     queryFn: () => fetchStock({ data: { clinicId, warehouseId: warehouseFilter || null } }),
   });
   /** Saldo de la bodega elegida; vacío = se muestra el total del ítem. */
@@ -936,6 +949,7 @@ function InventarioPage() {
   const fetchItems = useServerFn(listInventoryItems);
   const itemsQuery = useQuery({
     queryKey: ["inventory-items", clinicId, multiSucursal ? branchFilter : ""],
+    enabled: !bloqueado,
     queryFn: () =>
       fetchItems({
         data: { clinicId, branchId: multiSucursal && branchFilter ? branchFilter : undefined },
@@ -946,6 +960,7 @@ function InventarioPage() {
   const expiringQuery = useQuery({
     queryKey: ["inventory-expiring", clinicId],
     queryFn: () => fetchExpiring({ data: { clinicId, withinDays: 60 } }),
+    enabled: !bloqueado,
   });
 
   const items = itemsQuery.data?.items ?? [];
@@ -957,234 +972,242 @@ function InventarioPage() {
 
   return (
     <AppShell title="Inventario" access={access}>
-      <div className="space-y-8">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="font-display text-xl font-semibold">
-              Insumos y materiales de {access.clinic!.name}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {lowStockCount > 0
-                ? `${lowStockCount} ítem${lowStockCount === 1 ? "" : "s"} bajo el stock mínimo.`
-                : "Todo el stock está sobre el mínimo configurado."}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {multiSucursal && (
-              <label className="block">
-                <span className="sr-only">Sucursal</span>
-                <select
-                  value={branchFilter}
-                  onChange={(e) => setBranchFilter(e.target.value)}
-                  aria-label="Filtrar por sucursal"
-                  className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                >
-                  <option value="">Todas las sucursales</option>
-                  {sucursales.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nombre}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            {multiBodega && (
-              <label className="block">
-                <span className="sr-only">Bodega</span>
-                <select
-                  value={warehouseFilter}
-                  onChange={(e) => setWarehouseFilter(e.target.value)}
-                  aria-label="Ver el stock de una bodega"
-                  className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                >
-                  <option value="">Stock total</option>
-                  {bodegas.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            {puedeGestionar && (
-              <CrearItemDialog clinicId={clinicId} currency={currency} sucursales={sucursales} />
-            )}
-          </div>
-        </div>
-
-        {expiringLots.length > 0 && (
-          <section className="rounded-2xl border border-warning/30 bg-warning/5 p-5">
-            <h3 className="flex items-center gap-2 font-display text-sm font-semibold text-warning">
-              <AlertTriangle className="size-4" /> Lotes próximos a vencer (60 días)
-            </h3>
-            <ul className="mt-3 space-y-1.5 text-sm">
-              {expiringLots.map((lot) => {
-                const vencido = lot.expirationDate < hoyISO;
-                return (
-                  <li
-                    key={lot.movementId}
-                    className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline/60 pt-1.5 first:border-t-0 first:pt-0"
+      {bloqueado ? (
+        <TrialDesbloqueo pantalla="Inventario" />
+      ) : (
+        <div className="space-y-8">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-display text-xl font-semibold">
+                Insumos y materiales de {access.clinic!.name}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {lowStockCount > 0
+                  ? `${lowStockCount} ítem${lowStockCount === 1 ? "" : "s"} bajo el stock mínimo.`
+                  : "Todo el stock está sobre el mínimo configurado."}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {multiSucursal && (
+                <label className="block">
+                  <span className="sr-only">Sucursal</span>
+                  <select
+                    value={branchFilter}
+                    onChange={(e) => setBranchFilter(e.target.value)}
+                    aria-label="Filtrar por sucursal"
+                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
-                    <span>
-                      <span className="font-medium">{lot.itemName}</span>
-                      {lot.lotNumber && (
-                        <span className="text-muted-foreground"> · lote {lot.lotNumber}</span>
-                      )}
-                      <span className="text-muted-foreground">
-                        {" "}
-                        · {lot.quantity} {lot.unit}
-                      </span>
-                    </span>
-                    <Badge variant={vencido ? "destructive" : "secondary"}>
-                      {vencido ? "Vencido" : "Vence"}{" "}
-                      {new Date(lot.expirationDate + "T00:00:00").toLocaleDateString("es-CL")}
-                    </Badge>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        )}
+                    <option value="">Todas las sucursales</option>
+                    {sucursales.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              {multiBodega && (
+                <label className="block">
+                  <span className="sr-only">Bodega</span>
+                  <select
+                    value={warehouseFilter}
+                    onChange={(e) => setWarehouseFilter(e.target.value)}
+                    aria-label="Ver el stock de una bodega"
+                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    <option value="">Stock total</option>
+                    {bodegas.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              {puedeGestionar && (
+                <CrearItemDialog clinicId={clinicId} currency={currency} sucursales={sucursales} />
+              )}
+            </div>
+          </div>
 
-        <section className="card-clinical divide-y divide-hairline">
-          {itemsQuery.isLoading && (
-            <p className="flex items-center gap-2 px-5 py-6 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> Cargando inventario…
-            </p>
-          )}
-          {itemsQuery.isError && (
-            <p className="px-5 py-6 text-sm text-muted-foreground">
-              No pudimos cargar el inventario.
-            </p>
-          )}
-          {itemsQuery.data && activeItems.length === 0 && (
-            <p className="flex items-center gap-2 px-5 py-6 text-sm text-muted-foreground">
-              <Package className="size-4" /> Todavía no hay ítems de inventario cargados.
-            </p>
-          )}
-          {activeItems.length > 0 && (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ítem</TableHead>
-                  <TableHead>Stock actual</TableHead>
-                  <TableHead>Mínimo</TableHead>
-                  <TableHead>Costo unitario</TableHead>
-                  {multiSucursal && <TableHead>Sucursal</TableHead>}
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {activeItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">
-                      {item.name}
-                      {item.notes && (
-                        <p className="mt-0.5 text-xs font-normal text-muted-foreground">
-                          {item.notes}
-                        </p>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span>
-                          {warehouseFilter ? (stockPorBodega[item.id] ?? 0) : item.currentStock}{" "}
-                          {item.unit}
+          {expiringLots.length > 0 && (
+            <section className="rounded-2xl border border-warning/30 bg-warning/5 p-5">
+              <h3 className="flex items-center gap-2 font-display text-sm font-semibold text-warning">
+                <AlertTriangle className="size-4" /> Lotes próximos a vencer (60 días)
+              </h3>
+              <ul className="mt-3 space-y-1.5 text-sm">
+                {expiringLots.map((lot) => {
+                  const vencido = lot.expirationDate < hoyISO;
+                  return (
+                    <li
+                      key={lot.movementId}
+                      className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline/60 pt-1.5 first:border-t-0 first:pt-0"
+                    >
+                      <span>
+                        <span className="font-medium">{lot.itemName}</span>
+                        {lot.lotNumber && (
+                          <span className="text-muted-foreground"> · lote {lot.lotNumber}</span>
+                        )}
+                        <span className="text-muted-foreground">
+                          {" "}
+                          · {lot.quantity} {lot.unit}
                         </span>
-                        {item.belowMinStock && (
-                          <Badge variant="destructive" className="gap-1">
-                            <AlertTriangle className="size-3" /> Bajo mínimo
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {item.minStock == null
-                        ? "Sin alerta configurada"
-                        : `${item.minStock} ${item.unit}`}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {item.costCents == null
-                        ? "Sin costo cargado"
-                        : formatMoney(item.costCents, currency)}
-                    </TableCell>
-                    {multiSucursal && (
-                      <TableCell className="text-muted-foreground">
-                        {item.branchId == null
-                          ? "Sin asignar"
-                          : (branchNameById.get(item.branchId) ?? "Sin asignar")}
-                      </TableCell>
-                    )}
-                    <TableCell>
-                      <div className="flex flex-wrap justify-end gap-2">
-                        <HistorialMovimientosDialog clinicId={clinicId} item={item} />
-                        {puedeRegistrarMovimiento && (
-                          <>
-                            <RegistrarMovimientoDialog
-                              clinicId={clinicId}
-                              item={item}
-                              bodegas={bodegas}
-                            />
-                            <ConteoFisicoDialog clinicId={clinicId} item={item} bodegas={bodegas} />
-                          </>
-                        )}
-                        {puedeGestionar && (
-                          <EditarItemDialog
-                            clinicId={clinicId}
-                            item={item}
-                            currency={currency}
-                            sucursales={sucursales}
-                          />
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      </span>
+                      <Badge variant={vencido ? "destructive" : "secondary"}>
+                        {vencido ? "Vencido" : "Vence"}{" "}
+                        {new Date(lot.expirationDate + "T00:00:00").toLocaleDateString("es-CL")}
+                      </Badge>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
           )}
-        </section>
 
-        {puedeGestionar && inactiveItems.length > 0 && (
-          <section className="space-y-3">
-            <h3 className="font-display text-sm font-semibold text-muted-foreground">
-              Ítems dados de baja
-            </h3>
-            <div className="card-clinical divide-y divide-hairline">
+          <section className="card-clinical divide-y divide-hairline">
+            {itemsQuery.isLoading && (
+              <p className="flex items-center gap-2 px-5 py-6 text-sm text-muted-foreground">
+                <Loader2 className="size-4 animate-spin" /> Cargando inventario…
+              </p>
+            )}
+            {itemsQuery.isError && (
+              <p className="px-5 py-6 text-sm text-muted-foreground">
+                No pudimos cargar el inventario.
+              </p>
+            )}
+            {itemsQuery.data && activeItems.length === 0 && (
+              <p className="flex items-center gap-2 px-5 py-6 text-sm text-muted-foreground">
+                <Package className="size-4" /> Todavía no hay ítems de inventario cargados.
+              </p>
+            )}
+            {activeItems.length > 0 && (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Ítem</TableHead>
-                    <TableHead>Último stock</TableHead>
+                    <TableHead>Stock actual</TableHead>
+                    <TableHead>Mínimo</TableHead>
+                    <TableHead>Costo unitario</TableHead>
+                    {multiSucursal && <TableHead>Sucursal</TableHead>}
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {inactiveItems.map((item) => (
+                  {activeItems.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="text-muted-foreground">{item.name}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.currentStock} {item.unit}
+                      <TableCell className="font-medium">
+                        {item.name}
+                        {item.notes && (
+                          <p className="mt-0.5 text-xs font-normal text-muted-foreground">
+                            {item.notes}
+                          </p>
+                        )}
                       </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span>
+                            {warehouseFilter ? (stockPorBodega[item.id] ?? 0) : item.currentStock}{" "}
+                            {item.unit}
+                          </span>
+                          {item.belowMinStock && (
+                            <Badge variant="destructive" className="gap-1">
+                              <AlertTriangle className="size-3" /> Bajo mínimo
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {item.minStock == null
+                          ? "Sin alerta configurada"
+                          : `${item.minStock} ${item.unit}`}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {item.costCents == null
+                          ? "Sin costo cargado"
+                          : formatMoney(item.costCents, currency)}
+                      </TableCell>
+                      {multiSucursal && (
+                        <TableCell className="text-muted-foreground">
+                          {item.branchId == null
+                            ? "Sin asignar"
+                            : (branchNameById.get(item.branchId) ?? "Sin asignar")}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <div className="flex flex-wrap justify-end gap-2">
                           <HistorialMovimientosDialog clinicId={clinicId} item={item} />
-                          <EditarItemDialog
-                            clinicId={clinicId}
-                            item={item}
-                            currency={currency}
-                            sucursales={sucursales}
-                          />
+                          {puedeRegistrarMovimiento && (
+                            <>
+                              <RegistrarMovimientoDialog
+                                clinicId={clinicId}
+                                item={item}
+                                bodegas={bodegas}
+                              />
+                              <ConteoFisicoDialog
+                                clinicId={clinicId}
+                                item={item}
+                                bodegas={bodegas}
+                              />
+                            </>
+                          )}
+                          {puedeGestionar && (
+                            <EditarItemDialog
+                              clinicId={clinicId}
+                              item={item}
+                              currency={currency}
+                              sucursales={sucursales}
+                            />
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            )}
           </section>
-        )}
-      </div>
+
+          {puedeGestionar && inactiveItems.length > 0 && (
+            <section className="space-y-3">
+              <h3 className="font-display text-sm font-semibold text-muted-foreground">
+                Ítems dados de baja
+              </h3>
+              <div className="card-clinical divide-y divide-hairline">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ítem</TableHead>
+                      <TableHead>Último stock</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {inactiveItems.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="text-muted-foreground">{item.name}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {item.currentStock} {item.unit}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap justify-end gap-2">
+                            <HistorialMovimientosDialog clinicId={clinicId} item={item} />
+                            <EditarItemDialog
+                              clinicId={clinicId}
+                              item={item}
+                              currency={currency}
+                              sucursales={sucursales}
+                            />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </section>
+          )}
+        </div>
+      )}
     </AppShell>
   );
 }

@@ -4,10 +4,18 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { permissionsForRole, type ClinicRole } from "@/lib/access/access";
 import { mensajeDb } from "@/lib/db-errors";
+import { SUBSCRIPTION_STATUSES, trialInformesBloqueados, type Subscription } from "@/lib/billing";
 import type { Database } from "@/integrations/supabase/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const SIN_ASIGNAR = "sin_asignar";
+
+/** Mismo mensaje para el rechazo por rol y por trial vencido — regla de la
+ * casa: "Error 'No tienes permisos' genérico cuando error viene de policy,
+ * no filtrar el motivo". Si acá dijera algo distinto para cada caso, un
+ * cliente (o alguien mirando la Network tab) podría deducir el estado de
+ * facturación de la clínica a partir del texto del error. */
+const SIN_PERMISOS_FINANZAS = "No tienes permisos para ver los reportes financieros.";
 
 /**
  * security-review 01-sep: `treatment_items_select_members`/`payments_select_finance_roles`
@@ -32,7 +40,37 @@ export async function requireFinanceView(
   const canView = membership?.role
     ? permissionsForRole(membership.role as ClinicRole).includes("finance:view")
     : false;
-  if (!canView) throw new Error("No tienes permisos para ver los reportes financieros.");
+  if (!canView) throw new Error(SIN_PERMISOS_FINANZAS);
+
+  // Task 11: el trial vencido bloquea los INFORMES también en el servidor.
+  // Regla 15 de la casa — el JWT vive en localStorage — así que el gate de
+  // UI (TrialDesbloqueo) por sí solo no protege nada: cualquiera con el JWT
+  // en la mano puede llamar esta server function directo, saltándose la
+  // pantalla. Mismo mapeo que `mapSubscription` en billing.functions.ts
+  // (no está exportada, así que se repite acá en lugar de importarla).
+  const { data: subRow } = await supabase
+    .from("subscriptions")
+    .select(
+      "clinic_id, status, stripe_customer_id, stripe_subscription_id, stripe_price_id, trial_end, current_period_end, cancel_at_period_end",
+    )
+    .eq("clinic_id", clinicId)
+    .maybeSingle();
+  if (subRow) {
+    const status = (SUBSCRIPTION_STATUSES as readonly string[]).includes(subRow.status)
+      ? (subRow.status as Subscription["status"])
+      : "incomplete";
+    const sub: Subscription = {
+      clinicId: subRow.clinic_id,
+      status,
+      stripeCustomerId: subRow.stripe_customer_id,
+      stripeSubscriptionId: subRow.stripe_subscription_id,
+      stripePriceId: subRow.stripe_price_id,
+      trialEnd: subRow.trial_end,
+      currentPeriodEnd: subRow.current_period_end,
+      cancelAtPeriodEnd: subRow.cancel_at_period_end,
+    };
+    if (trialInformesBloqueados(sub)) throw new Error(SIN_PERMISOS_FINANZAS);
+  }
 }
 
 export interface FinanceSummary {

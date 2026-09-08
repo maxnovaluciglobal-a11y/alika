@@ -6,6 +6,7 @@ import { Loader2, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { TrialDesbloqueo } from "@/components/trial-desbloqueo";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,6 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { requirePermission } from "@/lib/access/route-guards";
+import { getMySubscription } from "@/lib/billing.functions";
+import { trialInformesBloqueados } from "@/lib/billing";
 import { formatMoney, netAfterRetention, type PaymentMethodConfig } from "@/lib/finance/finance";
 import {
   createPaymentMethod,
@@ -184,12 +187,21 @@ function MediosDePagoPage() {
   const currency = access.clinic?.currency ?? "CLP";
   const queryClient = useQueryClient();
 
+  const fetchSubscription = useServerFn(getMySubscription);
+  const { data: sub } = useQuery({
+    queryKey: ["my-subscription", clinicId],
+    queryFn: () => fetchSubscription({ data: { clinicId: clinicId! } }),
+    enabled: Boolean(clinicId),
+    staleTime: 60 * 1000,
+  });
+  const bloqueado = trialInformesBloqueados(sub ?? null);
+
   const fetchMethods = useServerFn(listPaymentMethods);
   const setActiveFn = useServerFn(setPaymentMethodActive);
 
   const { data: medios = [], isLoading } = useQuery({
     queryKey: ["payment-methods", clinicId, "todos"],
-    enabled: Boolean(clinicId),
+    enabled: Boolean(clinicId) && !bloqueado,
     queryFn: () => fetchMethods({ data: { clinicId: clinicId!, incluirInactivos: true } }),
   });
 
@@ -207,87 +219,91 @@ function MediosDePagoPage() {
 
   return (
     <AppShell title="Medios de pago" access={access}>
-      <div className="space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="max-w-xl text-sm text-muted-foreground">
-            {conRetencion === 0
-              ? "Ninguno tiene retención cargada, así que Finanzas muestra lo facturado. Cargá la comisión de tus tarjetas para ver lo que realmente entra al banco."
-              : `${conRetencion} de ${medios.length} tienen retención cargada.`}
-          </p>
-          <MedioDialog clinicId={clinicId!} currency={currency} />
-        </div>
+      {bloqueado ? (
+        <TrialDesbloqueo pantalla="Medios de pago" />
+      ) : (
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="max-w-xl text-sm text-muted-foreground">
+              {conRetencion === 0
+                ? "Ninguno tiene retención cargada, así que Finanzas muestra lo facturado. Cargá la comisión de tus tarjetas para ver lo que realmente entra al banco."
+                : `${conRetencion} de ${medios.length} tienen retención cargada.`}
+            </p>
+            <MedioDialog clinicId={clinicId!} currency={currency} />
+          </div>
 
-        {isLoading && <p className="text-sm text-muted-foreground">Cargando medios de pago…</p>}
+          {isLoading && <p className="text-sm text-muted-foreground">Cargando medios de pago…</p>}
 
-        {!isLoading && (
-          <section className="card-clinical overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[40rem] text-sm">
-                <thead>
-                  <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
-                    <th className="px-4 py-2 text-left font-medium">Medio de pago</th>
-                    <th className="px-3 py-2 text-right font-medium">Retención</th>
-                    <th className="px-3 py-2 text-right font-medium">
-                      Neto de {formatMoney(EJEMPLO_CENTS, currency)}
-                    </th>
-                    <th className="px-3 py-2 text-center font-medium">Devolución</th>
-                    <th className="px-3 py-2" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {medios.map((m) => (
-                    <tr
-                      key={m.id}
-                      className={cn(
-                        "border-b border-hairline last:border-0",
-                        !m.isActive && "opacity-50",
-                      )}
-                    >
-                      <td className="px-4 py-2">
-                        {m.name}
-                        {!m.isActive && (
-                          <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                            Deshabilitado
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono tabular-nums">
-                        {m.retentionPct > 0 ? `${m.retentionPct}%` : "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono text-xs tabular-nums text-muted-foreground">
-                        {formatMoney(netAfterRetention(EJEMPLO_CENTS, m.retentionPct), currency)}
-                      </td>
-                      <td className="px-3 py-2 text-center text-xs text-muted-foreground">
-                        {m.allowsRefund ? "Sí" : "No"}
-                      </td>
-                      <td className="px-3 py-2">
-                        <div className="flex justify-end gap-1">
-                          <MedioDialog clinicId={clinicId!} medio={m} currency={currency} />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            disabled={setActive.isPending}
-                            onClick={() =>
-                              setActive.mutate({ paymentMethodId: m.id, isActive: !m.isActive })
-                            }
-                          >
-                            {m.isActive ? "Deshabilitar" : "Habilitar"}
-                          </Button>
-                        </div>
-                      </td>
+          {!isLoading && (
+            <section className="card-clinical overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[40rem] text-sm">
+                  <thead>
+                    <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
+                      <th className="px-4 py-2 text-left font-medium">Medio de pago</th>
+                      <th className="px-3 py-2 text-right font-medium">Retención</th>
+                      <th className="px-3 py-2 text-right font-medium">
+                        Neto de {formatMoney(EJEMPLO_CENTS, currency)}
+                      </th>
+                      <th className="px-3 py-2 text-center font-medium">Devolución</th>
+                      <th className="px-3 py-2" />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
+                  </thead>
+                  <tbody>
+                    {medios.map((m) => (
+                      <tr
+                        key={m.id}
+                        className={cn(
+                          "border-b border-hairline last:border-0",
+                          !m.isActive && "opacity-50",
+                        )}
+                      >
+                        <td className="px-4 py-2">
+                          {m.name}
+                          {!m.isActive && (
+                            <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                              Deshabilitado
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono tabular-nums">
+                          {m.retentionPct > 0 ? `${m.retentionPct}%` : "—"}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                          {formatMoney(netAfterRetention(EJEMPLO_CENTS, m.retentionPct), currency)}
+                        </td>
+                        <td className="px-3 py-2 text-center text-xs text-muted-foreground">
+                          {m.allowsRefund ? "Sí" : "No"}
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="flex justify-end gap-1">
+                            <MedioDialog clinicId={clinicId!} medio={m} currency={currency} />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={setActive.isPending}
+                              onClick={() =>
+                                setActive.mutate({ paymentMethodId: m.id, isActive: !m.isActive })
+                              }
+                            >
+                              {m.isActive ? "Deshabilitar" : "Habilitar"}
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
 
-        <p className="text-xs text-muted-foreground">
-          Cambiar la retención afecta solo a los cobros futuros: cada pago congela su neto al
-          registrarse, así que un recibo viejo sigue diciendo lo que entró ese día.
-        </p>
-      </div>
+          <p className="text-xs text-muted-foreground">
+            Cambiar la retención afecta solo a los cobros futuros: cada pago congela su neto al
+            registrarse, así que un recibo viejo sigue diciendo lo que entró ese día.
+          </p>
+        </div>
+      )}
     </AppShell>
   );
 }
