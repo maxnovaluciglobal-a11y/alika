@@ -51,6 +51,7 @@ import {
   etiquetaEstado,
   formatoFechaLarga,
   HORA_INICIO,
+  fechaDeAgenda,
   hoyISO,
   type Cita,
   type EstadoCita,
@@ -132,14 +133,12 @@ function parseVista(v: unknown): VistaAgenda {
 export const Route = createFileRoute("/_authenticated/_clinic/agenda")({
   validateSearch: (search: Record<string, unknown>): AgendaSearch => ({
     q: str(search.q),
-    // hoyISO() se llama acá adentro, no en una constante de módulo: el
-    // módulo se carga una sola vez y se queda vivo (un servidor SSR tibio,
-    // una pestaña abierta toda la noche), así que una constante congelaría
-    // la fecha y después de medianoche la agenda abriría en ayer.
-    // Sin timezone de la clínica a propósito: validateSearch no tiene
-    // acceso al contexto de la ruta. El componente sí corrige su "hoy" con
-    // access.clinic?.timezone.
-    fecha: str(search.fecha, hoyISO()),
+    // Sin default a propósito: `validateSearch` no tiene acceso al contexto de
+    // la ruta, así que no puede saber el huso de la clínica. Cadena vacía
+    // significa "sin fecha explícita" y el componente resuelve el hoy real con
+    // `fechaDeAgenda`. Antes acá se caía al huso de Chile y una clínica en
+    // México abría la agenda en mañana durante sus últimas horas del día.
+    fecha: str(search.fecha),
     vista: parseVista(search.vista),
     sucursal: str(search.sucursal),
     profesional: str(search.profesional),
@@ -989,6 +988,7 @@ function AgendaPage() {
   const navigate = useNavigate({ from: Route.fullPath });
   const clinicId = access.clinic?.id;
   const hoy = hoyISO(access.clinic?.timezone);
+  const fecha = fechaDeAgenda(search.fecha, access.clinic?.timezone);
 
   const fetchAppointments = useServerFn(listAppointments);
   const fetchBranches = useServerFn(listBranches);
@@ -1098,8 +1098,8 @@ function AgendaPage() {
   // mes = primer→último del mes). El listado de abajo y las tres vistas
   // comparten este rango, así el conteo y el listado siempre concuerdan.
   const [rangoDesde, rangoHasta] = useMemo(
-    () => rangoDeVista(search.vista, search.fecha),
-    [search.vista, search.fecha],
+    () => rangoDeVista(search.vista, fecha),
+    [search.vista, fecha],
   );
 
   const filtradas = useMemo(
@@ -1158,7 +1158,7 @@ function AgendaPage() {
   });
   const activos =
     [search.q, search.sucursal, search.profesional, search.estado].filter(Boolean).length +
-    (search.fecha !== hoy ? 1 : 0);
+    (fecha !== hoy ? 1 : 0);
 
   return (
     <AppShell title="Agenda" access={access}>
@@ -1206,7 +1206,7 @@ function AgendaPage() {
             onChange={(q) => set({ q })}
             placeholder="Paciente, tratamiento…"
           />
-          <DateField label="Fecha" value={search.fecha} onChange={(fecha) => set({ fecha })} />
+          <DateField label="Fecha" value={fecha} onChange={(fecha) => set({ fecha })} />
           <SelectField
             label="Sucursal"
             value={search.sucursal}
@@ -1239,7 +1239,7 @@ function AgendaPage() {
                 <button
                   type="button"
                   aria-label="Período anterior"
-                  onClick={() => set({ fecha: desplazarPeriodo(search.vista, search.fecha, -1) })}
+                  onClick={() => set({ fecha: desplazarPeriodo(search.vista, fecha, -1) })}
                   className="grid size-8 place-items-center rounded-lg border border-hairline hover:bg-secondary/60"
                 >
                   <ChevronLeft className="size-4" />
@@ -1254,13 +1254,13 @@ function AgendaPage() {
                 <button
                   type="button"
                   aria-label="Período siguiente"
-                  onClick={() => set({ fecha: desplazarPeriodo(search.vista, search.fecha, 1) })}
+                  onClick={() => set({ fecha: desplazarPeriodo(search.vista, fecha, 1) })}
                   className="grid size-8 place-items-center rounded-lg border border-hairline hover:bg-secondary/60"
                 >
                   <ChevronRight className="size-4" />
                 </button>
                 <h2 className="ml-1 font-display text-lg font-semibold capitalize">
-                  {labelPeriodo(search.vista, search.fecha)}
+                  {labelPeriodo(search.vista, fecha)}
                 </h2>
               </div>
               <div className="flex items-center gap-3">
@@ -1297,17 +1297,12 @@ function AgendaPage() {
               />
             )}
             {search.vista === "semana" && (
-              <AgendaWeek
-                citas={filtradas}
-                fecha={search.fecha}
-                hoy={hoy}
-                profesionales={profesionales}
-              />
+              <AgendaWeek citas={filtradas} fecha={fecha} hoy={hoy} profesionales={profesionales} />
             )}
             {search.vista === "mes" && (
               <AgendaMonth
                 citas={filtradas}
-                fecha={search.fecha}
+                fecha={fecha}
                 hoy={hoy}
                 onSelectDay={(dia) => set({ fecha: dia, vista: "dia" })}
                 profesionales={profesionales}

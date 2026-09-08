@@ -111,6 +111,20 @@ export function hoyISO(timeZone = "America/Santiago"): string {
   }).format(new Date());
 }
 
+/**
+ * La fecha que muestra la agenda: la explícita de la URL, o el hoy de la clínica.
+ *
+ * El default NO puede vivir en `validateSearch`, que es donde estaba: esa
+ * función no tiene acceso al contexto de la ruta, así que caía al huso por
+ * defecto (Chile). Para una clínica en México eso significa que entre las
+ * 21:00 y medianoche —cuando en Santiago ya es el día siguiente— la agenda
+ * abría en MAÑANA. El huso de la clínica sólo se conoce dentro del
+ * componente, así que el default se resuelve ahí.
+ */
+export function fechaDeAgenda(fechaEnUrl: string, timeZone?: string): string {
+  return fechaEnUrl || hoyISO(timeZone);
+}
+
 /** Guard común: acepta null/undefined/"" y strings mal formados sin explotar. */
 export function parseIsoDate(iso: string | null | undefined): Date | null {
   if (!iso) return null;
