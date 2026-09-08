@@ -40,7 +40,14 @@ type FooterLink =
   | {
       label: string;
       kind: "route";
-      to: "/auth" | "/faq" | "/docs" | "/nosotros" | "/terminos" | "/privacidad";
+      to:
+        | "/auth"
+        | "/faq"
+        | "/docs"
+        | "/nosotros"
+        | "/terminos"
+        | "/privacidad"
+        | "/calculadora-rentabilidad-dental";
     }
   | { label: string; kind: "external"; href: string };
 
@@ -57,6 +64,11 @@ const footerColumns: { t: string; links: FooterLink[] }[] = [
     links: [
       { label: "Preguntas frecuentes", kind: "route", to: "/faq" },
       { label: "Documentación", kind: "route", to: "/docs" },
+      {
+        label: "Calculadora de rentabilidad",
+        kind: "route",
+        to: "/calculadora-rentabilidad-dental",
+      },
     ],
   },
   {

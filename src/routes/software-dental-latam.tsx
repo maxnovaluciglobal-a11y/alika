@@ -172,10 +172,17 @@ function SoftwareDentalLatam() {
           Puedes{" "}
           <Link to="/demo" className="text-mint-strong underline underline-offset-2">
             probar la demo sin registrarte
-          </Link>{" "}
-          o mirar el{" "}
+          </Link>
+          , mirar el{" "}
           <Link to="/faq" className="text-mint-strong underline underline-offset-2">
             resto de las preguntas frecuentes
+          </Link>{" "}
+          o calcular la{" "}
+          <Link
+            to="/calculadora-rentabilidad-dental"
+            className="text-mint-strong underline underline-offset-2"
+          >
+            rentabilidad de tu clínica
           </Link>
           .
         </p>

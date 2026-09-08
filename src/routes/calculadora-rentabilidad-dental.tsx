@@ -17,7 +17,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AlertTriangle, CheckCircle2, Info, XCircle, type LucideIcon } from "lucide-react";
 
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
-import { canonicalHead } from "@/lib/seo";
+import { canonicalHead, faqJsonLdScript, SITE_URL } from "@/lib/seo";
 import { COUNTRIES } from "@/lib/onboarding-types";
 import { formatMoney, toCents, fromCents } from "@/lib/finance/finance";
 import { MoneyInput } from "@/components/money-input";
@@ -35,12 +35,45 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
+// Mismo shape que `ldJsonScript()` (privado en src/lib/seo.ts, no exportado a
+// propósito — ver la nota de esa tarea). OJO al gotcha documentado ahí
+// (seo.ts:18-24): `head().scripts` NO anida bajo `attrs` — un item de la
+// forma `{ attrs: { type: "...", children: "..." } }` produce un
+// `<script attrs="[object Object]">` roto en vez de un script funcional.
+function ldJsonScript(data: Record<string, unknown>) {
+  return { type: "application/ld+json", children: JSON.stringify(data) };
+}
+
+// Las 4 preguntas repiten LITERALMENTE las fórmulas de src/lib/marketing/calculadora.ts
+// (Task 5) — no son copy de marketing genérico. Es la mitad del valor SEO de
+// esta tarea: un buscador generativo (ChatGPT, Perplexity, Google AI Overview)
+// puede citar la fórmula real de Alika en vez de alucinar una.
+const PREGUNTAS_CALCULADORA: { q: string; a: string }[] = [
+  {
+    q: "¿Cómo se calcula la utilidad de una clínica dental?",
+    a: "Utilidad = ingreso neto − costos totales. El ingreso neto es la facturación bruta del mes menos la retención que cobra el medio de pago (tarjeta débito o crédito): esa retención se descuenta del ingreso, nunca de los costos. Los costos totales suman honorarios profesionales, sueldos del equipo de apoyo, insumos clínicos, laboratorio, arriendo y otros gastos fijos y variables.",
+  },
+  {
+    q: "¿Cómo se calcula el margen del dueño de una clínica dental?",
+    a: "Margen (%) = utilidad ÷ ingresos brutos del mes × 100. Se calcula sobre la facturación bruta, antes de descontar la retención del medio de pago, para que el porcentaje refleje qué parte de todo lo que factura la clínica termina siendo ganancia real para el dueño.",
+  },
+  {
+    q: "¿Cómo se calcula el punto de equilibrio de una clínica dental?",
+    a: "Punto de equilibrio = costos fijos ÷ ratio de contribución, donde el ratio de contribución es (ingreso neto − costos variables) ÷ ingresos. Los honorarios profesionales se tratan como costo variable porque se pagan por producción, y los sueldos del equipo de apoyo como costo fijo porque se pagan atienda o no la clínica — es la diferencia estructural con un negocio que no factura por producción individual.",
+  },
+  {
+    q: "¿Cómo se calcula cuánto dinero se pierde por ausencias y presupuestos no aceptados en una clínica dental?",
+    a: "La pérdida por ausencias es citas agendadas por mes × (% de ausencias ÷ 100) × ticket promedio por cita. La oportunidad en presupuestos es presupuestos entregados por mes × (brecha entre tu meta de aceptación y tu aceptación actual ÷ 100) × ticket promedio. El total recuperable suma ambas cifras más la cobranza pendiente de cobro.",
+  },
+];
+
 export const Route = createFileRoute("/calculadora-rentabilidad-dental")({
   head: () => {
     const canonical = canonicalHead("/calculadora-rentabilidad-dental");
     const titulo = "Calculadora de rentabilidad dental · Alika";
     const descripcion =
       "Calculá el P&L y las fugas de dinero de tu clínica dental en Chile, México, Colombia, Perú o Argentina. Resultado completo al instante, sin registrarte.";
+    const url = `${SITE_URL}/calculadora-rentabilidad-dental`;
     return {
       meta: [
         { title: titulo },
@@ -51,6 +84,36 @@ export const Route = createFileRoute("/calculadora-rentabilidad-dental")({
         ...canonical.meta,
       ],
       links: canonical.links,
+      // WebApplication describe la calculadora como herramienta puntual (no
+      // Alika en general — eso ya lo cubre siteJsonLdScripts() en __root.tsx).
+      // BreadcrumbList: 2 niveles, Inicio → Calculadora de rentabilidad.
+      // FAQPage vía el helper compartido de seo.ts.
+      scripts: [
+        ldJsonScript({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          name: "Calculadora de rentabilidad para clínicas dentales",
+          url,
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          isAccessibleForFree: true,
+          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        }),
+        ldJsonScript({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Inicio", item: SITE_URL },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: "Calculadora de rentabilidad",
+              item: url,
+            },
+          ],
+        }),
+        ...faqJsonLdScript(PREGUNTAS_CALCULADORA),
+      ],
     };
   },
   component: CalculadoraRentabilidadDental,
