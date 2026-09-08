@@ -24,6 +24,8 @@ const ABIERTO_SIEMPRE = [
 
 const SE_ACTIVA_AL_SUSCRIBIRTE = [
   "Finanzas",
+  "Gastos",
+  "Medios de pago",
   "Comisiones",
   "Panel de desempeño",
   "Inventario",
@@ -42,8 +44,8 @@ export function TrialDesbloqueo({ pantalla }: { pantalla: string }) {
         <h1 className="font-display text-xl font-semibold">{pantalla} se activa al suscribirte</h1>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
           Tu trial de 14 días terminó. Podés seguir atendiendo con total normalidad — lo que se
-          activa al suscribirte es el análisis: caja, comisiones, panel de desempeño, inventario,
-          laboratorios y convenios.
+          activa al suscribirte es el análisis: caja, gastos, medios de pago, comisiones, panel de
+          desempeño, inventario, laboratorios y convenios.
         </p>
       </div>
 
