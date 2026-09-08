@@ -96,10 +96,13 @@ async function leerRecurso(filename: string) {
   throw new Error(`asset no encontrado en el storage de Nitro: ${filename}`);
 }
 
-const RECURSOS: Record<string, { filename: string; source: string }> = {
+// Revisión final de rama (Important #2): sin `source` — la autorización ya
+// no pasa por esa columna (ver el UPDATE de abajo), así que mantenerla acá
+// sólo dejaba la puerta abierta a que alguien la reintrodujera en el filtro
+// y repitiera el mismo bug.
+const RECURSOS: Record<string, { filename: string }> = {
   "fugas-clinica-dental": {
     filename: "fugas-clinica-dental.pdf",
-    source: "checklist",
   },
 };
 
@@ -127,11 +130,19 @@ export const Route = createFileRoute("/api/recurso/$slug")({
         // Validación + invalidación atómica: un solo UPDATE condicionado,
         // no un SELECT seguido de un UPDATE separado (eso sí tendría
         // condición de carrera entre dos requests con el mismo token).
+        //
+        // Revisión final de rama (Important #2): filtrado por
+        // `download_slug` (el slug de ESTA url), no por `source` — `source`
+        // en `marketing_leads` se pisa con la última fuente que envió el
+        // lead (comportamiento intencional de Task 3), así que un checklist
+        // seguido de una calculadora sin descargar todavía rompía este link
+        // para siempre. `download_slug` se setea una sola vez al INSERT y
+        // nunca se pisa (ver `leads.functions.ts`).
         const { data: filasActualizadas, error } = await supabaseAdmin
           .from("marketing_leads")
           .update({ download_delivered_at: new Date().toISOString() })
           .eq("download_token", token)
-          .eq("source", recurso.source)
+          .eq("download_slug", params.slug)
           .is("download_delivered_at", null)
           .select("id");
 

@@ -184,9 +184,18 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
     // reenviar sin límite real al mismo contacto una y otra vez. Insert
     // best-effort: si falla no bloqueamos el alta del lead por un problema
     // de instrumentación (ver log de abajo, no se traga en silencio total).
+    //
+    // Revisión final de rama (Important #3): este evento se llamaba
+    // "lead_enviado", el MISMO nombre que dispara `lead-form.tsx` desde el
+    // cliente cuando el submit tiene éxito (Task 6) — cada envío exitoso
+    // generaba 2 filas con ese nombre, y cada intento bloqueado 1, así que
+    // ningún conteo del embudo real daba un número correcto. Este es el
+    // evento de INTENTO (cuenta para el rate limiter, pasó el honeypot, no
+    // necesariamente tuvo éxito) — nombre propio "lead_intento", distinto de
+    // la conversión real que sigue siendo "lead_enviado" del lado cliente.
     const { error: eventoError } = await supabaseAdmin
       .from("marketing_events")
-      .insert({ name: "lead_enviado", props: { ip_hash: ipHash } });
+      .insert({ name: "lead_intento", props: { ip_hash: ipHash } });
     if (eventoError) {
       console.error("[leads] no se pudo registrar el evento de rate-limit:", eventoError.message);
     }
@@ -195,7 +204,7 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
     const { count } = await supabaseAdmin
       .from("marketing_events")
       .select("id", { count: "exact", head: true })
-      .eq("name", "lead_enviado")
+      .eq("name", "lead_intento")
       .eq("props->>ip_hash", ipHash)
       .gte("created_at", desde);
     // El evento de ESTE intento ya quedó insertado y contado arriba, por eso
@@ -245,6 +254,17 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
       consent_whatsapp: data.consentWhatsapp,
       ip_hash: ipHash,
       user_agent: (getRequestHeader("user-agent") ?? "").slice(0, 255) || null,
+      // Revisión final de rama (Important #2): `source` cumple doble
+      // propósito (Task 3 lo pisa con la última fuente que envió el lead) y
+      // `api.recurso.$slug.ts` no puede seguir usándolo para autorizar la
+      // descarga — un checklist seguido de una calculadora rompía el link
+      // para siempre. `download_slug` es independiente: se setea acá, en el
+      // INSERT, sólo para el lead magnet que efectivamente entrega token
+      // (hoy sólo "checklist"), y `datosActualizacion` de abajo lo excluye
+      // de todo UPDATE — igual que `consent_at`/`consent_text`, es evidencia
+      // de qué recurso desbloqueó este token que un envío posterior no debe
+      // poder pisar.
+      download_slug: data.source === "checklist" ? "fugas-clinica-dental" : null,
     };
 
     /**
@@ -274,6 +294,11 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
       const {
         consent_at: _consentAt,
         consent_text: _consentText,
+        // Revisión final de rama (Important #2): mismo criterio que
+        // consent_at/consent_text — se setea una sola vez, al INSERT, y un
+        // reenvío posterior (aunque cambie `source`) no debe poder pisarlo
+        // ni vaciarlo. Ver el comentario largo en `fila` más arriba.
+        download_slug: _downloadSlug,
         email: nuevoEmail,
         phone: nuevoPhone,
         phone_valid: nuevoPhoneValid,

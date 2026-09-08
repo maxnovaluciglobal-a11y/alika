@@ -1605,7 +1605,8 @@ export type Database = {
           delivered_at: string | null;
           delivery_error: string | null;
           download_delivered_at: string | null;
-          download_token: string | null;
+          download_slug: string | null;
+          download_token: string;
           email: string | null;
           id: string;
           ip_hash: string | null;
@@ -1631,7 +1632,8 @@ export type Database = {
           delivered_at?: string | null;
           delivery_error?: string | null;
           download_delivered_at?: string | null;
-          download_token?: string | null;
+          download_slug?: string | null;
+          download_token?: string;
           email?: string | null;
           id?: string;
           ip_hash?: string | null;
@@ -1657,7 +1659,8 @@ export type Database = {
           delivered_at?: string | null;
           delivery_error?: string | null;
           download_delivered_at?: string | null;
-          download_token?: string | null;
+          download_slug?: string | null;
+          download_token?: string;
           email?: string | null;
           id?: string;
           ip_hash?: string | null;
