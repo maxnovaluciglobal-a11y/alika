@@ -3,10 +3,14 @@
 // Lead magnet público (Task 12 del plan de captación, Fase 3). A diferencia de
 // la calculadora (Task 7), acá no hay ningún cálculo: es un checklist de
 // lectura, 15 fugas de dinero comunes en una clínica dental. Se lee entera y
-// gratis — nada se gatea. El PDF descargable (Task 13, todavía sin ejecutar)
-// va a vivir en esta misma página; hasta entonces el formulario del pie se
-// comporta exactamente igual que en la calculadora: guarda el contacto y
-// muestra el mensaje genérico de éxito, sin prometer un PDF que hoy no existe.
+// gratis — nada se gatea. El PDF descargable (Task 13, ya conectado) se sirve
+// gateado desde `/api/recurso/fugas-clinica-dental` — ver
+// src/routes/api.recurso.$slug.ts para el endpoint y
+// scripts/build-pdf-recursos.mjs para cómo se genera el binario a partir de
+// esta misma página. El formulario del pie (`LeadForm` con
+// `slugRecurso="fugas-clinica-dental"`) arma el link de descarga cuando el
+// server devuelve `downloadToken` — sigue mostrando el mensaje genérico de
+// éxito si no lo devuelve (lead que ya descargó, o falla la escritura).
 //
 // Regla no-negociable de esta tarea: cada fuga describe un problema real del
 // dueño de la clínica SIN nombrar ninguna función de Alika. Tiene que ser útil

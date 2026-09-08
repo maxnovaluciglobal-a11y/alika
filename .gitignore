@@ -42,7 +42,9 @@ dist-ssr
 # Supabase CLI: guarda a qué proyecto está linkeado el checkout local
 supabase/.temp
 
-# PDFs de recursos gateados (Task 13): artefacto derivado de la página .tsx
-# correspondiente (fuente de verdad real). Se regenera con
-# scripts/build-pdf-recursos.mjs, no hace falta versionar el binario.
-assets-privados/
+# Ronda de fix 1 sobre Task 13 (revisión rigurosa, critical): `assets-privados/`
+# ESTUVO acá — la lógica de "es un artefacto derivado, se regenera con
+# scripts/build-pdf-recursos.mjs" no sobrevivió el chequeo empírico: nada en el
+# build ejecuta ese script, así que en producción el PDF simplemente no existe
+# y el UPDATE que quema el token de un solo uso corre igual, antes del intento
+# de lectura — el lead pierde el PDF para siempre. 263KB es chico: se versiona.

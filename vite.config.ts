@@ -51,7 +51,23 @@ export default defineConfig(async ({ command, mode }) => {
   // Nitro sólo participa del build, nunca del dev server.
   if (command === "build") {
     const { nitro } = await import("nitro/vite");
-    plugins.push(nitro(nitroPreset ? { preset: nitroPreset } : {}));
+    plugins.push(
+      nitro({
+        ...(nitroPreset ? { preset: nitroPreset } : {}),
+        // Ronda de fix 1 sobre Task 13 (revisión rigurosa, CRITICAL):
+        // `serverAssets` es el mecanismo documentado de Nitro para bundlear
+        // un binario no-JS de forma que quede disponible en runtime dentro
+        // de una función serverless — ver src/routes/api.recurso.$slug.ts
+        // para el porqué (`new URL(..., import.meta.url)` sin esto, que era
+        // el intento anterior dentro de esta misma ronda, se confirmó roto
+        // por inspección directa de `npm run build:vercel`: el literal
+        // sobrevivía sin procesar y el PDF no aparecía en ningún lado de
+        // `.vercel/output`). Mapea `assets-privados/` bajo el mount
+        // `assets:recursos` — accesible en runtime vía
+        // `useStorage("assets:recursos")` (import de `nitro/storage`).
+        serverAssets: [{ baseName: "recursos", dir: "assets-privados" }],
+      }),
+    );
   }
 
   plugins.push(viteReact());

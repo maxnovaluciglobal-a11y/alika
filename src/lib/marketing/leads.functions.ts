@@ -129,34 +129,6 @@ async function buscarExistente(
   return (email && data.find((d) => d.email === email)) || data[0];
 }
 
-/**
- * Variante angosta de `buscarExistente` para Task 13: sólo trae
- * `download_token` de la fila que matchea por email o por teléfono. Mismo
- * criterio de matching (ver docstring de `buscarExistente` para el caso raro
- * de dos filas distintas) — acá basta con "alguna fila", no hace falta
- * decidir cuál preferir con la misma precisión porque el llamador sólo lee
- * el token, no escribe nada con este resultado.
- */
-async function buscarDownloadToken(
-  supabaseAdmin: SupabaseAdminClient,
-  email: string | null,
-  phone: string | null,
-): Promise<{ download_token: string | null } | null> {
-  if (!email && !phone) return null;
-
-  let query = supabaseAdmin.from("marketing_leads").select("download_token");
-  if (email && phone) {
-    query = query.or(`email.eq.${email},phone.eq.${phone}`);
-  } else if (email) {
-    query = query.eq("email", email);
-  } else {
-    query = query.eq("phone", phone as string);
-  }
-
-  const { data } = await query.limit(1).maybeSingle();
-  return data;
-}
-
 /** Si un UPDATE tira 23505, de qué columna vino según el nombre del índice
  *  único que violó (ver la migración de Task 1: `marketing_leads_email_key`
  *  / `marketing_leads_phone_key`). `null` si no se puede determinar. */
@@ -318,11 +290,26 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
       };
     }
 
+    // Task 13 (ronda de fix 1, Important): cada rama de escritura de abajo
+    // encadena `.select("download_token, download_delivered_at")` sobre la
+    // fila que ELLA MISMA acaba de tocar (por `id`, no por contacto) y guarda
+    // el resultado acá. Antes esto se resolvía con una query aparte
+    // (`buscarDownloadToken`) que volvía a buscar por email/phone — con el
+    // mismo bug de fondo que `buscarExistente` documenta (dos personas que
+    // comparten un dato de contacto matchean filas DISTINTAS), pero SIN la
+    // resolución que `buscarExistente` sí tiene para ese caso: podía devolver
+    // el token de otro lead. Encadenar el `.select()` sobre la escritura
+    // puntual hace que la fila sea exacta por construcción — no hay
+    // ambigüedad posible porque no hay ningún re-matching.
+    type InfoDescarga = { download_token: string | null; download_delivered_at: string | null };
+    const SELECT_DESCARGA = "download_token, download_delivered_at";
+
     async function actualizar(existente: LeadExistente) {
       return await supabaseAdmin
         .from("marketing_leads")
         .update({ ...datosActualizacion(fila), submissions_count: existente.submissions_count + 1 })
-        .eq("id", existente.id);
+        .eq("id", existente.id)
+        .select(SELECT_DESCARGA);
     }
 
     // Upsert por contacto: el mismo dentista que vuelve a usar la calculadora
@@ -343,10 +330,11 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
     // guardar, el `.eq("email", email)` de `buscarExistente` es equivalente
     // al índice sobre `lower(email)` — no hace falta ILIKE.
     let dbError: { message: string } | null = null;
+    let filaEscrita: InfoDescarga | null = null;
     const existente = await buscarExistente(supabaseAdmin, email, phone);
 
     if (existente) {
-      const { error } = await actualizar(existente);
+      const { error, data: dataActualizada } = await actualizar(existente);
       if (error?.code === "23505") {
         // Dos escenarios posibles, y no se pueden distinguir de antemano:
         // (a) carrera real — otra request tocó el mismo contacto entre el
@@ -356,8 +344,9 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
         const otraVez = await buscarExistente(supabaseAdmin, email, phone);
         if (otraVez && otraVez.id !== existente.id) {
           // Escenario (a): hay una fila más reciente que matchea mejor.
-          const { error: error2 } = await actualizar(otraVez);
+          const { error: error2, data: dataActualizada2 } = await actualizar(otraVez);
           dbError = error2;
+          filaEscrita = dataActualizada2?.[0] ?? null;
         } else {
           // Escenario (b) (o (a) resuelto igual que antes): no perdemos el
           // lead entero por un solo campo cruzado con otra persona — se
@@ -365,28 +354,41 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
           // fila ya tenía. No le "robamos" el dato a la otra fila.
           const campo = campoDelConflicto(error);
           const filaSinConflicto = campo ? { ...fila, [campo]: existente[campo] } : fila;
-          const { error: error2 } = await supabaseAdmin
+          const { error: error2, data: dataActualizada2 } = await supabaseAdmin
             .from("marketing_leads")
             .update({
               ...datosActualizacion(filaSinConflicto),
               submissions_count: existente.submissions_count + 1,
             })
-            .eq("id", existente.id);
+            .eq("id", existente.id)
+            .select(SELECT_DESCARGA);
           dbError = error2;
+          filaEscrita = dataActualizada2?.[0] ?? null;
         }
       } else {
         dbError = error;
+        filaEscrita = dataActualizada?.[0] ?? null;
       }
     } else {
-      const { error } = await supabaseAdmin.from("marketing_leads").insert(fila);
+      const { error, data: dataInsertada } = await supabaseAdmin
+        .from("marketing_leads")
+        .insert(fila)
+        .select(SELECT_DESCARGA);
       if (error?.code === "23505") {
         // Carrera: otra request insertó el mismo contacto entre el SELECT y
         // el INSERT de arriba. Ya existe la fila — la actualizamos en vez de
         // fallar (perder el lead sería peor que una carrera bien resuelta).
         const reciente = await buscarExistente(supabaseAdmin, email, phone);
-        dbError = reciente ? (await actualizar(reciente)).error : error;
+        if (reciente) {
+          const { error: error2, data: dataActualizada } = await actualizar(reciente);
+          dbError = error2;
+          filaEscrita = dataActualizada?.[0] ?? null;
+        } else {
+          dbError = error;
+        }
       } else {
         dbError = error;
+        filaEscrita = dataInsertada?.[0] ?? null;
       }
     }
 
@@ -394,17 +396,22 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
 
     // Task 13: el checklist gatea un PDF detrás de un token de descarga. El
     // resto de los canales (calculadora, benchmark) no tienen nada que
-    // descargar, así que no vale la pena cargar esta columna para ellos.
-    // Query extra deliberada en vez de encadenar `.select()` en cada rama de
-    // arriba (insert directo / update / los dos sub-casos del retry por
-    // 23505) — reusa el mismo criterio de matching que `buscarExistente`
-    // para traer el token de la fila que quedó escrita, sea cual sea la
-    // rama que se tomó. No es un endpoint de alto tráfico.
-    if (data.source === "checklist") {
-      const filaFinal = await buscarDownloadToken(supabaseAdmin, email, phone);
-      if (filaFinal?.download_token) {
-        return { ok: true as const, downloadToken: filaFinal.download_token };
-      }
+    // descargar, así que ni siquiera miramos `filaEscrita` para ellos.
+    //
+    // Ronda de fix 1 (Important): si esta fila YA tiene
+    // `download_delivered_at` (un lead que vuelve a llenar el mismo
+    // formulario después de haber descargado), el token de un solo uso ya
+    // se quemó — devolverlo igual sólo le muestra al lead un botón
+    // "Descargar PDF" que el endpoint va a rechazar con 403. Sin
+    // `downloadToken` en la respuesta, `LeadForm` no ofrece el botón (ver su
+    // lógica condicional) y el mensaje de éxito queda el genérico, que
+    // sigue siendo honesto — no hace falta texto especial nuevo.
+    if (
+      data.source === "checklist" &&
+      filaEscrita?.download_token &&
+      !filaEscrita.download_delivered_at
+    ) {
+      return { ok: true as const, downloadToken: filaEscrita.download_token };
     }
 
     return { ok: true as const };
