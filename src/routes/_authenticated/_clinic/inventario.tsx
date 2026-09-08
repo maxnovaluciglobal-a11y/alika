@@ -952,7 +952,11 @@ function InventarioPage() {
     enabled: !bloqueado,
     queryFn: () =>
       fetchItems({
-        data: { clinicId, branchId: multiSucursal && branchFilter ? branchFilter : undefined },
+        data: {
+          clinicId,
+          branchId: multiSucursal && branchFilter ? branchFilter : undefined,
+          paraInforme: true,
+        },
       }),
   });
 

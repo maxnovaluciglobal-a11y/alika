@@ -59,15 +59,34 @@ export const listPaymentMethods = createServerFn({ method: "GET" })
         clinicId: z.string().uuid(),
         /** La pantalla de configuración necesita ver los deshabilitados. */
         incluirInactivos: z.boolean().default(false),
+        /**
+         * Revisión final de rama (Critical #1): el gate de trial de Task 11
+         * se filtraba a callers operativos que no son un "informe" —
+         * `finance-section.tsx` en `/pacientes/:id` (diálogo de pago) llama
+         * esta misma función, y `/pacientes/:id` está en `ABIERTO_SIEMPRE`
+         * (regla no-negociable #3, nunca se gatea). Como nadie capturaba el
+         * error ahí, el fallo era silencioso: la lista vacía hacía caer el
+         * diálogo al `<select>` legacy y `registerPayment` recibía
+         * `paymentMethodId: undefined`, omitiendo la retención sin avisar.
+         *
+         * Por eso el gate ahora es opt-in: solo la pantalla de INFORME
+         * (`/medios-de-pago`) pasa `paraInforme: true`. Sin este flag la
+         * función se comporta como antes de Task 11 — sin gate — que es lo
+         * correcto para un caller operativo.
+         */
+        paraInforme: z.boolean().default(false),
       })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<PaymentMethodConfig[]> => {
-    // Task 11, fix round 1 (Important #2): esta función solo tenía
-    // `requireSupabaseAuth` + RLS — sin chequeo de rol propio, así que no
-    // pasa por `requireFinanceView` (cambiaría a quién le permite llamarla).
-    // Se le agrega SOLO la capa de trial, encima de lo que ya autorizaba.
-    await throwIfTrialBlocksInformes(context.supabase, data.clinicId);
+    // Task 11, fix round 1 (Important #2) + revisión final (Critical #1):
+    // esta función solo tenía `requireSupabaseAuth` + RLS — sin chequeo de
+    // rol propio, así que no pasa por `requireFinanceView` (cambiaría a
+    // quién le permite llamarla). El gate de trial solo se aplica cuando el
+    // caller es la pantalla de informe (ver `paraInforme` arriba) — el par
+    // en el servidor de regla 15 ahora es este flag explícito, no un gate
+    // incondicional en la función compartida.
+    if (data.paraInforme) await throwIfTrialBlocksInformes(context.supabase, data.clinicId);
 
     let query = context.supabase
       .from("payment_methods")
@@ -423,13 +442,21 @@ export const listAgreements = createServerFn({ method: "GET" })
       .object({
         clinicId: z.string().uuid(),
         incluirInactivos: z.boolean().default(false),
+        /**
+         * Revisión final de rama (Critical #1): mismo problema que
+         * `listPaymentMethods` — `pacientes.$pacienteId.tsx` (selector de
+         * convenio en la ficha, `ABIERTO_SIEMPRE`) llama esta función. Solo
+         * `/convenios` (la pantalla de INFORME) pasa `paraInforme: true`.
+         */
+        paraInforme: z.boolean().default(false),
       })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<Agreement[]> => {
-    // Task 11, fix round 1 (Important #2): ídem `listPaymentMethods` — sin
-    // chequeo de rol propio, se le agrega solo la capa de trial.
-    await throwIfTrialBlocksInformes(context.supabase, data.clinicId);
+    // Task 11, fix round 1 (Important #2) + revisión final (Critical #1):
+    // ídem `listPaymentMethods` — sin chequeo de rol propio, el gate de
+    // trial solo se aplica cuando el caller es la pantalla de informe.
+    if (data.paraInforme) await throwIfTrialBlocksInformes(context.supabase, data.clinicId);
 
     let query = context.supabase
       .from("agreements")

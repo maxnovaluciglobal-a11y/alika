@@ -202,7 +202,8 @@ function MediosDePagoPage() {
   const { data: medios = [], isLoading } = useQuery({
     queryKey: ["payment-methods", clinicId, "todos"],
     enabled: Boolean(clinicId) && !bloqueado,
-    queryFn: () => fetchMethods({ data: { clinicId: clinicId!, incluirInactivos: true } }),
+    queryFn: () =>
+      fetchMethods({ data: { clinicId: clinicId!, incluirInactivos: true, paraInforme: true } }),
   });
 
   const setActive = useMutation({

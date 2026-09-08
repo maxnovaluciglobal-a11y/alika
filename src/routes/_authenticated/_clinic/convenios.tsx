@@ -409,7 +409,8 @@ function ConveniosPage() {
   const { data: convenios = [], isLoading } = useQuery({
     queryKey: ["agreements", clinicId, "todos"],
     enabled: Boolean(clinicId) && !bloqueado,
-    queryFn: () => fetchAgreements({ data: { clinicId: clinicId!, incluirInactivos: true } }),
+    queryFn: () =>
+      fetchAgreements({ data: { clinicId: clinicId!, incluirInactivos: true, paraInforme: true } }),
   });
   const { data: procedures = [] } = useQuery({
     queryKey: ["procedures", clinicId],

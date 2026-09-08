@@ -113,15 +113,29 @@ function mapInventoryItemRow(row: InventoryItemRow): InventoryItem {
 export const listInventoryItems = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ clinicId: z.string().uuid(), branchId: z.string().uuid().nullish() }).parse(input),
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        branchId: z.string().uuid().nullish(),
+        /**
+         * Revisión final de rama (Critical #1): mismo problema que
+         * `listPaymentMethods`/`listAgreements` — `aranceles.tsx`
+         * (`RecetaDialog`, lookup de insumos, `ABIERTO_SIEMPRE`) llama esta
+         * función. Solo `/inventario` (la pantalla de INFORME) pasa
+         * `paraInforme: true`.
+         */
+        paraInforme: z.boolean().default(false),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }): Promise<{ items: InventoryItem[] }> => {
-    // Task 11, fix round 1 (Important #2): esta función solo tenía
-    // `requireSupabaseAuth` + RLS ("todos los roles clínicos con acceso
-    // operativo", ver comentario arriba) — sin chequeo de rol propio que
-    // rechace. Se le agrega SOLO la capa de trial, encima de lo que ya
-    // autorizaba, sin tocar a quién le permite llamarla.
-    await throwIfTrialBlocksInformes(context.supabase, data.clinicId);
+    // Task 11, fix round 1 (Important #2) + revisión final (Critical #1):
+    // esta función solo tenía `requireSupabaseAuth` + RLS ("todos los roles
+    // clínicos con acceso operativo", ver comentario arriba) — sin chequeo de
+    // rol propio que rechace. El gate de trial solo se aplica cuando el
+    // caller es la pantalla de informe, sin tocar a quién le permite
+    // llamarla en general.
+    if (data.paraInforme) await throwIfTrialBlocksInformes(context.supabase, data.clinicId);
 
     let query = context.supabase
       .from("inventory_items")
