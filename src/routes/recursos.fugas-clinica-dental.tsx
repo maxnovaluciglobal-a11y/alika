@@ -335,7 +335,12 @@ function FugasClinicaDental() {
         de todas las que marcaste, cuál conviene resolver primero.
       </LegalP>
 
-      <div className="mt-8 rounded-3xl border border-hairline bg-card p-6 sm:p-8">
+      {/* print:hidden (revisión final de rama, Important #7): el PDF gateado se
+          genera imprimiendo esta misma página (scripts/build-pdf-recursos.mjs)
+          — el visitante que llega acá desde el link de descarga ya llenó este
+          formulario, no tiene sentido que el PDF que se lleva lo incluya
+          otra vez. */}
+      <div className="mt-8 rounded-3xl border border-hairline bg-card p-6 sm:p-8 print:hidden">
         <p className="font-precise text-xs font-bold uppercase tracking-wider text-ink/60">
           País de tu clínica
         </p>
