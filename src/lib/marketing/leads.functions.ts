@@ -170,283 +170,320 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
     // que detectamos la trampa y le enseña a evitarla.
     if (data.company) return { ok: true as const };
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
     const ipCruda =
       (getRequestHeader("x-forwarded-for") ?? "").split(",")[0]?.trim() || "desconocida";
     const sal = obtenerSalIp();
     const ipHash = await hashIp(ipCruda, sal);
+    const userAgent = (getRequestHeader("user-agent") ?? "").slice(0, 255) || null;
 
-    // Evento de intento ANTES del chequeo de rate limit, para TODO envío que
-    // pasó el honeypot — insert o update. `marketing_leads` no sirve para
-    // contar intentos: un contacto ya conocido resuelve en UPDATE (misma
-    // fila, sin fila nueva), así que contar filas de `marketing_leads` deja
-    // reenviar sin límite real al mismo contacto una y otra vez. Insert
-    // best-effort: si falla no bloqueamos el alta del lead por un problema
-    // de instrumentación (ver log de abajo, no se traga en silencio total).
-    //
-    // Revisión final de rama (Important #3): este evento se llamaba
-    // "lead_enviado", el MISMO nombre que dispara `lead-form.tsx` desde el
-    // cliente cuando el submit tiene éxito (Task 6) — cada envío exitoso
-    // generaba 2 filas con ese nombre, y cada intento bloqueado 1, así que
-    // ningún conteo del embudo real daba un número correcto. Este es el
-    // evento de INTENTO (cuenta para el rate limiter, pasó el honeypot, no
-    // necesariamente tuvo éxito) — nombre propio "lead_intento", distinto de
-    // la conversión real que sigue siendo "lead_enviado" del lado cliente.
-    const { error: eventoError } = await supabaseAdmin
-      .from("marketing_events")
-      .insert({ name: "lead_intento", props: { ip_hash: ipHash } });
-    if (eventoError) {
-      console.error("[leads] no se pudo registrar el evento de rate-limit:", eventoError.message);
+    return escribirLeadEnBase(data, ipHash, userAgent);
+  });
+
+type DatosLead = z.infer<typeof EsquemaLead>;
+
+/**
+ * Task 16 (cierre del hallazgo diferido "cero tests" de la revisión final de
+ * rama): todo lo que antes vivía DENTRO del `.handler(...)` de arriba, a
+ * partir de calcular `ipHash`, cortado tal cual a esta función interna —
+ * mismo código, mismo orden, sin cambio de comportamiento. El único ajuste
+ * real es que `userAgent` (antes leído con `getRequestHeader("user-agent")`
+ * en el punto donde se arma `fila`, más abajo) ahora se calcula arriba junto
+ * con `ipHash` y se recibe acá como parámetro — es una lectura pura sin
+ * efectos secundarios ni dependencia de nada calculado entre medio, así que
+ * adelantarla no cambia qué termina guardado en la fila.
+ *
+ * Por qué este corte existe: `getRequestHeader` (como `getRequest()`, ver el
+ * comentario de `tests/finance-reports-permission.test.ts`) exige un
+ * contexto de request HTTP real — usarlo fuera de una request real explota
+ * con "No StartEvent found in AsyncLocalStorage" (confirmado corriendo
+ * exactamente eso en un script aislado antes de este refactor). Sin este
+ * corte, NINGÚN test de vitest podía ejercitar la lógica de escritura real
+ * de `submitMarketingLead` — que es la mayoría de la función (upsert por
+ * contacto, resolución de conflictos 23505, preservación de consentimiento,
+ * emisión del token de descarga). El handler público sigue llamando
+ * `getRequestHeader` normalmente; esta función sólo recibe los dos valores
+ * ya resueltos. `export`ada para que `tests/marketing-leads-submit.test.ts`
+ * pueda invocarla directo contra Supabase real, sin pasar por
+ * `createServerFn` (que tampoco se puede invocar fuera de una request real,
+ * aunque `submitMarketingLead` no use `requireSupabaseAuth`).
+ */
+export async function escribirLeadEnBase(
+  data: DatosLead,
+  ipHash: string,
+  userAgent: string | null,
+) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  // Evento de intento ANTES del chequeo de rate limit, para TODO envío que
+  // pasó el honeypot — insert o update. `marketing_leads` no sirve para
+  // contar intentos: un contacto ya conocido resuelve en UPDATE (misma
+  // fila, sin fila nueva), así que contar filas de `marketing_leads` deja
+  // reenviar sin límite real al mismo contacto una y otra vez. Insert
+  // best-effort: si falla no bloqueamos el alta del lead por un problema
+  // de instrumentación (ver log de abajo, no se traga en silencio total).
+  //
+  // Revisión final de rama (Important #3): este evento se llamaba
+  // "lead_enviado", el MISMO nombre que dispara `lead-form.tsx` desde el
+  // cliente cuando el submit tiene éxito (Task 6) — cada envío exitoso
+  // generaba 2 filas con ese nombre, y cada intento bloqueado 1, así que
+  // ningún conteo del embudo real daba un número correcto. Este es el
+  // evento de INTENTO (cuenta para el rate limiter, pasó el honeypot, no
+  // necesariamente tuvo éxito) — nombre propio "lead_intento", distinto de
+  // la conversión real que sigue siendo "lead_enviado" del lado cliente.
+  const { error: eventoError } = await supabaseAdmin
+    .from("marketing_events")
+    .insert({ name: "lead_intento", props: { ip_hash: ipHash } });
+  if (eventoError) {
+    console.error("[leads] no se pudo registrar el evento de rate-limit:", eventoError.message);
+  }
+
+  const desde = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count } = await supabaseAdmin
+    .from("marketing_events")
+    .select("id", { count: "exact", head: true })
+    .eq("name", "lead_intento")
+    .eq("props->>ip_hash", ipHash)
+    .gte("created_at", desde);
+  // El evento de ESTE intento ya quedó insertado y contado arriba, por eso
+  // acá es `>` y no `>=`: los primeros MAX_POR_IP_POR_HORA intentos (conteo
+  // 1..MAX) pasan, recién el intento MAX+1 (conteo > MAX) se bloquea —
+  // mismo umbral efectivo de siempre (5 por hora), ahora contando TODOS
+  // los intentos (inserts y updates), no sólo los que crean fila nueva.
+  if ((count ?? 0) > MAX_POR_IP_POR_HORA) {
+    throw new Error("Recibimos varios envíos desde tu conexión. Probá de nuevo en un rato.");
+  }
+
+  const email = data.email?.trim().toLowerCase() || null;
+  const phone = data.phone ? normalizarTelefonoPorPais(data.phone, data.countryCode) : null;
+  if (!email && !phone) {
+    throw new Error("El número no parece válido. Revisalo o dejanos tu email.");
+  }
+
+  // Numverify best-effort: nunca bloquea el alta. Mismo criterio que en
+  // el alta de pacientes — un falso negativo perdiendo un lead real sería
+  // peor que no validar.
+  let phoneValid: boolean | null = null;
+  if (phone) {
+    try {
+      const { validatePhoneNumber } = await import("@/lib/patients/phoneValidation");
+      phoneValid = await validatePhoneNumber(phone);
+    } catch {
+      phoneValid = null;
     }
+  }
 
-    const desde = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const { count } = await supabaseAdmin
-      .from("marketing_events")
-      .select("id", { count: "exact", head: true })
-      .eq("name", "lead_intento")
-      .eq("props->>ip_hash", ipHash)
-      .gte("created_at", desde);
-    // El evento de ESTE intento ya quedó insertado y contado arriba, por eso
-    // acá es `>` y no `>=`: los primeros MAX_POR_IP_POR_HORA intentos (conteo
-    // 1..MAX) pasan, recién el intento MAX+1 (conteo > MAX) se bloquea —
-    // mismo umbral efectivo de siempre (5 por hora), ahora contando TODOS
-    // los intentos (inserts y updates), no sólo los que crean fila nueva.
-    if ((count ?? 0) > MAX_POR_IP_POR_HORA) {
-      throw new Error("Recibimos varios envíos desde tu conexión. Probá de nuevo en un rato.");
-    }
+  // `fila` completa: se usa tal cual para el INSERT (primer alta, no hay
+  // nada previo que preservar) y como fuente para el payload de UPDATE
+  // (ver `datosActualizacion` más abajo, que recorta y condiciona algunos
+  // campos antes de escribir).
+  const fila = {
+    email,
+    phone,
+    phone_valid: phoneValid,
+    name: data.name?.trim() || null,
+    clinic_name: data.clinicName?.trim() || null,
+    country_code: data.countryCode,
+    source: data.source,
+    utm: data.utm ?? null,
+    meta: data.meta ?? null,
+    consent_at: new Date().toISOString(),
+    consent_text: data.consentText,
+    consent_whatsapp: data.consentWhatsapp,
+    ip_hash: ipHash,
+    user_agent: userAgent,
+    // Revisión final de rama (Important #2): `source` cumple doble
+    // propósito (Task 3 lo pisa con la última fuente que envió el lead) y
+    // `api.recurso.$slug.ts` no puede seguir usándolo para autorizar la
+    // descarga — un checklist seguido de una calculadora rompía el link
+    // para siempre. `download_slug` es independiente: se setea acá, en el
+    // INSERT, sólo para el lead magnet que efectivamente entrega token
+    // (hoy sólo "checklist"), y `datosActualizacion` de abajo lo excluye
+    // de todo UPDATE — igual que `consent_at`/`consent_text`, es evidencia
+    // de qué recurso desbloqueó este token que un envío posterior no debe
+    // poder pisar.
+    download_slug: data.source === "checklist" ? "fugas-clinica-dental" : null,
+  };
 
-    const email = data.email?.trim().toLowerCase() || null;
-    const phone = data.phone ? normalizarTelefonoPorPais(data.phone, data.countryCode) : null;
-    if (!email && !phone) {
-      throw new Error("El número no parece válido. Revisalo o dejanos tu email.");
-    }
-
-    // Numverify best-effort: nunca bloquea el alta. Mismo criterio que en
-    // el alta de pacientes — un falso negativo perdiendo un lead real sería
-    // peor que no validar.
-    let phoneValid: boolean | null = null;
-    if (phone) {
-      try {
-        const { validatePhoneNumber } = await import("@/lib/patients/phoneValidation");
-        phoneValid = await validatePhoneNumber(phone);
-      } catch {
-        phoneValid = null;
-      }
-    }
-
-    // `fila` completa: se usa tal cual para el INSERT (primer alta, no hay
-    // nada previo que preservar) y como fuente para el payload de UPDATE
-    // (ver `datosActualizacion` más abajo, que recorta y condiciona algunos
-    // campos antes de escribir).
-    const fila = {
-      email,
-      phone,
-      phone_valid: phoneValid,
-      name: data.name?.trim() || null,
-      clinic_name: data.clinicName?.trim() || null,
-      country_code: data.countryCode,
-      source: data.source,
-      utm: data.utm ?? null,
-      meta: data.meta ?? null,
-      consent_at: new Date().toISOString(),
-      consent_text: data.consentText,
-      consent_whatsapp: data.consentWhatsapp,
-      ip_hash: ipHash,
-      user_agent: (getRequestHeader("user-agent") ?? "").slice(0, 255) || null,
-      // Revisión final de rama (Important #2): `source` cumple doble
-      // propósito (Task 3 lo pisa con la última fuente que envió el lead) y
-      // `api.recurso.$slug.ts` no puede seguir usándolo para autorizar la
-      // descarga — un checklist seguido de una calculadora rompía el link
-      // para siempre. `download_slug` es independiente: se setea acá, en el
-      // INSERT, sólo para el lead magnet que efectivamente entrega token
-      // (hoy sólo "checklist"), y `datosActualizacion` de abajo lo excluye
-      // de todo UPDATE — igual que `consent_at`/`consent_text`, es evidencia
-      // de qué recurso desbloqueó este token que un envío posterior no debe
-      // poder pisar.
-      download_slug: data.source === "checklist" ? "fugas-clinica-dental" : null,
+  /**
+   * Payload de UPDATE — NO es `fila` tal cual. Dos ajustes respecto del
+   * INSERT:
+   *
+   * 1. `consent_at`/`consent_text` NO se tocan. Esta tabla existe para
+   *    poder probar consentimiento (Ley 21.719 pone la carga de la prueba
+   *    en Alika) — pisar el texto/fecha del consentimiento ORIGINAL en
+   *    cada reenvío destruye esa prueba. Quedan como se guardaron en el
+   *    primer INSERT.
+   * 2. `phone`, `phone_valid`, `name`, `clinic_name` y `email` sólo se
+   *    escriben si el envío actual trajo un valor. Un segundo envío más
+   *    angosto (p.ej. sólo email, para un lead magnet distinto) no debe
+   *    poder vaciar datos de contacto que un envío anterior sí capturó —
+   *    omitir la clave del objeto de `.update()` deja el valor existente
+   *    en la fila intacto (PostgREST sólo toca las columnas presentes en
+   *    el payload).
+   *
+   * `country_code`, `source`, `utm`, `meta`, `consent_whatsapp`, `ip_hash`
+   * y `user_agent` sí se pisan siempre con lo más reciente — es la
+   * intención original del diseño ("pisar con el resultado más reciente")
+   * y ninguno de ellos es evidencia de consentimiento ni un dato de
+   * contacto que un envío parcial pueda "perder" sin querer.
+   */
+  function datosActualizacion(f: typeof fila) {
+    const {
+      consent_at: _consentAt,
+      consent_text: _consentText,
+      // Revisión final de rama (Important #2, corregido en el re-review:
+      // la primera versión excluía esta columna del UPDATE por completo,
+      // igual que consent_at/consent_text — pero a diferencia del
+      // consentimiento, no hay nada que "proteger" de un reenvío: un lead
+      // que llenó la calculadora ANTES que el checklist queda con
+      // download_slug null para siempre, y el link de descarga que
+      // debería recibir en su segundo envío nunca se genera. Mismo
+      // criterio que phone/name/clinic_name: se escribe si el envío
+      // actual trae un valor, nunca se vacía si no lo trae.
+      download_slug: nuevoDownloadSlug,
+      email: nuevoEmail,
+      phone: nuevoPhone,
+      phone_valid: nuevoPhoneValid,
+      name: nuevoNombre,
+      clinic_name: nuevaClinica,
+      ...siempreFrescos
+    } = f;
+    return {
+      ...siempreFrescos,
+      ...(nuevoEmail ? { email: nuevoEmail } : {}),
+      ...(nuevoPhone ? { phone: nuevoPhone, phone_valid: nuevoPhoneValid } : {}),
+      ...(nuevoNombre ? { name: nuevoNombre } : {}),
+      ...(nuevaClinica ? { clinic_name: nuevaClinica } : {}),
+      ...(nuevoDownloadSlug ? { download_slug: nuevoDownloadSlug } : {}),
     };
+  }
 
-    /**
-     * Payload de UPDATE — NO es `fila` tal cual. Dos ajustes respecto del
-     * INSERT:
-     *
-     * 1. `consent_at`/`consent_text` NO se tocan. Esta tabla existe para
-     *    poder probar consentimiento (Ley 21.719 pone la carga de la prueba
-     *    en Alika) — pisar el texto/fecha del consentimiento ORIGINAL en
-     *    cada reenvío destruye esa prueba. Quedan como se guardaron en el
-     *    primer INSERT.
-     * 2. `phone`, `phone_valid`, `name`, `clinic_name` y `email` sólo se
-     *    escriben si el envío actual trajo un valor. Un segundo envío más
-     *    angosto (p.ej. sólo email, para un lead magnet distinto) no debe
-     *    poder vaciar datos de contacto que un envío anterior sí capturó —
-     *    omitir la clave del objeto de `.update()` deja el valor existente
-     *    en la fila intacto (PostgREST sólo toca las columnas presentes en
-     *    el payload).
-     *
-     * `country_code`, `source`, `utm`, `meta`, `consent_whatsapp`, `ip_hash`
-     * y `user_agent` sí se pisan siempre con lo más reciente — es la
-     * intención original del diseño ("pisar con el resultado más reciente")
-     * y ninguno de ellos es evidencia de consentimiento ni un dato de
-     * contacto que un envío parcial pueda "perder" sin querer.
-     */
-    function datosActualizacion(f: typeof fila) {
-      const {
-        consent_at: _consentAt,
-        consent_text: _consentText,
-        // Revisión final de rama (Important #2, corregido en el re-review:
-        // la primera versión excluía esta columna del UPDATE por completo,
-        // igual que consent_at/consent_text — pero a diferencia del
-        // consentimiento, no hay nada que "proteger" de un reenvío: un lead
-        // que llenó la calculadora ANTES que el checklist queda con
-        // download_slug null para siempre, y el link de descarga que
-        // debería recibir en su segundo envío nunca se genera. Mismo
-        // criterio que phone/name/clinic_name: se escribe si el envío
-        // actual trae un valor, nunca se vacía si no lo trae.
-        download_slug: nuevoDownloadSlug,
-        email: nuevoEmail,
-        phone: nuevoPhone,
-        phone_valid: nuevoPhoneValid,
-        name: nuevoNombre,
-        clinic_name: nuevaClinica,
-        ...siempreFrescos
-      } = f;
-      return {
-        ...siempreFrescos,
-        ...(nuevoEmail ? { email: nuevoEmail } : {}),
-        ...(nuevoPhone ? { phone: nuevoPhone, phone_valid: nuevoPhoneValid } : {}),
-        ...(nuevoNombre ? { name: nuevoNombre } : {}),
-        ...(nuevaClinica ? { clinic_name: nuevaClinica } : {}),
-        ...(nuevoDownloadSlug ? { download_slug: nuevoDownloadSlug } : {}),
-      };
-    }
+  // Task 13 (ronda de fix 1, Important): cada rama de escritura de abajo
+  // encadena `.select("download_token, download_delivered_at")` sobre la
+  // fila que ELLA MISMA acaba de tocar (por `id`, no por contacto) y guarda
+  // el resultado acá. Antes esto se resolvía con una query aparte
+  // (`buscarDownloadToken`) que volvía a buscar por email/phone — con el
+  // mismo bug de fondo que `buscarExistente` documenta (dos personas que
+  // comparten un dato de contacto matchean filas DISTINTAS), pero SIN la
+  // resolución que `buscarExistente` sí tiene para ese caso: podía devolver
+  // el token de otro lead. Encadenar el `.select()` sobre la escritura
+  // puntual hace que la fila sea exacta por construcción — no hay
+  // ambigüedad posible porque no hay ningún re-matching.
+  type InfoDescarga = { download_token: string | null; download_delivered_at: string | null };
+  const SELECT_DESCARGA = "download_token, download_delivered_at";
 
-    // Task 13 (ronda de fix 1, Important): cada rama de escritura de abajo
-    // encadena `.select("download_token, download_delivered_at")` sobre la
-    // fila que ELLA MISMA acaba de tocar (por `id`, no por contacto) y guarda
-    // el resultado acá. Antes esto se resolvía con una query aparte
-    // (`buscarDownloadToken`) que volvía a buscar por email/phone — con el
-    // mismo bug de fondo que `buscarExistente` documenta (dos personas que
-    // comparten un dato de contacto matchean filas DISTINTAS), pero SIN la
-    // resolución que `buscarExistente` sí tiene para ese caso: podía devolver
-    // el token de otro lead. Encadenar el `.select()` sobre la escritura
-    // puntual hace que la fila sea exacta por construcción — no hay
-    // ambigüedad posible porque no hay ningún re-matching.
-    type InfoDescarga = { download_token: string | null; download_delivered_at: string | null };
-    const SELECT_DESCARGA = "download_token, download_delivered_at";
+  async function actualizar(existente: LeadExistente) {
+    return await supabaseAdmin
+      .from("marketing_leads")
+      .update({ ...datosActualizacion(fila), submissions_count: existente.submissions_count + 1 })
+      .eq("id", existente.id)
+      .select(SELECT_DESCARGA);
+  }
 
-    async function actualizar(existente: LeadExistente) {
-      return await supabaseAdmin
-        .from("marketing_leads")
-        .update({ ...datosActualizacion(fila), submissions_count: existente.submissions_count + 1 })
-        .eq("id", existente.id)
-        .select(SELECT_DESCARGA);
-    }
+  // Upsert por contacto: el mismo dentista que vuelve a usar la calculadora
+  // actualiza su fila, no genera una nueva. DypOS no tiene dedupe y produce
+  // duplicados en cada recarga.
+  //
+  // OJO: NO se puede resolver con `.upsert({ onConflict })` de supabase-js
+  // (como proponía el borrador original). Verificado contra la base real:
+  // los dos índices únicos de la migración de Task 1 son PARCIALES
+  // (`WHERE email IS NOT NULL` / `WHERE phone IS NOT NULL`), y el de email
+  // además es sobre una expresión (`lower(email)`, no la columna `email`).
+  // PostgREST arma `ON CONFLICT (col)` a partir del nombre de columna que
+  // le pasás en `onConflict` — no puede expresar el predicate parcial ni
+  // una expresión — así que Postgres nunca encuentra un índice único que
+  // matchee y tira 42P10 ("no unique or exclusion constraint matching").
+  // Se resuelve a mano: SELECT por el contacto, UPDATE si existe, INSERT si
+  // no. Como ya normalizamos `email` a minúsculas nosotros mismos antes de
+  // guardar, el `.eq("email", email)` de `buscarExistente` es equivalente
+  // al índice sobre `lower(email)` — no hace falta ILIKE.
+  let dbError: { message: string } | null = null;
+  let filaEscrita: InfoDescarga | null = null;
+  const existente = await buscarExistente(supabaseAdmin, email, phone);
 
-    // Upsert por contacto: el mismo dentista que vuelve a usar la calculadora
-    // actualiza su fila, no genera una nueva. DypOS no tiene dedupe y produce
-    // duplicados en cada recarga.
-    //
-    // OJO: NO se puede resolver con `.upsert({ onConflict })` de supabase-js
-    // (como proponía el borrador original). Verificado contra la base real:
-    // los dos índices únicos de la migración de Task 1 son PARCIALES
-    // (`WHERE email IS NOT NULL` / `WHERE phone IS NOT NULL`), y el de email
-    // además es sobre una expresión (`lower(email)`, no la columna `email`).
-    // PostgREST arma `ON CONFLICT (col)` a partir del nombre de columna que
-    // le pasás en `onConflict` — no puede expresar el predicate parcial ni
-    // una expresión — así que Postgres nunca encuentra un índice único que
-    // matchee y tira 42P10 ("no unique or exclusion constraint matching").
-    // Se resuelve a mano: SELECT por el contacto, UPDATE si existe, INSERT si
-    // no. Como ya normalizamos `email` a minúsculas nosotros mismos antes de
-    // guardar, el `.eq("email", email)` de `buscarExistente` es equivalente
-    // al índice sobre `lower(email)` — no hace falta ILIKE.
-    let dbError: { message: string } | null = null;
-    let filaEscrita: InfoDescarga | null = null;
-    const existente = await buscarExistente(supabaseAdmin, email, phone);
-
-    if (existente) {
-      const { error, data: dataActualizada } = await actualizar(existente);
-      if (error?.code === "23505") {
-        // Dos escenarios posibles, y no se pueden distinguir de antemano:
-        // (a) carrera real — otra request tocó el mismo contacto entre el
-        //     SELECT de `buscarExistente` y este UPDATE — o (b) el caso raro
-        //     del docstring de `buscarExistente`: el email matcheó esta fila
-        //     pero el teléfono nuevo pertenece a OTRA fila distinta.
-        const otraVez = await buscarExistente(supabaseAdmin, email, phone);
-        if (otraVez && otraVez.id !== existente.id) {
-          // Escenario (a): hay una fila más reciente que matchea mejor.
-          const { error: error2, data: dataActualizada2 } = await actualizar(otraVez);
-          dbError = error2;
-          filaEscrita = dataActualizada2?.[0] ?? null;
-        } else {
-          // Escenario (b) (o (a) resuelto igual que antes): no perdemos el
-          // lead entero por un solo campo cruzado con otra persona — se
-          // reintenta sin la columna que chocó, dejando el valor que esa
-          // fila ya tenía. No le "robamos" el dato a la otra fila.
-          const campo = campoDelConflicto(error);
-          const filaSinConflicto = campo ? { ...fila, [campo]: existente[campo] } : fila;
-          const { error: error2, data: dataActualizada2 } = await supabaseAdmin
-            .from("marketing_leads")
-            .update({
-              ...datosActualizacion(filaSinConflicto),
-              submissions_count: existente.submissions_count + 1,
-            })
-            .eq("id", existente.id)
-            .select(SELECT_DESCARGA);
-          dbError = error2;
-          filaEscrita = dataActualizada2?.[0] ?? null;
-        }
+  if (existente) {
+    const { error, data: dataActualizada } = await actualizar(existente);
+    if (error?.code === "23505") {
+      // Dos escenarios posibles, y no se pueden distinguir de antemano:
+      // (a) carrera real — otra request tocó el mismo contacto entre el
+      //     SELECT de `buscarExistente` y este UPDATE — o (b) el caso raro
+      //     del docstring de `buscarExistente`: el email matcheó esta fila
+      //     pero el teléfono nuevo pertenece a OTRA fila distinta.
+      const otraVez = await buscarExistente(supabaseAdmin, email, phone);
+      if (otraVez && otraVez.id !== existente.id) {
+        // Escenario (a): hay una fila más reciente que matchea mejor.
+        const { error: error2, data: dataActualizada2 } = await actualizar(otraVez);
+        dbError = error2;
+        filaEscrita = dataActualizada2?.[0] ?? null;
       } else {
-        dbError = error;
-        filaEscrita = dataActualizada?.[0] ?? null;
+        // Escenario (b) (o (a) resuelto igual que antes): no perdemos el
+        // lead entero por un solo campo cruzado con otra persona — se
+        // reintenta sin la columna que chocó, dejando el valor que esa
+        // fila ya tenía. No le "robamos" el dato a la otra fila.
+        const campo = campoDelConflicto(error);
+        const filaSinConflicto = campo ? { ...fila, [campo]: existente[campo] } : fila;
+        const { error: error2, data: dataActualizada2 } = await supabaseAdmin
+          .from("marketing_leads")
+          .update({
+            ...datosActualizacion(filaSinConflicto),
+            submissions_count: existente.submissions_count + 1,
+          })
+          .eq("id", existente.id)
+          .select(SELECT_DESCARGA);
+        dbError = error2;
+        filaEscrita = dataActualizada2?.[0] ?? null;
       }
     } else {
-      const { error, data: dataInsertada } = await supabaseAdmin
-        .from("marketing_leads")
-        .insert(fila)
-        .select(SELECT_DESCARGA);
-      if (error?.code === "23505") {
-        // Carrera: otra request insertó el mismo contacto entre el SELECT y
-        // el INSERT de arriba. Ya existe la fila — la actualizamos en vez de
-        // fallar (perder el lead sería peor que una carrera bien resuelta).
-        const reciente = await buscarExistente(supabaseAdmin, email, phone);
-        if (reciente) {
-          const { error: error2, data: dataActualizada } = await actualizar(reciente);
-          dbError = error2;
-          filaEscrita = dataActualizada?.[0] ?? null;
-        } else {
-          dbError = error;
-        }
+      dbError = error;
+      filaEscrita = dataActualizada?.[0] ?? null;
+    }
+  } else {
+    const { error, data: dataInsertada } = await supabaseAdmin
+      .from("marketing_leads")
+      .insert(fila)
+      .select(SELECT_DESCARGA);
+    if (error?.code === "23505") {
+      // Carrera: otra request insertó el mismo contacto entre el SELECT y
+      // el INSERT de arriba. Ya existe la fila — la actualizamos en vez de
+      // fallar (perder el lead sería peor que una carrera bien resuelta).
+      const reciente = await buscarExistente(supabaseAdmin, email, phone);
+      if (reciente) {
+        const { error: error2, data: dataActualizada } = await actualizar(reciente);
+        dbError = error2;
+        filaEscrita = dataActualizada?.[0] ?? null;
       } else {
         dbError = error;
-        filaEscrita = dataInsertada?.[0] ?? null;
       }
+    } else {
+      dbError = error;
+      filaEscrita = dataInsertada?.[0] ?? null;
     }
+  }
 
-    if (dbError) throw new Error("No pudimos registrar tus datos. Probá de nuevo.");
+  if (dbError) throw new Error("No pudimos registrar tus datos. Probá de nuevo.");
 
-    // Task 13: el checklist gatea un PDF detrás de un token de descarga. El
-    // resto de los canales (calculadora, benchmark) no tienen nada que
-    // descargar, así que ni siquiera miramos `filaEscrita` para ellos.
-    //
-    // Ronda de fix 1 (Important): si esta fila YA tiene
-    // `download_delivered_at` (un lead que vuelve a llenar el mismo
-    // formulario después de haber descargado), el token de un solo uso ya
-    // se quemó — devolverlo igual sólo le muestra al lead un botón
-    // "Descargar PDF" que el endpoint va a rechazar con 403. Sin
-    // `downloadToken` en la respuesta, `LeadForm` no ofrece el botón (ver su
-    // lógica condicional) y el mensaje de éxito queda el genérico, que
-    // sigue siendo honesto — no hace falta texto especial nuevo.
-    if (
-      data.source === "checklist" &&
-      filaEscrita?.download_token &&
-      !filaEscrita.download_delivered_at
-    ) {
-      return { ok: true as const, downloadToken: filaEscrita.download_token };
-    }
+  // Task 13: el checklist gatea un PDF detrás de un token de descarga. El
+  // resto de los canales (calculadora, benchmark) no tienen nada que
+  // descargar, así que ni siquiera miramos `filaEscrita` para ellos.
+  //
+  // Ronda de fix 1 (Important): si esta fila YA tiene
+  // `download_delivered_at` (un lead que vuelve a llenar el mismo
+  // formulario después de haber descargado), el token de un solo uso ya
+  // se quemó — devolverlo igual sólo le muestra al lead un botón
+  // "Descargar PDF" que el endpoint va a rechazar con 403. Sin
+  // `downloadToken` en la respuesta, `LeadForm` no ofrece el botón (ver su
+  // lógica condicional) y el mensaje de éxito queda el genérico, que
+  // sigue siendo honesto — no hace falta texto especial nuevo.
+  if (
+    data.source === "checklist" &&
+    filaEscrita?.download_token &&
+    !filaEscrita.download_delivered_at
+  ) {
+    return { ok: true as const, downloadToken: filaEscrita.download_token };
+  }
 
-    return { ok: true as const };
-  });
+  return { ok: true as const };
+}
 
 /** Lectura de leads para el equipo de Alika. No existe un rol "staff de la
  *  empresa" en el schema (todos los roles son de clínica), así que el gate es
