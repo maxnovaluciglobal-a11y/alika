@@ -278,6 +278,53 @@ async function applyInboundMessage(
   });
 }
 
+/** Mismo tope que el portal (`requestPortalAppointment`): 3 en 24 horas. */
+const TOPE_SOLICITUDES_24H = 3;
+
+/**
+ * Frena la creación de solicitudes repetidas.
+ *
+ * Escribir por WhatsApp es gratis y repetirse es lo NORMAL cuando nadie
+ * contesta: un paciente que manda "quiero hora para el jueves" tres veces
+ * generaría tres filas pendientes y la clínica llamaría tres veces. El portal
+ * ya tenía este freno por una razón parecida (un link reenviado); este camino
+ * se había quedado sin él.
+ *
+ * Dos cortes, y el primero es el que resuelve el caso real:
+ *   1. Ya hay una solicitud PENDIENTE para esa misma fecha → es la misma pedida.
+ *   2. Ya hay 3 solicitudes en 24 h → alguien está insistiendo mucho.
+ *
+ * Frenar la fila NO frena el aviso al equipo: el mensaje igual aparece en la
+ * bandeja, así que nadie se queda sin enterarse. Ante un error de lectura se
+ * deja pasar: perder una solicitud legítima es peor que anotar una de más.
+ */
+async function puedeAnotarOtraSolicitud(
+  supabaseAdmin: SupabaseAdminClient,
+  clinicId: string,
+  patientId: string,
+  fecha: string,
+): Promise<boolean> {
+  const { count: mismaFecha, error: errFecha } = await supabaseAdmin
+    .from("appointment_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("clinic_id", clinicId)
+    .eq("patient_id", patientId)
+    .eq("preferred_date", fecha)
+    .eq("status", "pending");
+  if (errFecha) return true;
+  if ((mismaFecha ?? 0) > 0) return false;
+
+  const desde = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count: recientes, error: errRecientes } = await supabaseAdmin
+    .from("appointment_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("clinic_id", clinicId)
+    .eq("patient_id", patientId)
+    .gte("created_at", desde);
+  if (errRecientes) return true;
+  return (recientes ?? 0) < TOPE_SOLICITUDES_24H;
+}
+
 const ETIQUETA_DE_INTENCION = {
   agendar: "pide una hora",
   reagendar: "quiere mover su hora",
@@ -320,17 +367,19 @@ async function anotarSolicitudDeAgenda(
     : "sin fecha indicada";
 
   if (lectura.intencion === "agendar" && lectura.fecha) {
-    const { error } = await supabaseAdmin.from("appointment_requests").insert({
-      clinic_id: clinicId,
-      patient_id: patientId,
-      preferred_date: lectura.fecha,
-      reason: recorte(bodyText),
-      source: "whatsapp",
-      status: "pending",
-    });
-    // Si falla, el aviso igual sale: perder el aviso por no poder anotar la
-    // solicitud sería peor que tener el aviso sin la fila.
-    if (error) console.error("[whatsapp] no se pudo anotar la solicitud:", error.message);
+    if (await puedeAnotarOtraSolicitud(supabaseAdmin, clinicId, patientId, lectura.fecha)) {
+      const { error } = await supabaseAdmin.from("appointment_requests").insert({
+        clinic_id: clinicId,
+        patient_id: patientId,
+        preferred_date: lectura.fecha,
+        reason: recorte(bodyText),
+        source: "whatsapp",
+        status: "pending",
+      });
+      // Si falla, el aviso igual sale: perder el aviso por no poder anotar la
+      // solicitud sería peor que tener el aviso sin la fila.
+      if (error) console.error("[whatsapp] no se pudo anotar la solicitud:", error.message);
+    }
   }
 
   return {
