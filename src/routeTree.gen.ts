@@ -38,6 +38,7 @@ import { Route as DocsWhatsappRouteImport } from './routes/docs.whatsapp'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as PortalInicioRouteImport } from './routes/portal.inicio'
+import { Route as RecursosFugasClinicaDentalRouteImport } from './routes/recursos.fugas-clinica-dental'
 import { Route as AuthenticatedClinicAgendaRouteImport } from './routes/_authenticated/_clinic/agenda'
 import { Route as AuthenticatedClinicArancelesRouteImport } from './routes/_authenticated/_clinic/aranceles'
 import { Route as AuthenticatedClinicComisionesRouteImport } from './routes/_authenticated/_clinic/comisiones'
@@ -216,6 +217,12 @@ const PortalInicioRoute = PortalInicioRouteImport.update({
   path: '/inicio',
   getParentRoute: () => PortalRoute,
 } as any)
+const RecursosFugasClinicaDentalRoute =
+  RecursosFugasClinicaDentalRouteImport.update({
+    id: '/recursos/fugas-clinica-dental',
+    path: '/recursos/fugas-clinica-dental',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedClinicAgendaRoute =
   AuthenticatedClinicAgendaRouteImport.update({
     id: '/agenda',
@@ -434,6 +441,7 @@ export interface FileRoutesByFullPath {
   '/docs/whatsapp': typeof DocsWhatsappRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
+  '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
   '/docs/': typeof DocsIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
@@ -493,6 +501,7 @@ export interface FileRoutesByTo {
   '/docs/whatsapp': typeof DocsWhatsappRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
+  '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
   '/docs': typeof DocsIndexRoute
   '/portal': typeof PortalIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
@@ -557,6 +566,7 @@ export interface FileRoutesById {
   '/docs/whatsapp': typeof DocsWhatsappRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
+  '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
   '/docs/': typeof DocsIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/_authenticated/_clinic/agenda': typeof AuthenticatedClinicAgendaRoute
@@ -620,6 +630,7 @@ export interface FileRouteTypes {
     | '/docs/whatsapp'
     | '/portal/$token'
     | '/portal/inicio'
+    | '/recursos/fugas-clinica-dental'
     | '/docs/'
     | '/portal/'
     | '/agenda'
@@ -679,6 +690,7 @@ export interface FileRouteTypes {
     | '/docs/whatsapp'
     | '/portal/$token'
     | '/portal/inicio'
+    | '/recursos/fugas-clinica-dental'
     | '/docs'
     | '/portal'
     | '/agenda'
@@ -742,6 +754,7 @@ export interface FileRouteTypes {
     | '/docs/whatsapp'
     | '/portal/$token'
     | '/portal/inicio'
+    | '/recursos/fugas-clinica-dental'
     | '/docs/'
     | '/portal/'
     | '/_authenticated/_clinic/agenda'
@@ -797,6 +810,7 @@ export interface RootRouteChildren {
   ApiEvRoute: typeof ApiEvRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
+  RecursosFugasClinicaDentalRoute: typeof RecursosFugasClinicaDentalRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
 
@@ -1004,6 +1018,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/inicio'
       preLoaderRoute: typeof PortalInicioRouteImport
       parentRoute: typeof PortalRoute
+    }
+    '/recursos/fugas-clinica-dental': {
+      id: '/recursos/fugas-clinica-dental'
+      path: '/recursos/fugas-clinica-dental'
+      fullPath: '/recursos/fugas-clinica-dental'
+      preLoaderRoute: typeof RecursosFugasClinicaDentalRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_clinic/agenda': {
       id: '/_authenticated/_clinic/agenda'
@@ -1381,6 +1402,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiEvRoute: ApiEvRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
+  RecursosFugasClinicaDentalRoute: RecursosFugasClinicaDentalRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport

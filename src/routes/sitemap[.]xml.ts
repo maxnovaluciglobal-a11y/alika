@@ -26,6 +26,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/", changefreq: "weekly", priority: "1.0" },
           { path: "/software-dental-latam", changefreq: "monthly", priority: "0.8" },
           { path: "/calculadora-rentabilidad-dental", changefreq: "monthly", priority: "0.8" },
+          { path: "/recursos/fugas-clinica-dental", changefreq: "monthly", priority: "0.7" },
           { path: "/faq", changefreq: "monthly", priority: "0.6" },
           { path: "/nosotros", changefreq: "monthly", priority: "0.4" },
           { path: "/docs", changefreq: "monthly", priority: "0.5" },

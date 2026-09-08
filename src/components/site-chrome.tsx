@@ -47,7 +47,8 @@ type FooterLink =
         | "/nosotros"
         | "/terminos"
         | "/privacidad"
-        | "/calculadora-rentabilidad-dental";
+        | "/calculadora-rentabilidad-dental"
+        | "/recursos/fugas-clinica-dental";
     }
   | { label: string; kind: "external"; href: string };
 
@@ -68,6 +69,11 @@ const footerColumns: { t: string; links: FooterLink[] }[] = [
         label: "Calculadora de rentabilidad",
         kind: "route",
         to: "/calculadora-rentabilidad-dental",
+      },
+      {
+        label: "Checklist: 15 fugas de dinero",
+        kind: "route",
+        to: "/recursos/fugas-clinica-dental",
       },
     ],
   },
