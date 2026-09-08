@@ -37,12 +37,33 @@ export interface Subscription {
   cancelAtPeriodEnd: boolean;
 }
 
+/** Duración del trial. Única fuente de verdad: la migración que crea la fila
+ *  y este valor tienen que decir lo mismo. DypOS lo tiene hardcodeado en dos
+ *  INSERT distintos. */
+export const TRIAL_DAYS = 14;
+
 /** Considerada operativa: el usuario tiene acceso completo al panel. */
 export function isSubscriptionActive(sub: Subscription | null): boolean {
   if (!sub) return false;
   if (sub.status !== "trialing" && sub.status !== "active") return false;
+  // Un trial con trial_end pasado está vencido aunque currentPeriodEnd sea
+  // null: sin esta línea, la fila que crea el trigger nunca expiraría.
+  if (sub.status === "trialing" && sub.trialEnd && new Date(sub.trialEnd) <= new Date()) {
+    return false;
+  }
   if (sub.currentPeriodEnd && new Date(sub.currentPeriodEnd) <= new Date()) return false;
   return true;
+}
+
+/** ¿Se bloquean los INFORMES (finanzas, comisiones, panel, inventario)?
+ *  La operación diaria —agenda, pacientes, ficha clínica— nunca se bloquea.
+ *  Devuelve false para sub === null: las clínicas piloto anteriores al trigger
+ *  siguen con acceso libre y no se tocan. */
+export function trialInformesBloqueados(sub: Subscription | null): boolean {
+  if (!sub) return false;
+  if (sub.status !== "trialing") return false;
+  if (sub.stripeSubscriptionId) return false;
+  return !!sub.trialEnd && new Date(sub.trialEnd) <= new Date();
 }
 
 /** Días restantes de trial (o null si no está en trial). */
