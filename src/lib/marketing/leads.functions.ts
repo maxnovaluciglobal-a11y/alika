@@ -294,11 +294,16 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
       const {
         consent_at: _consentAt,
         consent_text: _consentText,
-        // Revisión final de rama (Important #2): mismo criterio que
-        // consent_at/consent_text — se setea una sola vez, al INSERT, y un
-        // reenvío posterior (aunque cambie `source`) no debe poder pisarlo
-        // ni vaciarlo. Ver el comentario largo en `fila` más arriba.
-        download_slug: _downloadSlug,
+        // Revisión final de rama (Important #2, corregido en el re-review:
+        // la primera versión excluía esta columna del UPDATE por completo,
+        // igual que consent_at/consent_text — pero a diferencia del
+        // consentimiento, no hay nada que "proteger" de un reenvío: un lead
+        // que llenó la calculadora ANTES que el checklist queda con
+        // download_slug null para siempre, y el link de descarga que
+        // debería recibir en su segundo envío nunca se genera. Mismo
+        // criterio que phone/name/clinic_name: se escribe si el envío
+        // actual trae un valor, nunca se vacía si no lo trae.
+        download_slug: nuevoDownloadSlug,
         email: nuevoEmail,
         phone: nuevoPhone,
         phone_valid: nuevoPhoneValid,
@@ -312,6 +317,7 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
         ...(nuevoPhone ? { phone: nuevoPhone, phone_valid: nuevoPhoneValid } : {}),
         ...(nuevoNombre ? { name: nuevoNombre } : {}),
         ...(nuevaClinica ? { clinic_name: nuevaClinica } : {}),
+        ...(nuevoDownloadSlug ? { download_slug: nuevoDownloadSlug } : {}),
       };
     }
 
