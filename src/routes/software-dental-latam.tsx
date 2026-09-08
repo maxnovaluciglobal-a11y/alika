@@ -125,8 +125,10 @@ function SoftwareDentalLatam() {
             <li>
               <strong className="text-ink">WhatsApp sin obligación de conectar nada.</strong> Alika
               arma la cola de recordatorios y tu equipo la despacha. Si conectas tu número, el envío
-              sale por la API; si no, por un link de wa.me. Ningún mensaje se manda sin que alguien
-              de tu clínica lo dispare.
+              sale por la API; si no, por un link de wa.me. Ningún recordatorio ni mensaje de
+              seguimiento sale solo: los dispara siempre alguien de tu clínica. La única excepción
+              es un saludo automático la primera vez que escribe alguien que todavía no es paciente
+              tuyo — y sólo si conectaste tu número.
             </li>
             <li>
               <strong className="text-ink">Sigue funcionando sin internet.</strong> Agenda, fichas,
