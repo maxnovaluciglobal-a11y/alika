@@ -86,23 +86,30 @@ export async function notifyClinicStaff(
   // aparece dos veces y recibiría el aviso duplicado.
   const destinatarios = [...new Set(miembros.map((m) => m.user_id))];
 
-  const { error: errIns } = await supabaseAdmin.from("notifications").insert(
-    destinatarios.map((recipientId) => ({
-      clinic_id: payload.clinicId,
-      recipient_id: recipientId,
-      actor_id: null,
-      kind: payload.kind,
-      title: payload.title,
-      body: payload.body ?? null,
-      link: payload.link ?? null,
-      patient_ref: payload.patientRef ?? null,
-    })),
-  );
+  // `.select()` para contar los avisos que ENTRARON, no los que se intentaron:
+  // el trigger `notifications_respetar_preferencia` descarta los de quien
+  // apagó los avisos en la app, así que devolver `destinatarios.length` diría
+  // que se avisó a gente que pidió no ser avisada.
+  const { data: insertados, error: errIns } = await supabaseAdmin
+    .from("notifications")
+    .insert(
+      destinatarios.map((recipientId) => ({
+        clinic_id: payload.clinicId,
+        recipient_id: recipientId,
+        actor_id: null,
+        kind: payload.kind,
+        title: payload.title,
+        body: payload.body ?? null,
+        link: payload.link ?? null,
+        patient_ref: payload.patientRef ?? null,
+      })),
+    )
+    .select("id");
   if (errIns) {
     console.error("[notifications] no se pudo avisar al equipo:", errIns.message);
     return 0;
   }
-  return destinatarios.length;
+  return insertados?.length ?? 0;
 }
 
 /** Lista las notificaciones del usuario autenticado, más recientes primero. */
