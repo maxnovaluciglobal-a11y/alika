@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  debeExpulsarDeLaApp,
   isSubscriptionActive,
   trialDaysLeft,
   trialInformesBloqueados,
@@ -88,5 +89,70 @@ describe("trialDaysLeft", () => {
 describe("TRIAL_DAYS", () => {
   it("es la única fuente de verdad de la duración", () => {
     expect(TRIAL_DAYS).toBe(14);
+  });
+});
+
+/**
+ * Task 11, fix round 1 — Important #4(b): esta lógica vivía inline en
+ * `_clinic/route.tsx::beforeLoad` (`soloTrialVencido = sub != null &&
+ * trialInformesBloqueados(sub)`, alimentando `!isSubscriptionActive(sub) &&
+ * !soloTrialVencido`) sin ningún test — es la única línea que separa "el
+ * trial vence y se activan los informes" de "el trial vence y se cierra la
+ * app entera". Extraída a `debeExpulsarDeLaApp` en `billing.ts` para poder
+ * testearla acá.
+ */
+describe("debeExpulsarDeLaApp", () => {
+  it("trial vigente no expulsa", () => {
+    expect(debeExpulsarDeLaApp({ ...base, trialEnd: enDias(5) })).toBe(false);
+  });
+
+  it("trial vencido SIN tarjeta no expulsa — eso lo maneja trialInformesBloqueados puntualmente en los informes, no un redirect de toda la app", () => {
+    expect(debeExpulsarDeLaApp({ ...base, trialEnd: enDias(-1) })).toBe(false);
+  });
+
+  it("trial vencido CON tarjeta sí expulsa", () => {
+    // Estado alcanzable: `createCheckoutSession` (billing.functions.ts) crea
+    // la suscripción de Stripe con `trial_period_days: 14` en el momento del
+    // checkout, así que `stripeSubscriptionId` queda seteado desde YA, con
+    // `status` todavía en "trialing" hasta que Stripe procese el fin del
+    // trial. Si `trial_end` pasa antes de que el webhook de Stripe actualice
+    // el status (demora normal, o el webhook falla/no está configurado), la
+    // fila local queda en este estado exacto: trialing + trial_end vencido +
+    // stripeSubscriptionId seteado. Acá `trialInformesBloqueados` ya no
+    // bloquea (hay tarjeta), pero `isSubscriptionActive` tampoco lo da por
+    // activo (sigue siendo "trialing" con `trial_end` pasado) — no tiene
+    // sentido dejarlo con acceso a toda la app basado solo en que alguna vez
+    // cargó una tarjeta, así que expulsar es lo correcto acá.
+    expect(
+      debeExpulsarDeLaApp({ ...base, trialEnd: enDias(-1), stripeSubscriptionId: "sub_123" }),
+    ).toBe(true);
+  });
+
+  it("past_due expulsa", () => {
+    expect(debeExpulsarDeLaApp({ ...base, status: "past_due" })).toBe(true);
+  });
+
+  it("canceled expulsa", () => {
+    expect(debeExpulsarDeLaApp({ ...base, status: "canceled" })).toBe(true);
+  });
+
+  it("unpaid expulsa", () => {
+    expect(debeExpulsarDeLaApp({ ...base, status: "unpaid" })).toBe(true);
+  });
+
+  it("active con currentPeriodEnd vencido expulsa", () => {
+    expect(debeExpulsarDeLaApp({ ...base, status: "active", currentPeriodEnd: enDias(-1) })).toBe(
+      true,
+    );
+  });
+
+  it("active con currentPeriodEnd vigente no expulsa", () => {
+    expect(debeExpulsarDeLaApp({ ...base, status: "active", currentPeriodEnd: enDias(20) })).toBe(
+      false,
+    );
+  });
+
+  it("sub === null no expulsa — las clínicas piloto sin fila de suscripción no se tocan", () => {
+    expect(debeExpulsarDeLaApp(null)).toBe(false);
   });
 });

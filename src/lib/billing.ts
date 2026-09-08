@@ -72,3 +72,21 @@ export function trialDaysLeft(sub: Subscription | null): number | null {
   const diffMs = new Date(sub.trialEnd).getTime() - Date.now();
   return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 }
+
+/**
+ * ¿Corresponde expulsar al owner de TODA la app hacia `/suscripcion`?
+ *
+ * Task 11, fix round 1: extraída de `_clinic/route.tsx::beforeLoad`, donde
+ * vivía como expresión inline sin ningún test — la única línea que separa
+ * "el trial venció y se activan los informes" de "el trial venció y se
+ * cierra la app entera". `trialInformesBloqueados(sub) === true` implica
+ * siempre `isSubscriptionActive(sub) === false` (un trial vencido sin
+ * tarjeta nunca está "activo"), así que restar ese caso de
+ * `!isSubscriptionActive(sub)` deja pasar exactamente "trial recién vencido,
+ * sin tarjeta" y sigue expulsando en todos los demás casos de post-trial:
+ * `past_due`/`canceled`/`unpaid`, o una suscripción `active` cuyo período ya
+ * venció.
+ */
+export function debeExpulsarDeLaApp(sub: Subscription | null): boolean {
+  return !!sub && !isSubscriptionActive(sub) && !trialInformesBloqueados(sub);
+}

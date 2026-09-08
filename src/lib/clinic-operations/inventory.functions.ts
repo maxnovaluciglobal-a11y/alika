@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isUndefinedColumnError, mensajeDb } from "@/lib/db-errors";
 import type { ConsumptionType } from "@/lib/clinic-operations/procedure-supply-consumption";
+import { throwIfTrialBlocksInformes } from "@/lib/finance/finance-reports.functions";
 
 export type InventoryMovementKind = "entrada" | "salida" | "ajuste";
 
@@ -115,6 +116,13 @@ export const listInventoryItems = createServerFn({ method: "GET" })
     z.object({ clinicId: z.string().uuid(), branchId: z.string().uuid().nullish() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<{ items: InventoryItem[] }> => {
+    // Task 11, fix round 1 (Important #2): esta función solo tenía
+    // `requireSupabaseAuth` + RLS ("todos los roles clínicos con acceso
+    // operativo", ver comentario arriba) — sin chequeo de rol propio que
+    // rechace. Se le agrega SOLO la capa de trial, encima de lo que ya
+    // autorizaba, sin tocar a quién le permite llamarla.
+    await throwIfTrialBlocksInformes(context.supabase, data.clinicId);
+
     let query = context.supabase
       .from("inventory_items")
       .select(INVENTORY_ITEM_COLUMNS_FULL)

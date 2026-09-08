@@ -4,7 +4,7 @@ import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-ro
 import { getMyAccess } from "@/lib/access/access.functions";
 import { ACCESS_QUERY_KEY, type ClinicAccess } from "@/lib/access/access";
 import { getMySubscription } from "@/lib/billing.functions";
-import { isSubscriptionActive, trialInformesBloqueados } from "@/lib/billing";
+import { debeExpulsarDeLaApp } from "@/lib/billing";
 import { leerRolSimulado, puedeSimular } from "@/lib/access/role-simulation";
 import { ensureOfflineCacheHydrated } from "@/lib/offline/offline-cache";
 import { AppShell } from "@/components/app-shell";
@@ -75,8 +75,10 @@ export const Route = createFileRoute("/_authenticated/_clinic")({
       // que llegó a poner tarjeta y el cobro falló o se canceló
       // (past_due/canceled/unpaid) o una suscripción activa cuyo período ya
       // venció — ahí sí tiene sentido mandar derecho a /suscripcion.
-      const soloTrialVencido = sub != null && trialInformesBloqueados(sub);
-      if (access.role === "owner" && sub && !isSubscriptionActive(sub) && !soloTrialVencido) {
+      // Lógica extraída a `debeExpulsarDeLaApp` (Task 11, fix round 1): es
+      // puro booleano que antes vivía inline acá sin ningún test — ver
+      // `tests/trial-gating.test.ts`.
+      if (access.role === "owner" && debeExpulsarDeLaApp(sub)) {
         throw redirect({ to: "/suscripcion" });
       }
     }

@@ -11,6 +11,7 @@ import type {
   Expense,
   PaymentMethodConfig,
 } from "@/lib/finance/finance";
+import { throwIfTrialBlocksInformes } from "@/lib/finance/finance-reports.functions";
 import { writePatientFields } from "@/lib/patients/patients.functions";
 
 /**
@@ -62,6 +63,12 @@ export const listPaymentMethods = createServerFn({ method: "GET" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<PaymentMethodConfig[]> => {
+    // Task 11, fix round 1 (Important #2): esta función solo tenía
+    // `requireSupabaseAuth` + RLS — sin chequeo de rol propio, así que no
+    // pasa por `requireFinanceView` (cambiaría a quién le permite llamarla).
+    // Se le agrega SOLO la capa de trial, encima de lo que ya autorizaba.
+    await throwIfTrialBlocksInformes(context.supabase, data.clinicId);
+
     let query = context.supabase
       .from("payment_methods")
       .select(PAYMENT_METHOD_COLUMNS)
@@ -234,6 +241,10 @@ export const listExpenses = createServerFn({ method: "GET" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<Expense[]> => {
+    // Task 11, fix round 1 (Important #2): ídem `listPaymentMethods` — sin
+    // chequeo de rol propio, se le agrega solo la capa de trial.
+    await throwIfTrialBlocksInformes(context.supabase, data.clinicId);
+
     const { data: rows, error } = await context.supabase
       .from("expenses")
       .select(EXPENSE_COLUMNS)
@@ -416,6 +427,10 @@ export const listAgreements = createServerFn({ method: "GET" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<Agreement[]> => {
+    // Task 11, fix round 1 (Important #2): ídem `listPaymentMethods` — sin
+    // chequeo de rol propio, se le agrega solo la capa de trial.
+    await throwIfTrialBlocksInformes(context.supabase, data.clinicId);
+
     let query = context.supabase
       .from("agreements")
       .select(AGREEMENT_COLUMNS)

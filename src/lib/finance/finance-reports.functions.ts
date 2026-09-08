@@ -25,8 +25,15 @@ const SIN_PERMISOS_FINANZAS = "No tienes permisos para ver los reportes financie
  * comisiones (que sí tiene sentido acotar a "lo propio"), un reporte de caja
  * no tiene una versión "propia" con sentido para un rol sin `finance:view` —
  * la respuesta correcta es negar, no degradar en silencio.
+ *
+ * Solo el chequeo de ROL — sin trial. Existe separada de `requireFinanceView`
+ * para `getAppointmentPatientBalances` (Task 11, fix round 1): ese endpoint
+ * exige el mismo rol `finance:view` pero es operación diaria de agenda, no un
+ * "informe", así que el trial vencido NO tiene que bloquearlo (ver ruling del
+ * reviewer — Important #3: mostrar saldo `undefined` ahí se confunde con "sin
+ * plan de tratamiento" y esconde una deuda real en el mostrador).
  */
-export async function requireFinanceView(
+export async function requireFinanceViewRole(
   supabase: SupabaseClient<Database>,
   clinicId: string,
   userId: string,
@@ -41,13 +48,32 @@ export async function requireFinanceView(
     ? permissionsForRole(membership.role as ClinicRole).includes("finance:view")
     : false;
   if (!canView) throw new Error(SIN_PERMISOS_FINANZAS);
+}
 
-  // Task 11: el trial vencido bloquea los INFORMES también en el servidor.
-  // Regla 15 de la casa — el JWT vive en localStorage — así que el gate de
-  // UI (TrialDesbloqueo) por sí solo no protege nada: cualquiera con el JWT
-  // en la mano puede llamar esta server function directo, saltándose la
-  // pantalla. Mismo mapeo que `mapSubscription` en billing.functions.ts
-  // (no está exportada, así que se repite acá en lugar de importarla).
+/**
+ * Gate compartido de trial vencido para cualquier server function que sirve
+ * un "informe" (Task 11, fix round 1). Lanza el MISMO mensaje genérico que el
+ * chequeo de rol — nunca uno distinto que delate el motivo ("trial vencido")
+ * a quien mire la Network tab.
+ *
+ * Regla 15 de la casa — el JWT vive en localStorage — así que el gate de UI
+ * (TrialDesbloqueo) por sí solo no protege nada: cualquiera con el JWT en la
+ * mano puede llamar la server function directo, saltándose la pantalla.
+ *
+ * Extraída de `requireFinanceView` para poder aplicarse también a funciones
+ * cuyo control de acceso NO es "requiere finance:view" (`listExpenses`,
+ * `listPaymentMethods`, `listAgreements`, `listLabOrders`,
+ * `listInventoryItems` — ver Important #2 de la revisión): esas cinco siguen
+ * su propio chequeo de rol/RLS tal cual estaba, y solo se les agrega esta
+ * capa encima, sin tocar a quién le permiten llamarlas.
+ *
+ * Mismo mapeo que `mapSubscription` en billing.functions.ts (no está
+ * exportada ahí, así que se repite acá en lugar de importarla).
+ */
+export async function throwIfTrialBlocksInformes(
+  supabase: SupabaseClient<Database>,
+  clinicId: string,
+) {
   const { data: subRow } = await supabase
     .from("subscriptions")
     .select(
@@ -55,22 +81,32 @@ export async function requireFinanceView(
     )
     .eq("clinic_id", clinicId)
     .maybeSingle();
-  if (subRow) {
-    const status = (SUBSCRIPTION_STATUSES as readonly string[]).includes(subRow.status)
-      ? (subRow.status as Subscription["status"])
-      : "incomplete";
-    const sub: Subscription = {
-      clinicId: subRow.clinic_id,
-      status,
-      stripeCustomerId: subRow.stripe_customer_id,
-      stripeSubscriptionId: subRow.stripe_subscription_id,
-      stripePriceId: subRow.stripe_price_id,
-      trialEnd: subRow.trial_end,
-      currentPeriodEnd: subRow.current_period_end,
-      cancelAtPeriodEnd: subRow.cancel_at_period_end,
-    };
-    if (trialInformesBloqueados(sub)) throw new Error(SIN_PERMISOS_FINANZAS);
-  }
+  if (!subRow) return;
+  const status = (SUBSCRIPTION_STATUSES as readonly string[]).includes(subRow.status)
+    ? (subRow.status as Subscription["status"])
+    : "incomplete";
+  const sub: Subscription = {
+    clinicId: subRow.clinic_id,
+    status,
+    stripeCustomerId: subRow.stripe_customer_id,
+    stripeSubscriptionId: subRow.stripe_subscription_id,
+    stripePriceId: subRow.stripe_price_id,
+    trialEnd: subRow.trial_end,
+    currentPeriodEnd: subRow.current_period_end,
+    cancelAtPeriodEnd: subRow.cancel_at_period_end,
+  };
+  if (trialInformesBloqueados(sub)) throw new Error(SIN_PERMISOS_FINANZAS);
+}
+
+/** Rol + trial. Lo que usan los tres reportes de esta misma factura
+ * (`getFinanceSummary`, `getQuoteConversionReport`, `getPanelDesempeno`). */
+export async function requireFinanceView(
+  supabase: SupabaseClient<Database>,
+  clinicId: string,
+  userId: string,
+) {
+  await requireFinanceViewRole(supabase, clinicId, userId);
+  await throwIfTrialBlocksInformes(supabase, clinicId);
 }
 
 export interface FinanceSummary {
