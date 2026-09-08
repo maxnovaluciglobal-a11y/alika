@@ -42,6 +42,105 @@ const EsquemaLead = z
     message: "Dejanos un email o un WhatsApp para poder enviarte el material.",
   });
 
+/**
+ * Sal para `hashIp`. Mismo patrón que `getSecret()` en
+ * `src/lib/patients/portal-token.server.ts`: un valor fijo en el repo (como
+ * el `"sal-de-desarrollo"` que había acá antes) es un secreto público conocido
+ * — cualquiera que lea el código puede reproducir el hash de cualquier IP en
+ * cualquier deploy que no tenga `PORTAL_TOKEN_SECRET` seteada. En producción
+ * sin esa env var, mejor fallar fuerte que hashear con un secreto adivinable.
+ * Fuera de producción cae a un valor random generado una vez por proceso
+ * (cacheado en el módulo, no en cada llamada) — así el hash de una misma IP
+ * es estable dentro de la ventana de rate-limit de una hora, aunque no
+ * sobreviva un restart de `npm run dev`.
+ */
+let salIpDev: string | null = null;
+
+function obtenerSalIp(): string {
+  const raw = process.env.PORTAL_TOKEN_SECRET;
+  if (raw) return raw;
+
+  if (process.env.NODE_ENV !== "production") {
+    if (!salIpDev) {
+      console.warn(
+        "[leads] Usando sal de desarrollo generada al azar (no persiste entre restarts). Setear PORTAL_TOKEN_SECRET en producción.",
+      );
+      salIpDev = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+    return salIpDev;
+  }
+
+  throw new Error(
+    "PORTAL_TOKEN_SECRET no configurada. Setear en Vercel Env Vars (32+ bytes random).",
+  );
+}
+
+type SupabaseAdminClient = Awaited<
+  typeof import("@/integrations/supabase/client.server")
+>["supabaseAdmin"];
+
+type LeadExistente = {
+  id: string;
+  submissions_count: number;
+  email: string | null;
+  phone: string | null;
+};
+
+/**
+ * Busca una fila existente que matchee por email O por teléfono — no sólo por
+ * la columna que se eligió como "conflicto principal". Si sólo se busca por
+ * una columna (como hacía el borrador original) un lead que ya existe por
+ * OTRA columna nunca se encuentra: el SELECT no lo ve, el INSERT choca contra
+ * el índice único de esa otra columna, y sin este broadening no había forma
+ * de recuperarse — el lead se perdía con un error duro.
+ *
+ * Caso raro: si `email` matchea una fila y `phone` matchea una fila DISTINTA
+ * (dos personas reales que comparten un solo dato de contacto — p.ej. un
+ * teléfono de recepción compartido), preferimos la fila del email: es el
+ * identificador más fuerte de los dos. No fusionamos en silencio los datos
+ * de dos personas distintas — el caller decide qué hacer con el resto
+ * (`campoDelConflicto` + el retry de UPDATE más abajo cubren el caso en que
+ * esto termina chocando contra el índice único de la otra fila).
+ */
+async function buscarExistente(
+  supabaseAdmin: SupabaseAdminClient,
+  email: string | null,
+  phone: string | null,
+): Promise<LeadExistente | null> {
+  if (!email && !phone) return null;
+
+  let query = supabaseAdmin.from("marketing_leads").select("id, submissions_count, email, phone");
+  if (email && phone) {
+    query = query.or(`email.eq.${email},phone.eq.${phone}`);
+  } else if (email) {
+    query = query.eq("email", email);
+  } else {
+    query = query.eq("phone", phone as string);
+  }
+
+  const { data } = await query;
+  if (!data || data.length === 0) return null;
+  if (data.length === 1) return data[0];
+
+  // Dos filas distintas matchearon (una por email, otra por phone). Ver
+  // comentario del docstring: preferimos la del email.
+  return (email && data.find((d) => d.email === email)) || data[0];
+}
+
+/** Si un UPDATE tira 23505, de qué columna vino según el nombre del índice
+ *  único que violó (ver la migración de Task 1: `marketing_leads_email_key`
+ *  / `marketing_leads_phone_key`). `null` si no se puede determinar. */
+function campoDelConflicto(
+  error: { message?: string; details?: string } | null,
+): "email" | "phone" | null {
+  const texto = `${error?.message ?? ""} ${error?.details ?? ""}`;
+  if (texto.includes("marketing_leads_email_key")) return "email";
+  if (texto.includes("marketing_leads_phone_key")) return "phone";
+  return null;
+}
+
 export const submitMarketingLead = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => EsquemaLead.parse(input))
   .handler(async ({ data }) => {
@@ -53,19 +152,36 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
 
     const ipCruda =
       (getRequestHeader("x-forwarded-for") ?? "").split(",")[0]?.trim() || "desconocida";
-    const sal = process.env.PORTAL_TOKEN_SECRET ?? "sal-de-desarrollo";
+    const sal = obtenerSalIp();
     const ipHash = await hashIp(ipCruda, sal);
 
-    // Rate limit EN LA BASE, no en memoria: la capa en memoria de
-    // rate-limit.server.ts es por instancia serverless y no sirve como
-    // control real. Mismo patrón que el portal (3 solicitudes/24h).
+    // Evento de intento ANTES del chequeo de rate limit, para TODO envío que
+    // pasó el honeypot — insert o update. `marketing_leads` no sirve para
+    // contar intentos: un contacto ya conocido resuelve en UPDATE (misma
+    // fila, sin fila nueva), así que contar filas de `marketing_leads` deja
+    // reenviar sin límite real al mismo contacto una y otra vez. Insert
+    // best-effort: si falla no bloqueamos el alta del lead por un problema
+    // de instrumentación (ver log de abajo, no se traga en silencio total).
+    const { error: eventoError } = await supabaseAdmin
+      .from("marketing_events")
+      .insert({ name: "lead_enviado", props: { ip_hash: ipHash } });
+    if (eventoError) {
+      console.error("[leads] no se pudo registrar el evento de rate-limit:", eventoError.message);
+    }
+
     const desde = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { count } = await supabaseAdmin
-      .from("marketing_leads")
+      .from("marketing_events")
       .select("id", { count: "exact", head: true })
-      .eq("ip_hash", ipHash)
+      .eq("name", "lead_enviado")
+      .eq("props->>ip_hash", ipHash)
       .gte("created_at", desde);
-    if ((count ?? 0) >= MAX_POR_IP_POR_HORA) {
+    // El evento de ESTE intento ya quedó insertado y contado arriba, por eso
+    // acá es `>` y no `>=`: los primeros MAX_POR_IP_POR_HORA intentos (conteo
+    // 1..MAX) pasan, recién el intento MAX+1 (conteo > MAX) se bloquea —
+    // mismo umbral efectivo de siempre (5 por hora), ahora contando TODOS
+    // los intentos (inserts y updates), no sólo los que crean fila nueva.
+    if ((count ?? 0) > MAX_POR_IP_POR_HORA) {
       throw new Error("Recibimos varios envíos desde tu conexión. Probá de nuevo en un rato.");
     }
 
@@ -88,6 +204,10 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
       }
     }
 
+    // `fila` completa: se usa tal cual para el INSERT (primer alta, no hay
+    // nada previo que preservar) y como fuente para el payload de UPDATE
+    // (ver `datosActualizacion` más abajo, que recorta y condiciona algunos
+    // campos antes de escribir).
     const fila = {
       email,
       phone,
@@ -98,17 +218,62 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
       source: data.source,
       utm: data.utm ?? null,
       meta: data.meta ?? null,
-      // Se re-escribe en cada envío, no sólo al insertar: `consent` es
-      // z.literal(true) obligatorio en CADA submit, así que cada envío es un
-      // consentimiento nuevo, no el mismo de la primera vez. El default de
-      // la columna (now() en el insert) no alcanzaría para reflejar eso en
-      // un update.
       consent_at: new Date().toISOString(),
       consent_text: data.consentText,
       consent_whatsapp: data.consentWhatsapp,
       ip_hash: ipHash,
       user_agent: (getRequestHeader("user-agent") ?? "").slice(0, 255) || null,
     };
+
+    /**
+     * Payload de UPDATE — NO es `fila` tal cual. Dos ajustes respecto del
+     * INSERT:
+     *
+     * 1. `consent_at`/`consent_text` NO se tocan. Esta tabla existe para
+     *    poder probar consentimiento (Ley 21.719 pone la carga de la prueba
+     *    en Alika) — pisar el texto/fecha del consentimiento ORIGINAL en
+     *    cada reenvío destruye esa prueba. Quedan como se guardaron en el
+     *    primer INSERT.
+     * 2. `phone`, `phone_valid`, `name`, `clinic_name` y `email` sólo se
+     *    escriben si el envío actual trajo un valor. Un segundo envío más
+     *    angosto (p.ej. sólo email, para un lead magnet distinto) no debe
+     *    poder vaciar datos de contacto que un envío anterior sí capturó —
+     *    omitir la clave del objeto de `.update()` deja el valor existente
+     *    en la fila intacto (PostgREST sólo toca las columnas presentes en
+     *    el payload).
+     *
+     * `country_code`, `source`, `utm`, `meta`, `consent_whatsapp`, `ip_hash`
+     * y `user_agent` sí se pisan siempre con lo más reciente — es la
+     * intención original del diseño ("pisar con el resultado más reciente")
+     * y ninguno de ellos es evidencia de consentimiento ni un dato de
+     * contacto que un envío parcial pueda "perder" sin querer.
+     */
+    function datosActualizacion(f: typeof fila) {
+      const {
+        consent_at: _consentAt,
+        consent_text: _consentText,
+        email: nuevoEmail,
+        phone: nuevoPhone,
+        phone_valid: nuevoPhoneValid,
+        name: nuevoNombre,
+        clinic_name: nuevaClinica,
+        ...siempreFrescos
+      } = f;
+      return {
+        ...siempreFrescos,
+        ...(nuevoEmail ? { email: nuevoEmail } : {}),
+        ...(nuevoPhone ? { phone: nuevoPhone, phone_valid: nuevoPhoneValid } : {}),
+        ...(nuevoNombre ? { name: nuevoNombre } : {}),
+        ...(nuevaClinica ? { clinic_name: nuevaClinica } : {}),
+      };
+    }
+
+    async function actualizar(existente: LeadExistente) {
+      return await supabaseAdmin
+        .from("marketing_leads")
+        .update({ ...datosActualizacion(fila), submissions_count: existente.submissions_count + 1 })
+        .eq("id", existente.id);
+    }
 
     // Upsert por contacto: el mismo dentista que vuelve a usar la calculadora
     // actualiza su fila, no genera una nueva. DypOS no tiene dedupe y produce
@@ -123,54 +288,53 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
     // le pasás en `onConflict` — no puede expresar el predicate parcial ni
     // una expresión — así que Postgres nunca encuentra un índice único que
     // matchee y tira 42P10 ("no unique or exclusion constraint matching").
-    // Confirmado en la base real con `ON CONFLICT (email)`, `ON CONFLICT
-    // (lower(email))` (sin WHERE) y `ON CONFLICT (phone)`: los tres fallan
-    // igual; sólo funciona agregando el WHERE exacto del índice, algo que el
-    // parámetro `onConflict` no permite construir.
-    //
     // Se resuelve a mano: SELECT por el contacto, UPDATE si existe, INSERT si
     // no. Como ya normalizamos `email` a minúsculas nosotros mismos antes de
-    // guardar, el `.eq("email", email)` de abajo es equivalente al índice
-    // sobre `lower(email)` — no hace falta ILIKE. Ante una carrera (dos
-    // requests concurrentes para el mismo contacto entre el SELECT y el
-    // INSERT) el índice único de la base sí actúa como red de seguridad: el
-    // segundo INSERT falla con 23505 y se reintenta como UPDATE.
-    const columnaConflicto = email ? "email" : "phone";
-    const valorConflicto = (email ?? phone) as string;
-
-    const { data: existente } = await supabaseAdmin
-      .from("marketing_leads")
-      .select("id, submissions_count")
-      .eq(columnaConflicto, valorConflicto)
-      .maybeSingle();
-
+    // guardar, el `.eq("email", email)` de `buscarExistente` es equivalente
+    // al índice sobre `lower(email)` — no hace falta ILIKE.
     let dbError: { message: string } | null = null;
+    const existente = await buscarExistente(supabaseAdmin, email, phone);
 
     if (existente) {
-      const { error } = await supabaseAdmin
-        .from("marketing_leads")
-        .update({ ...fila, submissions_count: existente.submissions_count + 1 })
-        .eq("id", existente.id);
-      dbError = error;
+      const { error } = await actualizar(existente);
+      if (error?.code === "23505") {
+        // Dos escenarios posibles, y no se pueden distinguir de antemano:
+        // (a) carrera real — otra request tocó el mismo contacto entre el
+        //     SELECT de `buscarExistente` y este UPDATE — o (b) el caso raro
+        //     del docstring de `buscarExistente`: el email matcheó esta fila
+        //     pero el teléfono nuevo pertenece a OTRA fila distinta.
+        const otraVez = await buscarExistente(supabaseAdmin, email, phone);
+        if (otraVez && otraVez.id !== existente.id) {
+          // Escenario (a): hay una fila más reciente que matchea mejor.
+          const { error: error2 } = await actualizar(otraVez);
+          dbError = error2;
+        } else {
+          // Escenario (b) (o (a) resuelto igual que antes): no perdemos el
+          // lead entero por un solo campo cruzado con otra persona — se
+          // reintenta sin la columna que chocó, dejando el valor que esa
+          // fila ya tenía. No le "robamos" el dato a la otra fila.
+          const campo = campoDelConflicto(error);
+          const filaSinConflicto = campo ? { ...fila, [campo]: existente[campo] } : fila;
+          const { error: error2 } = await supabaseAdmin
+            .from("marketing_leads")
+            .update({
+              ...datosActualizacion(filaSinConflicto),
+              submissions_count: existente.submissions_count + 1,
+            })
+            .eq("id", existente.id);
+          dbError = error2;
+        }
+      } else {
+        dbError = error;
+      }
     } else {
       const { error } = await supabaseAdmin.from("marketing_leads").insert(fila);
       if (error?.code === "23505") {
         // Carrera: otra request insertó el mismo contacto entre el SELECT y
         // el INSERT de arriba. Ya existe la fila — la actualizamos en vez de
         // fallar (perder el lead sería peor que una carrera bien resuelta).
-        const { data: reciente } = await supabaseAdmin
-          .from("marketing_leads")
-          .select("id, submissions_count")
-          .eq(columnaConflicto, valorConflicto)
-          .maybeSingle();
-        dbError = reciente
-          ? (
-              await supabaseAdmin
-                .from("marketing_leads")
-                .update({ ...fila, submissions_count: reciente.submissions_count + 1 })
-                .eq("id", reciente.id)
-            ).error
-          : error;
+        const reciente = await buscarExistente(supabaseAdmin, email, phone);
+        dbError = reciente ? (await actualizar(reciente)).error : error;
       } else {
         dbError = error;
       }
