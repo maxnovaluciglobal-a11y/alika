@@ -141,8 +141,30 @@ function campoDelConflicto(
   return null;
 }
 
+/**
+ * `EsquemaLead.parse` tira `ZodError` cuando la validación falla — su
+ * `.message` es un blob JSON crudo (`[{"code":"custom","message":"...",...}]`),
+ * no texto legible. Sin este wrapper ese blob llegaba tal cual al
+ * `role="alert"` de `lead-form.tsx`, frente a un prospecto real. El
+ * chequeo simétrico en el cliente (ver `onSubmit` de `LeadForm`) cubre el
+ * caso más común (email y phone vacíos) antes del round-trip; esto es la
+ * red de seguridad para cualquier otro caso que el cliente no cubra (p.ej.
+ * un email mal formado que pasa el `type="email"` del browser).
+ */
+function parsearLead(input: unknown) {
+  try {
+    return EsquemaLead.parse(input);
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      const mensaje = err.issues[0]?.message;
+      throw new Error(mensaje || "Revisá los datos del formulario e intentá de nuevo.");
+    }
+    throw err;
+  }
+}
+
 export const submitMarketingLead = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => EsquemaLead.parse(input))
+  .inputValidator(parsearLead)
   .handler(async ({ data }) => {
     // Honeypot lleno: fingimos éxito. Devolver un error le confirma al bot
     // que detectamos la trampa y le enseña a evitarla.

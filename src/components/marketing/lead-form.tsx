@@ -52,12 +52,22 @@ export function LeadForm({
       return;
     }
 
+    const email = String(f.get("email") ?? "").trim();
+    const phone = String(f.get("phone") ?? "").trim();
+    if (!email && !phone) {
+      // Mismo mensaje que el .refine() del server (EsquemaLead en
+      // leads.functions.ts) — cubrimos acá el caso más común para evitar el
+      // round-trip, pero el server sigue siendo la red de seguridad real.
+      setError("Dejanos un email o un WhatsApp para poder enviarte el material.");
+      return;
+    }
+
     setEstado("enviando");
     try {
       await enviar({
         data: {
-          email: String(f.get("email") ?? "").trim() || undefined,
-          phone: String(f.get("phone") ?? "").trim() || undefined,
+          email: email || undefined,
+          phone: phone || undefined,
           name: String(f.get("name") ?? "").trim() || undefined,
           clinicName: String(f.get("clinicName") ?? "").trim() || undefined,
           countryCode: pais,
