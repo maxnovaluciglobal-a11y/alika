@@ -83,6 +83,34 @@ function Privacidad() {
         </LegalLi>
       </LegalUl>
       <LegalP>
+        <strong>Para qué usamos estos datos.</strong> No es un uso genérico de "operar el servicio"
+        — son finalidades concretas:
+      </LegalP>
+      <LegalUl>
+        <LegalLi>
+          <strong>Darte acceso a tu cuenta de staff</strong> y aplicar los permisos de tu rol dentro
+          de la clínica.
+        </LegalLi>
+        <LegalLi>
+          <strong>
+            Que tu clínica lleve la ficha, el odontograma, los presupuestos y los pagos
+          </strong>{" "}
+          de sus pacientes — la razón de ser de la aplicación.
+        </LegalLi>
+        <LegalLi>
+          <strong>Procesar los turnos que un paciente pide</strong> por el link del portal de
+          auto-agendamiento.
+        </LegalLi>
+        <LegalLi>
+          <strong>Dar seguimiento por WhatsApp</strong> a pacientes y a personas que escriben sin
+          ser pacientes todavía, cuando la clínica conecta su número.
+        </LegalLi>
+        <LegalLi>
+          <strong>Generar resúmenes o borradores con IA</strong> — por ejemplo de notas clínicas —
+          sólo cuando el profesional lo pide de forma explícita, nunca en automático.
+        </LegalLi>
+      </LegalUl>
+      <LegalP>
         <strong>Con qué base tratamos todo esto.</strong> Con los datos de pacientes, Alika actúa
         como encargado: la base de legitimidad la fija tu clínica, que es la responsable — en
         general, la atención de salud que te está dando y la relación que tienes con ella. Con las
