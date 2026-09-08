@@ -129,6 +129,34 @@ async function buscarExistente(
   return (email && data.find((d) => d.email === email)) || data[0];
 }
 
+/**
+ * Variante angosta de `buscarExistente` para Task 13: sólo trae
+ * `download_token` de la fila que matchea por email o por teléfono. Mismo
+ * criterio de matching (ver docstring de `buscarExistente` para el caso raro
+ * de dos filas distintas) — acá basta con "alguna fila", no hace falta
+ * decidir cuál preferir con la misma precisión porque el llamador sólo lee
+ * el token, no escribe nada con este resultado.
+ */
+async function buscarDownloadToken(
+  supabaseAdmin: SupabaseAdminClient,
+  email: string | null,
+  phone: string | null,
+): Promise<{ download_token: string | null } | null> {
+  if (!email && !phone) return null;
+
+  let query = supabaseAdmin.from("marketing_leads").select("download_token");
+  if (email && phone) {
+    query = query.or(`email.eq.${email},phone.eq.${phone}`);
+  } else if (email) {
+    query = query.eq("email", email);
+  } else {
+    query = query.eq("phone", phone as string);
+  }
+
+  const { data } = await query.limit(1).maybeSingle();
+  return data;
+}
+
 /** Si un UPDATE tira 23505, de qué columna vino según el nombre del índice
  *  único que violó (ver la migración de Task 1: `marketing_leads_email_key`
  *  / `marketing_leads_phone_key`). `null` si no se puede determinar. */
@@ -363,6 +391,21 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
     }
 
     if (dbError) throw new Error("No pudimos registrar tus datos. Probá de nuevo.");
+
+    // Task 13: el checklist gatea un PDF detrás de un token de descarga. El
+    // resto de los canales (calculadora, benchmark) no tienen nada que
+    // descargar, así que no vale la pena cargar esta columna para ellos.
+    // Query extra deliberada en vez de encadenar `.select()` en cada rama de
+    // arriba (insert directo / update / los dos sub-casos del retry por
+    // 23505) — reusa el mismo criterio de matching que `buscarExistente`
+    // para traer el token de la fila que quedó escrita, sea cual sea la
+    // rama que se tomó. No es un endpoint de alto tráfico.
+    if (data.source === "checklist") {
+      const filaFinal = await buscarDownloadToken(supabaseAdmin, email, phone);
+      if (filaFinal?.download_token) {
+        return { ok: true as const, downloadToken: filaFinal.download_token };
+      }
+    }
 
     return { ok: true as const };
   });

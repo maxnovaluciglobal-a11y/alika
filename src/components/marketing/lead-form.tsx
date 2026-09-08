@@ -32,15 +32,21 @@ export function LeadForm({
   pais,
   meta,
   tituloExito,
+  slugRecurso,
 }: {
   source: "calculadora" | "checklist" | "benchmark";
   pais: PaisCaptacion;
   meta?: MetaLead;
   tituloExito: string;
+  /** Slug del recurso descargable (Task 13), ej. "fugas-clinica-dental". Sin
+   *  esto, aunque el server devuelva `downloadToken`, no se arma ningún link
+   *  — el caller es quien sabe qué recurso corresponde a este formulario. */
+  slugRecurso?: string;
 }) {
   const enviar = useServerFn(submitMarketingLead);
   const [estado, setEstado] = useState<"idle" | "enviando" | "ok">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [resultado, setResultado] = useState<Awaited<ReturnType<typeof enviar>> | null>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -64,7 +70,7 @@ export function LeadForm({
 
     setEstado("enviando");
     try {
-      await enviar({
+      const res = await enviar({
         data: {
           email: email || undefined,
           phone: phone || undefined,
@@ -80,6 +86,7 @@ export function LeadForm({
           company: String(f.get("company") ?? ""), // honeypot
         },
       });
+      setResultado(res);
       registrarEvento("lead_enviado", { source, pais });
       setEstado("ok");
     } catch (err) {
@@ -91,12 +98,24 @@ export function LeadForm({
   if (estado === "ok") {
     // NUNCA decir "te lo mandamos": hoy no hay RESEND_API_KEY y prometer un
     // envío que no ocurre es exactamente el modo de falla que tiene DypOS.
+    // El link de descarga (Task 13) es autoservicio inmediato en esta misma
+    // pantalla, no una promesa de envío por otro canal — respeta la misma
+    // regla. Sin `slugRecurso` (calculadora, benchmark) o sin `downloadToken`
+    // (honeypot, que finge éxito sin escribir nada) el bloque de abajo no
+    // aparece y el comportamiento queda idéntico al de antes de esta tarea.
+    const downloadToken =
+      resultado && "downloadToken" in resultado ? resultado.downloadToken : null;
     return (
       <div className="rounded-2xl border border-mint/25 bg-mint-soft p-6">
         <p className="font-semibold">{tituloExito}</p>
         <p className="mt-2 text-sm text-muted-foreground">
           Guardamos tus datos. Nos vamos a poner en contacto para acompañarte con esto.
         </p>
+        {downloadToken && slugRecurso && (
+          <Button asChild className="mt-4 bg-ink text-ink-foreground hover:bg-ink/90">
+            <a href={`/api/recurso/${slugRecurso}?token=${downloadToken}`}>Descargar PDF</a>
+          </Button>
+        )}
       </div>
     );
   }

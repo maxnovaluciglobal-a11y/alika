@@ -68,6 +68,7 @@ import { Route as AuthenticatedClinicSucursalesRouteImport } from './routes/_aut
 import { Route as AuthenticatedClinicSuscripcionRouteImport } from './routes/_authenticated/_clinic/suscripcion'
 import { Route as AuthenticatedClinicTratamientosRouteImport } from './routes/_authenticated/_clinic/tratamientos'
 import { Route as AuthenticatedClinicWhatsappRouteImport } from './routes/_authenticated/_clinic/whatsapp'
+import { Route as ApiRecursoSlugRouteImport } from './routes/api.recurso.$slug'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
 import { Route as AuthenticatedClinicPacientesIndexRouteImport } from './routes/_authenticated/_clinic/pacientes.index'
 import { Route as AuthenticatedClinicPacientesPacienteIdRouteImport } from './routes/_authenticated/_clinic/pacientes.$pacienteId'
@@ -397,6 +398,11 @@ const AuthenticatedClinicWhatsappRoute =
     path: '/whatsapp',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
+const ApiRecursoSlugRoute = ApiRecursoSlugRouteImport.update({
+  id: '/api/recurso/$slug',
+  path: '/api/recurso/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   id: '/api/stripe/webhook',
   path: '/api/stripe/webhook',
@@ -473,6 +479,7 @@ export interface FileRoutesByFullPath {
   '/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/whatsapp': typeof AuthenticatedClinicWhatsappRoute
+  '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
   '/pacientes/': typeof AuthenticatedClinicPacientesIndexRoute
@@ -533,6 +540,7 @@ export interface FileRoutesByTo {
   '/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/whatsapp': typeof AuthenticatedClinicWhatsappRoute
+  '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
   '/pacientes': typeof AuthenticatedClinicPacientesIndexRoute
@@ -598,6 +606,7 @@ export interface FileRoutesById {
   '/_authenticated/_clinic/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/_authenticated/_clinic/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/_authenticated/_clinic/whatsapp': typeof AuthenticatedClinicWhatsappRoute
+  '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/_authenticated/_clinic/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
   '/_authenticated/_clinic/pacientes/': typeof AuthenticatedClinicPacientesIndexRoute
@@ -662,6 +671,7 @@ export interface FileRouteTypes {
     | '/suscripcion'
     | '/tratamientos'
     | '/whatsapp'
+    | '/api/recurso/$slug'
     | '/api/stripe/webhook'
     | '/pacientes/$pacienteId'
     | '/pacientes/'
@@ -722,6 +732,7 @@ export interface FileRouteTypes {
     | '/suscripcion'
     | '/tratamientos'
     | '/whatsapp'
+    | '/api/recurso/$slug'
     | '/api/stripe/webhook'
     | '/pacientes/$pacienteId'
     | '/pacientes'
@@ -786,6 +797,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_clinic/suscripcion'
     | '/_authenticated/_clinic/tratamientos'
     | '/_authenticated/_clinic/whatsapp'
+    | '/api/recurso/$slug'
     | '/api/stripe/webhook'
     | '/_authenticated/_clinic/pacientes/$pacienteId'
     | '/_authenticated/_clinic/pacientes/'
@@ -811,6 +823,7 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
   RecursosFugasClinicaDentalRoute: typeof RecursosFugasClinicaDentalRoute
+  ApiRecursoSlugRoute: typeof ApiRecursoSlugRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
 
@@ -1229,6 +1242,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicWhatsappRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
+    '/api/recurso/$slug': {
+      id: '/api/recurso/$slug'
+      path: '/api/recurso/$slug'
+      fullPath: '/api/recurso/$slug'
+      preLoaderRoute: typeof ApiRecursoSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/stripe/webhook': {
       id: '/api/stripe/webhook'
       path: '/api/stripe/webhook'
@@ -1403,6 +1423,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
   RecursosFugasClinicaDentalRoute: RecursosFugasClinicaDentalRoute,
+  ApiRecursoSlugRoute: ApiRecursoSlugRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport

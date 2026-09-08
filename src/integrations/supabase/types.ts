@@ -1604,6 +1604,8 @@ export type Database = {
           created_at: string;
           delivered_at: string | null;
           delivery_error: string | null;
+          download_delivered_at: string | null;
+          download_token: string | null;
           email: string | null;
           id: string;
           ip_hash: string | null;
@@ -1628,6 +1630,8 @@ export type Database = {
           created_at?: string;
           delivered_at?: string | null;
           delivery_error?: string | null;
+          download_delivered_at?: string | null;
+          download_token?: string | null;
           email?: string | null;
           id?: string;
           ip_hash?: string | null;
@@ -1652,6 +1656,8 @@ export type Database = {
           created_at?: string;
           delivered_at?: string | null;
           delivery_error?: string | null;
+          download_delivered_at?: string | null;
+          download_token?: string | null;
           email?: string | null;
           id?: string;
           ip_hash?: string | null;

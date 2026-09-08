@@ -41,3 +41,8 @@ dist-ssr
 
 # Supabase CLI: guarda a qué proyecto está linkeado el checkout local
 supabase/.temp
+
+# PDFs de recursos gateados (Task 13): artefacto derivado de la página .tsx
+# correspondiente (fuente de verdad real). Se regenera con
+# scripts/build-pdf-recursos.mjs, no hace falta versionar el binario.
+assets-privados/

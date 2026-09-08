@@ -342,6 +342,7 @@ function FugasClinicaDental() {
             pais={paisCode}
             meta={metaLead}
             tituloExito="Guardamos tu contacto."
+            slugRecurso="fugas-clinica-dental"
           />
         </div>
       </div>
