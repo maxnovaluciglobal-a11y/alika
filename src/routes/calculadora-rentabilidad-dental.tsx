@@ -169,6 +169,21 @@ const BANDA_ESTILO: Record<Banda, { etiqueta: string; icono: LucideIcon; clases:
 };
 
 /**
+ * La etiqueta visible de margen no puede ser el nombre interno de la banda:
+ * "alto" (banda) para margen significa "margen crítico, bajo" — mostrar
+ * literalmente "ALTO" ahí se lee como "tu margen es alto" (bueno) cuando el
+ * diagnóstico de al lado dice lo contrario ("zona crítica"). Ausentismo y
+ * overhead no tienen esta inversión (ahí "alto" significa literalmente
+ * número alto, y eso sí es malo), así que sólo margen necesita traducción —
+ * el nombre interno de la banda (el que usan bandaMargen/bucketDeMargen y el
+ * mapeo a MetaLead) no cambia, sólo lo que lee el usuario en la tarjeta.
+ */
+function etiquetaVisibleMargen(banda: Banda): string {
+  if (banda === "alto") return "Crítico";
+  return BANDA_ESTILO[banda].etiqueta;
+}
+
+/**
  * `MetaLead.ausencias_bucket` sólo acepta 3 valores (bajo/medio/alto/na), no
  * los 4 estados del semáforo visual. Colapso: bajo→bajo, sano y atención→
  * medio (ambos son "dentro de lo esperable o levemente peor", sólo alto es
@@ -335,12 +350,17 @@ function IndicadorSemaforo({
   banda,
   fuenteEtiqueta,
   descripcion,
+  etiquetaVisible,
 }: {
   titulo: string;
   pct: number | null;
   banda: Banda | null;
   fuenteEtiqueta: string;
   descripcion: string;
+  /** Override del texto de la insignia — ver etiquetaVisibleMargen(). Si no
+   * se pasa, usa el nombre genérico de la banda (correcto para ausentismo y
+   * overhead, donde "alto" nunca se invierte). */
+  etiquetaVisible?: string;
 }) {
   if (pct === null || banda === null) {
     return (
@@ -354,6 +374,7 @@ function IndicadorSemaforo({
   }
   const estilo = BANDA_ESTILO[banda];
   const Icono = estilo.icono;
+  const etiqueta = etiquetaVisible ?? estilo.etiqueta;
   return (
     <div className={cn("rounded-xl border p-4", estilo.clases)}>
       <div className="flex items-start gap-3">
@@ -363,7 +384,7 @@ function IndicadorSemaforo({
             <p className="font-precise font-semibold">
               {titulo}: {formatearPct(pct)}
             </p>
-            <span className="text-xs font-bold uppercase tracking-wide">{estilo.etiqueta}</span>
+            <span className="text-xs font-bold uppercase tracking-wide">{etiqueta}</span>
           </div>
           <p className="mt-1 text-sm opacity-90">{descripcion}</p>
           <p className="mt-1.5 text-xs opacity-70">Fuente: {fuenteEtiqueta}</p>
@@ -484,7 +505,10 @@ function CalculadoraRentabilidadDental() {
     [entradaPL, resultadoPL],
   );
 
-  const hayDatosPL = (montosPL.ingresosCents ?? 0) > 0;
+  // Ambas condiciones, no sólo ingresos: con costos en cero el margen calcula
+  // ~100% (basura) y el evento analítico quedaría latcheado para siempre con
+  // ese bucket falso — ver hallazgo del revisor, ronda de fix 1.
+  const hayDatosPL = (montosPL.ingresosCents ?? 0) > 0 && resultadoPL.costosTotalesCents > 0;
 
   const entradaFugas = useMemo(
     () => ({
@@ -835,6 +859,9 @@ function CalculadoraRentabilidadDental() {
                   banda={bandaMargenValue}
                   fuenteEtiqueta="referencia EE.UU. — ADA Health Policy Institute"
                   descripcion="No transferible a LatAm — usalo como brújula, no como sentencia."
+                  etiquetaVisible={
+                    bandaMargenValue ? etiquetaVisibleMargen(bandaMargenValue) : undefined
+                  }
                 />
               </div>
 
@@ -946,11 +973,10 @@ function CalculadoraRentabilidadDental() {
                 semáforo, a propósito.
               </strong>{" "}
               No existe un benchmark público y verificable para clínicas dentales de Latinoamérica
-              en ninguno de estos rubros — y las cifras por categoría que circulan atribuidas al ADA
-              (25-30% personal, 5-6% insumos, 6-8% laboratorio, 6-7% arriendo) no están en ningún
-              reporte público del ADA: es una atribución falsa que decidimos no repetir. Te
-              mostramos tu número tal cual lo cargaste, sin compararlo contra nada que no podamos
-              citar.
+              en ninguno de estos rubros. Las cifras específicas por categoría (personal, insumos,
+              laboratorio, arriendo) que circulan atribuidas al ADA son una atribución falsa: el ADA
+              no publica ese desglose. No las repetimos acá. Te mostramos tu número tal cual lo
+              cargaste, sin compararlo contra nada que no podamos citar.
             </p>
             <p>
               Ninguno de estos rangos es "el promedio de nuestras clínicas": Alika todavía no tiene
