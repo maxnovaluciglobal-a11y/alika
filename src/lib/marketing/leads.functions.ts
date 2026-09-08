@@ -5,7 +5,7 @@
 // paciente y el webhook de WhatsApp — escritura con supabaseAdmin y filtros
 // explícitos, sobre una tabla sin GRANT para authenticated.
 
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
@@ -206,8 +206,30 @@ type DatosLead = z.infer<typeof EsquemaLead>;
  * pueda invocarla directo contra Supabase real, sin pasar por
  * `createServerFn` (que tampoco se puede invocar fuera de una request real,
  * aunque `submitMarketingLead` no use `requireSupabaseAuth`).
+ *
+ * `createServerOnlyFn(...)`: a diferencia de `submitMarketingLead`/
+ * `listMarketingLeads`, esta función NO vive dentro de un `.handler()` de
+ * `createServerFn` — es una función de módulo suelta, y el import dinámico
+ * de `client.server` de acá abajo quedaba fuera del único lugar donde el
+ * plugin de import-protection de TanStack Start sabe pelarlo del bundle de
+ * cliente. Sin este wrapper, cualquier ruta que importe este archivo
+ * (`/calculadora-rentabilidad-dental`, `/recursos/fugas-clinica-dental`,
+ * `/admin/leads` — y de hecho TODO el árbol de rutas, porque
+ * `routeTree.gen.ts` importa cada ruta de forma eager) tira 500 en
+ * `vite dev` con "[import-protection] Import denied in client environment"
+ * apenas Vite analiza el grafo de módulos del cliente — confirmado en vivo
+ * con el navegador real, no sólo leyendo el mensaje del plugin. En
+ * `vite build` no se nota porque Rollup hace tree-shaking real y esta
+ * función queda muerta si nada del cliente la llama, pero `vite dev`
+ * transforma módulo por módulo sin ese tree-shaking. `createServerOnlyFn`
+ * es identidad en runtime (`(fn) => fn`, confirmado leyendo
+ * `@tanstack/start-fn-stubs/dist/esm/envOnly.js`) — sólo le avisa al plugin,
+ * en build time, que este cuerpo es intencionalmente server-only y no debe
+ * evaluarse para el bundle de cliente. No cambia la firma ni el
+ * comportamiento: sigue siendo `async (data, ipHash, userAgent) => {...}`,
+ * invocable igual desde los tests.
  */
-export async function escribirLeadEnBase(
+export const escribirLeadEnBase = createServerOnlyFn(async function escribirLeadEnBase(
   data: DatosLead,
   ipHash: string,
   userAgent: string | null,
@@ -483,7 +505,7 @@ export async function escribirLeadEnBase(
   }
 
   return { ok: true as const };
-}
+});
 
 /** Lectura de leads para el equipo de Alika. No existe un rol "staff de la
  *  empresa" en el schema (todos los roles son de clínica), así que el gate es
