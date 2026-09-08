@@ -26,6 +26,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSinAccesoRouteImport } from './routes/_authenticated/sin-acceso'
 import { Route as ApiDailyDigestRouteImport } from './routes/api.daily-digest'
 import { Route as ApiDemoResetRouteImport } from './routes/api.demo-reset'
+import { Route as ApiEvRouteImport } from './routes/api.ev'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api.whatsapp-webhook'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
@@ -151,6 +152,11 @@ const ApiDailyDigestRoute = ApiDailyDigestRouteImport.update({
 const ApiDemoResetRoute = ApiDemoResetRouteImport.update({
   id: '/api/demo-reset',
   path: '/api/demo-reset',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiEvRoute = ApiEvRouteImport.update({
+  id: '/api/ev',
+  path: '/api/ev',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
@@ -411,6 +417,7 @@ export interface FileRoutesByFullPath {
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/daily-digest': typeof ApiDailyDigestRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
+  '/api/ev': typeof ApiEvRoute
   '/api/health': typeof ApiHealthRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
@@ -468,6 +475,7 @@ export interface FileRoutesByTo {
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/daily-digest': typeof ApiDailyDigestRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
+  '/api/ev': typeof ApiEvRoute
   '/api/health': typeof ApiHealthRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
@@ -530,6 +538,7 @@ export interface FileRoutesById {
   '/_authenticated/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/daily-digest': typeof ApiDailyDigestRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
+  '/api/ev': typeof ApiEvRoute
   '/api/health': typeof ApiHealthRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
@@ -591,6 +600,7 @@ export interface FileRouteTypes {
     | '/sin-acceso'
     | '/api/daily-digest'
     | '/api/demo-reset'
+    | '/api/ev'
     | '/api/health'
     | '/api/whatsapp-webhook'
     | '/docs/datos-y-seguridad'
@@ -648,6 +658,7 @@ export interface FileRouteTypes {
     | '/sin-acceso'
     | '/api/daily-digest'
     | '/api/demo-reset'
+    | '/api/ev'
     | '/api/health'
     | '/api/whatsapp-webhook'
     | '/docs/datos-y-seguridad'
@@ -709,6 +720,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sin-acceso'
     | '/api/daily-digest'
     | '/api/demo-reset'
+    | '/api/ev'
     | '/api/health'
     | '/api/whatsapp-webhook'
     | '/docs/datos-y-seguridad'
@@ -768,6 +780,7 @@ export interface RootRouteChildren {
   TerminosRoute: typeof TerminosRoute
   ApiDailyDigestRoute: typeof ApiDailyDigestRoute
   ApiDemoResetRoute: typeof ApiDemoResetRoute
+  ApiEvRoute: typeof ApiEvRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
@@ -892,6 +905,13 @@ declare module '@tanstack/react-router' {
       path: '/api/demo-reset'
       fullPath: '/api/demo-reset'
       preLoaderRoute: typeof ApiDemoResetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ev': {
+      id: '/api/ev'
+      path: '/api/ev'
+      fullPath: '/api/ev'
+      preLoaderRoute: typeof ApiEvRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/health': {
@@ -1336,6 +1356,7 @@ const rootRouteChildren: RootRouteChildren = {
   TerminosRoute: TerminosRoute,
   ApiDailyDigestRoute: ApiDailyDigestRoute,
   ApiDemoResetRoute: ApiDemoResetRoute,
+  ApiEvRoute: ApiEvRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
