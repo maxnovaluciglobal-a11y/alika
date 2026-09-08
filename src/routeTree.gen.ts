@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CalculadoraRentabilidadDentalRouteImport } from './routes/calculadora-rentabilidad-dental'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as FaqRouteImport } from './routes/faq'
@@ -84,6 +85,12 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CalculadoraRentabilidadDentalRoute =
+  CalculadoraRentabilidadDentalRouteImport.update({
+    id: '/calculadora-rentabilidad-dental',
+    path: '/calculadora-rentabilidad-dental',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DemoRoute = DemoRouteImport.update({
   id: '/demo',
   path: '/demo',
@@ -404,6 +411,7 @@ const AuthenticatedClinicPacientesPacienteIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/calculadora-rentabilidad-dental': typeof CalculadoraRentabilidadDentalRoute
   '/demo': typeof DemoRoute
   '/docs': typeof DocsRouteWithChildren
   '/faq': typeof FaqRoute
@@ -464,6 +472,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/calculadora-rentabilidad-dental': typeof CalculadoraRentabilidadDentalRoute
   '/demo': typeof DemoRoute
   '/faq': typeof FaqRoute
   '/nosotros': typeof NosotrosRoute
@@ -524,6 +533,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/calculadora-rentabilidad-dental': typeof CalculadoraRentabilidadDentalRoute
   '/demo': typeof DemoRoute
   '/docs': typeof DocsRouteWithChildren
   '/faq': typeof FaqRoute
@@ -587,6 +597,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/calculadora-rentabilidad-dental'
     | '/demo'
     | '/docs'
     | '/faq'
@@ -647,6 +658,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/calculadora-rentabilidad-dental'
     | '/demo'
     | '/faq'
     | '/nosotros'
@@ -706,6 +718,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/calculadora-rentabilidad-dental'
     | '/demo'
     | '/docs'
     | '/faq'
@@ -769,6 +782,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CalculadoraRentabilidadDentalRoute: typeof CalculadoraRentabilidadDentalRoute
   DemoRoute: typeof DemoRoute
   DocsRoute: typeof DocsRouteWithChildren
   FaqRoute: typeof FaqRoute
@@ -807,6 +821,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calculadora-rentabilidad-dental': {
+      id: '/calculadora-rentabilidad-dental'
+      path: '/calculadora-rentabilidad-dental'
+      fullPath: '/calculadora-rentabilidad-dental'
+      preLoaderRoute: typeof CalculadoraRentabilidadDentalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo': {
@@ -1345,6 +1366,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CalculadoraRentabilidadDentalRoute: CalculadoraRentabilidadDentalRoute,
   DemoRoute: DemoRoute,
   DocsRoute: DocsRouteWithChildren,
   FaqRoute: FaqRoute,
