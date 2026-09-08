@@ -68,6 +68,7 @@ import { Route as AuthenticatedClinicSucursalesRouteImport } from './routes/_aut
 import { Route as AuthenticatedClinicSuscripcionRouteImport } from './routes/_authenticated/_clinic/suscripcion'
 import { Route as AuthenticatedClinicTratamientosRouteImport } from './routes/_authenticated/_clinic/tratamientos'
 import { Route as AuthenticatedClinicWhatsappRouteImport } from './routes/_authenticated/_clinic/whatsapp'
+import { Route as AuthenticatedAdminLeadsRouteImport } from './routes/_authenticated/admin.leads'
 import { Route as ApiRecursoSlugRouteImport } from './routes/api.recurso.$slug'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
 import { Route as AuthenticatedClinicPacientesIndexRouteImport } from './routes/_authenticated/_clinic/pacientes.index'
@@ -398,6 +399,11 @@ const AuthenticatedClinicWhatsappRoute =
     path: '/whatsapp',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
+const AuthenticatedAdminLeadsRoute = AuthenticatedAdminLeadsRouteImport.update({
+  id: '/admin/leads',
+  path: '/admin/leads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiRecursoSlugRoute = ApiRecursoSlugRouteImport.update({
   id: '/api/recurso/$slug',
   path: '/api/recurso/$slug',
@@ -479,6 +485,7 @@ export interface FileRoutesByFullPath {
   '/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/whatsapp': typeof AuthenticatedClinicWhatsappRoute
+  '/admin/leads': typeof AuthenticatedAdminLeadsRoute
   '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
@@ -540,6 +547,7 @@ export interface FileRoutesByTo {
   '/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/whatsapp': typeof AuthenticatedClinicWhatsappRoute
+  '/admin/leads': typeof AuthenticatedAdminLeadsRoute
   '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
@@ -606,6 +614,7 @@ export interface FileRoutesById {
   '/_authenticated/_clinic/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/_authenticated/_clinic/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/_authenticated/_clinic/whatsapp': typeof AuthenticatedClinicWhatsappRoute
+  '/_authenticated/admin/leads': typeof AuthenticatedAdminLeadsRoute
   '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/_authenticated/_clinic/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
@@ -671,6 +680,7 @@ export interface FileRouteTypes {
     | '/suscripcion'
     | '/tratamientos'
     | '/whatsapp'
+    | '/admin/leads'
     | '/api/recurso/$slug'
     | '/api/stripe/webhook'
     | '/pacientes/$pacienteId'
@@ -732,6 +742,7 @@ export interface FileRouteTypes {
     | '/suscripcion'
     | '/tratamientos'
     | '/whatsapp'
+    | '/admin/leads'
     | '/api/recurso/$slug'
     | '/api/stripe/webhook'
     | '/pacientes/$pacienteId'
@@ -797,6 +808,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_clinic/suscripcion'
     | '/_authenticated/_clinic/tratamientos'
     | '/_authenticated/_clinic/whatsapp'
+    | '/_authenticated/admin/leads'
     | '/api/recurso/$slug'
     | '/api/stripe/webhook'
     | '/_authenticated/_clinic/pacientes/$pacienteId'
@@ -1242,6 +1254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicWhatsappRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
+    '/_authenticated/admin/leads': {
+      id: '/_authenticated/admin/leads'
+      path: '/admin/leads'
+      fullPath: '/admin/leads'
+      preLoaderRoute: typeof AuthenticatedAdminLeadsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/recurso/$slug': {
       id: '/api/recurso/$slug'
       path: '/api/recurso/$slug'
@@ -1359,12 +1378,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedClinicRouteRoute: typeof AuthenticatedClinicRouteRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedSinAccesoRoute: typeof AuthenticatedSinAccesoRoute
+  AuthenticatedAdminLeadsRoute: typeof AuthenticatedAdminLeadsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClinicRouteRoute: AuthenticatedClinicRouteRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedSinAccesoRoute: AuthenticatedSinAccesoRoute,
+  AuthenticatedAdminLeadsRoute: AuthenticatedAdminLeadsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
