@@ -1,7 +1,7 @@
 # Captación: lead magnets + trial de 14 días — Diseño
 
 **Fecha:** 2026-09-07 · **Estado:** diseño aprobado, pendiente de ejecución
-**Plan de ejecución:** `docs/superpowers/plans/2026-09-07-captacion-lead-magnets-plan.md`
+**Plan de ejecución:** `docs/superpowers/plans/2026-09-07-captacion-lead-magnets.md`
 
 ---
 
@@ -38,7 +38,7 @@ Todo lo de esta sección fue verificado leyendo el código en el commit `e18ebc0
 | Analítica de producto                    | No hay PostHog/GA/GTM/Vercel Analytics. Los CTAs son `<a href>` sin instrumentar. **Hoy no se puede medir ninguna conversión.**                      |
 | Antiabuso de formulario                  | No hay honeypot, CAPTCHA ni doble opt-in en todo el repo.                                                                                            |
 | Envío de email a un desconocido          | `sendEmail()` existe (`email.server.ts:33`) pero exige `RESEND_API_KEY`; los dos únicos callers exigen `patientId` o `professionalId`.               |
-| Costo directo / margen por procedimiento | `grep "margen                                                                                                                                        | margin | utilidad | rentabilidad"`en`src/` → cero ocurrencias de negocio. |
+| Costo directo / margen por procedimiento | Buscar `margen`, `margin`, `utilidad` o `rentabilidad` en `src/` devuelve cero ocurrencias de negocio.                                               |
 | Benchmarks de industria                  | `grep BENCHMARK` → 3 hits, todos en documentación aspiracional, ninguno en código.                                                                   |
 | Tasa de no-show                          | El enum `appointment_status` tiene `'ausente'`, pero el panel de desempeño no lo mide.                                                               |
 
