@@ -1570,6 +1570,105 @@ export type Database = {
           },
         ];
       };
+      marketing_events: {
+        Row: {
+          created_at: string;
+          id: number;
+          name: string;
+          props: Json | null;
+          session_hash: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          id?: number;
+          name: string;
+          props?: Json | null;
+          session_hash?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          id?: number;
+          name?: string;
+          props?: Json | null;
+          session_hash?: string | null;
+        };
+        Relationships: [];
+      };
+      marketing_leads: {
+        Row: {
+          clinic_name: string | null;
+          consent_at: string;
+          consent_text: string;
+          consent_whatsapp: boolean;
+          country_code: string | null;
+          created_at: string;
+          delivered_at: string | null;
+          delivery_error: string | null;
+          email: string | null;
+          id: string;
+          ip_hash: string | null;
+          meta: Json | null;
+          name: string | null;
+          phone: string | null;
+          phone_valid: boolean | null;
+          source: string;
+          submissions_count: number;
+          unsubscribe_token: string;
+          unsubscribed_at: string | null;
+          updated_at: string;
+          user_agent: string | null;
+          utm: Json | null;
+        };
+        Insert: {
+          clinic_name?: string | null;
+          consent_at?: string;
+          consent_text: string;
+          consent_whatsapp?: boolean;
+          country_code?: string | null;
+          created_at?: string;
+          delivered_at?: string | null;
+          delivery_error?: string | null;
+          email?: string | null;
+          id?: string;
+          ip_hash?: string | null;
+          meta?: Json | null;
+          name?: string | null;
+          phone?: string | null;
+          phone_valid?: boolean | null;
+          source: string;
+          submissions_count?: number;
+          unsubscribe_token?: string;
+          unsubscribed_at?: string | null;
+          updated_at?: string;
+          user_agent?: string | null;
+          utm?: Json | null;
+        };
+        Update: {
+          clinic_name?: string | null;
+          consent_at?: string;
+          consent_text?: string;
+          consent_whatsapp?: boolean;
+          country_code?: string | null;
+          created_at?: string;
+          delivered_at?: string | null;
+          delivery_error?: string | null;
+          email?: string | null;
+          id?: string;
+          ip_hash?: string | null;
+          meta?: Json | null;
+          name?: string | null;
+          phone?: string | null;
+          phone_valid?: boolean | null;
+          source?: string;
+          submissions_count?: number;
+          unsubscribe_token?: string;
+          unsubscribed_at?: string | null;
+          updated_at?: string;
+          user_agent?: string | null;
+          utm?: Json | null;
+        };
+        Relationships: [];
+      };
       message_templates: {
         Row: {
           body: string;
