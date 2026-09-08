@@ -45,6 +45,7 @@ import { Route as AuthenticatedClinicConveniosRouteImport } from './routes/_auth
 import { Route as AuthenticatedClinicConversacionesRouteImport } from './routes/_authenticated/_clinic/conversaciones'
 import { Route as AuthenticatedClinicDashboardRouteImport } from './routes/_authenticated/_clinic/dashboard'
 import { Route as AuthenticatedClinicDominioEmailRouteImport } from './routes/_authenticated/_clinic/dominio-email'
+import { Route as AuthenticatedClinicEfectividadRouteImport } from './routes/_authenticated/_clinic/efectividad'
 import { Route as AuthenticatedClinicEquipoRouteImport } from './routes/_authenticated/_clinic/equipo'
 import { Route as AuthenticatedClinicEstadosDeCitaRouteImport } from './routes/_authenticated/_clinic/estados-de-cita'
 import { Route as AuthenticatedClinicFinanzasRouteImport } from './routes/_authenticated/_clinic/finanzas'
@@ -256,6 +257,12 @@ const AuthenticatedClinicDominioEmailRoute =
     path: '/dominio-email',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
+const AuthenticatedClinicEfectividadRoute =
+  AuthenticatedClinicEfectividadRouteImport.update({
+    id: '/efectividad',
+    path: '/efectividad',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
 const AuthenticatedClinicEquipoRoute =
   AuthenticatedClinicEquipoRouteImport.update({
     id: '/equipo',
@@ -423,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/conversaciones': typeof AuthenticatedClinicConversacionesRoute
   '/dashboard': typeof AuthenticatedClinicDashboardRoute
   '/dominio-email': typeof AuthenticatedClinicDominioEmailRoute
+  '/efectividad': typeof AuthenticatedClinicEfectividadRoute
   '/equipo': typeof AuthenticatedClinicEquipoRoute
   '/estados-de-cita': typeof AuthenticatedClinicEstadosDeCitaRoute
   '/finanzas': typeof AuthenticatedClinicFinanzasRoute
@@ -479,6 +487,7 @@ export interface FileRoutesByTo {
   '/conversaciones': typeof AuthenticatedClinicConversacionesRoute
   '/dashboard': typeof AuthenticatedClinicDashboardRoute
   '/dominio-email': typeof AuthenticatedClinicDominioEmailRoute
+  '/efectividad': typeof AuthenticatedClinicEfectividadRoute
   '/equipo': typeof AuthenticatedClinicEquipoRoute
   '/estados-de-cita': typeof AuthenticatedClinicEstadosDeCitaRoute
   '/finanzas': typeof AuthenticatedClinicFinanzasRoute
@@ -540,6 +549,7 @@ export interface FileRoutesById {
   '/_authenticated/_clinic/conversaciones': typeof AuthenticatedClinicConversacionesRoute
   '/_authenticated/_clinic/dashboard': typeof AuthenticatedClinicDashboardRoute
   '/_authenticated/_clinic/dominio-email': typeof AuthenticatedClinicDominioEmailRoute
+  '/_authenticated/_clinic/efectividad': typeof AuthenticatedClinicEfectividadRoute
   '/_authenticated/_clinic/equipo': typeof AuthenticatedClinicEquipoRoute
   '/_authenticated/_clinic/estados-de-cita': typeof AuthenticatedClinicEstadosDeCitaRoute
   '/_authenticated/_clinic/finanzas': typeof AuthenticatedClinicFinanzasRoute
@@ -600,6 +610,7 @@ export interface FileRouteTypes {
     | '/conversaciones'
     | '/dashboard'
     | '/dominio-email'
+    | '/efectividad'
     | '/equipo'
     | '/estados-de-cita'
     | '/finanzas'
@@ -656,6 +667,7 @@ export interface FileRouteTypes {
     | '/conversaciones'
     | '/dashboard'
     | '/dominio-email'
+    | '/efectividad'
     | '/equipo'
     | '/estados-de-cita'
     | '/finanzas'
@@ -716,6 +728,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_clinic/conversaciones'
     | '/_authenticated/_clinic/dashboard'
     | '/_authenticated/_clinic/dominio-email'
+    | '/_authenticated/_clinic/efectividad'
     | '/_authenticated/_clinic/equipo'
     | '/_authenticated/_clinic/estados-de-cita'
     | '/_authenticated/_clinic/finanzas'
@@ -1014,6 +1027,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicDominioEmailRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
+    '/_authenticated/_clinic/efectividad': {
+      id: '/_authenticated/_clinic/efectividad'
+      path: '/efectividad'
+      fullPath: '/efectividad'
+      preLoaderRoute: typeof AuthenticatedClinicEfectividadRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
     '/_authenticated/_clinic/equipo': {
       id: '/_authenticated/_clinic/equipo'
       path: '/equipo'
@@ -1181,6 +1201,7 @@ interface AuthenticatedClinicRouteRouteChildren {
   AuthenticatedClinicConversacionesRoute: typeof AuthenticatedClinicConversacionesRoute
   AuthenticatedClinicDashboardRoute: typeof AuthenticatedClinicDashboardRoute
   AuthenticatedClinicDominioEmailRoute: typeof AuthenticatedClinicDominioEmailRoute
+  AuthenticatedClinicEfectividadRoute: typeof AuthenticatedClinicEfectividadRoute
   AuthenticatedClinicEquipoRoute: typeof AuthenticatedClinicEquipoRoute
   AuthenticatedClinicEstadosDeCitaRoute: typeof AuthenticatedClinicEstadosDeCitaRoute
   AuthenticatedClinicFinanzasRoute: typeof AuthenticatedClinicFinanzasRoute
@@ -1217,6 +1238,7 @@ const AuthenticatedClinicRouteRouteChildren: AuthenticatedClinicRouteRouteChildr
       AuthenticatedClinicConversacionesRoute,
     AuthenticatedClinicDashboardRoute: AuthenticatedClinicDashboardRoute,
     AuthenticatedClinicDominioEmailRoute: AuthenticatedClinicDominioEmailRoute,
+    AuthenticatedClinicEfectividadRoute: AuthenticatedClinicEfectividadRoute,
     AuthenticatedClinicEquipoRoute: AuthenticatedClinicEquipoRoute,
     AuthenticatedClinicEstadosDeCitaRoute:
       AuthenticatedClinicEstadosDeCitaRoute,

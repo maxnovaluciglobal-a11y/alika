@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   CalendarDays,
   CalendarCheck,
+  TrendingUp,
   Users,
   Stethoscope,
   Receipt,
@@ -91,6 +92,12 @@ const navGroups: { section: string; items: readonly NavItem[] }[] = [
         label: "Recordatorios",
         icon: MessageCircleMore,
         permission: "agenda:manage",
+      },
+      {
+        to: "/efectividad",
+        label: "Efectividad",
+        icon: TrendingUp,
+        permission: "dashboard:view",
       },
       { to: "/pacientes", label: "Pacientes", icon: Users, permission: "patients:view" },
       {
