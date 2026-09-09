@@ -4,7 +4,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, Inbox, Loader2, MessageSquare, TrendingDown } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
+import { LlamadaDesbloqueo } from "@/components/llamada-desbloqueo";
 import { requirePermission } from "@/lib/access/route-guards";
+import { requiereLlamadaOSuscripcion } from "@/lib/billing";
+import { getMySubscription } from "@/lib/billing.functions";
 import {
   MUESTRA_MINIMA,
   formatearEspera,
@@ -109,150 +112,180 @@ function Tarjeta({
 function EfectividadPage() {
   const { access } = Route.useRouteContext();
   const clinicId = access.clinic?.id;
-  const fetchEfectividad = useServerFn(getEfectividad);
 
+  const fetchSubscription = useServerFn(getMySubscription);
+  const { data: sub } = useQuery({
+    queryKey: ["my-subscription", clinicId],
+    queryFn: () => fetchSubscription({ data: { clinicId: clinicId! } }),
+    enabled: Boolean(clinicId),
+    staleTime: 60 * 1000,
+  });
+  const bloqueado = requiereLlamadaOSuscripcion(
+    sub ?? null,
+    access.clinic?.onboardingCallAt ?? null,
+  );
+
+  const fetchEfectividad = useServerFn(getEfectividad);
   const { data, isPending, error } = useQuery({
     queryKey: ["efectividad", clinicId],
     queryFn: () => fetchEfectividad({ data: { clinicId: clinicId! } }),
-    enabled: !!clinicId,
+    enabled: Boolean(clinicId) && !bloqueado,
   });
 
   return (
     <AppShell title="Efectividad" access={access}>
       <div className="mx-auto max-w-3xl px-4 py-8">
-        <h1 className="font-precise text-2xl font-bold tracking-tight text-ink">Efectividad</h1>
-        <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
-          Si lo que Alika automatiza está sirviendo, medido sobre los últimos 90 días de tu propia
-          clínica. Cuando la muestra es chica se muestra el conteo en vez del porcentaje: con pocos
-          casos, un porcentaje parece una conclusión y no lo es.
-        </p>
+        {bloqueado ? (
+          <LlamadaDesbloqueo
+            feature="Efectividad"
+            descripcion="Medí si los recordatorios de WhatsApp reducen las ausencias, cuántos mensajes resuelve sola la automatización y cuánto tarda tu equipo en responder — sobre los últimos 90 días de tu propia clínica."
+            clinicName={access.clinic?.name}
+            clinicEmail={access.email}
+          />
+        ) : (
+          <>
+            <h1 className="font-precise text-2xl font-bold tracking-tight text-ink">Efectividad</h1>
+            <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
+              Si lo que Alika automatiza está sirviendo, medido sobre los últimos 90 días de tu
+              propia clínica. Cuando la muestra es chica se muestra el conteo en vez del porcentaje:
+              con pocos casos, un porcentaje parece una conclusión y no lo es.
+            </p>
 
-        {isPending && (
-          <p className="mt-8 flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Calculando…
-          </p>
-        )}
-        {error && (
-          <p className="mt-8 text-sm text-destructive">
-            No pudimos calcular la efectividad. Vuelve a intentarlo en un momento.
-          </p>
-        )}
-
-        {data && (
-          <div className="mt-8 space-y-4">
-            <Tarjeta titulo="Ausencias" icono={<TrendingDown className="h-4 w-4" />}>
-              <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
-                <span className="text-sm text-muted-foreground">
-                  De las citas que ya pasaron, cuántas faltaron
-                </span>
-                <Cifra p={data.ausencia} sufijo="citas" />
-              </div>
-            </Tarjeta>
-
-            <Tarjeta titulo="¿Sirve el recordatorio?" icono={<MessageSquare className="h-4 w-4" />}>
-              <Comparativa
-                c={data.porRecordatorio}
-                etiquetaCon="Faltaron, habiendo recibido recordatorio"
-                etiquetaSin="Faltaron, sin recordatorio"
-              />
-              <p className="mt-3 flex gap-2 rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
-                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-none" />
-                <span>
-                  Esto <strong className="text-ink">no es un experimento</strong>. Tu equipo elige a
-                  quién le manda recordatorio, y esa elección puede coincidir con quién iba a faltar
-                  igual. Tómalo como una señal, no como una prueba de que el recordatorio causó la
-                  diferencia.
-                </span>
+            {isPending && (
+              <p className="mt-8 flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" /> Calculando…
               </p>
-            </Tarjeta>
-
-            <Tarjeta
-              titulo="¿Sirve que el paciente avise?"
-              icono={<TrendingDown className="h-4 w-4" />}
-            >
-              <Comparativa
-                c={data.porAviso}
-                etiquetaCon="Faltaron, habiendo avisado que venían"
-                etiquetaSin="Faltaron, sin avisar"
-              />
-            </Tarjeta>
-
-            <Tarjeta titulo="Mensajes que se resuelven solos" icono={<Inbox className="h-4 w-4" />}>
-              <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
-                <span className="text-sm text-muted-foreground">
-                  De los mensajes que entraron, cuántos entendió Alika sola
-                </span>
-                <Cifra p={data.cobertura.resueltos} sufijo="mensajes" />
-              </div>
-              {data.cobertura.total > 0 && (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {data.cobertura.porTipo.agenda} sobre la agenda · {data.cobertura.porTipo.aviso}{" "}
-                  avisando que venían · {data.cobertura.porTipo.baja} pidiendo la baja ·{" "}
-                  <strong className="text-ink">{data.cobertura.paraLeer}</strong> los leyó alguien
-                  del equipo.
-                </p>
-              )}
-              <p className="mt-3 flex gap-2 rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
-                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-none" />
-                <span>
-                  Los que leyó una persona{" "}
-                  <strong className="text-ink">no son todos automatizables</strong>: ahí entran un
-                  “gracias”, una consulta de precio o una foto. Es el techo de lo que podría
-                  ganarse, no lo que se está perdiendo.
-                </span>
+            )}
+            {error && (
+              <p className="mt-8 text-sm text-destructive">
+                No pudimos calcular la efectividad. Vuelve a intentarlo en un momento.
               </p>
-            </Tarjeta>
-
-            <Tarjeta titulo="Cuánto tarda tu equipo" icono={<Inbox className="h-4 w-4" />}>
-              <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
-                <span className="text-sm text-muted-foreground">
-                  Mediana entre el mensaje del paciente y tu respuesta
-                </span>
-                <span className="font-precise text-2xl font-bold text-ink">
-                  {data.medianaRespuestaMin === null
-                    ? "—"
-                    : formatearEspera(data.medianaRespuestaMin)}
-                </span>
-              </div>
-              {data.sinResponder > 0 && (
-                <p className="mt-2 text-sm">
-                  <Link
-                    to="/conversaciones"
-                    search={{ paciente: undefined }}
-                    className="text-mint-strong underline underline-offset-2"
-                  >
-                    {data.sinResponder}{" "}
-                    {data.sinResponder === 1
-                      ? "conversación sigue sin responder"
-                      : "conversaciones siguen sin responder"}
-                  </Link>{" "}
-                  <span className="text-muted-foreground">
-                    y no cuentan en esa mediana: no son una respuesta lenta, son otra cosa.
-                  </span>
-                </p>
-              )}
-            </Tarjeta>
-
-            {data.solicitudes.total > 0 && (
-              <Tarjeta
-                titulo="Pedidos de hora por WhatsApp"
-                icono={<MessageSquare className="h-4 w-4" />}
-              >
-                <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    Terminaron con una cita agendada
-                  </span>
-                  <Cifra p={data.solicitudes.agendadas} sufijo="pedidos" />
-                </div>
-              </Tarjeta>
             )}
 
-            <p className="pt-2 text-xs leading-relaxed text-muted-foreground">
-              Los porcentajes aparecen a partir de {MUESTRA_MINIMA} casos.
-              {data.recortado &&
-                " La muestra se recortó por volumen: se leyeron los más recientes."}
-            </p>
-          </div>
+            {data && (
+              <div className="mt-8 space-y-4">
+                <Tarjeta titulo="Ausencias" icono={<TrendingDown className="h-4 w-4" />}>
+                  <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      De las citas que ya pasaron, cuántas faltaron
+                    </span>
+                    <Cifra p={data.ausencia} sufijo="citas" />
+                  </div>
+                </Tarjeta>
+
+                <Tarjeta
+                  titulo="¿Sirve el recordatorio?"
+                  icono={<MessageSquare className="h-4 w-4" />}
+                >
+                  <Comparativa
+                    c={data.porRecordatorio}
+                    etiquetaCon="Faltaron, habiendo recibido recordatorio"
+                    etiquetaSin="Faltaron, sin recordatorio"
+                  />
+                  <p className="mt-3 flex gap-2 rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-none" />
+                    <span>
+                      Esto <strong className="text-ink">no es un experimento</strong>. Tu equipo
+                      elige a quién le manda recordatorio, y esa elección puede coincidir con quién
+                      iba a faltar igual. Tómalo como una señal, no como una prueba de que el
+                      recordatorio causó la diferencia.
+                    </span>
+                  </p>
+                </Tarjeta>
+
+                <Tarjeta
+                  titulo="¿Sirve que el paciente avise?"
+                  icono={<TrendingDown className="h-4 w-4" />}
+                >
+                  <Comparativa
+                    c={data.porAviso}
+                    etiquetaCon="Faltaron, habiendo avisado que venían"
+                    etiquetaSin="Faltaron, sin avisar"
+                  />
+                </Tarjeta>
+
+                <Tarjeta
+                  titulo="Mensajes que se resuelven solos"
+                  icono={<Inbox className="h-4 w-4" />}
+                >
+                  <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      De los mensajes que entraron, cuántos entendió Alika sola
+                    </span>
+                    <Cifra p={data.cobertura.resueltos} sufijo="mensajes" />
+                  </div>
+                  {data.cobertura.total > 0 && (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {data.cobertura.porTipo.agenda} sobre la agenda ·{" "}
+                      {data.cobertura.porTipo.aviso} avisando que venían ·{" "}
+                      {data.cobertura.porTipo.baja} pidiendo la baja ·{" "}
+                      <strong className="text-ink">{data.cobertura.paraLeer}</strong> los leyó
+                      alguien del equipo.
+                    </p>
+                  )}
+                  <p className="mt-3 flex gap-2 rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-none" />
+                    <span>
+                      Los que leyó una persona{" "}
+                      <strong className="text-ink">no son todos automatizables</strong>: ahí entran
+                      un “gracias”, una consulta de precio o una foto. Es el techo de lo que podría
+                      ganarse, no lo que se está perdiendo.
+                    </span>
+                  </p>
+                </Tarjeta>
+
+                <Tarjeta titulo="Cuánto tarda tu equipo" icono={<Inbox className="h-4 w-4" />}>
+                  <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      Mediana entre el mensaje del paciente y tu respuesta
+                    </span>
+                    <span className="font-precise text-2xl font-bold text-ink">
+                      {data.medianaRespuestaMin === null
+                        ? "—"
+                        : formatearEspera(data.medianaRespuestaMin)}
+                    </span>
+                  </div>
+                  {data.sinResponder > 0 && (
+                    <p className="mt-2 text-sm">
+                      <Link
+                        to="/conversaciones"
+                        search={{ paciente: undefined }}
+                        className="text-mint-strong underline underline-offset-2"
+                      >
+                        {data.sinResponder}{" "}
+                        {data.sinResponder === 1
+                          ? "conversación sigue sin responder"
+                          : "conversaciones siguen sin responder"}
+                      </Link>{" "}
+                      <span className="text-muted-foreground">
+                        y no cuentan en esa mediana: no son una respuesta lenta, son otra cosa.
+                      </span>
+                    </p>
+                  )}
+                </Tarjeta>
+
+                {data.solicitudes.total > 0 && (
+                  <Tarjeta
+                    titulo="Pedidos de hora por WhatsApp"
+                    icono={<MessageSquare className="h-4 w-4" />}
+                  >
+                    <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
+                      <span className="text-sm text-muted-foreground">
+                        Terminaron con una cita agendada
+                      </span>
+                      <Cifra p={data.solicitudes.agendadas} sufijo="pedidos" />
+                    </div>
+                  </Tarjeta>
+                )}
+
+                <p className="pt-2 text-xs leading-relaxed text-muted-foreground">
+                  Los porcentajes aparecen a partir de {MUESTRA_MINIMA} casos.
+                  {data.recortado &&
+                    " La muestra se recortó por volumen: se leyeron los más recientes."}
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </AppShell>

@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
+import { throwIfRequiresLlamadaOSuscripcion } from "@/lib/billing.functions";
 import { mensajeDb } from "@/lib/db-errors";
 import { normalizeToWaMe } from "@/lib/messaging/messaging";
 import {
@@ -63,6 +64,9 @@ function requireMetaAppConfig() {
   return { appId, appSecret, systemUserToken };
 }
 
+const SIN_PERMISOS_LLAMADA =
+  "Para conectar WhatsApp automático primero tenés que agendar la llamada de puesta en marcha o suscribirte.";
+
 /** Estado de conexión de WhatsApp de la clínica. Null = nunca conectó. */
 export const getWhatsAppAccountStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -104,6 +108,7 @@ export const completeWhatsAppEmbeddedSignup = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<WhatsAppAccount> => {
+    await throwIfRequiresLlamadaOSuscripcion(context.supabase, data.clinicId, SIN_PERMISOS_LLAMADA);
     const { appId, appSecret, systemUserToken } = requireMetaAppConfig();
     const version = metaApiVersion();
 

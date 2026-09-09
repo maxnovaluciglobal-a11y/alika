@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { throwIfRequiresLlamadaOSuscripcion } from "@/lib/billing.functions";
 import { mensajeDb } from "@/lib/db-errors";
 import {
   ausenciaSegunAviso,
@@ -28,6 +29,9 @@ const TOPE_MENSAJES = 3000;
 
 const KINDS_DE_RECORDATORIO = ["appointment_reminder", "appointment_checkin"];
 const OPT_OUT = new Set(["BAJA", "STOP", "CANCELAR", "UNSUBSCRIBE"]);
+
+const SIN_PERMISOS_EFECTIVIDAD =
+  "Para ver Efectividad primero tenés que agendar la llamada de puesta en marcha o suscribirte.";
 
 export interface Efectividad {
   desde: string;
@@ -56,6 +60,7 @@ export const getEfectividad = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<Efectividad> => {
     const { supabase } = context;
+    await throwIfRequiresLlamadaOSuscripcion(supabase, data.clinicId, SIN_PERMISOS_EFECTIVIDAD);
     const desde = new Date(Date.now() - DIAS_DE_VENTANA * 24 * 60 * 60 * 1000).toISOString();
 
     const [citasRes, mensajesRes, solicitudesRes, clinicaRes] = await Promise.all([

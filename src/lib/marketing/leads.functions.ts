@@ -11,6 +11,7 @@ import { z } from "zod";
 
 import { hashIp, normalizarTelefonoPorPais } from "@/lib/marketing/leads";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireAlikaStaffEmail } from "@/lib/admin/staff-gate";
 
 const MAX_POR_IP_POR_HORA = 5;
 
@@ -513,18 +514,8 @@ export const escribirLeadEnBase = createServerOnlyFn(async function escribirLead
 export const listMarketingLeads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const permitidos = (process.env.ALIKA_STAFF_EMAILS ?? "")
-      .split(",")
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean);
-
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: usuario } = await supabaseAdmin.auth.admin.getUserById(context.userId);
-    const email = usuario?.user?.email?.toLowerCase();
-
-    if (!email || !permitidos.includes(email)) {
-      throw new Error("No tienes permisos.");
-    }
+    await requireAlikaStaffEmail(supabaseAdmin, context.userId);
 
     const { data, error } = await supabaseAdmin
       .from("marketing_leads")

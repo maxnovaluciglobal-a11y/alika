@@ -126,6 +126,9 @@ export type ClinicAccess = {
     isDemo: boolean;
     /** Moneda ISO 4217 de la clínica (ej. "CLP"). Usar con formatMoney/toCents/fromCents. */
     currency: string;
+    /** Cuándo se agendó/hizo la llamada de puesta en marcha (null = no agendó todavía).
+     * Ver `requiereLlamadaOSuscripcion` en billing.ts. */
+    onboardingCallAt: string | null;
   } | null;
   /** Rol vigente en la interfaz: el real, o el simulado si el admin activó la simulación. */
   role: ClinicRole | null;
