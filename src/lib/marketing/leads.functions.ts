@@ -21,7 +21,7 @@ const EsquemaLead = z
     name: z.string().trim().max(120).optional(),
     clinicName: z.string().trim().max(120).optional(),
     countryCode: z.enum(["CL", "MX", "CO", "PE", "AR"]),
-    source: z.enum(["calculadora", "checklist", "benchmark"]),
+    source: z.enum(["calculadora", "checklist", "benchmark", "demo"]),
     consent: z.literal(true),
     consentText: z.string().trim().min(10).max(500),
     consentWhatsapp: z.boolean().default(false),

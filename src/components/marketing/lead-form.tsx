@@ -33,8 +33,10 @@ export function LeadForm({
   meta,
   tituloExito,
   slugRecurso,
+  onSuccess,
+  textoBoton,
 }: {
-  source: "calculadora" | "checklist" | "benchmark";
+  source: "calculadora" | "checklist" | "benchmark" | "demo";
   pais: PaisCaptacion;
   meta?: MetaLead;
   tituloExito: string;
@@ -42,6 +44,15 @@ export function LeadForm({
    *  esto, aunque el server devuelva `downloadToken`, no se arma ningún link
    *  — el caller es quien sabe qué recurso corresponde a este formulario. */
   slugRecurso?: string;
+  /** Gate de `/demo` (source="demo"): en vez de mostrar la tarjeta de éxito
+   *  estática de acá abajo, el caller decide qué hacer (loguearse en la
+   *  clínica demo). El caller es quien controla su propio estado — si
+   *  también re-renderiza a partir de esto, este componente ni llega a
+   *  pintar su rama "ok". */
+  onSuccess?: (resultado: Awaited<ReturnType<typeof submitMarketingLead>>) => void;
+  /** "Quiero recibirlo" no tiene sentido para el gate de `/demo` (no se
+   *  envía nada, se entra a un panel). */
+  textoBoton?: string;
 }) {
   const enviar = useServerFn(submitMarketingLead);
   const [estado, setEstado] = useState<"idle" | "enviando" | "ok">("idle");
@@ -89,6 +100,7 @@ export function LeadForm({
       setResultado(res);
       registrarEvento("lead_enviado", { source, pais });
       setEstado("ok");
+      onSuccess?.(res);
     } catch (err) {
       setEstado("idle");
       setError(err instanceof Error ? err.message : "No pudimos guardar tus datos.");
@@ -205,7 +217,7 @@ export function LeadForm({
         className="w-full bg-ink text-ink-foreground hover:bg-ink/90 sm:w-auto"
         size="lg"
       >
-        {estado === "enviando" ? "Guardando…" : "Quiero recibirlo"}
+        {estado === "enviando" ? "Guardando…" : (textoBoton ?? "Quiero recibirlo")}
       </Button>
     </form>
   );
