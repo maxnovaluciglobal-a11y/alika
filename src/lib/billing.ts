@@ -90,3 +90,30 @@ export function trialDaysLeft(sub: Subscription | null): number | null {
 export function debeExpulsarDeLaApp(sub: Subscription | null): boolean {
   return !!sub && !isSubscriptionActive(sub) && !trialInformesBloqueados(sub);
 }
+
+/**
+ * ¿Hace falta agendar la llamada o suscribirse para esta feature avanzada?
+ *
+ * A diferencia de `trialInformesBloqueados` (por tiempo, día 15+), este gate
+ * aplica desde el día 1 del trial — no es "seguís gratis 2 semanas", es
+ * "todavía no diste señal de intención de compra". Dos salidas, las dos
+ * reales: agendar la llamada (`onboardingCallAt` se setea), o suscribirse
+ * (`sub.status` pasa a `"active"`). Nunca ambas condiciones a la vez son
+ * necesarias — OR entre salidas, no AND.
+ *
+ * Features afectadas: WhatsApp automático real, portal del paciente,
+ * /efectividad. Las tres desde el día 1.
+ */
+export function requiereLlamadaOSuscripcion(
+  sub: Subscription | null,
+  onboardingCallAt: string | null,
+): boolean {
+  // Sin suscripción = clínica piloto anterior al trigger, no se toca.
+  if (!sub) return false;
+  // Ya se suscribió (active, past_due en gracia, etc.): nunca bloquea.
+  if (sub.status !== "trialing") return false;
+  // Está en trial pero ya agendó: desbloqueado.
+  if (onboardingCallAt) return false;
+  // En trial sin agendar: bloqueado.
+  return true;
+}

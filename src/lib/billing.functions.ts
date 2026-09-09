@@ -1,8 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { SUBSCRIPTION_STATUSES, type Subscription } from "@/lib/billing";
+import type { Database } from "@/integrations/supabase/types";
+import {
+  requiereLlamadaOSuscripcion,
+  SUBSCRIPTION_STATUSES,
+  type Subscription,
+} from "@/lib/billing";
 import { mensajeDb } from "@/lib/db-errors";
 import { planPriceId, getStripe, type BillingPlan } from "@/lib/stripe.server";
 
@@ -49,6 +55,37 @@ export const getMySubscription = createServerFn({ method: "GET" })
     if (!row) return null;
     return mapSubscription(row as SubscriptionRow);
   });
+
+/**
+ * Defensa en profundidad compartida de `requiereLlamadaOSuscripcion` (ver
+ * billing.ts): el gate del cliente (`LlamadaDesbloqueo`) es solo UI — el JWT
+ * vive en localStorage (regla 15 de la casa), así que cualquier miembro
+ * puede llamar la server function directo. Un solo lugar en vez de repetir
+ * el mapeo de `subscriptions` en cada caller (whatsapp/efectividad/portal
+ * empezaron repitiéndolo — consolidado acá, mismo criterio que
+ * `requireAlikaStaffEmail` en `lib/admin/staff-gate.ts`).
+ */
+export async function throwIfRequiresLlamadaOSuscripcion(
+  supabase: SupabaseClient<Database>,
+  clinicId: string,
+  mensaje: string,
+) {
+  const [{ data: subRow }, { data: clinicRow }] = await Promise.all([
+    supabase
+      .from("subscriptions")
+      .select(
+        "clinic_id, status, stripe_customer_id, stripe_subscription_id, stripe_price_id, trial_end, current_period_end, cancel_at_period_end",
+      )
+      .eq("clinic_id", clinicId)
+      .maybeSingle(),
+    supabase.from("clinics").select("onboarding_call_at").eq("id", clinicId).maybeSingle(),
+  ]);
+
+  const sub = subRow ? mapSubscription(subRow as SubscriptionRow) : null;
+  if (requiereLlamadaOSuscripcion(sub, clinicRow?.onboarding_call_at ?? null)) {
+    throw new Error(mensaje);
+  }
+}
 
 /**
  * Crea (o reutiliza) una sesión de Stripe Checkout para que la clínica

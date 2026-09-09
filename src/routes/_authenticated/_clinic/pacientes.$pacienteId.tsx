@@ -23,6 +23,8 @@ import { WhatsAppOptInToggle } from "@/components/whatsapp-opt-in-toggle";
 import { PortalLinkButton, RevokePortalAccessButton } from "@/components/portal-link-button";
 import { ReferralCodeCard } from "@/components/referral-code-card";
 import { hasPermission } from "@/lib/access/access";
+import { getMySubscription } from "@/lib/billing.functions";
+import { requiereLlamadaOSuscripcion } from "@/lib/billing";
 import type { Paciente } from "@/lib/clinic-operations/clinic-data";
 import { formatMoney } from "@/lib/finance/finance";
 import { getPatient } from "@/lib/patients/patients.functions";
@@ -249,6 +251,20 @@ function PacienteDetalle() {
     queryFn: () => fetchMedicalHistory({ data: { clinicId: clinicId!, patientId: paciente.id } }),
     enabled: Boolean(clinicId) && puedeVerClinico,
   });
+
+  // Gate del portal del paciente (día 1 del trial, no día 15 como los
+  // informes) — ver requiereLlamadaOSuscripcion en billing.ts.
+  const fetchSubscription = useServerFn(getMySubscription);
+  const { data: sub } = useQuery({
+    queryKey: ["my-subscription", clinicId],
+    queryFn: () => fetchSubscription({ data: { clinicId: clinicId! } }),
+    enabled: Boolean(clinicId),
+    staleTime: 60 * 1000,
+  });
+  const portalBloqueado = requiereLlamadaOSuscripcion(
+    sub ?? null,
+    access.clinic?.onboardingCallAt ?? null,
+  );
 
   return (
     <AppShell title="Ficha del paciente" access={access}>
@@ -481,8 +497,31 @@ function PacienteDetalle() {
                     Twilio.
                   </p>
                 </div>
-                <div className="flex flex-wrap items-start gap-2">
-                  <PortalLinkButton clinicId={access.clinic.id} patientId={paciente.id} />
+                <div
+                  className={
+                    portalBloqueado
+                      ? "flex flex-col items-stretch gap-2"
+                      : "flex flex-wrap items-start gap-2"
+                  }
+                >
+                  <PortalLinkButton
+                    clinicId={access.clinic.id}
+                    patientId={paciente.id}
+                    bloqueado={
+                      portalBloqueado
+                        ? {
+                            feature: "El portal del paciente",
+                            descripcion:
+                              "Tus pacientes pueden ver sus próximas citas y pedir hora sin login, por un link que vos generás. Se activa con tu puesta en marcha o al suscribirte.",
+                            clinicName: access.clinic.name,
+                            clinicEmail: access.email,
+                          }
+                        : undefined
+                    }
+                  />
+                  {/* Revocar acceso NUNCA se gatea — cortar un link filtrado
+                      tiene que funcionar aunque la clínica no haya agendado
+                      su llamada ni se haya suscrito todavía. */}
                   <RevokePortalAccessButton clinicId={access.clinic.id} patientId={paciente.id} />
                 </div>
                 <div className="mt-3">

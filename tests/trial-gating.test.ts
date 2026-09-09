@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   debeExpulsarDeLaApp,
   isSubscriptionActive,
+  requiereLlamadaOSuscripcion,
   trialDaysLeft,
   trialInformesBloqueados,
   TRIAL_DAYS,
@@ -154,5 +155,40 @@ describe("debeExpulsarDeLaApp", () => {
 
   it("sub === null no expulsa — las clínicas piloto sin fila de suscripción no se tocan", () => {
     expect(debeExpulsarDeLaApp(null)).toBe(false);
+  });
+});
+
+/**
+ * Gate de WhatsApp automático / portal del paciente / efectividad — Walter,
+ * 09-sep-2026: "forzar la llamada". A diferencia de `trialInformesBloqueados`
+ * (por tiempo, día 15+), este aplica desde el día 1: bloqueado mientras esté
+ * en trial y no haya agendado la llamada. Dos salidas reales, nunca las dos
+ * a la vez (OR): agendar (`onboardingCallAt` seteado) o suscribirse
+ * (`status` deja de ser "trialing").
+ */
+describe("requiereLlamadaOSuscripcion", () => {
+  it("bloquea en trial sin llamada agendada", () => {
+    expect(requiereLlamadaOSuscripcion({ ...base, trialEnd: enDias(10) }, null)).toBe(true);
+  });
+
+  it("no bloquea en trial con llamada agendada", () => {
+    expect(requiereLlamadaOSuscripcion({ ...base, trialEnd: enDias(10) }, enDias(-1))).toBe(false);
+  });
+
+  it("no bloquea a una suscripción activa, aunque no haya agendado nunca", () => {
+    expect(requiereLlamadaOSuscripcion({ ...base, status: "active" }, null)).toBe(false);
+  });
+
+  it("no bloquea a una suscripción vencida/impaga — eso lo maneja debeExpulsarDeLaApp, no este gate", () => {
+    expect(requiereLlamadaOSuscripcion({ ...base, status: "past_due" }, null)).toBe(false);
+    expect(requiereLlamadaOSuscripcion({ ...base, status: "canceled" }, null)).toBe(false);
+  });
+
+  it("un trial vencido sin agendar sigue bloqueado (no se abre solo por pasar el tiempo, a diferencia de trialInformesBloqueados)", () => {
+    expect(requiereLlamadaOSuscripcion({ ...base, trialEnd: enDias(-1) }, null)).toBe(true);
+  });
+
+  it("sub === null no bloquea — las clínicas piloto sin fila de suscripción no se tocan", () => {
+    expect(requiereLlamadaOSuscripcion(null, null)).toBe(false);
   });
 });

@@ -4,12 +4,22 @@ import { useServerFn } from "@tanstack/react-start";
 import { Check, CheckCircle2, Copy, Link2, Loader2, MessageCircle, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 
+import { LlamadaDesbloqueo } from "@/components/llamada-desbloqueo";
 import { generatePortalLink, revokePortalAccess } from "@/lib/patients/portal.functions";
 import { cn } from "@/lib/utils";
 
 interface Props {
   clinicId: string;
   patientId: string;
+  /** Seteado por el padre cuando `requiereLlamadaOSuscripcion` da true para
+   * esta clínica — reemplaza el botón por `LlamadaDesbloqueo` en vez de dejar
+   * generar el link. Ver billing.ts. */
+  bloqueado?: {
+    feature: string;
+    descripcion: string;
+    clinicName?: string | null;
+    clinicEmail?: string | null;
+  };
 }
 
 /**
@@ -17,7 +27,7 @@ interface Props {
  * del portal (7 días de validez por default), copiarlo o mandarlo por
  * WhatsApp al paciente. Sin login, sin Twilio — el link vale por sí solo.
  */
-export function PortalLinkButton({ clinicId, patientId }: Props) {
+export function PortalLinkButton({ clinicId, patientId, bloqueado }: Props) {
   const generate = useServerFn(generatePortalLink);
   const [copiedAt, setCopiedAt] = useState<number | null>(null);
 
@@ -33,6 +43,18 @@ export function PortalLinkButton({ clinicId, patientId }: Props) {
       }),
     onError: (e: Error) => toast.error(e.message),
   });
+
+  if (bloqueado) {
+    return (
+      <LlamadaDesbloqueo
+        feature={bloqueado.feature}
+        descripcion={bloqueado.descripcion}
+        clinicName={bloqueado.clinicName}
+        clinicEmail={bloqueado.clinicEmail}
+        variante="inline"
+      />
+    );
+  }
 
   async function copy() {
     if (!mut.data) return;

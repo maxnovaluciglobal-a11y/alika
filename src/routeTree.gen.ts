@@ -68,6 +68,7 @@ import { Route as AuthenticatedClinicSucursalesRouteImport } from './routes/_aut
 import { Route as AuthenticatedClinicSuscripcionRouteImport } from './routes/_authenticated/_clinic/suscripcion'
 import { Route as AuthenticatedClinicTratamientosRouteImport } from './routes/_authenticated/_clinic/tratamientos'
 import { Route as AuthenticatedClinicWhatsappRouteImport } from './routes/_authenticated/_clinic/whatsapp'
+import { Route as AuthenticatedAdminClinicasRouteImport } from './routes/_authenticated/admin.clinicas'
 import { Route as AuthenticatedAdminLeadsRouteImport } from './routes/_authenticated/admin.leads'
 import { Route as ApiRecursoSlugRouteImport } from './routes/api.recurso.$slug'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
@@ -399,6 +400,12 @@ const AuthenticatedClinicWhatsappRoute =
     path: '/whatsapp',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
+const AuthenticatedAdminClinicasRoute =
+  AuthenticatedAdminClinicasRouteImport.update({
+    id: '/admin/clinicas',
+    path: '/admin/clinicas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminLeadsRoute = AuthenticatedAdminLeadsRouteImport.update({
   id: '/admin/leads',
   path: '/admin/leads',
@@ -485,6 +492,7 @@ export interface FileRoutesByFullPath {
   '/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/whatsapp': typeof AuthenticatedClinicWhatsappRoute
+  '/admin/clinicas': typeof AuthenticatedAdminClinicasRoute
   '/admin/leads': typeof AuthenticatedAdminLeadsRoute
   '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
@@ -547,6 +555,7 @@ export interface FileRoutesByTo {
   '/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/whatsapp': typeof AuthenticatedClinicWhatsappRoute
+  '/admin/clinicas': typeof AuthenticatedAdminClinicasRoute
   '/admin/leads': typeof AuthenticatedAdminLeadsRoute
   '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
@@ -614,6 +623,7 @@ export interface FileRoutesById {
   '/_authenticated/_clinic/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/_authenticated/_clinic/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/_authenticated/_clinic/whatsapp': typeof AuthenticatedClinicWhatsappRoute
+  '/_authenticated/admin/clinicas': typeof AuthenticatedAdminClinicasRoute
   '/_authenticated/admin/leads': typeof AuthenticatedAdminLeadsRoute
   '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
@@ -680,6 +690,7 @@ export interface FileRouteTypes {
     | '/suscripcion'
     | '/tratamientos'
     | '/whatsapp'
+    | '/admin/clinicas'
     | '/admin/leads'
     | '/api/recurso/$slug'
     | '/api/stripe/webhook'
@@ -742,6 +753,7 @@ export interface FileRouteTypes {
     | '/suscripcion'
     | '/tratamientos'
     | '/whatsapp'
+    | '/admin/clinicas'
     | '/admin/leads'
     | '/api/recurso/$slug'
     | '/api/stripe/webhook'
@@ -808,6 +820,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_clinic/suscripcion'
     | '/_authenticated/_clinic/tratamientos'
     | '/_authenticated/_clinic/whatsapp'
+    | '/_authenticated/admin/clinicas'
     | '/_authenticated/admin/leads'
     | '/api/recurso/$slug'
     | '/api/stripe/webhook'
@@ -1254,6 +1267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicWhatsappRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
+    '/_authenticated/admin/clinicas': {
+      id: '/_authenticated/admin/clinicas'
+      path: '/admin/clinicas'
+      fullPath: '/admin/clinicas'
+      preLoaderRoute: typeof AuthenticatedAdminClinicasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/leads': {
       id: '/_authenticated/admin/leads'
       path: '/admin/leads'
@@ -1378,6 +1398,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedClinicRouteRoute: typeof AuthenticatedClinicRouteRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedSinAccesoRoute: typeof AuthenticatedSinAccesoRoute
+  AuthenticatedAdminClinicasRoute: typeof AuthenticatedAdminClinicasRoute
   AuthenticatedAdminLeadsRoute: typeof AuthenticatedAdminLeadsRoute
 }
 
@@ -1385,6 +1406,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClinicRouteRoute: AuthenticatedClinicRouteRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedSinAccesoRoute: AuthenticatedSinAccesoRoute,
+  AuthenticatedAdminClinicasRoute: AuthenticatedAdminClinicasRoute,
   AuthenticatedAdminLeadsRoute: AuthenticatedAdminLeadsRoute,
 }
 

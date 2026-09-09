@@ -840,6 +840,7 @@ export type Database = {
           legal_name: string | null;
           logo_url: string | null;
           name: string;
+          onboarding_call_at: string | null;
           onboarding_completed: boolean;
           tax_id: string | null;
           timezone: string;
@@ -855,6 +856,7 @@ export type Database = {
           legal_name?: string | null;
           logo_url?: string | null;
           name: string;
+          onboarding_call_at?: string | null;
           onboarding_completed?: boolean;
           tax_id?: string | null;
           timezone?: string;
@@ -870,6 +872,7 @@ export type Database = {
           legal_name?: string | null;
           logo_url?: string | null;
           name?: string;
+          onboarding_call_at?: string | null;
           onboarding_completed?: boolean;
           tax_id?: string | null;
           timezone?: string;

@@ -3,6 +3,7 @@ import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { throwIfRequiresLlamadaOSuscripcion } from "@/lib/billing.functions";
 import { mensajeDb } from "@/lib/db-errors";
 import { buildWaMeUrl } from "@/lib/messaging/messaging";
 import {
@@ -18,6 +19,9 @@ import { tryMetaTemplateSend } from "@/lib/messaging/whatsapp.functions";
 // ────────────────────────────────────────────────────────────
 // Cara clínica: generar link firmado + mandar por WhatsApp
 // ────────────────────────────────────────────────────────────
+
+const SIN_PERMISOS_PORTAL =
+  "El portal del paciente se activa con tu puesta en marcha o al suscribirte. Agendá tu llamada o suscribite desde /suscripcion.";
 
 /** Genera link firmado del portal para un paciente. Solo staff de la clínica. */
 export const generatePortalLink = createServerFn({ method: "POST" })
@@ -56,6 +60,8 @@ export const generatePortalLink = createServerFn({ method: "POST" })
         .maybeSingle();
       if (error) throw new Error(mensajeDb(error, "No pudimos cargar los datos del paciente."));
       if (!patient) throw new Error("Paciente no encontrado o sin permisos.");
+
+      await throwIfRequiresLlamadaOSuscripcion(supabase, data.clinicId, SIN_PERMISOS_PORTAL);
 
       const token = await signPortalToken(
         { patientId: patient.id, clinicId: data.clinicId },

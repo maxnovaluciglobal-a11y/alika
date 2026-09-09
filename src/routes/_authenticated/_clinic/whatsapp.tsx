@@ -16,7 +16,10 @@ import {
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { LlamadaDesbloqueo } from "@/components/llamada-desbloqueo";
 import { requirePermission } from "@/lib/access/route-guards";
+import { getMySubscription } from "@/lib/billing.functions";
+import { requiereLlamadaOSuscripcion } from "@/lib/billing";
 import { normalizeToWaMe } from "@/lib/messaging/messaging";
 import {
   completeWhatsAppEmbeddedSignup,
@@ -155,6 +158,21 @@ function WhatsAppPage() {
     queryFn: () => fetchStatus({ data: { clinicId: clinicId! } }),
   });
 
+  const fetchSubscription = useServerFn(getMySubscription);
+  const { data: sub } = useQuery({
+    queryKey: ["my-subscription", clinicId],
+    queryFn: () => fetchSubscription({ data: { clinicId: clinicId! } }),
+    enabled: Boolean(clinicId),
+    staleTime: 60 * 1000,
+  });
+  // Gatea solo la CONEXIÓN real (Embedded Signup) — la bandeja de leads y el
+  // fallback wa.me siguen visibles/funcionando siempre. Ver
+  // `requiereLlamadaOSuscripcion` en billing.ts.
+  const requiereLlamada = requiereLlamadaOSuscripcion(
+    sub ?? null,
+    access.clinic?.onboardingCallAt ?? null,
+  );
+
   const complete = useServerFn(completeWhatsAppEmbeddedSignup);
   const disconnect = useServerFn(disconnectWhatsAppAccount);
 
@@ -277,28 +295,40 @@ function WhatsAppPage() {
           <LeadsSection clinicId={clinicId} />
         )}
 
-        {!isLoading && platformConfigured && account?.status !== "connected" && (
-          <div className="card-clinical p-6">
-            <p className="text-sm font-medium">Sin número conectado</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Vas a elegir o verificar el WhatsApp de tu clínica en una ventana de Meta. Toma entre
-              5 y 15 minutos.
-            </p>
-            <button
-              type="button"
-              onClick={launchSignup}
-              disabled={!sdkReady || completeMutation.isPending}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-50"
-            >
-              {completeMutation.isPending ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <MessageCircle className="size-3.5" />
-              )}
-              Conectar WhatsApp
-            </button>
-          </div>
+        {!isLoading && platformConfigured && account?.status !== "connected" && requiereLlamada && (
+          <LlamadaDesbloqueo
+            feature="WhatsApp automático"
+            descripcion="Conectá el WhatsApp real de tu clínica para mandar recordatorios, recall y avisos de saldo automáticamente por la API de Meta — en vez de wa.me manual."
+            clinicName={access.clinic?.name}
+            clinicEmail={access.email}
+          />
         )}
+
+        {!isLoading &&
+          platformConfigured &&
+          account?.status !== "connected" &&
+          !requiereLlamada && (
+            <div className="card-clinical p-6">
+              <p className="text-sm font-medium">Sin número conectado</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Vas a elegir o verificar el WhatsApp de tu clínica en una ventana de Meta. Toma
+                entre 5 y 15 minutos.
+              </p>
+              <button
+                type="button"
+                onClick={launchSignup}
+                disabled={!sdkReady || completeMutation.isPending}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-50"
+              >
+                {completeMutation.isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <MessageCircle className="size-3.5" />
+                )}
+                Conectar WhatsApp
+              </button>
+            </div>
+          )}
       </div>
     </AppShell>
   );

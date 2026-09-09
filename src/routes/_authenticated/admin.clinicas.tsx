@@ -1,0 +1,250 @@
+// src/routes/_authenticated/admin.clinicas.tsx
+//
+// Pantalla para que Walter marque "llamada hecha" después de la puesta en
+// marcha con una clínica — desbloquea WhatsApp automático, portal del
+// paciente y /efectividad (ver `requiereLlamadaOSuscripcion` en billing.ts).
+//
+// Mismo criterio que `admin.leads.tsx`: NO vive bajo `_authenticated/_clinic/`
+// (el gate real es la allowlist `ALIKA_STAFF_EMAILS`, no un rol de clínica —
+// `listClinicsForStaff`/`marcarLlamadaHecha` lo resuelven del lado del
+// servidor vía `requireAlikaStaffEmail`), y por eso tampoco usa `AppShell` ni
+// `sin-acceso.tsx` (ambos piden un `ClinicAccess` con rol de clínica que esta
+// ruta no tiene en su contexto).
+
+import { useState } from "react";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { Phone, PhoneCall } from "lucide-react";
+
+import { AlikaLogo } from "@/components/alika-logo";
+import {
+  listClinicsForStaff,
+  marcarLlamadaHecha,
+  type ClinicaStaffRow,
+} from "@/lib/admin/clinicas.functions";
+import {
+  SUBSCRIPTION_STATUS_LABELS,
+  trialDaysLeft,
+  type Subscription,
+  type SubscriptionStatus,
+} from "@/lib/billing";
+
+export const Route = createFileRoute("/_authenticated/admin/clinicas")({
+  loader: () => listClinicsForStaff({}),
+  head: () => ({
+    meta: [
+      { title: "Clínicas | Alika" },
+      {
+        name: "description",
+        content: "Estado de suscripción y llamada de puesta en marcha por clínica.",
+      },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
+  errorComponent: AccesoRestringido,
+  component: AdminClinicasPage,
+});
+
+/** Mismo criterio que `admin.leads.tsx`: `listClinicsForStaff` siempre tira
+ *  con `Error("...")` con texto ya seguro para mostrar tal cual. */
+function AccesoRestringido({ error }: { error: Error }) {
+  return (
+    <div className="grid min-h-screen place-items-center bg-surface px-6 text-foreground">
+      <div className="card-clinical max-w-md p-8 text-center">
+        <AlikaLogo size={40} className="mx-auto mb-4" />
+        <h1 className="mb-2 font-display text-xl font-semibold">Acceso restringido</h1>
+        <p className="mb-6 text-sm text-muted-foreground">
+          {error?.message || "No pudimos mostrar esta sección."}
+        </p>
+        <Link
+          to="/dashboard"
+          className="inline-block rounded-lg bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90"
+        >
+          Volver al dashboard
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/** Igual criterio que `admin.leads.tsx::formatFechaHora`: `Intl`/`toLocaleString`
+ *  directo, sin luxon. */
+function formatFechaHora(iso: string): string {
+  return new Date(iso).toLocaleString("es-CL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+const ESTADO_TONO: Record<SubscriptionStatus, string> = {
+  incomplete: "bg-secondary text-muted-foreground",
+  incomplete_expired: "bg-destructive/10 text-destructive",
+  trialing: "bg-ai-soft text-ai",
+  active: "bg-success-soft text-success",
+  past_due: "bg-warning-soft text-warning",
+  canceled: "bg-destructive/10 text-destructive",
+  unpaid: "bg-destructive/10 text-destructive",
+  paused: "bg-secondary text-muted-foreground",
+};
+
+/** `listClinicsForStaff` solo trae `status`/`trialEnd` (no la fila completa de
+ *  `subscriptions` — no hace falta stripeCustomerId acá). `trialDaysLeft` de
+ *  billing.ts pide un `Subscription` completo; se arma uno mínimo para
+ *  reusar esa única fuente de verdad en vez de reimplementar el cálculo de
+ *  días acá. */
+function comoSubscription(row: ClinicaStaffRow): Subscription | null {
+  if (!row.subscriptionStatus) return null;
+  const estado = (Object.keys(SUBSCRIPTION_STATUS_LABELS) as SubscriptionStatus[]).includes(
+    row.subscriptionStatus as SubscriptionStatus,
+  )
+    ? (row.subscriptionStatus as SubscriptionStatus)
+    : "incomplete";
+  return {
+    clinicId: row.id,
+    status: estado,
+    stripeCustomerId: null,
+    stripeSubscriptionId: null,
+    stripePriceId: null,
+    trialEnd: row.trialEnd,
+    currentPeriodEnd: null,
+    cancelAtPeriodEnd: false,
+  };
+}
+
+function EstadoSuscripcion({ row }: { row: ClinicaStaffRow }) {
+  const sub = comoSubscription(row);
+  if (!sub) {
+    return <span className="text-xs text-muted-foreground">Sin suscripción</span>;
+  }
+  const dias = trialDaysLeft(sub);
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span
+        className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ${ESTADO_TONO[sub.status]}`}
+      >
+        {SUBSCRIPTION_STATUS_LABELS[sub.status]}
+      </span>
+      {dias !== null && (
+        <span className="text-xs text-muted-foreground">
+          {dias === 0 ? "vence hoy" : `${dias} ${dias === 1 ? "día" : "días"} de trial`}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function AdminClinicasPage() {
+  const clinicas = Route.useLoaderData();
+  const router = useRouter();
+  const marcarFn = useServerFn(marcarLlamadaHecha);
+  // Cuál fila está en vuelo — sin esto, disparar la mutation en una fila
+  // muestra "Marcando..." en TODAS (una sola mutation compartida entre filas).
+  const [clinicIdEnVuelo, setClinicIdEnVuelo] = useState<string | null>(null);
+
+  const marcar = useMutation({
+    mutationFn: (clinicId: string) => marcarFn({ data: { clinicId } }),
+    onMutate: (clinicId: string) => setClinicIdEnVuelo(clinicId),
+    onSuccess: async () => {
+      // `clinicas` viene del loader de la ruta, no de React Query — mismo
+      // motivo por el que el saldo del paciente usa router.invalidate() y no
+      // invalidateQueries (ver pacientes.$pacienteId.tsx).
+      await router.invalidate();
+      toast.success("Llamada marcada como hecha");
+    },
+    onError: (e: Error) => toast.error(e.message),
+    onSettled: () => setClinicIdEnVuelo(null),
+  });
+
+  return (
+    <div className="min-h-screen bg-surface px-4 py-10 sm:py-12">
+      <div className="mx-auto w-full max-w-5xl">
+        <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <AlikaLogo size={36} />
+            <div>
+              <h1 className="font-display text-xl font-semibold sm:text-2xl">Clínicas</h1>
+              <p className="text-sm text-muted-foreground">
+                Suscripción y llamada de puesta en marcha — {clinicas.length}{" "}
+                {clinicas.length === 1 ? "clínica" : "clínicas"}.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/dashboard"
+            className="rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          >
+            Volver al dashboard
+          </Link>
+        </header>
+
+        {clinicas.length === 0 ? (
+          <div className="card-clinical p-8 text-center">
+            <p className="mb-1 font-display text-lg font-semibold">Todavía no hay clínicas</p>
+            <p className="mx-auto max-w-md text-sm text-muted-foreground">
+              En cuanto se dé de alta la primera clínica, va a aparecer acá.
+            </p>
+          </div>
+        ) : (
+          <section className="card-clinical overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[48rem] text-sm">
+                <thead>
+                  <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <th className="px-4 py-2 text-left font-medium">Clínica</th>
+                    <th className="px-3 py-2 text-left font-medium">Alta</th>
+                    <th className="px-3 py-2 text-left font-medium">Suscripción</th>
+                    <th className="px-3 py-2 text-left font-medium">Llamada de puesta en marcha</th>
+                    <th className="px-3 py-2 text-right font-medium">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clinicas.map((row) => (
+                    <tr key={row.id} className="border-b border-hairline last:border-0">
+                      <td className="px-4 py-2 font-medium">{row.name}</td>
+                      <td className="whitespace-nowrap px-3 py-2 font-mono text-xs text-muted-foreground">
+                        {formatFechaHora(row.createdAt)}
+                      </td>
+                      <td className="px-3 py-2">
+                        <EstadoSuscripcion row={row} />
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
+                        {row.onboardingCallAt ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <PhoneCall className="size-3.5 text-success" />
+                            {formatFechaHora(row.onboardingCallAt)}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 text-right">
+                        {!row.onboardingCallAt && (
+                          <button
+                            type="button"
+                            onClick={() => marcar.mutate(row.id)}
+                            disabled={marcar.isPending && clinicIdEnVuelo === row.id}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <Phone className="size-3.5" />
+                            {marcar.isPending && clinicIdEnVuelo === row.id
+                              ? "Marcando…"
+                              : "Marcar llamada hecha"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+}
