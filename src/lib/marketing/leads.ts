@@ -33,7 +33,7 @@ export async function hashIp(ip: string, salt: string): Promise<string> {
 }
 
 export const TEXTO_CONSENTIMIENTO =
-  "Autorizo a Alika a usar estos datos para enviarme el material solicitado y " +
+  "Autorizo a Alika a usar estos datos para lo que pedí acá y " +
   "comunicarse conmigo. Puedo pedir la baja en cualquier momento.";
 
 export type MetaLead = {

@@ -72,12 +72,14 @@ const FUENTE_LABEL: Record<string, string> = {
   calculadora: "Calculadora",
   checklist: "Checklist",
   benchmark: "Benchmark",
+  demo: "Demo",
 };
 
 const FUENTE_TONO: Record<string, string> = {
   calculadora: "bg-ai-soft text-ai",
   checklist: "bg-brand-soft text-brand",
   benchmark: "bg-warning-soft text-warning",
+  demo: "bg-secondary text-foreground",
 };
 
 /** Duck-typing liviano: `meta` es `Json` en el schema (Task 1 no le puso un
