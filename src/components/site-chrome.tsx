@@ -2,10 +2,18 @@ import { Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { AlikaLogo } from "@/components/alika-logo";
 
-/** Header compartido por la landing y las páginas de contenido (legal/FAQ/docs). */
+/** Header compartido por la landing y las páginas de contenido (legal/FAQ/docs).
+ *
+ * `print:hidden` (revisión final de rama, Important #7): `scripts/build-pdf-recursos.mjs`
+ * genera el PDF gateado de `/recursos/fugas-clinica-dental` con
+ * `page.emulateMedia({ media: "print" })` sobre esta misma página — sin esta
+ * clase el PDF salía con la nav del sitio adentro. Universal a propósito
+ * (nunca sólo en esa ruta): ninguna otra página del sitio usa `@media print`
+ * hoy, así que esto no cambia nada fuera de la generación del PDF, y es lo
+ * correcto igual si alguna vez alguien imprime cualquier otra página. */
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md print:hidden">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
         <Link to="/" className="flex items-center gap-2">
           <AlikaLogo tone="ink" size={32} />
@@ -40,7 +48,15 @@ type FooterLink =
   | {
       label: string;
       kind: "route";
-      to: "/auth" | "/faq" | "/docs" | "/nosotros" | "/terminos" | "/privacidad";
+      to:
+        | "/auth"
+        | "/faq"
+        | "/docs"
+        | "/nosotros"
+        | "/terminos"
+        | "/privacidad"
+        | "/calculadora-rentabilidad-dental"
+        | "/recursos/fugas-clinica-dental";
     }
   | { label: string; kind: "external"; href: string };
 
@@ -57,6 +73,16 @@ const footerColumns: { t: string; links: FooterLink[] }[] = [
     links: [
       { label: "Preguntas frecuentes", kind: "route", to: "/faq" },
       { label: "Documentación", kind: "route", to: "/docs" },
+      {
+        label: "Calculadora de rentabilidad",
+        kind: "route",
+        to: "/calculadora-rentabilidad-dental",
+      },
+      {
+        label: "Checklist: 15 fugas de dinero",
+        kind: "route",
+        to: "/recursos/fugas-clinica-dental",
+      },
     ],
   },
   {
@@ -84,10 +110,12 @@ const footerColumns: { t: string; links: FooterLink[] }[] = [
   },
 ];
 
-/** Footer compartido: a diferencia del footer mínimo original, estos links apuntan a páginas reales. */
+/** Footer compartido: a diferencia del footer mínimo original, estos links apuntan a páginas reales.
+ *
+ * `print:hidden`: ver el comentario de `SiteHeader` arriba — mismo motivo. */
 export function SiteFooter() {
   return (
-    <footer className="border-t border-hairline">
+    <footer className="border-t border-hairline print:hidden">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-14 sm:grid-cols-4">
         {footerColumns.map((col) => (
           <div key={col.t}>

@@ -6,6 +6,7 @@ import { AlertTriangle, Download, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { TrialDesbloqueo } from "@/components/trial-desbloqueo";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,6 +22,8 @@ import { FilterBar, SelectField } from "@/components/filters";
 import { PatientCombobox } from "@/components/patient-combobox";
 import { MoneyInput } from "@/components/money-input";
 import { requirePermission } from "@/lib/access/route-guards";
+import { getMySubscription } from "@/lib/billing.functions";
+import { trialInformesBloqueados } from "@/lib/billing";
 import { hoyISO, formatoFecha } from "@/lib/clinic-operations/clinic-data";
 import {
   LAB_ORDER_STATUSES,
@@ -334,12 +337,21 @@ function LaboratoriosPage() {
   const hoy = hoyISO(timezone);
   const queryClient = useQueryClient();
 
+  const fetchSubscription = useServerFn(getMySubscription);
+  const { data: sub } = useQuery({
+    queryKey: ["my-subscription", clinicId],
+    queryFn: () => fetchSubscription({ data: { clinicId: clinicId! } }),
+    enabled: Boolean(clinicId),
+    staleTime: 60 * 1000,
+  });
+  const bloqueado = trialInformesBloqueados(sub ?? null);
+
   const fetchOrders = useServerFn(listLabOrders);
   const setStatusFn = useServerFn(setLabOrderStatus);
 
   const { data: ordenes = [], isLoading } = useQuery({
     queryKey: ["lab-orders", clinicId, search.estado],
-    enabled: Boolean(clinicId),
+    enabled: Boolean(clinicId) && !bloqueado,
     queryFn: () =>
       fetchOrders({
         data: {
@@ -390,136 +402,140 @@ function LaboratoriosPage() {
 
   return (
     <AppShell title="Laboratorios" access={access}>
-      <div className="space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground">
-            {ordenes.length} {ordenes.length === 1 ? "orden" : "órdenes"}
-            {atrasadas.length > 0 && (
-              <span className="ml-2 inline-flex items-center gap-1 text-destructive">
-                <AlertTriangle className="size-3.5" />
-                {atrasadas.length} con el plazo vencido
-              </span>
-            )}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {ordenes.length > 0 && (
-              <Button variant="outline" size="sm" onClick={exportar}>
-                <Download className="size-4" /> Exportar CSV
-              </Button>
-            )}
-            <NuevoLaboratorioDialog clinicId={clinicId!} />
-            <NuevaOrdenDialog clinicId={clinicId!} currency={currency} timezone={timezone} />
-          </div>
-        </div>
-
-        <FilterBar activos={search.estado ? 1 : 0} onReset={() => set({ estado: "" })}>
-          <SelectField
-            label="Estado"
-            value={search.estado}
-            onChange={(estado) => set({ estado })}
-            allLabel="Todos los estados"
-            options={LAB_ORDER_STATUSES.map((e) => ({
-              value: e,
-              label: LAB_ORDER_STATUS_LABELS[e],
-            }))}
-          />
-        </FilterBar>
-
-        {isLoading && <p className="text-sm text-muted-foreground">Cargando órdenes…</p>}
-
-        {!isLoading && ordenes.length === 0 && (
-          <div className="card-clinical p-8 text-center">
-            <p className="mb-1 font-display text-lg font-semibold">Sin órdenes de laboratorio</p>
-            <p className="mx-auto max-w-md text-sm text-muted-foreground">
-              Registrá acá lo que mandás al taller: qué, para quién y cuándo lo prometieron. Es lo
-              que hoy vive en un cuaderno aparte.
+      {bloqueado ? (
+        <TrialDesbloqueo pantalla="Laboratorios" />
+      ) : (
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              {ordenes.length} {ordenes.length === 1 ? "orden" : "órdenes"}
+              {atrasadas.length > 0 && (
+                <span className="ml-2 inline-flex items-center gap-1 text-destructive">
+                  <AlertTriangle className="size-3.5" />
+                  {atrasadas.length} con el plazo vencido
+                </span>
+              )}
             </p>
+            <div className="flex flex-wrap gap-2">
+              {ordenes.length > 0 && (
+                <Button variant="outline" size="sm" onClick={exportar}>
+                  <Download className="size-4" /> Exportar CSV
+                </Button>
+              )}
+              <NuevoLaboratorioDialog clinicId={clinicId!} />
+              <NuevaOrdenDialog clinicId={clinicId!} currency={currency} timezone={timezone} />
+            </div>
           </div>
-        )}
 
-        {!isLoading && ordenes.length > 0 && (
-          <section className="card-clinical overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[52rem] text-sm">
-                <thead>
-                  <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
-                    <th className="px-4 py-2 text-left font-medium">Enviado</th>
-                    <th className="px-3 py-2 text-left font-medium">Paciente</th>
-                    <th className="px-3 py-2 text-left font-medium">Trabajo</th>
-                    <th className="px-3 py-2 text-left font-medium">Laboratorio</th>
-                    <th className="px-3 py-2 text-left font-medium">Comprometido</th>
-                    <th className="px-3 py-2 text-right font-medium">Costo</th>
-                    <th className="px-3 py-2 text-left font-medium">Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ordenes.map((o) => {
-                    const atrasada = ordenAtrasada(o, hoy);
-                    return (
-                      <tr key={o.id} className="border-b border-hairline last:border-0">
-                        <td className="whitespace-nowrap px-4 py-2 font-mono text-xs text-muted-foreground">
-                          {formatoFecha(o.sentOn)}
-                        </td>
-                        <td className="px-3 py-2">{o.patientName}</td>
-                        <td className="px-3 py-2">
-                          {o.description}
-                          {o.toothNumbers?.length ? (
-                            <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-                              {o.toothNumbers.join(" · ")}
-                            </span>
-                          ) : null}
-                        </td>
-                        <td className="px-3 py-2 text-muted-foreground">
-                          {o.labNameSnapshot ?? "—"}
-                        </td>
-                        <td
-                          className={cn(
-                            "whitespace-nowrap px-3 py-2 font-mono text-xs",
-                            atrasada ? "font-semibold text-destructive" : "text-muted-foreground",
-                          )}
-                        >
-                          {o.dueOn ? formatoFecha(o.dueOn) : "—"}
-                          {atrasada && <span className="ml-1">⚠</span>}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono tabular-nums text-muted-foreground">
-                          {o.costCents === null ? "—" : formatMoney(o.costCents, o.currency)}
-                        </td>
-                        <td className="px-3 py-2">
-                          <select
-                            value={o.status}
-                            aria-label={`Estado de la orden de ${o.patientName}`}
-                            onChange={(e) =>
-                              cambiarEstado.mutate({
-                                orderId: o.id,
-                                status: e.target.value as LabOrderStatus,
-                              })
-                            }
+          <FilterBar activos={search.estado ? 1 : 0} onReset={() => set({ estado: "" })}>
+            <SelectField
+              label="Estado"
+              value={search.estado}
+              onChange={(estado) => set({ estado })}
+              allLabel="Todos los estados"
+              options={LAB_ORDER_STATUSES.map((e) => ({
+                value: e,
+                label: LAB_ORDER_STATUS_LABELS[e],
+              }))}
+            />
+          </FilterBar>
+
+          {isLoading && <p className="text-sm text-muted-foreground">Cargando órdenes…</p>}
+
+          {!isLoading && ordenes.length === 0 && (
+            <div className="card-clinical p-8 text-center">
+              <p className="mb-1 font-display text-lg font-semibold">Sin órdenes de laboratorio</p>
+              <p className="mx-auto max-w-md text-sm text-muted-foreground">
+                Registrá acá lo que mandás al taller: qué, para quién y cuándo lo prometieron. Es lo
+                que hoy vive en un cuaderno aparte.
+              </p>
+            </div>
+          )}
+
+          {!isLoading && ordenes.length > 0 && (
+            <section className="card-clinical overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[52rem] text-sm">
+                  <thead>
+                    <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
+                      <th className="px-4 py-2 text-left font-medium">Enviado</th>
+                      <th className="px-3 py-2 text-left font-medium">Paciente</th>
+                      <th className="px-3 py-2 text-left font-medium">Trabajo</th>
+                      <th className="px-3 py-2 text-left font-medium">Laboratorio</th>
+                      <th className="px-3 py-2 text-left font-medium">Comprometido</th>
+                      <th className="px-3 py-2 text-right font-medium">Costo</th>
+                      <th className="px-3 py-2 text-left font-medium">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ordenes.map((o) => {
+                      const atrasada = ordenAtrasada(o, hoy);
+                      return (
+                        <tr key={o.id} className="border-b border-hairline last:border-0">
+                          <td className="whitespace-nowrap px-4 py-2 font-mono text-xs text-muted-foreground">
+                            {formatoFecha(o.sentOn)}
+                          </td>
+                          <td className="px-3 py-2">{o.patientName}</td>
+                          <td className="px-3 py-2">
+                            {o.description}
+                            {o.toothNumbers?.length ? (
+                              <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                                {o.toothNumbers.join(" · ")}
+                              </span>
+                            ) : null}
+                          </td>
+                          <td className="px-3 py-2 text-muted-foreground">
+                            {o.labNameSnapshot ?? "—"}
+                          </td>
+                          <td
                             className={cn(
-                              "rounded-md border-0 px-2 py-1 text-xs font-medium",
-                              TONO_ESTADO[o.status],
+                              "whitespace-nowrap px-3 py-2 font-mono text-xs",
+                              atrasada ? "font-semibold text-destructive" : "text-muted-foreground",
                             )}
                           >
-                            {LAB_ORDER_STATUSES.map((e) => (
-                              <option key={e} value={e}>
-                                {LAB_ORDER_STATUS_LABELS[e]}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
+                            {o.dueOn ? formatoFecha(o.dueOn) : "—"}
+                            {atrasada && <span className="ml-1">⚠</span>}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-2 text-right font-mono tabular-nums text-muted-foreground">
+                            {o.costCents === null ? "—" : formatMoney(o.costCents, o.currency)}
+                          </td>
+                          <td className="px-3 py-2">
+                            <select
+                              value={o.status}
+                              aria-label={`Estado de la orden de ${o.patientName}`}
+                              onChange={(e) =>
+                                cambiarEstado.mutate({
+                                  orderId: o.id,
+                                  status: e.target.value as LabOrderStatus,
+                                })
+                              }
+                              className={cn(
+                                "rounded-md border-0 px-2 py-1 text-xs font-medium",
+                                TONO_ESTADO[o.status],
+                              )}
+                            >
+                              {LAB_ORDER_STATUSES.map((e) => (
+                                <option key={e} value={e}>
+                                  {LAB_ORDER_STATUS_LABELS[e]}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
 
-        <p className="text-xs text-muted-foreground">
-          Una orden solo cuenta como atrasada si el laboratorio comprometió una fecha y todavía no
-          llegó — sin plazo pactado no se inventa uno.
-        </p>
-      </div>
+          <p className="text-xs text-muted-foreground">
+            Una orden solo cuenta como atrasada si el laboratorio comprometió una fecha y todavía no
+            llegó — sin plazo pactado no se inventa uno.
+          </p>
+        </div>
+      )}
     </AppShell>
   );
 }

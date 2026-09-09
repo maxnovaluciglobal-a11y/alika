@@ -6,6 +6,7 @@ import { Download, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { TrialDesbloqueo } from "@/components/trial-desbloqueo";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -30,6 +31,8 @@ import { Label } from "@/components/ui/label";
 import { DateField, FilterBar, SelectField } from "@/components/filters";
 import { MoneyInput } from "@/components/money-input";
 import { requirePermission } from "@/lib/access/route-guards";
+import { getMySubscription } from "@/lib/billing.functions";
+import { trialInformesBloqueados } from "@/lib/billing";
 import { hoyISO, formatoFecha } from "@/lib/clinic-operations/clinic-data";
 import { CATEGORIAS_GASTO_SUGERIDAS, formatMoney, type Expense } from "@/lib/finance/finance";
 import {
@@ -323,12 +326,21 @@ function GastosPage() {
   const queryClient = useQueryClient();
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
+  const fetchSubscription = useServerFn(getMySubscription);
+  const { data: sub } = useQuery({
+    queryKey: ["my-subscription", clinicId],
+    queryFn: () => fetchSubscription({ data: { clinicId: clinicId! } }),
+    enabled: Boolean(clinicId),
+    staleTime: 60 * 1000,
+  });
+  const bloqueado = trialInformesBloqueados(sub ?? null);
+
   const fetchExpenses = useServerFn(listExpenses);
   const deleteFn = useServerFn(deleteExpense);
 
   const { data: gastos = [], isLoading } = useQuery({
     queryKey: ["expenses", clinicId, search.desde, search.hasta],
-    enabled: Boolean(clinicId),
+    enabled: Boolean(clinicId) && !bloqueado,
     queryFn: () =>
       fetchExpenses({ data: { clinicId: clinicId!, desde: search.desde, hasta: search.hasta } }),
   });
@@ -364,188 +376,192 @@ function GastosPage() {
 
   return (
     <AppShell title="Gastos" access={access}>
-      <div className="space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="font-display text-2xl font-semibold tabular-nums">
-              {formatMoney(total, currency)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {filtrados.length} {filtrados.length === 1 ? "gasto" : "gastos"} en el período
-            </p>
+      {bloqueado ? (
+        <TrialDesbloqueo pantalla="Gastos" />
+      ) : (
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="font-display text-2xl font-semibold tabular-nums">
+                {formatMoney(total, currency)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {filtrados.length} {filtrados.length === 1 ? "gasto" : "gastos"} en el período
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {filtrados.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    exportarCsv<Expense>(
+                      filtrados,
+                      [
+                        { header: "Fecha", value: (g) => g.incurredOn },
+                        { header: "Categoría", value: (g) => g.category },
+                        { header: "Descripción", value: (g) => g.description },
+                        { header: "Proveedor", value: (g) => g.supplier },
+                        { header: "Medio de pago", value: (g) => g.methodNameSnapshot },
+                        { header: "Monto", value: (g) => g.amountCents },
+                        { header: "Moneda", value: (g) => g.currency },
+                        { header: "Notas", value: (g) => g.notes },
+                      ],
+                      "gastos",
+                      hoyISO(timezone),
+                    )
+                  }
+                >
+                  <Download className="size-4" /> Exportar CSV
+                </Button>
+              )}
+              <GastoDialog
+                clinicId={clinicId!}
+                currency={currency}
+                timezone={timezone}
+                categoriasUsadas={categorias}
+              />
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {filtrados.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  exportarCsv<Expense>(
-                    filtrados,
-                    [
-                      { header: "Fecha", value: (g) => g.incurredOn },
-                      { header: "Categoría", value: (g) => g.category },
-                      { header: "Descripción", value: (g) => g.description },
-                      { header: "Proveedor", value: (g) => g.supplier },
-                      { header: "Medio de pago", value: (g) => g.methodNameSnapshot },
-                      { header: "Monto", value: (g) => g.amountCents },
-                      { header: "Moneda", value: (g) => g.currency },
-                      { header: "Notas", value: (g) => g.notes },
-                    ],
-                    "gastos",
-                    hoyISO(timezone),
-                  )
-                }
-              >
-                <Download className="size-4" /> Exportar CSV
-              </Button>
-            )}
-            <GastoDialog
-              clinicId={clinicId!}
-              currency={currency}
-              timezone={timezone}
-              categoriasUsadas={categorias}
+
+          <FilterBar
+            activos={search.categoria ? 1 : 0}
+            onReset={() =>
+              set({
+                desde: primerDiaDelMes(timezone),
+                hasta: hoyISO(timezone),
+                categoria: "",
+              })
+            }
+          >
+            <DateField label="Desde" value={search.desde} onChange={(desde) => set({ desde })} />
+            <DateField label="Hasta" value={search.hasta} onChange={(hasta) => set({ hasta })} />
+            <SelectField
+              label="Categoría"
+              value={search.categoria}
+              onChange={(categoria) => set({ categoria })}
+              allLabel="Todas las categorías"
+              options={categorias.map((c) => ({ value: c, label: c }))}
             />
-          </div>
-        </div>
+          </FilterBar>
 
-        <FilterBar
-          activos={search.categoria ? 1 : 0}
-          onReset={() =>
-            set({
-              desde: primerDiaDelMes(timezone),
-              hasta: hoyISO(timezone),
-              categoria: "",
-            })
-          }
-        >
-          <DateField label="Desde" value={search.desde} onChange={(desde) => set({ desde })} />
-          <DateField label="Hasta" value={search.hasta} onChange={(hasta) => set({ hasta })} />
-          <SelectField
-            label="Categoría"
-            value={search.categoria}
-            onChange={(categoria) => set({ categoria })}
-            allLabel="Todas las categorías"
-            options={categorias.map((c) => ({ value: c, label: c }))}
-          />
-        </FilterBar>
+          {isLoading && <p className="text-sm text-muted-foreground">Cargando gastos…</p>}
 
-        {isLoading && <p className="text-sm text-muted-foreground">Cargando gastos…</p>}
+          {!isLoading && gastos.length === 0 && (
+            <div className="card-clinical p-8 text-center">
+              <p className="mb-1 font-display text-lg font-semibold">Sin gastos en este período</p>
+              <p className="mx-auto max-w-md text-sm text-muted-foreground">
+                Cargá arriendo, sueldos, insumos y laboratorio acá. Finanzas los resta de lo cobrado
+                y te dice si el mes cerró en verde.
+              </p>
+            </div>
+          )}
 
-        {!isLoading && gastos.length === 0 && (
-          <div className="card-clinical p-8 text-center">
-            <p className="mb-1 font-display text-lg font-semibold">Sin gastos en este período</p>
-            <p className="mx-auto max-w-md text-sm text-muted-foreground">
-              Cargá arriendo, sueldos, insumos y laboratorio acá. Finanzas los resta de lo cobrado y
-              te dice si el mes cerró en verde.
-            </p>
-          </div>
-        )}
-
-        {!isLoading && porCategoria.length > 1 && (
-          <section className="card-clinical p-5">
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Por categoría
-            </p>
-            <div className="space-y-2">
-              {porCategoria.map(([categoria, monto]) => (
-                <div key={categoria} className="flex items-center gap-3 text-sm">
-                  <span className="w-40 shrink-0 truncate">{categoria}</span>
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
-                    <div
-                      className="h-full rounded-full bg-brand"
-                      style={{ width: `${total ? (monto / total) * 100 : 0}%` }}
-                    />
+          {!isLoading && porCategoria.length > 1 && (
+            <section className="card-clinical p-5">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Por categoría
+              </p>
+              <div className="space-y-2">
+                {porCategoria.map(([categoria, monto]) => (
+                  <div key={categoria} className="flex items-center gap-3 text-sm">
+                    <span className="w-40 shrink-0 truncate">{categoria}</span>
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className="h-full rounded-full bg-brand"
+                        style={{ width: `${total ? (monto / total) * 100 : 0}%` }}
+                      />
+                    </div>
+                    <span className="w-28 shrink-0 text-right font-mono text-xs tabular-nums">
+                      {formatMoney(monto, currency)}
+                    </span>
                   </div>
-                  <span className="w-28 shrink-0 text-right font-mono text-xs tabular-nums">
-                    {formatMoney(monto, currency)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+                ))}
+              </div>
+            </section>
+          )}
 
-        {!isLoading && filtrados.length > 0 && (
-          <section className="card-clinical overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[44rem] text-sm">
-                <thead>
-                  <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
-                    <th className="px-4 py-2 text-left font-medium">Fecha</th>
-                    <th className="px-3 py-2 text-left font-medium">Categoría</th>
-                    <th className="px-3 py-2 text-left font-medium">Descripción</th>
-                    <th className="px-3 py-2 text-left font-medium">Proveedor</th>
-                    <th className="px-3 py-2 text-left font-medium">Medio</th>
-                    <th className="px-3 py-2 text-right font-medium">Monto</th>
-                    <th className="px-3 py-2" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtrados.map((g) => (
-                    <tr key={g.id} className="border-b border-hairline last:border-0">
-                      <td className="whitespace-nowrap px-4 py-2 font-mono text-xs text-muted-foreground">
-                        {formatoFecha(g.incurredOn)}
-                      </td>
-                      <td className="px-3 py-2">{g.category}</td>
-                      <td className="px-3 py-2">{g.description}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{g.supplier ?? "—"}</td>
-                      <td className="px-3 py-2 text-xs text-muted-foreground">
-                        {g.methodNameSnapshot ?? "—"}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right font-mono tabular-nums">
-                        {formatMoney(g.amountCents, g.currency)}
-                      </td>
-                      <td className="px-3 py-2">
-                        <div className="flex justify-end gap-1">
-                          <GastoDialog
-                            clinicId={clinicId!}
-                            currency={currency}
-                            timezone={timezone}
-                            expense={g}
-                            categoriasUsadas={categorias}
-                          />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            aria-label={`Borrar gasto: ${g.description}`}
-                            onClick={() => setConfirmDeleteId(g.id)}
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </div>
-                      </td>
+          {!isLoading && filtrados.length > 0 && (
+            <section className="card-clinical overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[44rem] text-sm">
+                  <thead>
+                    <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
+                      <th className="px-4 py-2 text-left font-medium">Fecha</th>
+                      <th className="px-3 py-2 text-left font-medium">Categoría</th>
+                      <th className="px-3 py-2 text-left font-medium">Descripción</th>
+                      <th className="px-3 py-2 text-left font-medium">Proveedor</th>
+                      <th className="px-3 py-2 text-left font-medium">Medio</th>
+                      <th className="px-3 py-2 text-right font-medium">Monto</th>
+                      <th className="px-3 py-2" />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
+                  </thead>
+                  <tbody>
+                    {filtrados.map((g) => (
+                      <tr key={g.id} className="border-b border-hairline last:border-0">
+                        <td className="whitespace-nowrap px-4 py-2 font-mono text-xs text-muted-foreground">
+                          {formatoFecha(g.incurredOn)}
+                        </td>
+                        <td className="px-3 py-2">{g.category}</td>
+                        <td className="px-3 py-2">{g.description}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{g.supplier ?? "—"}</td>
+                        <td className="px-3 py-2 text-xs text-muted-foreground">
+                          {g.methodNameSnapshot ?? "—"}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono tabular-nums">
+                          {formatMoney(g.amountCents, g.currency)}
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="flex justify-end gap-1">
+                            <GastoDialog
+                              clinicId={clinicId!}
+                              currency={currency}
+                              timezone={timezone}
+                              expense={g}
+                              categoriasUsadas={categorias}
+                            />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-label={`Borrar gasto: ${g.description}`}
+                              onClick={() => setConfirmDeleteId(g.id)}
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
 
-        <AlertDialog
-          open={confirmDeleteId !== null}
-          onOpenChange={(o) => !o && setConfirmDeleteId(null)}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>¿Borrar este gasto?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Se elimina definitivamente y el resultado del período se recalcula sin él.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => confirmDeleteId && borrar.mutate(confirmDeleteId)}
-                disabled={borrar.isPending}
-              >
-                Borrar gasto
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+          <AlertDialog
+            open={confirmDeleteId !== null}
+            onOpenChange={(o) => !o && setConfirmDeleteId(null)}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Borrar este gasto?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Se elimina definitivamente y el resultado del período se recalcula sin él.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => confirmDeleteId && borrar.mutate(confirmDeleteId)}
+                  disabled={borrar.isPending}
+                >
+                  Borrar gasto
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
     </AppShell>
   );
 }

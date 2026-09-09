@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp, Loader2, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { TrialDesbloqueo } from "@/components/trial-desbloqueo";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,6 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { requirePermission } from "@/lib/access/route-guards";
+import { getMySubscription } from "@/lib/billing.functions";
+import { trialInformesBloqueados } from "@/lib/billing";
 import {
   formatMoney,
   fromCents,
@@ -390,18 +393,28 @@ function ConveniosPage() {
   const queryClient = useQueryClient();
   const [abierto, setAbierto] = useState<string | null>(null);
 
+  const fetchSubscription = useServerFn(getMySubscription);
+  const { data: sub } = useQuery({
+    queryKey: ["my-subscription", clinicId],
+    queryFn: () => fetchSubscription({ data: { clinicId: clinicId! } }),
+    enabled: Boolean(clinicId),
+    staleTime: 60 * 1000,
+  });
+  const bloqueado = trialInformesBloqueados(sub ?? null);
+
   const fetchAgreements = useServerFn(listAgreements);
   const fetchProcedures = useServerFn(listProcedures);
   const setActiveFn = useServerFn(setAgreementActive);
 
   const { data: convenios = [], isLoading } = useQuery({
     queryKey: ["agreements", clinicId, "todos"],
-    enabled: Boolean(clinicId),
-    queryFn: () => fetchAgreements({ data: { clinicId: clinicId!, incluirInactivos: true } }),
+    enabled: Boolean(clinicId) && !bloqueado,
+    queryFn: () =>
+      fetchAgreements({ data: { clinicId: clinicId!, incluirInactivos: true, paraInforme: true } }),
   });
   const { data: procedures = [] } = useQuery({
     queryKey: ["procedures", clinicId],
-    enabled: Boolean(clinicId),
+    enabled: Boolean(clinicId) && !bloqueado,
     queryFn: () => fetchProcedures({ data: { clinicId: clinicId! } }),
   });
 
@@ -417,98 +430,103 @@ function ConveniosPage() {
 
   return (
     <AppShell title="Convenios" access={access}>
-      <div className="space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="max-w-xl text-sm text-muted-foreground">
-            Cuando un paciente tiene convenio, el presupuesto se parte solo entre lo que cubre el
-            convenio y lo que paga él — y el saldo que ves en la ficha y en la agenda pasa a ser
-            solo su parte.
-          </p>
-          <ConvenioDialog clinicId={clinicId!} />
-        </div>
-
-        {isLoading && <p className="text-sm text-muted-foreground">Cargando convenios…</p>}
-
-        {!isLoading && convenios.length === 0 && (
-          <div className="card-clinical p-8 text-center">
-            <p className="mb-1 font-display text-lg font-semibold">Todavía no hay convenios</p>
-            <p className="mx-auto mb-4 max-w-md text-sm text-muted-foreground">
-              Si atendés Fonasa, Isapre o convenios de empresa, cargalos acá una vez y definí qué
-              cubre cada uno. Sin esto, cada presupuesto con convenio se calcula a mano.
+      {bloqueado ? (
+        <TrialDesbloqueo pantalla="Convenios" />
+      ) : (
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="max-w-xl text-sm text-muted-foreground">
+              Cuando un paciente tiene convenio, el presupuesto se parte solo entre lo que cubre el
+              convenio y lo que paga él — y el saldo que ves en la ficha y en la agenda pasa a ser
+              solo su parte.
             </p>
-            <div className="flex justify-center">
-              <ConvenioDialog clinicId={clinicId!} />
-            </div>
+            <ConvenioDialog clinicId={clinicId!} />
           </div>
-        )}
 
-        {convenios.map((c) => {
-          const isOpen = abierto === c.id;
-          return (
-            <section
-              key={c.id}
-              className={cn("card-clinical overflow-hidden", !c.isActive && "opacity-60")}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                <button
-                  onClick={() => setAbierto(isOpen ? null : c.id)}
-                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                >
-                  <div className="min-w-0">
-                    <p className="flex items-center gap-2 text-sm font-medium">
-                      <span className="truncate">{c.name}</span>
-                      {c.kind && (
-                        <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                          {c.kind}
-                        </span>
-                      )}
-                      {!c.isActive && (
-                        <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                          De baja
-                        </span>
-                      )}
-                    </p>
-                    <p className="truncate text-[11px] text-muted-foreground">
-                      {[c.contactName, c.contactPhone, c.contactEmail]
-                        .filter(Boolean)
-                        .join(" · ") || "Sin datos de contacto"}
-                    </p>
-                  </div>
-                  {isOpen ? (
-                    <ChevronUp className="ml-auto size-4 shrink-0" />
-                  ) : (
-                    <ChevronDown className="ml-auto size-4 shrink-0" />
-                  )}
-                </button>
-                <div className="flex gap-1">
-                  <ConvenioDialog clinicId={clinicId!} convenio={c} />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={setActive.isPending}
-                    onClick={() => setActive.mutate({ agreementId: c.id, isActive: !c.isActive })}
-                  >
-                    {c.isActive ? "Dar de baja" : "Reactivar"}
-                  </Button>
-                </div>
+          {isLoading && <p className="text-sm text-muted-foreground">Cargando convenios…</p>}
+
+          {!isLoading && convenios.length === 0 && (
+            <div className="card-clinical p-8 text-center">
+              <p className="mb-1 font-display text-lg font-semibold">Todavía no hay convenios</p>
+              <p className="mx-auto mb-4 max-w-md text-sm text-muted-foreground">
+                Si atendés Fonasa, Isapre o convenios de empresa, cargalos acá una vez y definí qué
+                cubre cada uno. Sin esto, cada presupuesto con convenio se calcula a mano.
+              </p>
+              <div className="flex justify-center">
+                <ConvenioDialog clinicId={clinicId!} />
               </div>
-              {isOpen && (
-                <CoberturaDelConvenio
-                  clinicId={clinicId!}
-                  agreementId={c.id}
-                  procedures={procedures}
-                  currency={currency}
-                />
-              )}
-            </section>
-          );
-        })}
+            </div>
+          )}
 
-        <p className="text-xs text-muted-foreground">
-          Dejar la cobertura vacía significa que el convenio no cubre esa prestación. Un convenio
-          dado de baja no reparte presupuestos nuevos, pero los ya emitidos conservan lo que decían.
-        </p>
-      </div>
+          {convenios.map((c) => {
+            const isOpen = abierto === c.id;
+            return (
+              <section
+                key={c.id}
+                className={cn("card-clinical overflow-hidden", !c.isActive && "opacity-60")}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                  <button
+                    onClick={() => setAbierto(isOpen ? null : c.id)}
+                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                  >
+                    <div className="min-w-0">
+                      <p className="flex items-center gap-2 text-sm font-medium">
+                        <span className="truncate">{c.name}</span>
+                        {c.kind && (
+                          <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                            {c.kind}
+                          </span>
+                        )}
+                        {!c.isActive && (
+                          <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                            De baja
+                          </span>
+                        )}
+                      </p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {[c.contactName, c.contactPhone, c.contactEmail]
+                          .filter(Boolean)
+                          .join(" · ") || "Sin datos de contacto"}
+                      </p>
+                    </div>
+                    {isOpen ? (
+                      <ChevronUp className="ml-auto size-4 shrink-0" />
+                    ) : (
+                      <ChevronDown className="ml-auto size-4 shrink-0" />
+                    )}
+                  </button>
+                  <div className="flex gap-1">
+                    <ConvenioDialog clinicId={clinicId!} convenio={c} />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={setActive.isPending}
+                      onClick={() => setActive.mutate({ agreementId: c.id, isActive: !c.isActive })}
+                    >
+                      {c.isActive ? "Dar de baja" : "Reactivar"}
+                    </Button>
+                  </div>
+                </div>
+                {isOpen && (
+                  <CoberturaDelConvenio
+                    clinicId={clinicId!}
+                    agreementId={c.id}
+                    procedures={procedures}
+                    currency={currency}
+                  />
+                )}
+              </section>
+            );
+          })}
+
+          <p className="text-xs text-muted-foreground">
+            Dejar la cobertura vacía significa que el convenio no cubre esa prestación. Un convenio
+            dado de baja no reparte presupuestos nuevos, pero los ya emitidos conservan lo que
+            decían.
+          </p>
+        </div>
+      )}
     </AppShell>
   );
 }

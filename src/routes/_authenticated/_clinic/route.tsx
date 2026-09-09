@@ -4,7 +4,7 @@ import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-ro
 import { getMyAccess } from "@/lib/access/access.functions";
 import { ACCESS_QUERY_KEY, type ClinicAccess } from "@/lib/access/access";
 import { getMySubscription } from "@/lib/billing.functions";
-import { isSubscriptionActive } from "@/lib/billing";
+import { debeExpulsarDeLaApp } from "@/lib/billing";
 import { leerRolSimulado, puedeSimular } from "@/lib/access/role-simulation";
 import { ensureOfflineCacheHydrated } from "@/lib/offline/offline-cache";
 import { AppShell } from "@/components/app-shell";
@@ -67,7 +67,18 @@ export const Route = createFileRoute("/_authenticated/_clinic")({
       }
       // Solo el owner ve el gate real; el resto del equipo sigue trabajando
       // aunque la sub esté vencida (la clínica es responsabilidad del owner).
-      if (access.role === "owner" && sub && !isSubscriptionActive(sub)) {
+      //
+      // Un trial vencido sin tarjeta NO expulsa de la app — eso lo maneja
+      // trialInformesBloqueados puntualmente en cada ruta de informes (ver
+      // TrialDesbloqueo), sin sacar a nadie de agenda/pacientes/ficha
+      // clínica. Este redirect de acá es para el caso distinto: alguien
+      // que llegó a poner tarjeta y el cobro falló o se canceló
+      // (past_due/canceled/unpaid) o una suscripción activa cuyo período ya
+      // venció — ahí sí tiene sentido mandar derecho a /suscripcion.
+      // Lógica extraída a `debeExpulsarDeLaApp` (Task 11, fix round 1): es
+      // puro booleano que antes vivía inline acá sin ningún test — ver
+      // `tests/trial-gating.test.ts`.
+      if (access.role === "owner" && debeExpulsarDeLaApp(sub)) {
         throw redirect({ to: "/suscripcion" });
       }
     }

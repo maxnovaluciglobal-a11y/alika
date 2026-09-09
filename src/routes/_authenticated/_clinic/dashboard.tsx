@@ -2,13 +2,15 @@ import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarClock, CircleAlert } from "lucide-react";
+import { CalendarClock, CircleAlert, Lock, Sparkles } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { PanelDesempeno } from "@/components/panel-desempeno";
 import { requirePermission } from "@/lib/access/route-guards";
 import { hasPermission } from "@/lib/access/access";
 import { AgendaGrid } from "@/components/agenda-grid";
+import { getMySubscription } from "@/lib/billing.functions";
+import { trialInformesBloqueados } from "@/lib/billing";
 import { formatoFecha, hoyISO } from "@/lib/clinic-operations/clinic-data";
 import { listProfessionals } from "@/lib/clinic-operations/clinic-catalog.functions";
 import { listPatients } from "@/lib/patients/patients.functions";
@@ -39,6 +41,41 @@ function horaDeCita(inicio: number) {
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
+/**
+ * Variante compacta de `TrialDesbloqueo` para el panel de desempeño del
+ * dashboard (Task 11, fix round 1 — Critical #1).
+ *
+ * `TrialDesbloqueo` completo (grilla de dos columnas a página completa) no
+ * entra bien acá: el dashboard ya tiene su propia agenda del día y KPIs
+ * debajo, y esta sección es solo UNA de varias, no la pantalla entera. Lo que
+ * sí hereda es la regla que importa: nunca un error rojo genérico donde en
+ * realidad es un trial vencido — el estado tiene que decir la verdad.
+ */
+function DesempenoBloqueado() {
+  return (
+    <div className="card-clinical flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand">
+          <Lock className="size-4" />
+        </span>
+        <div>
+          <p className="text-sm font-medium">El panel de desempeño se activa al suscribirte</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Tu trial de 14 días terminó. La agenda y el resto de la clínica siguen funcionando con
+            total normalidad.
+          </p>
+        </div>
+      </div>
+      <Link
+        to="/suscripcion"
+        className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-brand px-4 py-2 text-xs font-medium text-brand-foreground transition-opacity hover:opacity-90"
+      >
+        <Sparkles className="size-3.5" /> Activar suscripción
+      </Link>
+    </div>
+  );
+}
+
 function Dashboard() {
   const { access } = Route.useRouteContext();
   const clinicId = access.clinic?.id;
@@ -47,6 +84,22 @@ function Dashboard() {
   const fetchPatients = useServerFn(listPatients);
   const fetchAppointments = useServerFn(listAppointments);
   const fetchProfessionals = useServerFn(listProfessionals);
+
+  // Task 11, fix round 1 (Critical #1): mismo patrón `useQuery`/`getMySubscription`
+  // que ya usan las 7 rutas de informes (ver finanzas.tsx) — mismo queryKey,
+  // así que comparte caché con `TrialBanner` y con esas rutas si se navegó
+  // entre ellas. Sin esto, `getPanelDesempeno` (que SÍ pasa por
+  // `requireFinanceView`) rechazaba con trial vencido y el dashboard —la
+  // pantalla de aterrizaje del owner— mostraba el error rojo genérico de
+  // `PanelDesempeno` para el 100% de las clínicas cuyo trial vence.
+  const fetchSubscription = useServerFn(getMySubscription);
+  const { data: sub } = useQuery({
+    queryKey: ["my-subscription", clinicId],
+    queryFn: () => fetchSubscription({ data: { clinicId: clinicId! } }),
+    enabled: Boolean(clinicId),
+    staleTime: 60 * 1000,
+  });
+  const panelBloqueado = trialInformesBloqueados(sub ?? null);
 
   const { data: pacientes = [] } = useQuery({
     queryKey: ["patients", clinicId],
@@ -133,7 +186,11 @@ function Dashboard() {
                 {formatoFecha(primerDiaDelMes)} — {formatoFecha(hoy)}
               </p>
             </div>
-            <PanelDesempeno clinicId={clinicId} desde={primerDiaDelMes} hasta={hoy} />
+            {panelBloqueado ? (
+              <DesempenoBloqueado />
+            ) : (
+              <PanelDesempeno clinicId={clinicId} desde={primerDiaDelMes} hasta={hoy} />
+            )}
           </section>
         )}
 

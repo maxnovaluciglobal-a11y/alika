@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { mensajeDb } from "@/lib/db-errors";
 import { permissionsForRole, type ClinicRole } from "@/lib/access/access";
 import { LAB_ORDER_STATUSES, type Lab, type LabOrder, type Warehouse } from "@/lib/finance/finance";
+import { throwIfTrialBlocksInformes } from "@/lib/finance/finance-reports.functions";
 
 /**
  * Operación de clínica mediana (Tanda C): laboratorios, bodegas, estados de
@@ -118,6 +119,12 @@ export const listLabOrders = createServerFn({ method: "GET" })
   )
   .handler(async ({ data, context }): Promise<LabOrder[]> => {
     const { supabase, userId } = context;
+
+    // Task 11, fix round 1 (Important #2): esta función no tiene un chequeo
+    // de rol que rechace — el chequeo de abajo (`puedeVerCostos`) solo decide
+    // si se muestra el costo, cualquier miembro de la clínica puede llamarla.
+    // Se le agrega solo la capa de trial, encima de lo que ya autorizaba.
+    await throwIfTrialBlocksInformes(supabase, data.clinicId);
 
     // El costo es lo que la clínica le paga al laboratorio: mismo tipo de dato
     // que un gasto. La fila entera es operativa y la ve todo el equipo, pero

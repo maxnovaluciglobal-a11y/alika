@@ -2,7 +2,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 
-import { requireFinanceView } from "@/lib/finance/finance-reports.functions";
+import {
+  requireFinanceView,
+  throwIfTrialBlocksInformes,
+} from "@/lib/finance/finance-reports.functions";
 
 /**
  * Regresión del P0 de la auditoría de código 01-sep-2026: `getFinanceSummary`/
@@ -135,5 +138,68 @@ describe("requireFinanceView — regresión del P0 de finance-reports", () => {
     await expect(
       requireFinanceView(receptionClient, randomUUID(), receptionUserId),
     ).rejects.toThrow("No tienes permisos para ver los reportes financieros.");
+  });
+
+  /**
+   * Task 11, fix round 1 — Important #4(a): el gate de trial dentro de
+   * `requireFinanceView` (agregado en el commit `be4d55c`) no tenía NINGÚN
+   * test — nada en CI lo protegía. Estos dos tests van al final a propósito:
+   * mutan `trial_end` de la MISMA clínica que ya usaron los tres tests de
+   * arriba (con trial vigente, creada por el trigger
+   * `clinics_crear_trial` — ver `20260907240000_trial_nace_con_la_clinica.sql`),
+   * así que tienen que correr después de esos tres, nunca antes. La clínica
+   * de todos modos se borra en `afterAll`.
+   */
+  it("con el trial vencido, `requireFinanceView` rechaza a un owner con finance:view", async () => {
+    const desde = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: actualizada, error } = await admin
+      .from("subscriptions")
+      .update({ trial_end: desde })
+      .eq("clinic_id", clinicId)
+      .select("clinic_id")
+      .maybeSingle();
+    if (error) throw new Error(`No se pudo mover trial_end al pasado: ${error.message}`);
+    // Si el trigger de la migración 20260907240000 no corrió (entorno viejo
+    // sin esa migración aplicada), este update no toca ninguna fila y el
+    // resto del test sería un falso positivo — falla fuerte en vez de
+    // seguir con un estado ambiguo.
+    if (!actualizada) {
+      throw new Error(
+        "No existe fila en subscriptions para esta clínica de prueba — ¿falta aplicar " +
+          "la migración 20260907240000_trial_nace_con_la_clinica.sql?",
+      );
+    }
+
+    // Antes del gate de trial (solo chequeo de rol) esto pasaba: el owner
+    // TIENE finance:view. Con el trial vencido y sin tarjeta, ahora rechaza
+    // con el MISMO mensaje genérico que el chequeo de rol — nunca uno
+    // distinto que delate "trial vencido" a quien mire la Network tab.
+    await expect(requireFinanceView(ownerClient, clinicId, ownerUserId)).rejects.toThrow(
+      "No tienes permisos para ver los reportes financieros.",
+    );
+  });
+
+  /**
+   * Important #2 de la revisión: `listExpenses`, `listPaymentMethods`,
+   * `listAgreements`, `listLabOrders` e `listInventoryItems` ahora llaman a
+   * `throwIfTrialBlocksInformes` como primera línea de su handler — la misma
+   * capa que `requireFinanceView` usa internamente, extraída para poder
+   * aplicarse sin cambiar el chequeo de rol/RLS propio de cada una.
+   *
+   * No se puede invocar esas cinco funciones directamente en un test: son
+   * `createServerFn(...)` y su middleware `requireSupabaseAuth` llama a
+   * `getRequest()` de `@tanstack/react-start/server`, que exige un request
+   * HTTP real — fuera de ese contexto tira "No Start context found in
+   * AsyncLocalStorage" (verificado corriendo exactamente eso contra
+   * `listExpenses` antes de escribir este test; es la misma razón por la que
+   * el test de arriba tampoco llama a `getFinanceSummary` directo). Esta
+   * prueba llama al helper compartido con el mismo cliente logueado y el
+   * mismo `clinicId` que usaría cualquiera de esas cinco — prueba que el
+   * rechazo llega hasta ahí.
+   */
+  it("`throwIfTrialBlocksInformes` (el helper de las 5 funciones del fix round 1) rechaza igual con el trial ya vencido", async () => {
+    await expect(throwIfTrialBlocksInformes(ownerClient, clinicId)).rejects.toThrow(
+      "No tienes permisos para ver los reportes financieros.",
+    );
   });
 });

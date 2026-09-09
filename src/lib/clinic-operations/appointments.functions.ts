@@ -7,7 +7,7 @@ import { HORA_INICIO, type Cita, type EstadoCita } from "@/lib/clinic-operations
 import { mensajeDb } from "@/lib/db-errors";
 import { filaYaCreada } from "@/lib/idempotency";
 import { fetchPatientBalances } from "@/lib/patients/patients.functions";
-import { requireFinanceView } from "@/lib/finance/finance-reports.functions";
+import { requireFinanceViewRole } from "@/lib/finance/finance-reports.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 const DEFAULT_TIMEZONE = "America/Santiago";
@@ -587,7 +587,15 @@ export const getAppointmentPatientBalances = createServerFn({ method: "GET" })
     // endpoint directo. Sin este chequeo, una recepcionista obtiene el saldo
     // exacto de todos los pacientes de la clínica en un request.
     // Mismo helper y mismo motivo que `getFinanceSummary` (auditoría 04-sep).
-    await requireFinanceView(context.supabase, data.clinicId, context.userId);
+    //
+    // Task 11, fix round 1 (ruling del reviewer, Important #3): a propósito
+    // NO pasa por `requireFinanceView` (que sí incluye el trial). Esto es
+    // agenda operativa del día a día, no un "informe" — mostrar el saldo de
+    // un paciente que debe plata como si no tuviera nada facturado, justo en
+    // la columna "Abierto siempre" del mostrador, es peor que dejarlo visible
+    // durante el trial vencido. Solo el chequeo de rol (`requireFinanceViewRole`),
+    // sin importar el estado de la suscripción.
+    await requireFinanceViewRole(context.supabase, data.clinicId, context.userId);
 
     if (!data.patientIds.length) return {};
 

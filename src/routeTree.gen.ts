@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CalculadoraRentabilidadDentalRouteImport } from './routes/calculadora-rentabilidad-dental'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as FaqRouteImport } from './routes/faq'
@@ -26,6 +27,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSinAccesoRouteImport } from './routes/_authenticated/sin-acceso'
 import { Route as ApiDailyDigestRouteImport } from './routes/api.daily-digest'
 import { Route as ApiDemoResetRouteImport } from './routes/api.demo-reset'
+import { Route as ApiEvRouteImport } from './routes/api.ev'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api.whatsapp-webhook'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
@@ -36,6 +38,7 @@ import { Route as DocsWhatsappRouteImport } from './routes/docs.whatsapp'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as PortalInicioRouteImport } from './routes/portal.inicio'
+import { Route as RecursosFugasClinicaDentalRouteImport } from './routes/recursos.fugas-clinica-dental'
 import { Route as AuthenticatedClinicAgendaRouteImport } from './routes/_authenticated/_clinic/agenda'
 import { Route as AuthenticatedClinicArancelesRouteImport } from './routes/_authenticated/_clinic/aranceles'
 import { Route as AuthenticatedClinicComisionesRouteImport } from './routes/_authenticated/_clinic/comisiones'
@@ -65,6 +68,8 @@ import { Route as AuthenticatedClinicSucursalesRouteImport } from './routes/_aut
 import { Route as AuthenticatedClinicSuscripcionRouteImport } from './routes/_authenticated/_clinic/suscripcion'
 import { Route as AuthenticatedClinicTratamientosRouteImport } from './routes/_authenticated/_clinic/tratamientos'
 import { Route as AuthenticatedClinicWhatsappRouteImport } from './routes/_authenticated/_clinic/whatsapp'
+import { Route as AuthenticatedAdminLeadsRouteImport } from './routes/_authenticated/admin.leads'
+import { Route as ApiRecursoSlugRouteImport } from './routes/api.recurso.$slug'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
 import { Route as AuthenticatedClinicPacientesIndexRouteImport } from './routes/_authenticated/_clinic/pacientes.index'
 import { Route as AuthenticatedClinicPacientesPacienteIdRouteImport } from './routes/_authenticated/_clinic/pacientes.$pacienteId'
@@ -83,6 +88,12 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CalculadoraRentabilidadDentalRoute =
+  CalculadoraRentabilidadDentalRouteImport.update({
+    id: '/calculadora-rentabilidad-dental',
+    path: '/calculadora-rentabilidad-dental',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DemoRoute = DemoRouteImport.update({
   id: '/demo',
   path: '/demo',
@@ -153,6 +164,11 @@ const ApiDemoResetRoute = ApiDemoResetRouteImport.update({
   path: '/api/demo-reset',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiEvRoute = ApiEvRouteImport.update({
+  id: '/api/ev',
+  path: '/api/ev',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
   id: '/api/health',
   path: '/api/health',
@@ -203,6 +219,12 @@ const PortalInicioRoute = PortalInicioRouteImport.update({
   path: '/inicio',
   getParentRoute: () => PortalRoute,
 } as any)
+const RecursosFugasClinicaDentalRoute =
+  RecursosFugasClinicaDentalRouteImport.update({
+    id: '/recursos/fugas-clinica-dental',
+    path: '/recursos/fugas-clinica-dental',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedClinicAgendaRoute =
   AuthenticatedClinicAgendaRouteImport.update({
     id: '/agenda',
@@ -377,6 +399,16 @@ const AuthenticatedClinicWhatsappRoute =
     path: '/whatsapp',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
+const AuthenticatedAdminLeadsRoute = AuthenticatedAdminLeadsRouteImport.update({
+  id: '/admin/leads',
+  path: '/admin/leads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiRecursoSlugRoute = ApiRecursoSlugRouteImport.update({
+  id: '/api/recurso/$slug',
+  path: '/api/recurso/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   id: '/api/stripe/webhook',
   path: '/api/stripe/webhook',
@@ -398,6 +430,7 @@ const AuthenticatedClinicPacientesPacienteIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/calculadora-rentabilidad-dental': typeof CalculadoraRentabilidadDentalRoute
   '/demo': typeof DemoRoute
   '/docs': typeof DocsRouteWithChildren
   '/faq': typeof FaqRoute
@@ -411,6 +444,7 @@ export interface FileRoutesByFullPath {
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/daily-digest': typeof ApiDailyDigestRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
+  '/api/ev': typeof ApiEvRoute
   '/api/health': typeof ApiHealthRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
@@ -419,6 +453,7 @@ export interface FileRoutesByFullPath {
   '/docs/whatsapp': typeof DocsWhatsappRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
+  '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
   '/docs/': typeof DocsIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
@@ -450,6 +485,8 @@ export interface FileRoutesByFullPath {
   '/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/whatsapp': typeof AuthenticatedClinicWhatsappRoute
+  '/admin/leads': typeof AuthenticatedAdminLeadsRoute
+  '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
   '/pacientes/': typeof AuthenticatedClinicPacientesIndexRoute
@@ -457,6 +494,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/calculadora-rentabilidad-dental': typeof CalculadoraRentabilidadDentalRoute
   '/demo': typeof DemoRoute
   '/faq': typeof FaqRoute
   '/nosotros': typeof NosotrosRoute
@@ -468,6 +506,7 @@ export interface FileRoutesByTo {
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/daily-digest': typeof ApiDailyDigestRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
+  '/api/ev': typeof ApiEvRoute
   '/api/health': typeof ApiHealthRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
@@ -476,6 +515,7 @@ export interface FileRoutesByTo {
   '/docs/whatsapp': typeof DocsWhatsappRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
+  '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
   '/docs': typeof DocsIndexRoute
   '/portal': typeof PortalIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
@@ -507,6 +547,8 @@ export interface FileRoutesByTo {
   '/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/whatsapp': typeof AuthenticatedClinicWhatsappRoute
+  '/admin/leads': typeof AuthenticatedAdminLeadsRoute
+  '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
   '/pacientes': typeof AuthenticatedClinicPacientesIndexRoute
@@ -516,6 +558,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/calculadora-rentabilidad-dental': typeof CalculadoraRentabilidadDentalRoute
   '/demo': typeof DemoRoute
   '/docs': typeof DocsRouteWithChildren
   '/faq': typeof FaqRoute
@@ -530,6 +573,7 @@ export interface FileRoutesById {
   '/_authenticated/sin-acceso': typeof AuthenticatedSinAccesoRoute
   '/api/daily-digest': typeof ApiDailyDigestRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
+  '/api/ev': typeof ApiEvRoute
   '/api/health': typeof ApiHealthRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
@@ -538,6 +582,7 @@ export interface FileRoutesById {
   '/docs/whatsapp': typeof DocsWhatsappRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
+  '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
   '/docs/': typeof DocsIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/_authenticated/_clinic/agenda': typeof AuthenticatedClinicAgendaRoute
@@ -569,6 +614,8 @@ export interface FileRoutesById {
   '/_authenticated/_clinic/suscripcion': typeof AuthenticatedClinicSuscripcionRoute
   '/_authenticated/_clinic/tratamientos': typeof AuthenticatedClinicTratamientosRoute
   '/_authenticated/_clinic/whatsapp': typeof AuthenticatedClinicWhatsappRoute
+  '/_authenticated/admin/leads': typeof AuthenticatedAdminLeadsRoute
+  '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/_authenticated/_clinic/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
   '/_authenticated/_clinic/pacientes/': typeof AuthenticatedClinicPacientesIndexRoute
@@ -578,6 +625,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/calculadora-rentabilidad-dental'
     | '/demo'
     | '/docs'
     | '/faq'
@@ -591,6 +639,7 @@ export interface FileRouteTypes {
     | '/sin-acceso'
     | '/api/daily-digest'
     | '/api/demo-reset'
+    | '/api/ev'
     | '/api/health'
     | '/api/whatsapp-webhook'
     | '/docs/datos-y-seguridad'
@@ -599,6 +648,7 @@ export interface FileRouteTypes {
     | '/docs/whatsapp'
     | '/portal/$token'
     | '/portal/inicio'
+    | '/recursos/fugas-clinica-dental'
     | '/docs/'
     | '/portal/'
     | '/agenda'
@@ -630,6 +680,8 @@ export interface FileRouteTypes {
     | '/suscripcion'
     | '/tratamientos'
     | '/whatsapp'
+    | '/admin/leads'
+    | '/api/recurso/$slug'
     | '/api/stripe/webhook'
     | '/pacientes/$pacienteId'
     | '/pacientes/'
@@ -637,6 +689,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/calculadora-rentabilidad-dental'
     | '/demo'
     | '/faq'
     | '/nosotros'
@@ -648,6 +701,7 @@ export interface FileRouteTypes {
     | '/sin-acceso'
     | '/api/daily-digest'
     | '/api/demo-reset'
+    | '/api/ev'
     | '/api/health'
     | '/api/whatsapp-webhook'
     | '/docs/datos-y-seguridad'
@@ -656,6 +710,7 @@ export interface FileRouteTypes {
     | '/docs/whatsapp'
     | '/portal/$token'
     | '/portal/inicio'
+    | '/recursos/fugas-clinica-dental'
     | '/docs'
     | '/portal'
     | '/agenda'
@@ -687,6 +742,8 @@ export interface FileRouteTypes {
     | '/suscripcion'
     | '/tratamientos'
     | '/whatsapp'
+    | '/admin/leads'
+    | '/api/recurso/$slug'
     | '/api/stripe/webhook'
     | '/pacientes/$pacienteId'
     | '/pacientes'
@@ -695,6 +752,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/calculadora-rentabilidad-dental'
     | '/demo'
     | '/docs'
     | '/faq'
@@ -709,6 +767,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sin-acceso'
     | '/api/daily-digest'
     | '/api/demo-reset'
+    | '/api/ev'
     | '/api/health'
     | '/api/whatsapp-webhook'
     | '/docs/datos-y-seguridad'
@@ -717,6 +776,7 @@ export interface FileRouteTypes {
     | '/docs/whatsapp'
     | '/portal/$token'
     | '/portal/inicio'
+    | '/recursos/fugas-clinica-dental'
     | '/docs/'
     | '/portal/'
     | '/_authenticated/_clinic/agenda'
@@ -748,6 +808,8 @@ export interface FileRouteTypes {
     | '/_authenticated/_clinic/suscripcion'
     | '/_authenticated/_clinic/tratamientos'
     | '/_authenticated/_clinic/whatsapp'
+    | '/_authenticated/admin/leads'
+    | '/api/recurso/$slug'
     | '/api/stripe/webhook'
     | '/_authenticated/_clinic/pacientes/$pacienteId'
     | '/_authenticated/_clinic/pacientes/'
@@ -757,6 +819,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CalculadoraRentabilidadDentalRoute: typeof CalculadoraRentabilidadDentalRoute
   DemoRoute: typeof DemoRoute
   DocsRoute: typeof DocsRouteWithChildren
   FaqRoute: typeof FaqRoute
@@ -768,8 +831,11 @@ export interface RootRouteChildren {
   TerminosRoute: typeof TerminosRoute
   ApiDailyDigestRoute: typeof ApiDailyDigestRoute
   ApiDemoResetRoute: typeof ApiDemoResetRoute
+  ApiEvRoute: typeof ApiEvRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
+  RecursosFugasClinicaDentalRoute: typeof RecursosFugasClinicaDentalRoute
+  ApiRecursoSlugRoute: typeof ApiRecursoSlugRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
 
@@ -794,6 +860,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calculadora-rentabilidad-dental': {
+      id: '/calculadora-rentabilidad-dental'
+      path: '/calculadora-rentabilidad-dental'
+      fullPath: '/calculadora-rentabilidad-dental'
+      preLoaderRoute: typeof CalculadoraRentabilidadDentalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo': {
@@ -894,6 +967,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDemoResetRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ev': {
+      id: '/api/ev'
+      path: '/api/ev'
+      fullPath: '/api/ev'
+      preLoaderRoute: typeof ApiEvRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/health': {
       id: '/api/health'
       path: '/api/health'
@@ -963,6 +1043,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/inicio'
       preLoaderRoute: typeof PortalInicioRouteImport
       parentRoute: typeof PortalRoute
+    }
+    '/recursos/fugas-clinica-dental': {
+      id: '/recursos/fugas-clinica-dental'
+      path: '/recursos/fugas-clinica-dental'
+      fullPath: '/recursos/fugas-clinica-dental'
+      preLoaderRoute: typeof RecursosFugasClinicaDentalRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_clinic/agenda': {
       id: '/_authenticated/_clinic/agenda'
@@ -1167,6 +1254,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicWhatsappRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
+    '/_authenticated/admin/leads': {
+      id: '/_authenticated/admin/leads'
+      path: '/admin/leads'
+      fullPath: '/admin/leads'
+      preLoaderRoute: typeof AuthenticatedAdminLeadsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/recurso/$slug': {
+      id: '/api/recurso/$slug'
+      path: '/api/recurso/$slug'
+      fullPath: '/api/recurso/$slug'
+      preLoaderRoute: typeof ApiRecursoSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/stripe/webhook': {
       id: '/api/stripe/webhook'
       path: '/api/stripe/webhook'
@@ -1277,12 +1378,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedClinicRouteRoute: typeof AuthenticatedClinicRouteRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedSinAccesoRoute: typeof AuthenticatedSinAccesoRoute
+  AuthenticatedAdminLeadsRoute: typeof AuthenticatedAdminLeadsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClinicRouteRoute: AuthenticatedClinicRouteRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedSinAccesoRoute: AuthenticatedSinAccesoRoute,
+  AuthenticatedAdminLeadsRoute: AuthenticatedAdminLeadsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -1325,6 +1428,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CalculadoraRentabilidadDentalRoute: CalculadoraRentabilidadDentalRoute,
   DemoRoute: DemoRoute,
   DocsRoute: DocsRouteWithChildren,
   FaqRoute: FaqRoute,
@@ -1336,8 +1440,11 @@ const rootRouteChildren: RootRouteChildren = {
   TerminosRoute: TerminosRoute,
   ApiDailyDigestRoute: ApiDailyDigestRoute,
   ApiDemoResetRoute: ApiDemoResetRoute,
+  ApiEvRoute: ApiEvRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
+  RecursosFugasClinicaDentalRoute: RecursosFugasClinicaDentalRoute,
+  ApiRecursoSlugRoute: ApiRecursoSlugRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
