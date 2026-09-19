@@ -18,6 +18,32 @@ import {
 import { str } from "@/lib/search";
 import { cn } from "@/lib/utils";
 
+/**
+ * Rangos largos (ej. 3 meses) volvían el gráfico de caja una lista de barras
+ * finas día por día, difícil de escanear — agrupa por semana (lunes a
+ * domingo) cuando hay más de 30 puntos, sin tocar el resumen que llega del
+ * servidor.
+ */
+function agruparPorSemana(dias: { date: string; totalCents: number }[]) {
+  const totales = new Map<string, number>();
+  for (const d of dias) {
+    const fecha = new Date(`${d.date}T00:00:00`);
+    const diaSemana = fecha.getDay();
+    const offsetALunes = (diaSemana + 6) % 7;
+    fecha.setDate(fecha.getDate() - offsetALunes);
+    const inicioSemana = fecha.toISOString().slice(0, 10);
+    totales.set(inicioSemana, (totales.get(inicioSemana) ?? 0) + d.totalCents);
+  }
+  return [...totales.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, totalCents]) => ({ date, totalCents }));
+}
+
+function etiquetaBarra(date: string, agrupadoPorSemana: boolean) {
+  const [, mes, dia] = date.split("-");
+  return agrupadoPorSemana ? `Sem. ${dia}/${mes}` : date;
+}
+
 interface FinanzasSearch {
   desde: string;
   hasta: string;
@@ -92,7 +118,13 @@ function FinanzasPage() {
     navigate({ search: (prev: FinanzasSearch) => ({ ...prev, ...patch }) });
 
   const currency = resumen?.currency ?? "CLP";
-  const maxDia = Math.max(1, ...(resumen?.byDay.map((d) => d.totalCents) ?? [1]));
+  const agrupadoPorSemana = (resumen?.byDay.length ?? 0) > 30;
+  const serieCaja = resumen
+    ? agrupadoPorSemana
+      ? agruparPorSemana(resumen.byDay)
+      : resumen.byDay
+    : [];
+  const maxDia = Math.max(1, ...(serieCaja.map((d) => d.totalCents) ?? [1]));
 
   return (
     <AppShell title="Finanzas" access={access}>
@@ -274,18 +306,18 @@ function FinanzasPage() {
 
               <section className="card-clinical overflow-hidden">
                 <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Caja por día
+                  {agrupadoPorSemana ? "Caja por semana" : "Caja por día"}
                 </div>
-                {resumen.byDay.length === 0 ? (
+                {serieCaja.length === 0 ? (
                   <p className="px-5 py-8 text-center text-sm text-muted-foreground">
                     Sin pagos registrados en este rango.
                   </p>
                 ) : (
                   <div className="space-y-2.5 p-5">
-                    {resumen.byDay.map((d) => (
+                    {serieCaja.map((d) => (
                       <div key={d.date} className="flex items-center gap-3">
                         <span className="w-24 shrink-0 font-mono text-xs text-muted-foreground">
-                          {d.date}
+                          {etiquetaBarra(d.date, agrupadoPorSemana)}
                         </span>
                         <div className="h-5 flex-1 overflow-hidden rounded bg-secondary/60">
                           <div

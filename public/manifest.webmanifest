@@ -4,6 +4,7 @@
   "description": "Agenda, fichas, odontograma y cobranza de tu clínica dental. Sigue consultando la información aunque se corte internet.",
   "lang": "es",
   "dir": "ltr",
+  "id": "/dashboard",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
