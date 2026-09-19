@@ -63,6 +63,9 @@ export const Route = createFileRoute("/_authenticated/_clinic/whatsapp")({
 // la página muestra el estado "todavía no habilitado" en vez de un botón roto.
 const WHATSAPP_APP_ID = import.meta.env.VITE_WHATSAPP_APP_ID as string | undefined;
 const WHATSAPP_CONFIG_ID = import.meta.env.VITE_WHATSAPP_CONFIG_ID as string | undefined;
+// Meta da ~2 años de vida a cada versión mayor del Graph API antes de
+// deprecarla — v21.0 salió en oct-2024, así que conviene revisar este
+// default (o setear VITE_WHATSAPP_API_VERSION) antes de fines de 2026.
 const WHATSAPP_API_VERSION =
   (import.meta.env.VITE_WHATSAPP_API_VERSION as string | undefined) || "v21.0";
 
@@ -274,8 +277,9 @@ function WhatsAppPage() {
     <AppShell title="WhatsApp" access={access}>
       <div className="max-w-2xl space-y-6">
         <p className="text-sm text-muted-foreground">
-          Conectá el WhatsApp de tu clínica para mandar recordatorios, recall y avisos de saldo
-          automáticamente. Cada clínica usa su propio número — nunca compartimos uno entre clínicas.
+          {requiereLlamada && (!platformConfigured || account?.status !== "connected")
+            ? "Conectá el WhatsApp de tu clínica para mandar recordatorios, recall y avisos de saldo por acá — cada clínica usa su propio número, nunca compartimos uno entre clínicas."
+            : "Conectá el WhatsApp de tu clínica para mandar recordatorios, recall y avisos de saldo automáticamente. Cada clínica usa su propio número — nunca compartimos uno entre clínicas."}
         </p>
 
         {isLoading && <p className="text-sm text-muted-foreground">Cargando…</p>}
@@ -406,13 +410,28 @@ function WaMeLinkCard({ displayPhone }: { displayPhone: string }) {
   const [copiedAt, setCopiedAt] = useState<number | null>(null);
   const normalized = normalizeToWaMe(displayPhone);
   const link = normalized ? `https://wa.me/${normalized}` : null;
-  if (!link) return null;
+
+  if (!link) {
+    return (
+      <div className="card-clinical p-6">
+        <p className="text-sm font-medium">Link para captar pacientes nuevos</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          No pudimos generar el link automático para el número {displayPhone}. Escribinos a soporte
+          y lo resolvemos.
+        </p>
+      </div>
+    );
+  }
 
   async function copy() {
-    await navigator.clipboard.writeText(link!);
-    setCopiedAt(Date.now());
-    setTimeout(() => setCopiedAt(null), 2000);
-    toast.success("Link copiado al portapapeles");
+    try {
+      await navigator.clipboard.writeText(link!);
+      setCopiedAt(Date.now());
+      setTimeout(() => setCopiedAt(null), 2000);
+      toast.success("Link copiado al portapapeles");
+    } catch {
+      toast.error("No se pudo copiar. Copialo manualmente.");
+    }
   }
 
   return (
@@ -490,16 +509,18 @@ function LeadsSection({ clinicId }: { clinicId: string }) {
               <p className="flex items-center gap-1.5 text-sm font-medium">
                 {lead.name || lead.phone}
                 {isAutoReplyStale(lead) && (
-                  <span
-                    title="La auto-respuesta no se pudo mandar — contactalo a mano."
-                    className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive"
-                  >
+                  <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
                     <AlertTriangle className="size-3" aria-hidden="true" />
                     Sin auto-respuesta
                   </span>
                 )}
               </p>
               {lead.name && <p className="text-xs text-muted-foreground">{lead.phone}</p>}
+              {isAutoReplyStale(lead) && (
+                <p className="text-[11px] text-destructive">
+                  La auto-respuesta no se pudo mandar — contactalo a mano.
+                </p>
+              )}
               <p className="mt-1 truncate text-xs text-muted-foreground">{lead.firstMessage}</p>
               {lead.referredByName && (
                 <p className="mt-1 text-[11px] font-medium text-brand">

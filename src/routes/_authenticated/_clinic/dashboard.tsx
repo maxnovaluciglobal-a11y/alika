@@ -36,6 +36,10 @@ export const Route = createFileRoute("/_authenticated/_clinic/dashboard")({
   component: Dashboard,
 });
 
+// `inicio` llega como minutos desde las 8:00 de la sucursal (no desde
+// medianoche) — mismo criterio que usa el resto de la agenda para acotar la
+// jornada laboral. Si esa semántica cambia en el backend, acá es donde hay
+// que ajustar el offset.
 function horaDeCita(inicio: number) {
   const total = 8 * 60 + inicio;
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
@@ -164,11 +168,19 @@ function Dashboard() {
     return citas.filter((c) => c.fecha >= hoy && c.fecha <= limiteISO && c.estado === "tentativa");
   }, [citas, hoy]);
 
+  // `acumulado: true` marca el único KPI que mira toda la historia de la
+  // clínica en vez de una ventana de tiempo corta — se distingue con otro
+  // color de badge para no confundirlo con las 3 métricas de período.
   const kpis = [
-    { label: "Pacientes totales", valor: pacientes.length, nota: "Clínica completa" },
-    { label: "Citas hoy", valor: citasHoy.length, nota: formatoFecha(hoy) },
-    { label: "Próximos 7 días", valor: en7Dias.length, nota: "Citas agendadas" },
-    { label: "Pacientes nuevos", valor: pacientesNuevos, nota: "Estado: nuevo" },
+    {
+      label: "Pacientes totales",
+      valor: pacientes.length,
+      nota: "Clínica completa",
+      acumulado: true,
+    },
+    { label: "Citas hoy", valor: citasHoy.length, nota: formatoFecha(hoy), acumulado: false },
+    { label: "Próximos 7 días", valor: en7Dias.length, nota: "Citas agendadas", acumulado: false },
+    { label: "Pacientes nuevos", valor: pacientesNuevos, nota: "Estado: nuevo", acumulado: false },
   ];
 
   // El panel de desempeño mira el mes en curso; los KPIs de abajo siguen
@@ -206,8 +218,15 @@ function Dashboard() {
               ) : (
                 <p className="font-display text-3xl font-bold">{k.valor}</p>
               )}
-              <div className="mt-2 inline-block rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                {k.nota}
+              <div
+                className={cn(
+                  "mt-2 inline-block rounded px-1.5 py-0.5 text-[10px] font-medium",
+                  k.acumulado
+                    ? "bg-brand-soft text-accent-foreground"
+                    : "bg-secondary text-muted-foreground",
+                )}
+              >
+                {k.acumulado ? `${k.nota} · acumulado` : k.nota}
               </div>
             </div>
           ))}

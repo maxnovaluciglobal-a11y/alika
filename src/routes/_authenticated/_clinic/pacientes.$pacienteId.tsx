@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   CalendarClock,
   Mail,
+  Pencil,
   Phone,
   ShieldAlert,
   Tag,
@@ -242,9 +243,9 @@ function ConvenioDelPaciente({
             setNroAfiliado(afiliado ?? "");
             setEditando(true);
           }}
-          className="text-[11px] font-medium text-brand hover:underline"
+          className="inline-flex min-h-9 items-center gap-1 rounded border border-dashed border-brand/40 px-1.5 text-[11px] font-medium text-brand outline-none hover:bg-brand-soft focus-visible:ring-1 focus-visible:ring-ring"
         >
-          Cambiar
+          <Pencil className="size-3" /> Cambiar
         </button>
       )}
     </div>
