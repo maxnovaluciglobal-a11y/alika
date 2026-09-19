@@ -169,15 +169,18 @@ function SoftwareDentalLatam() {
         </section>
 
         <p className="mt-12 text-sm text-muted-foreground">
-          Puedes{" "}
+          Podés{" "}
           <Link to="/demo" className="text-clay-strong underline underline-offset-2">
             probar la demo sin registrarte
-          </Link>
-          , mirar el{" "}
+          </Link>{" "}
+          o mirar el{" "}
           <Link to="/faq" className="text-clay-strong underline underline-offset-2">
             resto de las preguntas frecuentes
-          </Link>{" "}
-          o calcular la{" "}
+          </Link>
+          .
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          ¿Querés saber cuánto estás perdiendo hoy? Calculá la{" "}
           <Link
             to="/calculadora-rentabilidad-dental"
             className="text-clay-strong underline underline-offset-2"
