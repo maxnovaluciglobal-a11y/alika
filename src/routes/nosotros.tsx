@@ -71,7 +71,7 @@ function Nosotros() {
       <LegalP>
         Alika es operado por MAXNOVA &amp; LUCI Global LLC, una LLC constituida en Estados Unidos.
         Más detalles de cómo tratamos los datos de tu clínica y tus pacientes están en la{" "}
-        <a href="/privacidad" className="text-mint-strong underline underline-offset-2">
+        <a href="/privacidad" className="text-clay-strong underline underline-offset-2">
           Política de Privacidad
         </a>
         .
@@ -82,7 +82,7 @@ function Nosotros() {
         Para consultas, piloto o soporte:{" "}
         <a
           href="mailto:maxnovaluciglobal@gmail.com"
-          className="text-mint-strong underline underline-offset-2"
+          className="text-clay-strong underline underline-offset-2"
         >
           maxnovaluciglobal@gmail.com
         </a>

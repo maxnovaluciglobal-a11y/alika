@@ -16,14 +16,14 @@ export const Route = createFileRoute("/docs/datos-y-seguridad")({
 function DocsSeguridad() {
   return (
     <article>
-      <p className="text-xs font-semibold uppercase tracking-wider text-mint-strong">
+      <p className="text-xs font-semibold uppercase tracking-wider text-clay-strong">
         Documentación
       </p>
       <h1 className="font-precise mt-2 text-3xl font-bold tracking-tight">Datos y seguridad</h1>
       <LegalP>
         Esta página es el detalle técnico de cómo protegemos tus datos día a día. El marco legal
         completo está en la{" "}
-        <a href="/privacidad" className="text-mint-strong underline underline-offset-2">
+        <a href="/privacidad" className="text-clay-strong underline underline-offset-2">
           Política de Privacidad
         </a>
         .
@@ -112,7 +112,7 @@ function DocsSeguridad() {
         Si detectas algo que te parece un problema de seguridad, escríbenos directamente a{" "}
         <a
           href="mailto:maxnovaluciglobal@gmail.com"
-          className="text-mint-strong underline underline-offset-2"
+          className="text-clay-strong underline underline-offset-2"
         >
           maxnovaluciglobal@gmail.com
         </a>{" "}

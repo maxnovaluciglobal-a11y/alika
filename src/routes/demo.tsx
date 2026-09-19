@@ -7,6 +7,7 @@ import { getSupabase } from "@/integrations/supabase/lazy";
 import { ensureDemoClinicFresh } from "@/lib/demo.functions";
 import { LeadForm } from "@/components/marketing/lead-form";
 import { AlikaLogo } from "@/components/alika-logo";
+import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 
 // Credenciales de la clínica demo pública, de solo lectura (bloqueo por
 // trigger, ver migración 20260815180000). No son un secreto: cualquiera
@@ -16,7 +17,19 @@ const DEMO_PASSWORD = "AlikaDemo2026!";
 
 export const Route = createFileRoute("/demo")({
   head: () => ({
-    meta: [{ title: "Demo — Alika" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Demo · Alika" },
+      {
+        name: "description",
+        content: "Entrá a la demo pública de Alika con datos reales de una clínica de prueba.",
+      },
+      { property: "og:title", content: "Demo · Alika" },
+      {
+        property: "og:description",
+        content: "Entrá a la demo pública de Alika con datos reales de una clínica de prueba.",
+      },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: DemoPage,
 });
@@ -75,21 +88,25 @@ function DemoPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-6 px-4 py-12">
-      <div className="text-center">
-        <AlikaLogo size={36} className="mx-auto mb-4" />
-        <h1 className="font-display text-2xl font-semibold">Antes de entrar a la demo</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          No pedimos tarjeta ni contraseña — solo para saber a quién le mostramos el panel.
-        </p>
+    <div className="flex min-h-screen flex-col bg-background">
+      <SiteHeader />
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center gap-6 px-4 py-12">
+        <div className="text-center">
+          <AlikaLogo size={36} className="mx-auto mb-4" />
+          <h1 className="font-precise text-2xl font-semibold">Antes de entrar a la demo</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            No pedimos tarjeta ni contraseña — solo para saber a quién le mostramos el panel.
+          </p>
+        </div>
+        <LeadForm
+          source="demo"
+          pais="CL"
+          tituloExito="¡Listo!"
+          textoBoton="Entrar a la demo"
+          onSuccess={() => void entrar()}
+        />
       </div>
-      <LeadForm
-        source="demo"
-        pais="CL"
-        tituloExito="¡Listo!"
-        textoBoton="Entrar a la demo"
-        onSuccess={() => void entrar()}
-      />
+      <SiteFooter />
     </div>
   );
 }

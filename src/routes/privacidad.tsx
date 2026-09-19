@@ -49,7 +49,7 @@ function Privacidad() {
         cualquier consulta de privacidad, escríbenos a{" "}
         <a
           href="mailto:maxnovaluciglobal@gmail.com"
-          className="text-mint-strong underline underline-offset-2"
+          className="text-clay-strong underline underline-offset-2"
         >
           maxnovaluciglobal@gmail.com
         </a>
@@ -204,7 +204,7 @@ function Privacidad() {
         intentemos convencerte de lo contrario. Hoy el camino es escribirnos a{" "}
         <a
           href="mailto:maxnovaluciglobal@gmail.com"
-          className="text-mint-strong underline underline-offset-2"
+          className="text-clay-strong underline underline-offset-2"
         >
           maxnovaluciglobal@gmail.com
         </a>{" "}
@@ -430,7 +430,7 @@ function Privacidad() {
         Para consultas sobre privacidad:{" "}
         <a
           href="mailto:maxnovaluciglobal@gmail.com"
-          className="text-mint-strong underline underline-offset-2"
+          className="text-clay-strong underline underline-offset-2"
         >
           maxnovaluciglobal@gmail.com
         </a>

@@ -41,7 +41,7 @@ function DocsLayout() {
         className="mx-auto grid max-w-5xl gap-10 px-6 py-12 sm:py-16 lg:grid-cols-[200px_1fr]"
       >
         <nav className="lg:sticky lg:top-20 lg:self-start">
-          <p className="text-xs font-semibold uppercase tracking-wider text-mint-strong">
+          <p className="text-xs font-semibold uppercase tracking-wider text-clay-strong">
             Documentación
           </p>
           <ul className="mt-4 space-y-1">
@@ -52,7 +52,7 @@ function DocsLayout() {
                   className={cn(
                     "block rounded-lg px-3 py-1.5 text-sm transition-colors",
                     pathname === item.to
-                      ? "bg-mint-soft font-medium text-mint-strong"
+                      ? "bg-clay-soft font-medium text-clay-strong"
                       : "text-ink/70 hover:bg-secondary hover:text-ink",
                   )}
                 >

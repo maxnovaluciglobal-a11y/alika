@@ -682,7 +682,7 @@ function CalculadoraRentabilidadDental() {
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
         <div className="max-w-3xl">
-          <p className="font-precise text-xs font-bold uppercase tracking-wider text-mint-strong">
+          <p className="font-precise text-xs font-bold uppercase tracking-wider text-clay-strong">
             Calculadora gratuita
           </p>
           <h1 className="mt-2 font-precise text-3xl font-bold tracking-tight text-ink sm:text-4xl">
@@ -864,7 +864,7 @@ function CalculadoraRentabilidadDental() {
               className="space-y-6 rounded-3xl border border-hairline bg-card p-6 shadow-sm"
             >
               <div>
-                <p className="font-precise text-xs font-bold uppercase tracking-wider text-mint-strong">
+                <p className="font-precise text-xs font-bold uppercase tracking-wider text-clay-strong">
                   Resultado en vivo · {paisActual.label} ({currency})
                 </p>
                 {diagnostico ? (

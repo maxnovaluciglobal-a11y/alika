@@ -16,7 +16,7 @@ export const Route = createFileRoute("/docs/primeros-pasos")({
 function PrimerosPasos() {
   return (
     <article>
-      <p className="text-xs font-semibold uppercase tracking-wider text-mint-strong">
+      <p className="text-xs font-semibold uppercase tracking-wider text-clay-strong">
         Documentación
       </p>
       <h1 className="font-precise mt-2 text-3xl font-bold tracking-tight">Primeros pasos</h1>

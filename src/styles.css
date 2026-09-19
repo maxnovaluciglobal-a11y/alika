@@ -62,6 +62,7 @@
      la app (Operate) sigue con --brand/--font-heading para no repetir el
      desajuste de verde admin-vs-portal que ya pasó en GastroCore. */
   --color-clay: var(--clay);
+  --color-clay-strong: var(--clay-strong);
   --color-clay-foreground: var(--clay-foreground);
   --color-clay-soft: var(--clay-soft);
   --color-ink: var(--ink);
@@ -94,8 +95,15 @@
   --font-landing-display: "Newsreader", ui-serif, Georgia, serif;
 
   /* Acento cálido solo para la landing pública — arcilla/terracota, no
-     compite con el teal de marca que ya vive en toda la app autenticada. */
+     compite con el teal de marca que ya vive en toda la app autenticada.
+     Auditoría 19-sep: el acento declarado en este comentario nunca se usaba
+     de verdad, todo el marketing corría con --mint-strong (el mismo verde
+     de la app autenticada) — cero diferenciación entre "te vendemos" y "ya
+     sos cliente". Se agrega --clay-strong (mismo motivo que --mint-strong:
+     0.62 da ~3.1:1 sobre blanco, insuficiente para texto AA) y clay pasa a
+     ser el acento real de eyebrows/CTAs/números destacados en marketing. */
   --clay: oklch(0.62 0.15 45);
+  --clay-strong: oklch(0.48 0.15 45);
   --clay-foreground: oklch(0.99 0.012 60);
   --clay-soft: oklch(0.96 0.03 50);
 
@@ -165,6 +173,7 @@
 
 .dark {
   --clay: oklch(0.74 0.14 45);
+  --clay-strong: oklch(0.68 0.14 45);
   --clay-foreground: oklch(0.18 0.03 45);
   --clay-soft: oklch(0.32 0.05 45);
 

@@ -58,7 +58,7 @@ function Terminos() {
         datos frente a tus pacientes; Alika actúa como encargado del tratamiento, es decir,
         procesamos esos datos para que la aplicación funcione, pero no los usamos para otro fin ni
         se los vendemos a terceros. El detalle de cómo los tratamos está en la{" "}
-        <a href="/privacidad" className="text-mint-strong underline underline-offset-2">
+        <a href="/privacidad" className="text-clay-strong underline underline-offset-2">
           Política de Privacidad
         </a>
         .
@@ -142,7 +142,7 @@ function Terminos() {
         Para consultas sobre estos términos:{" "}
         <a
           href="mailto:maxnovaluciglobal@gmail.com"
-          className="text-mint-strong underline underline-offset-2"
+          className="text-clay-strong underline underline-offset-2"
         >
           maxnovaluciglobal@gmail.com
         </a>

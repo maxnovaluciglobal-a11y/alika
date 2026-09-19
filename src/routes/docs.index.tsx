@@ -40,7 +40,7 @@ function DocsIndex() {
       <h1 className="font-precise text-3xl font-bold tracking-tight">Documentación</h1>
       <p className="mt-3 max-w-lg text-base leading-relaxed text-muted-foreground">
         Guías cortas para sacarle jugo a Alika. Si buscas algo más puntual, el{" "}
-        <Link to="/faq" className="text-mint-strong underline underline-offset-2">
+        <Link to="/faq" className="text-clay-strong underline underline-offset-2">
           FAQ
         </Link>{" "}
         capaz lo responde más rápido.
@@ -50,9 +50,9 @@ function DocsIndex() {
           <Link
             key={c.to}
             to={c.to}
-            className="rounded-xl border border-hairline bg-card p-5 transition-colors hover:border-mint/40 hover:bg-mint-soft/40"
+            className="rounded-xl border border-hairline bg-card p-5 transition-colors hover:border-clay/40 hover:bg-clay-soft/40"
           >
-            <c.icon className="size-5 text-mint-strong" />
+            <c.icon className="size-5 text-clay-strong" />
             <p className="font-precise mt-3 text-base font-bold">{c.title}</p>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{c.text}</p>
           </Link>

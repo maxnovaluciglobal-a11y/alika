@@ -224,7 +224,7 @@ function FilaFuga({ fuga }: { fuga: Fuga }) {
   return (
     <li className="border-b border-hairline py-7 first:pt-0 last:border-b-0">
       <div className="flex items-start gap-4">
-        <span className="font-precise flex size-8 shrink-0 items-center justify-center rounded-full bg-mint-soft text-sm font-bold text-mint-strong">
+        <span className="font-precise flex size-8 shrink-0 items-center justify-center rounded-full bg-clay-soft text-sm font-bold text-clay-strong">
           {fuga.numero}
         </span>
         <div className="min-w-0 flex-1">
@@ -235,7 +235,7 @@ function FilaFuga({ fuga }: { fuga: Fuga }) {
             <span className="text-sm text-muted-foreground">Se aplica a mi clínica</span>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-ink/70">
-            <span className="font-semibold text-mint-strong">Detectala:</span> {fuga.pregunta}
+            <span className="font-semibold text-clay-strong">Detectala:</span> {fuga.pregunta}
           </p>
         </div>
       </div>
