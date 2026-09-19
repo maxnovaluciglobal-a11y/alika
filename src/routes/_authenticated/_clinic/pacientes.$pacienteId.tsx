@@ -345,10 +345,18 @@ function PacienteDetalle() {
                 </div>
               </div>
 
-              {medicalHistoryQuery.data && medicalHistoryQuery.data.allergies.length > 0 && (
-                <div className="mt-4">
-                  <AllergyAlertBanner allergies={medicalHistoryQuery.data.allergies} />
-                </div>
+              {medicalHistoryQuery.isLoading ? (
+                <div
+                  className="mt-4 h-9 w-56 animate-pulse rounded bg-secondary"
+                  aria-label="Comprobando alergias"
+                />
+              ) : (
+                medicalHistoryQuery.data &&
+                medicalHistoryQuery.data.allergies.length > 0 && (
+                  <div className="mt-4">
+                    <AllergyAlertBanner allergies={medicalHistoryQuery.data.allergies} />
+                  </div>
+                )
               )}
 
               <div className="mt-6 grid gap-4 border-t border-hairline pt-5 sm:grid-cols-2 lg:grid-cols-4">

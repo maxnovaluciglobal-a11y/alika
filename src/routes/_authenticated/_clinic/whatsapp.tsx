@@ -15,6 +15,17 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { AppShell } from "@/components/app-shell";
 import { LlamadaDesbloqueo } from "@/components/llamada-desbloqueo";
 import { requirePermission } from "@/lib/access/route-guards";
@@ -208,19 +219,45 @@ function WhatsAppPage() {
 
   const sdkReady = useFacebookSdk();
   const [pendingCode, setPendingCode] = useState<string | null>(null);
+  const [isOpeningPopup, setIsOpeningPopup] = useState(false);
 
   useEmbeddedSignupResult((payload) => {
     if (!pendingCode) return;
+    setIsOpeningPopup(false);
     completeMutation.mutate({ ...payload, code: pendingCode });
     setPendingCode(null);
   });
 
+  // Si el usuario cierra la ventana de Meta sin terminar, o el postMessage
+  // nunca llega, el botón quedaba colgado sin ningún aviso — 2 minutos es
+  // más que suficiente para completar el flujo real (5-15 min según el
+  // texto de la página se refiere al enrolamiento, no a este popup puntual).
+  useEffect(() => {
+    if (!isOpeningPopup) return;
+    const timeout = window.setTimeout(() => {
+      setIsOpeningPopup(false);
+      setPendingCode(null);
+      toast.error(
+        "No llegó respuesta de Meta. Si cerraste la ventana o no la viste, revisá que el navegador no bloquee popups e intentá de nuevo.",
+      );
+    }, 120_000);
+    return () => window.clearTimeout(timeout);
+  }, [isOpeningPopup]);
+
   function launchSignup() {
-    if (!window.FB || !WHATSAPP_CONFIG_ID) return;
+    if (!window.FB || !WHATSAPP_CONFIG_ID) {
+      toast.error("No se pudo abrir la ventana de Meta. Recargá la página e intentá de nuevo.");
+      return;
+    }
+    setIsOpeningPopup(true);
     window.FB.login(
       (response) => {
         const code = response.authResponse?.code;
-        if (code) setPendingCode(code);
+        if (code) {
+          setPendingCode(code);
+        } else {
+          setIsOpeningPopup(false);
+        }
       },
       {
         config_id: WHATSAPP_CONFIG_ID,
@@ -255,35 +292,65 @@ function WhatsAppPage() {
         )}
 
         {!isLoading && platformConfigured && account?.status === "connected" && (
-          <div className="card-clinical flex items-center justify-between gap-4 p-6">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-brand" />
-              <div>
-                <p className="text-sm font-medium">
-                  Conectado {account.displayPhone ? `· ${account.displayPhone}` : ""}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {account.qualityRating
-                    ? `Calidad reportada por Meta: ${account.qualityRating}`
-                    : "Los recordatorios y avisos se mandan automáticamente."}
+          <div className="card-clinical space-y-3 p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-brand" />
+                <div>
+                  <p className="text-sm font-medium">
+                    Conectado {account.displayPhone ? `· ${account.displayPhone}` : ""}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {account.qualityRating
+                      ? `Calidad reportada por Meta: ${account.qualityRating}`
+                      : "Los recordatorios y avisos se mandan automáticamente."}
+                  </p>
+                </div>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button
+                    type="button"
+                    disabled={disconnectMutation.isPending}
+                    className={cn(
+                      "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-destructive hover:text-destructive disabled:opacity-50",
+                    )}
+                  >
+                    {disconnectMutation.isPending ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Unplug className="size-3.5" />
+                    )}
+                    Desconectar
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>¿Desconectar WhatsApp?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Los recordatorios, el recall y los avisos de saldo dejan de mandarse
+                      automáticamente y vuelven a wa.me manual desde /recordatorios. Vas a poder
+                      reconectar cuando quieras.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => disconnectMutation.mutate()}>
+                      Desconectar
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+            {account.qualityRating === "RED" && (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                <p>
+                  Meta marcó tu número con calidad baja — puede que tus mensajes no lleguen. Revisá
+                  tu cuenta de WhatsApp Business para entender por qué.
                 </p>
               </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => disconnectMutation.mutate()}
-              disabled={disconnectMutation.isPending}
-              className={cn(
-                "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-destructive hover:text-destructive disabled:opacity-50",
-              )}
-            >
-              {disconnectMutation.isPending ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Unplug className="size-3.5" />
-              )}
-              Desconectar
-            </button>
+            )}
           </div>
         )}
 
@@ -317,15 +384,15 @@ function WhatsAppPage() {
               <button
                 type="button"
                 onClick={launchSignup}
-                disabled={!sdkReady || completeMutation.isPending}
+                disabled={!sdkReady || isOpeningPopup || completeMutation.isPending}
                 className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-50"
               >
-                {completeMutation.isPending ? (
+                {isOpeningPopup || completeMutation.isPending ? (
                   <Loader2 className="size-3.5 animate-spin" />
                 ) : (
                   <MessageCircle className="size-3.5" />
                 )}
-                Conectar WhatsApp
+                {isOpeningPopup ? "Esperando a Meta…" : "Conectar WhatsApp"}
               </button>
             </div>
           )}

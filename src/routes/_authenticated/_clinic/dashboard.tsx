@@ -198,7 +198,14 @@ function Dashboard() {
           {kpis.map((k) => (
             <div key={k.label} className="card-clinical p-5">
               <p className="mb-1 text-xs font-medium text-muted-foreground">{k.label}</p>
-              <p className="font-display text-3xl font-bold">{isLoading ? "—" : k.valor}</p>
+              {isLoading ? (
+                <div
+                  className="h-9 w-12 animate-pulse rounded bg-secondary"
+                  aria-label="Cargando"
+                />
+              ) : (
+                <p className="font-display text-3xl font-bold">{k.valor}</p>
+              )}
               <div className="mt-2 inline-block rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                 {k.nota}
               </div>
