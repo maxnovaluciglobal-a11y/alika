@@ -302,7 +302,7 @@ function FugasClinicaDental() {
     <LegalPage
       label="Recurso gratuito"
       title="15 fugas de dinero de una clínica dental"
-      updated="Versión 1 · 8 de septiembre de 2026 · Alika"
+      updated="Versión 1 · 8 de septiembre de 2026"
     >
       <LegalNotice>
         Esta página se lee completa y gratis, sin registrarte en ningún lado. Es un checklist para
