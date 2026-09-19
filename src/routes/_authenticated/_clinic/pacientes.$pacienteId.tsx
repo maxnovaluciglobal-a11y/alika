@@ -2,11 +2,26 @@ import { useState } from "react";
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, CalendarClock, Mail, Phone, ShieldAlert, Tag } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CalendarClock,
+  Mail,
+  Phone,
+  ShieldAlert,
+  Tag,
+} from "lucide-react";
 
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { requirePermission } from "@/lib/access/route-guards";
 import { PacienteTimeline } from "@/components/paciente-timeline";
 import { NotasClinicas } from "@/components/notas-clinicas";
@@ -171,19 +186,22 @@ function ConvenioDelPaciente({
     return (
       <div className="space-y-1.5">
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Convenio</p>
-        <select
-          value={seleccion}
-          onChange={(e) => setSeleccion(e.target.value)}
-          aria-label="Convenio del paciente"
-          className="w-full rounded-md border border-hairline bg-transparent px-2 py-1 text-sm outline-none focus:border-brand/50"
+        <Select
+          value={seleccion || "particular"}
+          onValueChange={(v) => setSeleccion(v === "particular" ? "" : v)}
         >
-          <option value="">Particular</option>
-          {convenios.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger aria-label="Convenio del paciente" className="h-8 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="particular">Particular</SelectItem>
+            {convenios.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {seleccion && (
           <input
             value={nroAfiliado}
@@ -197,13 +215,13 @@ function ConvenioDelPaciente({
           <button
             onClick={() => guardar.mutate()}
             disabled={guardar.isPending}
-            className="text-[11px] font-medium text-brand hover:underline disabled:opacity-50"
+            className="min-h-9 rounded px-1.5 text-[11px] font-medium text-brand outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
           >
             Guardar
           </button>
           <button
             onClick={() => setEditando(false)}
-            className="text-[11px] text-muted-foreground hover:underline"
+            className="min-h-9 rounded px-1.5 text-[11px] text-muted-foreground outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring"
           >
             Cancelar
           </button>
@@ -331,13 +349,16 @@ function PacienteDetalle() {
                         ? "flex items-center gap-2 text-warning"
                         : "flex items-center gap-2"
                     }
-                    title={
-                      paciente.telefono && paciente.telefonoValido === false
-                        ? "No pudimos confirmar que este número tenga un formato válido"
-                        : undefined
-                    }
                   >
                     <Phone className="size-3.5" /> {paciente.telefono || "Sin teléfono"}
+                    {paciente.telefono && paciente.telefonoValido === false && (
+                      <span
+                        className="inline-flex items-center gap-1"
+                        aria-label="Formato de teléfono no confirmado"
+                      >
+                        <AlertTriangle className="size-3.5 shrink-0" /> formato dudoso
+                      </span>
+                    )}
                   </p>
                   <p className="flex items-center gap-2">
                     <Mail className="size-3.5" /> {paciente.email || "Sin email"}

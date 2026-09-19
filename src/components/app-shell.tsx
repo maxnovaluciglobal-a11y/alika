@@ -448,7 +448,10 @@ export function AppShell({
       </aside>
 
       <main id="main-content" className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-5 sm:px-8">
+        <header
+          className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-5 sm:px-8"
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
           <h1 className="font-display text-lg font-semibold">{title}</h1>
           <div className="flex items-center gap-3">
             <GlobalSearch />

@@ -234,6 +234,10 @@
   html,
   body {
     overflow-x: hidden;
+    /* Instalada como PWA en un celular real, sin esto el scroll rebota
+       (Android) o hace elastic bounce (iOS) — el "tell" más obvio de que
+       esto es una web y no una app nativa. */
+    overscroll-behavior: none;
   }
 
   body {
@@ -248,6 +252,16 @@
   h3 {
     font-family: var(--font-heading);
     letter-spacing: -0.015em;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button,
+  a,
+  [role="button"] {
+    touch-action: manipulation;
   }
 }
 

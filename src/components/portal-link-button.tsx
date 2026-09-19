@@ -75,7 +75,7 @@ export function PortalLinkButton({ clinicId, patientId, bloqueado }: Props) {
         type="button"
         onClick={() => mut.mutate()}
         disabled={mut.isPending}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-card px-3 py-1.5 text-xs font-medium text-foreground outline-none hover:bg-accent focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
       >
         {mut.isPending ? (
           <Loader2 className="size-3.5 animate-spin" />
@@ -100,7 +100,7 @@ export function PortalLinkButton({ clinicId, patientId, bloqueado }: Props) {
           type="button"
           onClick={copy}
           className={cn(
-            "shrink-0 rounded-lg border border-hairline bg-background p-1.5 text-muted-foreground hover:text-foreground",
+            "flex size-8 shrink-0 items-center justify-center rounded-lg border border-hairline bg-background text-muted-foreground outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring",
             copiedAt && "text-brand",
           )}
           aria-label="Copiar link"
@@ -116,7 +116,7 @@ export function PortalLinkButton({ clinicId, patientId, bloqueado }: Props) {
           <button
             type="button"
             onClick={openWhatsApp}
-            className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand px-2 py-1.5 text-[11px] font-medium text-brand-foreground hover:bg-brand/90"
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand px-2 py-1.5 text-[11px] font-medium text-brand-foreground outline-none hover:bg-brand/90 focus-visible:ring-1 focus-visible:ring-ring"
           >
             <MessageCircle className="size-3.5" /> WhatsApp
           </button>
@@ -152,7 +152,7 @@ export function RevokePortalAccessButton({ clinicId, patientId }: Props) {
       type="button"
       onClick={handleClick}
       disabled={mut.isPending}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-destructive/40 hover:text-destructive disabled:opacity-50"
+      className="inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground outline-none hover:border-destructive/40 hover:text-destructive focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
     >
       {mut.isPending ? (
         <Loader2 className="size-3.5 animate-spin" />
