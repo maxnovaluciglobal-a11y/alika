@@ -7,7 +7,7 @@ import { getSupabase } from "@/integrations/supabase/lazy";
 import { ensureDemoClinicFresh } from "@/lib/demo.functions";
 import { LeadForm } from "@/components/marketing/lead-form";
 import { AlikaLogo } from "@/components/alika-logo";
-import { SiteHeader, SiteFooter } from "@/components/site-chrome";
+import { PublicPageShell } from "@/components/site-chrome";
 
 // Credenciales de la clínica demo pública, de solo lectura (bloqueo por
 // trigger, ver migración 20260815180000). No son un secreto: cualquiera
@@ -88,25 +88,24 @@ function DemoPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <SiteHeader />
-      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center gap-6 px-4 py-12">
-        <div className="text-center">
-          <AlikaLogo size={36} className="mx-auto mb-4" />
-          <h1 className="font-precise text-2xl font-semibold">Antes de entrar a la demo</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            No pedimos tarjeta ni contraseña — solo para saber a quién le mostramos el panel.
-          </p>
-        </div>
-        <LeadForm
-          source="demo"
-          pais="CL"
-          tituloExito="¡Listo!"
-          textoBoton="Entrar a la demo"
-          onSuccess={() => void entrar()}
-        />
+    <PublicPageShell
+      outerClassName="flex flex-col"
+      mainClassName="flex w-full max-w-lg flex-1 flex-col justify-center gap-6 px-4 py-12"
+    >
+      <div className="text-center">
+        <AlikaLogo size={36} className="mx-auto mb-4" />
+        <h1 className="font-precise text-2xl font-semibold">Antes de entrar a la demo</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          No pedimos tarjeta ni contraseña — solo para saber a quién le mostramos el panel.
+        </p>
       </div>
-      <SiteFooter />
-    </div>
+      <LeadForm
+        source="demo"
+        pais="CL"
+        tituloExito="¡Listo!"
+        textoBoton="Entrar a la demo"
+        onSuccess={() => void entrar()}
+      />
+    </PublicPageShell>
   );
 }

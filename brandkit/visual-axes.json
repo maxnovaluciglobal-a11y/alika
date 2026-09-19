@@ -1,0 +1,12 @@
+{
+  "visual_axes": {
+    "restrained_expressive": 28,
+    "geometric_organic": 62,
+    "familiar_experimental": 22
+  },
+  "reading": {
+    "restrained_expressive": "Cerca del extremo restrained: la app (Operate) es teal clínico + tipografía neutra, sin acentos decorativos. Solo la landing pública se permite el acento clay y la serif Newsreader — el marketing puede ser más expresivo que el producto.",
+    "geometric_organic": "Hacia geometric: isotipo Cúspide es un triángulo de un solo trazo (la cúspide de una muela vista de perfil), shadcn/ui vendored sin curvas orgánicas, Outfit/Schibsted Grotesk son geométricas.",
+    "familiar_experimental": "Cerca del extremo familiar: SaaS de gestión clínica, el objetivo es que un dueño de clínica sin fricción reconozca los patrones (tablas, diálogos, KPIs) — cero riesgo experimental en la app. La landing se permite un poco más de personalidad (serif + clay) sin volverse experimental."
+  }
+}

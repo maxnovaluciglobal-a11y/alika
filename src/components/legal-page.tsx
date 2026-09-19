@@ -1,9 +1,12 @@
 import type { ReactNode } from "react";
-import { SiteHeader, SiteFooter } from "@/components/site-chrome";
+import { PublicPageShell } from "@/components/site-chrome";
 
 /**
- * Shell compartido por las páginas de prosa (legal, quiénes somos): header,
- * columna angosta centrada con label + título + fecha, footer.
+ * Shell de las páginas de prosa (legal, quiénes somos): columna angosta
+ * centrada con label + título + fecha. El header/footer/contenedor externo
+ * vienen de `PublicPageShell`, compartido con el resto de las páginas
+ * públicas (auditoría 19-sep-2026: antes esto armaba su propio
+ * `<div><SiteHeader/>...<SiteFooter/></div>` en vez de reusar el patrón).
  */
 export function LegalPage({
   label,
@@ -17,16 +20,12 @@ export function LegalPage({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background text-ink">
-      <SiteHeader />
-      <main className="mx-auto max-w-2xl px-6 py-16 sm:py-20">
-        <p className="text-xs font-semibold uppercase tracking-wider text-mint-strong">{label}</p>
-        <h1 className="font-precise mt-3 text-4xl font-bold tracking-tight sm:text-5xl">{title}</h1>
-        {updated ? <p className="mt-3 font-mono text-xs text-muted-foreground">{updated}</p> : null}
-        <div className="mt-10">{children}</div>
-      </main>
-      <SiteFooter />
-    </div>
+    <PublicPageShell mainClassName="max-w-2xl px-6 py-16 text-ink sm:py-20">
+      <p className="text-xs font-semibold uppercase tracking-wider text-clay-strong">{label}</p>
+      <h1 className="font-precise mt-3 text-4xl font-bold tracking-tight sm:text-5xl">{title}</h1>
+      {updated ? <p className="mt-3 font-mono text-xs text-muted-foreground">{updated}</p> : null}
+      <div className="mt-10">{children}</div>
+    </PublicPageShell>
   );
 }
 
@@ -47,13 +46,13 @@ export function LegalUl({ children }: { children: ReactNode }) {
 }
 
 export function LegalLi({ children }: { children: ReactNode }) {
-  return <li className="list-disc marker:text-mint-strong">{children}</li>;
+  return <li className="list-disc marker:text-clay-strong">{children}</li>;
 }
 
 /** Callout destacado — para aclaraciones importantes (equivalente al .notice de FinanceOS). */
 export function LegalNotice({ children }: { children: ReactNode }) {
   return (
-    <div className="mt-6 rounded-xl border border-mint/25 bg-mint-soft p-4 text-sm leading-relaxed text-ink">
+    <div className="mt-6 rounded-xl border border-clay-strong/25 bg-clay-soft p-4 text-sm leading-relaxed text-ink">
       {children}
     </div>
   );

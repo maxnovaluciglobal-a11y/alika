@@ -16,7 +16,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AlertTriangle, CheckCircle2, Info, XCircle, type LucideIcon } from "lucide-react";
 
-import { SiteHeader, SiteFooter } from "@/components/site-chrome";
+import { PublicPageShell } from "@/components/site-chrome";
 import { canonicalHead, faqJsonLdScript, SITE_URL } from "@/lib/seo";
 import { COUNTRIES } from "@/lib/onboarding-types";
 import { formatMoney, toCents, fromCents } from "@/lib/finance/finance";
@@ -678,377 +678,371 @@ function CalculadoraRentabilidadDental() {
     cents === null ? "Sin datos" : formatMoney(cents, currency);
 
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
-      <main className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
-        <div className="max-w-3xl">
-          <p className="font-precise text-xs font-bold uppercase tracking-wider text-clay-strong">
-            Calculadora gratuita
-          </p>
-          <h1 className="mt-2 font-precise text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-            Calculadora de rentabilidad para tu clínica dental
-          </h1>
-          <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-            Cargá los números de tu clínica y mirá al instante cuánto te queda, dónde se te está
-            yendo la plata y qué conviene resolver primero. El resultado se ve completo sin
-            registrarte — sólo te pedimos el email si querés guardarlo.
-          </p>
+    <PublicPageShell>
+      <div className="max-w-3xl">
+        <p className="font-precise text-xs font-bold uppercase tracking-wider text-clay-strong">
+          Calculadora gratuita
+        </p>
+        <h1 className="mt-2 font-precise text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+          Calculadora de rentabilidad para tu clínica dental
+        </h1>
+        <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+          Cargá los números de tu clínica y mirá al instante cuánto te queda, dónde se te está yendo
+          la plata y qué conviene resolver primero. El resultado se ve completo sin registrarte —
+          sólo te pedimos el email si querés guardarlo.
+        </p>
+      </div>
+
+      <div className="mt-8">
+        <p className="font-precise text-xs font-bold uppercase tracking-wider text-ink/60">
+          País de tu clínica
+        </p>
+        <div role="group" aria-label="País de tu clínica" className="mt-3 flex flex-wrap gap-2">
+          {COUNTRIES.map((c) => {
+            const activo = c.code === paisCode;
+            return (
+              <button
+                key={c.code}
+                type="button"
+                aria-pressed={activo}
+                onClick={() => handleCambiarPais(c.code)}
+                className={cn(
+                  "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+                  activo
+                    ? "border-ink bg-ink text-ink-foreground"
+                    : "border-hairline bg-card text-muted-foreground hover:border-ink/40 hover:text-ink",
+                )}
+              >
+                {c.label} <span className="opacity-70">· {c.currency}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_400px] lg:items-start">
+        {/* Columna izquierda: inputs. P&L primero, fugas después (regla #4). */}
+        <div className="space-y-10">
+          <section>
+            <h2 className="font-precise text-xl font-bold text-ink">1. Tu P&L del mes</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Lo que factura tu clínica y en qué se va.
+            </p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <CampoMonto
+                id="pl-ingresos"
+                label="Ingresos del mes (facturación bruta)"
+                currency={currency}
+                valueCents={montosPL.ingresosCents}
+                onValueChange={(v) => setMontosPL((m) => ({ ...m, ingresosCents: v }))}
+              />
+              <CampoNumero
+                id="pl-retencion"
+                label="Retención del medio de pago"
+                texto={retencionTexto}
+                onTextoChange={setRetencionTexto}
+                suffix="%"
+                hint="Comisión de tarjeta débito/crédito. 0 si cobrás en efectivo o transferencia."
+              />
+              <CampoMonto
+                id="pl-honorarios"
+                label="Honorarios profesionales"
+                currency={currency}
+                valueCents={montosPL.honorariosCents}
+                onValueChange={(v) => setMontosPL((m) => ({ ...m, honorariosCents: v }))}
+                hint="Lo que se paga por producción — variable."
+              />
+              <CampoMonto
+                id="pl-sueldos"
+                label="Sueldos del equipo de apoyo"
+                currency={currency}
+                valueCents={montosPL.sueldosCents}
+                onValueChange={(v) => setMontosPL((m) => ({ ...m, sueldosCents: v }))}
+                hint="Fijo — se paga atienda o no."
+              />
+              <CampoMonto
+                id="pl-insumos"
+                label="Insumos clínicos"
+                currency={currency}
+                valueCents={montosPL.insumosCents}
+                onValueChange={(v) => setMontosPL((m) => ({ ...m, insumosCents: v }))}
+              />
+              <CampoMonto
+                id="pl-laboratorio"
+                label="Laboratorio"
+                currency={currency}
+                valueCents={montosPL.laboratorioCents}
+                onValueChange={(v) => setMontosPL((m) => ({ ...m, laboratorioCents: v }))}
+              />
+              <CampoMonto
+                id="pl-fijos"
+                label="Arriendo y otros gastos fijos"
+                currency={currency}
+                valueCents={montosPL.fijosCents}
+                onValueChange={(v) => setMontosPL((m) => ({ ...m, fijosCents: v }))}
+              />
+              <CampoMonto
+                id="pl-variables"
+                label="Otros gastos variables"
+                currency={currency}
+                valueCents={montosPL.variablesCents}
+                onValueChange={(v) => setMontosPL((m) => ({ ...m, variablesCents: v }))}
+              />
+            </div>
+          </section>
+
+          <section>
+            <h2 className="font-precise text-xl font-bold text-ink">2. Fugas de dinero</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Ausencias y presupuestos que no se cierran son plata que ya generaste y no cobraste.
+            </p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <CampoNumero
+                id="fugas-citas"
+                label="Citas agendadas por mes"
+                texto={citasTexto}
+                onTextoChange={setCitasTexto}
+                placeholder="Ej: 200"
+              />
+              <CampoNumero
+                id="fugas-ausencias"
+                label="% de ausencias (no-show)"
+                texto={ausenciasTexto}
+                onTextoChange={setAusenciasTexto}
+                suffix="%"
+                hint="Default 15% — rango sano de literatura: 10-30%."
+              />
+              <CampoMonto
+                id="fugas-ticket"
+                label="Ticket promedio por cita"
+                currency={currency}
+                valueCents={montosFugas.ticketPromedioCents}
+                onValueChange={(v) => setMontosFugas((m) => ({ ...m, ticketPromedioCents: v }))}
+              />
+              <CampoNumero
+                id="fugas-presupuestos"
+                label="Presupuestos entregados por mes"
+                texto={presupuestosTexto}
+                onTextoChange={setPresupuestosTexto}
+                placeholder="Ej: 40"
+              />
+              <CampoNumero
+                id="fugas-aceptacion"
+                label="% de presupuestos que se aceptan hoy"
+                texto={aceptacionTexto}
+                onTextoChange={setAceptacionTexto}
+                suffix="%"
+              />
+              <CampoNumero
+                id="fugas-aceptacion-meta"
+                label="Tu meta de aceptación"
+                texto={aceptacionRefTexto}
+                onTextoChange={setAceptacionRefTexto}
+                suffix="%"
+                hint="Sin benchmark citable — vos definís contra qué compararte."
+              />
+              <CampoMonto
+                id="fugas-cobranza"
+                label="Saldo pendiente de cobro (cobranza)"
+                currency={currency}
+                valueCents={montosFugas.cobranzaPendienteCents}
+                onValueChange={(v) => setMontosFugas((m) => ({ ...m, cobranzaPendienteCents: v }))}
+              />
+            </div>
+          </section>
         </div>
 
-        <div className="mt-8">
-          <p className="font-precise text-xs font-bold uppercase tracking-wider text-ink/60">
-            País de tu clínica
-          </p>
-          <div role="group" aria-label="País de tu clínica" className="mt-3 flex flex-wrap gap-2">
-            {COUNTRIES.map((c) => {
-              const activo = c.code === paisCode;
-              return (
-                <button
-                  key={c.code}
-                  type="button"
-                  aria-pressed={activo}
-                  onClick={() => handleCambiarPais(c.code)}
-                  className={cn(
-                    "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-                    activo
-                      ? "border-ink bg-ink text-ink-foreground"
-                      : "border-hairline bg-card text-muted-foreground hover:border-ink/40 hover:text-ink",
-                  )}
-                >
-                  {c.label} <span className="opacity-70">· {c.currency}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_400px] lg:items-start">
-          {/* Columna izquierda: inputs. P&L primero, fugas después (regla #4). */}
-          <div className="space-y-10">
-            <section>
-              <h2 className="font-precise text-xl font-bold text-ink">1. Tu P&L del mes</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Lo que factura tu clínica y en qué se va.
+        {/* Columna derecha: resultado en vivo (regla #3) + LeadForm debajo (regla #7). */}
+        <aside className="lg:sticky lg:top-24 lg:self-start">
+          <div
+            aria-live="polite"
+            aria-atomic="true"
+            className="space-y-6 rounded-3xl border border-hairline bg-card p-6 shadow-sm"
+          >
+            <div>
+              <p className="font-precise text-xs font-bold uppercase tracking-wider text-clay-strong">
+                Resultado en vivo · {paisActual.label} ({currency})
               </p>
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <CampoMonto
-                  id="pl-ingresos"
-                  label="Ingresos del mes (facturación bruta)"
-                  currency={currency}
-                  valueCents={montosPL.ingresosCents}
-                  onValueChange={(v) => setMontosPL((m) => ({ ...m, ingresosCents: v }))}
+              {diagnostico ? (
+                <p className="mt-2 text-sm leading-relaxed text-ink">{diagnostico}</p>
+              ) : (
+                <p className="mt-2 text-sm italic leading-relaxed text-muted-foreground">
+                  Completá al menos tus ingresos y costos del mes para ver tu diagnóstico acá.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2 border-t border-hairline pt-4">
+              <FilaResultado
+                label="Ingreso neto"
+                valor={formatMoney(resultadoPL.ingresoNetoCents, currency)}
+              />
+              {retencionPct > 0 && (
+                <FilaResultado
+                  label="Retención descontada"
+                  valor={formatMoney(resultadoPL.retencionCents, currency)}
                 />
-                <CampoNumero
-                  id="pl-retencion"
-                  label="Retención del medio de pago"
-                  texto={retencionTexto}
-                  onTextoChange={setRetencionTexto}
-                  suffix="%"
-                  hint="Comisión de tarjeta débito/crédito. 0 si cobrás en efectivo o transferencia."
+              )}
+              <FilaResultado
+                label="Costos totales"
+                valor={formatMoney(resultadoPL.costosTotalesCents, currency)}
+              />
+              <FilaResultado
+                label="Utilidad"
+                valor={formatMoney(resultadoPL.utilidadCents, currency)}
+              />
+              <FilaResultado
+                label="Punto de equilibrio"
+                valor={fmtMoneyOpcional(resultadoPL.puntoEquilibrioCents)}
+              />
+            </div>
+
+            <div className="space-y-3 border-t border-hairline pt-4">
+              <IndicadorSemaforo
+                titulo="Ausentismo"
+                pct={ausenciasPct}
+                banda={bandaAusenciasValue}
+                fuenteEtiqueta="literatura revisada por pares (PubMed)"
+                descripcion="Media 15,2% / mediana 12,9% en revisión sistemática de inasistencias a citas de salud."
+              />
+              <IndicadorSemaforo
+                titulo="Overhead total"
+                pct={overheadPctValue}
+                banda={bandaOverheadValue}
+                fuenteEtiqueta="referencia EE.UU. — ADA Health Policy Institute"
+                descripcion="No transferible a LatAm: el mix de seguros, el costo laboral y el de laboratorio son distintos."
+              />
+              <IndicadorSemaforo
+                titulo="Margen del dueño"
+                pct={resultadoPL.margenPct}
+                banda={bandaMargenValue}
+                fuenteEtiqueta="referencia EE.UU. — ADA Health Policy Institute"
+                descripcion="No transferible a LatAm — usalo como brújula, no como sentencia."
+                etiquetaVisible={
+                  bandaMargenValue ? etiquetaVisibleMargen(bandaMargenValue) : undefined
+                }
+              />
+            </div>
+
+            <div className="space-y-1 border-t border-hairline pt-4">
+              <p className="font-precise text-sm font-semibold text-ink">
+                Sin comparación (todavía)
+              </p>
+              <div className="rounded-xl border border-dashed border-hairline bg-bone/60 p-3 text-xs leading-relaxed text-muted-foreground">
+                Para personal, insumos, laboratorio, arriendo, aceptación de presupuestos y cobranza
+                no existe un benchmark público confiable para clínicas de Latinoamérica. Te
+                mostramos tu número tal cual, sin compararlo contra nada que no podamos citar.
+              </div>
+              <div className="pt-1">
+                <FilaSinJuicio
+                  label="Personal (honorarios + sueldos)"
+                  valor={fmtPctOpcional(personalPct)}
                 />
-                <CampoMonto
-                  id="pl-honorarios"
-                  label="Honorarios profesionales"
-                  currency={currency}
-                  valueCents={montosPL.honorariosCents}
-                  onValueChange={(v) => setMontosPL((m) => ({ ...m, honorariosCents: v }))}
-                  hint="Lo que se paga por producción — variable."
+                <FilaSinJuicio
+                  label="Insumos"
+                  valor={fmtPctOpcional(resultadoPL.distribucion.insumos)}
                 />
-                <CampoMonto
-                  id="pl-sueldos"
-                  label="Sueldos del equipo de apoyo"
-                  currency={currency}
-                  valueCents={montosPL.sueldosCents}
-                  onValueChange={(v) => setMontosPL((m) => ({ ...m, sueldosCents: v }))}
-                  hint="Fijo — se paga atienda o no."
-                />
-                <CampoMonto
-                  id="pl-insumos"
-                  label="Insumos clínicos"
-                  currency={currency}
-                  valueCents={montosPL.insumosCents}
-                  onValueChange={(v) => setMontosPL((m) => ({ ...m, insumosCents: v }))}
-                />
-                <CampoMonto
-                  id="pl-laboratorio"
+                <FilaSinJuicio
                   label="Laboratorio"
-                  currency={currency}
-                  valueCents={montosPL.laboratorioCents}
-                  onValueChange={(v) => setMontosPL((m) => ({ ...m, laboratorioCents: v }))}
+                  valor={fmtPctOpcional(resultadoPL.distribucion.laboratorio)}
                 />
-                <CampoMonto
-                  id="pl-fijos"
-                  label="Arriendo y otros gastos fijos"
-                  currency={currency}
-                  valueCents={montosPL.fijosCents}
-                  onValueChange={(v) => setMontosPL((m) => ({ ...m, fijosCents: v }))}
+                <FilaSinJuicio
+                  label="Arriendo y fijos"
+                  valor={fmtPctOpcional(resultadoPL.distribucion.fijos)}
                 />
-                <CampoMonto
-                  id="pl-variables"
-                  label="Otros gastos variables"
-                  currency={currency}
-                  valueCents={montosPL.variablesCents}
-                  onValueChange={(v) => setMontosPL((m) => ({ ...m, variablesCents: v }))}
+                <FilaSinJuicio
+                  label="Otros variables"
+                  valor={fmtPctOpcional(resultadoPL.distribucion.variables)}
                 />
-              </div>
-            </section>
-
-            <section>
-              <h2 className="font-precise text-xl font-bold text-ink">2. Fugas de dinero</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Ausencias y presupuestos que no se cierran son plata que ya generaste y no cobraste.
-              </p>
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <CampoNumero
-                  id="fugas-citas"
-                  label="Citas agendadas por mes"
-                  texto={citasTexto}
-                  onTextoChange={setCitasTexto}
-                  placeholder="Ej: 200"
+                <FilaSinJuicio
+                  label="Aceptación de presupuestos"
+                  valor={aceptacionPct === null ? "Sin datos" : formatearPct(aceptacionPct)}
                 />
-                <CampoNumero
-                  id="fugas-ausencias"
-                  label="% de ausencias (no-show)"
-                  texto={ausenciasTexto}
-                  onTextoChange={setAusenciasTexto}
-                  suffix="%"
-                  hint="Default 15% — rango sano de literatura: 10-30%."
-                />
-                <CampoMonto
-                  id="fugas-ticket"
-                  label="Ticket promedio por cita"
-                  currency={currency}
-                  valueCents={montosFugas.ticketPromedioCents}
-                  onValueChange={(v) => setMontosFugas((m) => ({ ...m, ticketPromedioCents: v }))}
-                />
-                <CampoNumero
-                  id="fugas-presupuestos"
-                  label="Presupuestos entregados por mes"
-                  texto={presupuestosTexto}
-                  onTextoChange={setPresupuestosTexto}
-                  placeholder="Ej: 40"
-                />
-                <CampoNumero
-                  id="fugas-aceptacion"
-                  label="% de presupuestos que se aceptan hoy"
-                  texto={aceptacionTexto}
-                  onTextoChange={setAceptacionTexto}
-                  suffix="%"
-                />
-                <CampoNumero
-                  id="fugas-aceptacion-meta"
-                  label="Tu meta de aceptación"
-                  texto={aceptacionRefTexto}
-                  onTextoChange={setAceptacionRefTexto}
-                  suffix="%"
-                  hint="Sin benchmark citable — vos definís contra qué compararte."
-                />
-                <CampoMonto
-                  id="fugas-cobranza"
-                  label="Saldo pendiente de cobro (cobranza)"
-                  currency={currency}
-                  valueCents={montosFugas.cobranzaPendienteCents}
-                  onValueChange={(v) =>
-                    setMontosFugas((m) => ({ ...m, cobranzaPendienteCents: v }))
-                  }
-                />
-              </div>
-            </section>
-          </div>
-
-          {/* Columna derecha: resultado en vivo (regla #3) + LeadForm debajo (regla #7). */}
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div
-              aria-live="polite"
-              aria-atomic="true"
-              className="space-y-6 rounded-3xl border border-hairline bg-card p-6 shadow-sm"
-            >
-              <div>
-                <p className="font-precise text-xs font-bold uppercase tracking-wider text-clay-strong">
-                  Resultado en vivo · {paisActual.label} ({currency})
-                </p>
-                {diagnostico ? (
-                  <p className="mt-2 text-sm leading-relaxed text-ink">{diagnostico}</p>
-                ) : (
-                  <p className="mt-2 text-sm italic leading-relaxed text-muted-foreground">
-                    Completá al menos tus ingresos y costos del mes para ver tu diagnóstico acá.
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2 border-t border-hairline pt-4">
-                <FilaResultado
-                  label="Ingreso neto"
-                  valor={formatMoney(resultadoPL.ingresoNetoCents, currency)}
-                />
-                {retencionPct > 0 && (
-                  <FilaResultado
-                    label="Retención descontada"
-                    valor={formatMoney(resultadoPL.retencionCents, currency)}
-                  />
-                )}
-                <FilaResultado
-                  label="Costos totales"
-                  valor={formatMoney(resultadoPL.costosTotalesCents, currency)}
-                />
-                <FilaResultado
-                  label="Utilidad"
-                  valor={formatMoney(resultadoPL.utilidadCents, currency)}
-                />
-                <FilaResultado
-                  label="Punto de equilibrio"
-                  valor={fmtMoneyOpcional(resultadoPL.puntoEquilibrioCents)}
-                />
-              </div>
-
-              <div className="space-y-3 border-t border-hairline pt-4">
-                <IndicadorSemaforo
-                  titulo="Ausentismo"
-                  pct={ausenciasPct}
-                  banda={bandaAusenciasValue}
-                  fuenteEtiqueta="literatura revisada por pares (PubMed)"
-                  descripcion="Media 15,2% / mediana 12,9% en revisión sistemática de inasistencias a citas de salud."
-                />
-                <IndicadorSemaforo
-                  titulo="Overhead total"
-                  pct={overheadPctValue}
-                  banda={bandaOverheadValue}
-                  fuenteEtiqueta="referencia EE.UU. — ADA Health Policy Institute"
-                  descripcion="No transferible a LatAm: el mix de seguros, el costo laboral y el de laboratorio son distintos."
-                />
-                <IndicadorSemaforo
-                  titulo="Margen del dueño"
-                  pct={resultadoPL.margenPct}
-                  banda={bandaMargenValue}
-                  fuenteEtiqueta="referencia EE.UU. — ADA Health Policy Institute"
-                  descripcion="No transferible a LatAm — usalo como brújula, no como sentencia."
-                  etiquetaVisible={
-                    bandaMargenValue ? etiquetaVisibleMargen(bandaMargenValue) : undefined
-                  }
-                />
-              </div>
-
-              <div className="space-y-1 border-t border-hairline pt-4">
-                <p className="font-precise text-sm font-semibold text-ink">
-                  Sin comparación (todavía)
-                </p>
-                <div className="rounded-xl border border-dashed border-hairline bg-bone/60 p-3 text-xs leading-relaxed text-muted-foreground">
-                  Para personal, insumos, laboratorio, arriendo, aceptación de presupuestos y
-                  cobranza no existe un benchmark público confiable para clínicas de Latinoamérica.
-                  Te mostramos tu número tal cual, sin compararlo contra nada que no podamos citar.
-                </div>
-                <div className="pt-1">
-                  <FilaSinJuicio
-                    label="Personal (honorarios + sueldos)"
-                    valor={fmtPctOpcional(personalPct)}
-                  />
-                  <FilaSinJuicio
-                    label="Insumos"
-                    valor={fmtPctOpcional(resultadoPL.distribucion.insumos)}
-                  />
-                  <FilaSinJuicio
-                    label="Laboratorio"
-                    valor={fmtPctOpcional(resultadoPL.distribucion.laboratorio)}
-                  />
-                  <FilaSinJuicio
-                    label="Arriendo y fijos"
-                    valor={fmtPctOpcional(resultadoPL.distribucion.fijos)}
-                  />
-                  <FilaSinJuicio
-                    label="Otros variables"
-                    valor={fmtPctOpcional(resultadoPL.distribucion.variables)}
-                  />
-                  <FilaSinJuicio
-                    label="Aceptación de presupuestos"
-                    valor={aceptacionPct === null ? "Sin datos" : formatearPct(aceptacionPct)}
-                  />
-                  <FilaSinJuicio
-                    label="Cobranza pendiente"
-                    valor={formatMoney(montosFugas.cobranzaPendienteCents ?? 0, currency)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 border-t border-hairline pt-4">
-                <p className="font-precise text-sm font-semibold text-ink">
-                  Fugas recuperables al mes
-                </p>
-                <FilaResultado
-                  label="Pérdida por ausencias"
-                  valor={fmtMoneyOpcional(resultadoFugas.perdidaAusenciasCents)}
-                />
-                <FilaResultado
-                  label="Oportunidad en presupuestos"
-                  valor={fmtMoneyOpcional(resultadoFugas.oportunidadPresupuestosCents)}
-                />
-                <FilaResultado
+                <FilaSinJuicio
                   label="Cobranza pendiente"
-                  valor={formatMoney(resultadoFugas.retencionCents, currency)}
-                />
-                <FilaResultado
-                  label="Total recuperable"
-                  valor={fmtMoneyOpcional(resultadoFugas.totalRecuperableCents)}
+                  valor={formatMoney(montosFugas.cobranzaPendienteCents ?? 0, currency)}
                 />
               </div>
             </div>
 
-            <div className="mt-6 rounded-3xl border border-hairline bg-card p-6">
-              <h2 className="font-precise text-lg font-bold text-ink">Guardá este diagnóstico</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Dejanos tu email o WhatsApp y te ayudamos a mirar en detalle dónde tenés más para
-                ganar.
+            <div className="space-y-2 border-t border-hairline pt-4">
+              <p className="font-precise text-sm font-semibold text-ink">
+                Fugas recuperables al mes
               </p>
-              <div className="mt-4">
-                <LeadForm
-                  source="calculadora"
-                  pais={paisCode}
-                  meta={metaLead}
-                  tituloExito="Guardamos tu diagnóstico de rentabilidad."
-                />
-              </div>
+              <FilaResultado
+                label="Pérdida por ausencias"
+                valor={fmtMoneyOpcional(resultadoFugas.perdidaAusenciasCents)}
+              />
+              <FilaResultado
+                label="Oportunidad en presupuestos"
+                valor={fmtMoneyOpcional(resultadoFugas.oportunidadPresupuestosCents)}
+              />
+              <FilaResultado
+                label="Cobranza pendiente"
+                valor={formatMoney(resultadoFugas.retencionCents, currency)}
+              />
+              <FilaResultado
+                label="Total recuperable"
+                valor={fmtMoneyOpcional(resultadoFugas.totalRecuperableCents)}
+              />
             </div>
-          </aside>
-        </div>
-
-        <details className="mt-14 rounded-2xl border border-hairline bg-card p-6">
-          <summary className="cursor-pointer font-precise font-semibold text-ink">
-            De dónde salen estos números (nota metodológica)
-          </summary>
-          <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">
-            <p>
-              <strong className="text-ink">Ausentismo (10-30%, referencia 15%).</strong> Literatura
-              revisada por pares indexada en PubMed: media 15,2% y mediana 12,9% en una revisión
-              sistemática de inasistencias a citas de salud, y 14,3% en un estudio pediátrico dental
-              sobre 7.379 visitas. Es el único indicador de esta calculadora con respaldo académico
-              directo — por eso es el único que no lleva la etiqueta "referencia EE.UU."
-            </p>
-            <p>
-              <strong className="text-ink">Overhead total (≈58%) y margen del dueño (≈24%).</strong>{" "}
-              ADA Health Policy Institute, <em>2026 Survey of Dental Practice</em> (datos del
-              ejercicio 2025), n=423 para overhead y n=367 para margen. Son cifras de clínicas de
-              Estados Unidos: el mix de seguros, el costo laboral y el costo de laboratorio son
-              estructuralmente distintos en Chile, México, Colombia, Perú y Argentina, así que
-              tratalas como una brújula ajena, no como una sentencia local.
-            </p>
-            <p>
-              <strong className="text-ink">
-                Personal, insumos, laboratorio, arriendo, aceptación de presupuestos y cobranza: sin
-                semáforo, a propósito.
-              </strong>{" "}
-              No existe un benchmark público y verificable para clínicas dentales de Latinoamérica
-              en ninguno de estos rubros. Las cifras específicas por categoría (personal, insumos,
-              laboratorio, arriendo) que circulan atribuidas al ADA son una atribución falsa: el ADA
-              no publica ese desglose. No las repetimos acá. Te mostramos tu número tal cual lo
-              cargaste, sin compararlo contra nada que no podamos citar.
-            </p>
-            <p>
-              Ninguno de estos rangos es "el promedio de nuestras clínicas": Alika todavía no tiene
-              esa base. Úsalos como brújula, no como sentencia.
-            </p>
           </div>
-        </details>
-      </main>
-      <SiteFooter />
-    </div>
+
+          <div className="mt-6 rounded-3xl border border-hairline bg-card p-6">
+            <h2 className="font-precise text-lg font-bold text-ink">Guardá este diagnóstico</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Dejanos tu email o WhatsApp y te ayudamos a mirar en detalle dónde tenés más para
+              ganar.
+            </p>
+            <div className="mt-4">
+              <LeadForm
+                source="calculadora"
+                pais={paisCode}
+                meta={metaLead}
+                tituloExito="Guardamos tu diagnóstico de rentabilidad."
+              />
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <details className="mt-14 rounded-2xl border border-hairline bg-card p-6">
+        <summary className="cursor-pointer font-precise font-semibold text-ink">
+          De dónde salen estos números (nota metodológica)
+        </summary>
+        <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">
+          <p>
+            <strong className="text-ink">Ausentismo (10-30%, referencia 15%).</strong> Literatura
+            revisada por pares indexada en PubMed: media 15,2% y mediana 12,9% en una revisión
+            sistemática de inasistencias a citas de salud, y 14,3% en un estudio pediátrico dental
+            sobre 7.379 visitas. Es el único indicador de esta calculadora con respaldo académico
+            directo — por eso es el único que no lleva la etiqueta "referencia EE.UU."
+          </p>
+          <p>
+            <strong className="text-ink">Overhead total (≈58%) y margen del dueño (≈24%).</strong>{" "}
+            ADA Health Policy Institute, <em>2026 Survey of Dental Practice</em> (datos del
+            ejercicio 2025), n=423 para overhead y n=367 para margen. Son cifras de clínicas de
+            Estados Unidos: el mix de seguros, el costo laboral y el costo de laboratorio son
+            estructuralmente distintos en Chile, México, Colombia, Perú y Argentina, así que
+            tratalas como una brújula ajena, no como una sentencia local.
+          </p>
+          <p>
+            <strong className="text-ink">
+              Personal, insumos, laboratorio, arriendo, aceptación de presupuestos y cobranza: sin
+              semáforo, a propósito.
+            </strong>{" "}
+            No existe un benchmark público y verificable para clínicas dentales de Latinoamérica en
+            ninguno de estos rubros. Las cifras específicas por categoría (personal, insumos,
+            laboratorio, arriendo) que circulan atribuidas al ADA son una atribución falsa: el ADA
+            no publica ese desglose. No las repetimos acá. Te mostramos tu número tal cual lo
+            cargaste, sin compararlo contra nada que no podamos citar.
+          </p>
+          <p>
+            Ninguno de estos rangos es "el promedio de nuestras clínicas": Alika todavía no tiene
+            esa base. Úsalos como brújula, no como sentencia.
+          </p>
+        </div>
+      </details>
+    </PublicPageShell>
   );
 }

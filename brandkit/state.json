@@ -1,0 +1,12 @@
+{
+  "brand": "Alika",
+  "brandbookElements": ["palette", "typography", "isotype"],
+  "essentialKitApproved": true,
+  "version": 2,
+  "visualAxes": {
+    "familiarExperimental": 22,
+    "geometricOrganic": 62,
+    "restrainedExpressive": 28
+  },
+  "note": "Reescrito 19-sep-2026: el contenido anterior de esta carpeta era una exploración de paleta/naming para un producto llamado \"Pattyto\", sin relación con Alika (ver auditoría de diseño 19-sep). Este archivo y palette-reviews.json documentan ahora el sistema de marca real, ya decidido y en producción — no son propuestas a elegir."
+}

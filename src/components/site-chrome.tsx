@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { AlikaLogo } from "@/components/alika-logo";
+import { cn } from "@/lib/utils";
 
 /** Header compartido por la landing y las páginas de contenido (legal/FAQ/docs).
  *
@@ -159,5 +161,35 @@ export function SiteFooter() {
         </div>
       </div>
     </footer>
+  );
+}
+
+/**
+ * Shell compartido por toda página pública con header+contenido+footer —
+ * unifica el patrón que antes tenía dos formas distintas de llegar al mismo
+ * resultado (auditoría 19-sep-2026): `calculadora-rentabilidad-dental.tsx`
+ * armaba el div a mano, `recursos.fugas-clinica-dental.tsx` pasaba por
+ * `LegalPage`. Cualquier página pública nueva debería usar esto en vez de
+ * repetir `<div><SiteHeader/>...<SiteFooter/></div>`.
+ *
+ * `outerClassName` es para el caso `demo.tsx` (necesita `flex flex-col` en
+ * el contenedor para que `flex-1` del `<main>` centre el formulario
+ * verticalmente) — el resto de las páginas no lo necesita.
+ */
+export function PublicPageShell({
+  children,
+  mainClassName,
+  outerClassName,
+}: {
+  children: ReactNode;
+  mainClassName?: string;
+  outerClassName?: string;
+}) {
+  return (
+    <div className={cn("min-h-screen bg-background", outerClassName)}>
+      <SiteHeader />
+      <main className={cn("mx-auto max-w-6xl px-6 py-12 sm:py-16", mainClassName)}>{children}</main>
+      <SiteFooter />
+    </div>
   );
 }

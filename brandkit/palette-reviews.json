@@ -1,0 +1,44 @@
+{
+  "reviews": [
+    {
+      "stage": "approved",
+      "name": "Alika — sistema de marca vigente",
+      "premise": "Dos paletas, una app: teal clínico (\"Precision clinical mint\") para todo lo autenticado, arcilla/terracota como acento real de marketing (implementado 19-sep-2026 tras encontrar que el marketing corría con el mismo verde de la app — cero diferenciación entre \"te vendemos\" y \"ya sos cliente\"). Fuente de verdad: src/styles.css, tokens en oklch.",
+      "keywords": ["clínico", "confiable", "acento cálido solo en marketing"],
+      "palette_app": [
+        { "hex": "#148d80", "name": "Brand (teal)", "token": "--brand" },
+        { "hex": "#ffffff", "name": "Background", "token": "--background" },
+        { "hex": "#00c899", "name": "Mint (decorativo/logo)", "token": "--mint" },
+        { "hex": "#007b53", "name": "Mint strong (texto AA)", "token": "--mint-strong" }
+      ],
+      "palette_marketing": [
+        { "hex": "#142a41", "name": "Ink", "token": "--ink" },
+        { "hex": "#f2f7f9", "name": "Bone", "token": "--bone" },
+        { "hex": "#cd632d", "name": "Clay (decorativo)", "token": "--clay" },
+        {
+          "hex": "#9e3800",
+          "name": "Clay strong (texto AA, ~7:1 sobre blanco)",
+          "token": "--clay-strong"
+        }
+      ],
+      "logo": {
+        "name": "Cúspide",
+        "description": "Isotipo triangular de un solo trazo — la cúspide de una muela vista de perfil, sobre fondo ink. Elegido tras 2 rondas + auditoría multi-agente (distintividad + técnica), commit 28ce6dd (19-ago-2026).",
+        "component": "src/components/alika-logo.tsx"
+      },
+      "background_color": "#ffffff",
+      "text_color": "#142a41"
+    }
+  ],
+  "typography": {
+    "heading_app": { "family": "Outfit", "usage": "h1/h2/h3 de toda la app autenticada" },
+    "body": {
+      "family": "Schibsted Grotesk",
+      "usage": "texto de la app y de las páginas de marketing"
+    },
+    "display_marketing": {
+      "family": "Newsreader",
+      "usage": "Solo el home público (src/routes/index.tsx) — una cita en itálica del hero. Auditoría 19-sep: el resto de las páginas de marketing (landing de producto, calculadora, checklist, FAQ, docs) es 100% sans-serif; extenderla a más headlines de marketing marcaría más fuerte \"esto es contenido editorial, no la app\", pero es decisión de producto pendiente, no un bug — ver recomendación en la sesión del 19-sep-2026."
+    }
+  }
+}
