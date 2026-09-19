@@ -294,7 +294,9 @@ function CrearItemDialog({
               crear.isPending ||
               !name.trim() ||
               !unit.trim() ||
-              !(Number(yieldPct) > 0 && Number(yieldPct) <= 100)
+              !(Number(yieldPct) > 0 && Number(yieldPct) <= 100) ||
+              (minStock.trim() !== "" && !(Number(minStock) >= 0)) ||
+              (costPesos.trim() !== "" && !(Number(costPesos) >= 0))
             }
           >
             {crear.isPending && <Loader2 className="size-3.5 animate-spin" />}
@@ -468,7 +470,9 @@ function EditarItemDialog({
               guardar.isPending ||
               !name.trim() ||
               !unit.trim() ||
-              !(Number(yieldPct) > 0 && Number(yieldPct) <= 100)
+              !(Number(yieldPct) > 0 && Number(yieldPct) <= 100) ||
+              (minStock.trim() !== "" && !(Number(minStock) >= 0)) ||
+              (costPesos.trim() !== "" && !(Number(costPesos) >= 0))
             }
           >
             {guardar.isPending && <Loader2 className="size-3.5 animate-spin" />}
@@ -650,7 +654,12 @@ function RegistrarMovimientoDialog({
         <DialogFooter>
           <Button
             onClick={() => registrar.mutate()}
-            disabled={registrar.isPending || !quantity.trim() || Number(quantity) <= 0}
+            disabled={
+              registrar.isPending ||
+              !quantity.trim() ||
+              Number.isNaN(Number(quantity)) ||
+              (kind === "ajuste" ? Number(quantity) < 0 : Number(quantity) <= 0)
+            }
           >
             {registrar.isPending && <Loader2 className="size-3.5 animate-spin" />}
             Registrar
@@ -774,7 +783,12 @@ function ConteoFisicoDialog({
         <DialogFooter>
           <Button
             onClick={() => registrar.mutate()}
-            disabled={registrar.isPending || !countedQuantity.trim()}
+            disabled={
+              registrar.isPending ||
+              !countedQuantity.trim() ||
+              Number.isNaN(Number(countedQuantity)) ||
+              Number(countedQuantity) < 0
+            }
           >
             {registrar.isPending && <Loader2 className="size-3.5 animate-spin" />}
             Guardar conteo
@@ -986,9 +1000,11 @@ function InventarioPage() {
                 Insumos y materiales de {access.clinic!.name}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {lowStockCount > 0
-                  ? `${lowStockCount} ítem${lowStockCount === 1 ? "" : "s"} bajo el stock mínimo.`
-                  : "Todo el stock está sobre el mínimo configurado."}
+                {itemsQuery.isLoading
+                  ? "Revisando el stock…"
+                  : lowStockCount > 0
+                    ? `${lowStockCount} ítem${lowStockCount === 1 ? "" : "s"} bajo el stock mínimo.`
+                    : "Todo el stock está sobre el mínimo configurado."}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">

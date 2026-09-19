@@ -196,7 +196,7 @@ function GastoDialog({
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="g-cat">Categoría</Label>
+              <Label htmlFor="g-cat">Categoría *</Label>
               <input
                 id="g-cat"
                 list="categorias-gasto"
@@ -224,7 +224,7 @@ function GastoDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="g-desc">Descripción</Label>
+            <Label htmlFor="g-desc">Descripción *</Label>
             <input
               id="g-desc"
               value={d.description}
@@ -236,7 +236,7 @@ function GastoDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="g-monto">Monto</Label>
+              <Label htmlFor="g-monto">Monto *</Label>
               <MoneyInput
                 id="g-monto"
                 currency={currency}
@@ -305,7 +305,19 @@ function GastoDialog({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col items-end gap-1.5 sm:flex-row sm:items-center">
+          {!listo && !guardar.isPending && (
+            <p className="text-xs text-muted-foreground">
+              Falta{" "}
+              {[
+                !d.category.trim() && "categoría",
+                !d.description.trim() && "descripción",
+                !((d.amount ?? 0) > 0) && "monto",
+              ]
+                .filter(Boolean)
+                .join(", ")}
+            </p>
+          )}
           <Button onClick={() => guardar.mutate()} disabled={!listo}>
             {guardar.isPending && <Loader2 className="size-3.5 animate-spin" />}
             {expense ? "Guardar cambios" : "Registrar gasto"}
@@ -457,6 +469,21 @@ function GastosPage() {
             </div>
           )}
 
+          {!isLoading && gastos.length > 0 && filtrados.length === 0 && (
+            <div className="card-clinical p-8 text-center">
+              <p className="mb-1 font-display text-lg font-semibold">
+                Sin gastos en la categoría seleccionada
+              </p>
+              <button
+                type="button"
+                onClick={() => set({ categoria: "" })}
+                className="text-sm text-brand hover:underline"
+              >
+                Ver todas las categorías
+              </button>
+            </div>
+          )}
+
           {!isLoading && porCategoria.length > 1 && (
             <section className="card-clinical p-5">
               <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -546,7 +573,12 @@ function GastosPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle>¿Borrar este gasto?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Se elimina definitivamente y el resultado del período se recalcula sin él.
+                  {(() => {
+                    const g = gastos.find((x) => x.id === confirmDeleteId);
+                    if (!g)
+                      return "Se elimina definitivamente y el resultado del período se recalcula sin él.";
+                    return `Se borra "${g.description}" por ${formatMoney(g.amountCents, g.currency)} del ${formatoFecha(g.incurredOn)}. El resultado del período se recalcula sin él. No se puede deshacer.`;
+                  })()}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

@@ -114,7 +114,14 @@ function FinanzasPage() {
           </FilterBar>
 
           {isLoading && (
-            <p className="px-1 py-10 text-center text-sm text-muted-foreground">Cargando…</p>
+            <section className="grid gap-4 sm:grid-cols-3" aria-label="Cargando finanzas">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="card-clinical p-5">
+                  <div className="mb-2 h-3 w-20 animate-pulse rounded bg-secondary" />
+                  <div className="h-7 w-28 animate-pulse rounded bg-secondary" />
+                </div>
+              ))}
+            </section>
           )}
 
           {!isLoading && resumen && (
@@ -189,11 +196,13 @@ function FinanzasPage() {
                 </div>
               </section>
 
-              {resumen.byExpenseCategory.length > 0 && (
-                <section className="card-clinical p-5">
-                  <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Gastos por categoría
-                  </p>
+              <section className="card-clinical p-5">
+                <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Gastos por categoría
+                </p>
+                {resumen.byExpenseCategory.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Sin datos en este rango.</p>
+                ) : (
                   <div className="space-y-2">
                     {resumen.byExpenseCategory.map((c) => (
                       <div key={c.category} className="flex items-center gap-3 text-sm">
@@ -212,50 +221,56 @@ function FinanzasPage() {
                       </div>
                     ))}
                   </div>
-                </section>
-              )}
+                )}
+              </section>
 
-              {conversion && conversion.created > 0 && (
-                <section className="card-clinical p-5">
-                  <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Conversión de presupuestos
-                  </p>
-                  <div className="grid gap-4 sm:grid-cols-4">
-                    <div>
-                      <p className="font-display text-2xl font-semibold">
-                        {conversion.conversionRate === null ? "—" : `${conversion.conversionRate}%`}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Tasa de conversión</p>
+              <section className="card-clinical p-5">
+                <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Conversión de presupuestos
+                </p>
+                {!conversion || conversion.created === 0 ? (
+                  <p className="text-sm text-muted-foreground">Sin datos en este rango.</p>
+                ) : (
+                  <>
+                    <div className="grid gap-4 sm:grid-cols-4">
+                      <div>
+                        <p className="font-display text-2xl font-semibold">
+                          {conversion.conversionRate === null
+                            ? "—"
+                            : `${conversion.conversionRate}%`}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Tasa de conversión</p>
+                      </div>
+                      <div>
+                        <p className="font-display text-2xl font-semibold text-success">
+                          {conversion.accepted}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Aceptados</p>
+                      </div>
+                      <div>
+                        <p className="font-display text-2xl font-semibold text-destructive">
+                          {conversion.rejected}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Rechazados</p>
+                      </div>
+                      <div>
+                        <p className="font-display text-2xl font-semibold text-muted-foreground">
+                          {conversion.pending}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Pendientes</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-display text-2xl font-semibold text-success">
-                        {conversion.accepted}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Aceptados</p>
-                    </div>
-                    <div>
-                      <p className="font-display text-2xl font-semibold text-destructive">
-                        {conversion.rejected}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Rechazados</p>
-                    </div>
-                    <div>
-                      <p className="font-display text-2xl font-semibold text-muted-foreground">
-                        {conversion.pending}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Pendientes</p>
-                    </div>
-                  </div>
-                  <p className="mt-4 border-t border-hairline pt-3 text-xs text-muted-foreground">
-                    {conversion.created} presupuesto{conversion.created === 1 ? "" : "s"} creado
-                    {conversion.created === 1 ? "" : "s"} por{" "}
-                    {formatMoney(conversion.createdTotalCents, currency)} · aceptado por{" "}
-                    <span className="font-medium text-foreground">
-                      {formatMoney(conversion.acceptedTotalCents, currency)}
-                    </span>
-                  </p>
-                </section>
-              )}
+                    <p className="mt-4 border-t border-hairline pt-3 text-xs text-muted-foreground">
+                      {conversion.created} presupuesto{conversion.created === 1 ? "" : "s"} creado
+                      {conversion.created === 1 ? "" : "s"} por{" "}
+                      {formatMoney(conversion.createdTotalCents, currency)} · aceptado por{" "}
+                      <span className="font-medium text-foreground">
+                        {formatMoney(conversion.acceptedTotalCents, currency)}
+                      </span>
+                    </p>
+                  </>
+                )}
+              </section>
 
               <section className="card-clinical overflow-hidden">
                 <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
