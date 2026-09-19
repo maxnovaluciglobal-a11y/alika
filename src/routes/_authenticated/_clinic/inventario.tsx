@@ -936,6 +936,7 @@ function InventarioPage() {
   const sucursales = branchesQuery.data ?? [];
   const multiSucursal = sucursales.length > 1;
   const [branchFilter, setBranchFilter] = useState("");
+  const [nameFilter, setNameFilter] = useState("");
   const branchNameById = new Map(sucursales.map((s) => [s.id, s.nombre]));
 
   // Bodegas (Tanda C). Mismo criterio que el filtro de sucursal de arriba:
@@ -982,9 +983,12 @@ function InventarioPage() {
   });
 
   const items = itemsQuery.data?.items ?? [];
-  const activeItems = items.filter((i) => i.isActive);
+  const activeItemsAll = items.filter((i) => i.isActive);
+  const activeItems = nameFilter.trim()
+    ? activeItemsAll.filter((i) => i.name.toLowerCase().includes(nameFilter.trim().toLowerCase()))
+    : activeItemsAll;
   const inactiveItems = items.filter((i) => !i.isActive);
-  const lowStockCount = activeItems.filter((i) => i.belowMinStock).length;
+  const lowStockCount = activeItemsAll.filter((i) => i.belowMinStock).length;
   const expiringLots = expiringQuery.data ?? [];
   const hoyISO = new Date().toISOString().slice(0, 10);
 
@@ -1008,41 +1012,43 @@ function InventarioPage() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="search"
+                value={nameFilter}
+                onChange={(e) => setNameFilter(e.target.value)}
+                placeholder="Buscar insumo…"
+                aria-label="Buscar insumo por nombre"
+                className="w-40 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              />
               {multiSucursal && (
-                <label className="block">
-                  <span className="sr-only">Sucursal</span>
-                  <select
-                    value={branchFilter}
-                    onChange={(e) => setBranchFilter(e.target.value)}
-                    aria-label="Filtrar por sucursal"
-                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                  >
-                    <option value="">Todas las sucursales</option>
-                    {sucursales.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <select
+                  value={branchFilter}
+                  onChange={(e) => setBranchFilter(e.target.value)}
+                  aria-label="Filtrar por sucursal"
+                  className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                  <option value="">Todas las sucursales</option>
+                  {sucursales.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nombre}
+                    </option>
+                  ))}
+                </select>
               )}
               {multiBodega && (
-                <label className="block">
-                  <span className="sr-only">Bodega</span>
-                  <select
-                    value={warehouseFilter}
-                    onChange={(e) => setWarehouseFilter(e.target.value)}
-                    aria-label="Ver el stock de una bodega"
-                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                  >
-                    <option value="">Stock total</option>
-                    {bodegas.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <select
+                  value={warehouseFilter}
+                  onChange={(e) => setWarehouseFilter(e.target.value)}
+                  aria-label="Ver el stock de una bodega"
+                  className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                  <option value="">Stock total</option>
+                  {bodegas.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
               )}
               {puedeGestionar && (
                 <CrearItemDialog clinicId={clinicId} currency={currency} sucursales={sucursales} />
@@ -1097,7 +1103,10 @@ function InventarioPage() {
             )}
             {itemsQuery.data && activeItems.length === 0 && (
               <p className="flex items-center gap-2 px-5 py-6 text-sm text-muted-foreground">
-                <Package className="size-4" /> Todavía no hay ítems de inventario cargados.
+                <Package className="size-4" />
+                {nameFilter.trim() && activeItemsAll.length > 0
+                  ? `Ningún insumo coincide con "${nameFilter.trim()}".`
+                  : "Todavía no hay ítems de inventario cargados."}
               </p>
             )}
             {activeItems.length > 0 && (

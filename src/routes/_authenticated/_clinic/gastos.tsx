@@ -128,11 +128,13 @@ function GastoDialog({
     queryKey: ["branches", clinicId],
     enabled: open,
     queryFn: () => fetchBranches({ data: { clinicId } }),
+    staleTime: 60 * 1000,
   });
   const { data: medios = [] } = useQuery({
     queryKey: ["payment-methods", clinicId],
     enabled: open,
     queryFn: () => fetchMethods({ data: { clinicId } }),
+    staleTime: 60 * 1000,
   });
 
   const guardar = useMutation({
@@ -175,7 +177,7 @@ function GastoDialog({
     >
       <DialogTrigger asChild>
         {expense ? (
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" aria-label={`Editar gasto: ${expense.description}`}>
             <Pencil className="size-3.5" /> Editar
           </Button>
         ) : (
