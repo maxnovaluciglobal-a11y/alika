@@ -202,7 +202,10 @@ export async function fetchPatientBalances(
   let paidQuery = supabase
     .from("payments")
     .select("patient_id, amount_cents")
-    .eq("clinic_id", clinicId);
+    .eq("clinic_id", clinicId)
+    // Un pago reversado no pagó nada: si se sumara, el saldo del paciente
+    // quedaría más bajo de lo real (o hasta a favor) por un cobro deshecho.
+    .is("reversed_at", null);
   if (patientId) {
     billedQuery = billedQuery.eq("treatment_plans.patient_id", patientId);
     paidQuery = paidQuery.eq("patient_id", patientId);
@@ -407,6 +410,91 @@ export interface ImportPatientsResult {
   warnings: { row: number; nombre: string; message: string }[];
   errors: { chunkFrom: number; chunkTo: number; message: string }[];
 }
+
+const IMPORT_ROW_SCHEMA = z.object({
+  nombre: z.string().trim().min(1).max(200),
+  documento: z.string().trim().optional(),
+  fechaNacimiento: z.string().trim().optional(),
+  telefono: z.string().trim().optional(),
+  email: z.string().trim().optional(),
+});
+
+export interface ImportPreviewRow {
+  row: number;
+  nombre: string;
+  documento: string | null;
+  /** `create` = fila nueva. `skip_duplicate` = ya existe (en la DB o repetida
+   * en el mismo archivo) y el importador real la va a saltar igual. */
+  action: "create" | "skip_duplicate";
+  warning: string | null;
+}
+
+/**
+ * Vista previa de la importación (regla de la casa: mostrar antes de que se
+ * confirme, no confirmar y esperar que salga bien). Corre EXACTAMENTE la
+ * misma clasificación que `importPatients` — mismo chequeo de duplicados
+ * contra la DB y dentro del archivo, misma validación de fecha de
+ * nacimiento — pero no escribe nada. Gap de la auditoría comparativa vs.
+ * SuperClini (22-sep-2026): antes de esto, la única forma de saber qué iba a
+ * pasar con un CSV era importarlo y mirar el resultado.
+ *
+ * Deliberadamente NO se factorizó la clasificación en un helper compartido
+ * con `importPatients`: son ~15 líneas casi idénticas, y separar la lectura
+ * (esta función) de la escritura (esa) dijo más sobre el riesgo real —tocar
+ * el importador que ya está en producción para extraer un helper compartido—
+ * que ahorrar la duplicación.
+ */
+export const previewImportPatients = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        rows: z.array(IMPORT_ROW_SCHEMA).min(1).max(2000),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<ImportPreviewRow[]> => {
+    const { supabase } = context;
+
+    const documentos = [
+      ...new Set(data.rows.map((r) => r.documento?.trim()).filter((d): d is string => Boolean(d))),
+    ];
+    const { data: existentes, error: exError } = await supabase
+      .from("patients")
+      .select("document_id")
+      .eq("clinic_id", data.clinicId)
+      .in("document_id", documentos.length ? documentos : [""]);
+    if (exError)
+      throw new Error(
+        mensajeDb(exError, "No pudimos verificar los pacientes existentes antes de importar."),
+      );
+    const yaExisten = new Set((existentes ?? []).map((e) => e.document_id));
+    const vistosEnEsteLote = new Set<string>();
+
+    return data.rows.map((r, i) => {
+      const doc = r.documento?.trim() || null;
+      if (doc && (yaExisten.has(doc) || vistosEnEsteLote.has(doc))) {
+        return {
+          row: i + 1,
+          nombre: r.nombre,
+          documento: doc,
+          action: "skip_duplicate",
+          warning: null,
+        };
+      }
+      if (doc) vistosEnEsteLote.add(doc);
+
+      let warning: string | null = null;
+      if (r.fechaNacimiento) {
+        const d = new Date(r.fechaNacimiento);
+        const valida = !Number.isNaN(d.getTime()) && d <= new Date() && d >= new Date("1900-01-01");
+        if (!valida) warning = "Fecha de nacimiento inválida — se va a importar sin ella.";
+      }
+
+      return { row: i + 1, nombre: r.nombre, documento: doc, action: "create", warning };
+    });
+  });
 
 /**
  * Importador CSV de pacientes — palanca de adquisición para migrar desde

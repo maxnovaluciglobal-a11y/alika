@@ -11,6 +11,8 @@ import {
   Users,
   Stethoscope,
   Receipt,
+  TrendingDown,
+  Wallet,
   Settings,
   UsersRound,
   CreditCard,
@@ -118,6 +120,8 @@ const navGroups: { section: string; items: readonly NavItem[] }[] = [
     section: "Finanzas",
     items: [
       { to: "/finanzas", label: "Finanzas", icon: Landmark, permission: "finance:view" },
+      { to: "/cajas", label: "Cajas", icon: Wallet, permission: "cash:manage" },
+      { to: "/morosidad", label: "Morosidad", icon: TrendingDown, permission: "finance:view" },
       { to: "/gastos", label: "Gastos", icon: Receipt, permission: "finance:view" },
       { to: "/comisiones", label: "Comisiones", icon: Percent, permission: "finance:view" },
       { to: "/inventario", label: "Inventario", icon: Boxes, permission: "inventory:view" },

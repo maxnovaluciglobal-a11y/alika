@@ -15,6 +15,7 @@ export const TABLES = [
   "appointment_statuses",
   "appointments",
   "branches",
+  "cash_registers",
   "clinic_counters",
   "clinic_members",
   "clinical_note_audit",

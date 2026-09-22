@@ -501,6 +501,7 @@ function PacienteDetalle() {
                 currency={currency}
                 patientId={paciente.id}
                 puedeEditar={puedeFacturar}
+                puedeReversarPagos={hasPermission(access.role, "payments:reverse")}
                 userId={access.userId}
                 piezaSeed={piezaSeed}
                 onPiezaSeedConsumido={() => setPiezaSeed(null)}

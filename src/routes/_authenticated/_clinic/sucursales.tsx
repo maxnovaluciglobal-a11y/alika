@@ -19,13 +19,89 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   addOperatory,
   createBranch,
+  getBranchComparison,
   listBranchesDetailed,
   updateBranch,
   type BranchDetail,
 } from "@/lib/clinic-operations/branches.functions";
 import { requirePermission } from "@/lib/access/route-guards";
+import { hoyISO } from "@/lib/clinic-operations/clinic-data";
+
+function primerDiaDelMes(timeZone?: string): string {
+  return `${hoyISO(timeZone).slice(0, 7)}-01`;
+}
+
+/**
+ * Panel de red: comparación operativa entre sucursales del mes en curso.
+ * Solo tiene sentido con 2+ sucursales activas — con una sola no hay nada
+ * que comparar. Sin facturación por sucursal a propósito, ver
+ * `getBranchComparison`.
+ */
+function PanelDeRed({ clinicId, branchCount }: { clinicId: string; branchCount: number }) {
+  const fetchComparison = useServerFn(getBranchComparison);
+  const desde = primerDiaDelMes();
+  const hasta = hoyISO();
+  const { data: filas, isLoading } = useQuery({
+    queryKey: ["branch-comparison", clinicId, desde, hasta],
+    queryFn: () => fetchComparison({ data: { clinicId, desde, hasta } }),
+    enabled: branchCount > 1,
+  });
+
+  if (branchCount <= 1) return null;
+
+  return (
+    <section className="card-clinical p-5">
+      <h3 className="mb-1 text-base font-semibold">
+        Panel de red — {new Date().toLocaleDateString("es-CL", { month: "long", year: "numeric" })}
+      </h3>
+      <p className="mb-4 text-sm text-muted-foreground">
+        Citas y asistencia del mes en curso, comparadas entre sucursales.
+      </p>
+      {isLoading ? (
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" /> Comparando sucursales…
+        </p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Sucursal</TableHead>
+              <TableHead>Citas</TableHead>
+              <TableHead>Finalizadas</TableHead>
+              <TableHead>Ausentes</TableHead>
+              <TableHead>Asistencia</TableHead>
+              <TableHead>Pacientes distintos</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {(filas ?? []).map((f) => (
+              <TableRow key={f.branchId}>
+                <TableCell className="font-medium">{f.branchName}</TableCell>
+                <TableCell>{f.totalCitas}</TableCell>
+                <TableCell>{f.finalizadas}</TableCell>
+                <TableCell>{f.ausentes}</TableCell>
+                <TableCell>
+                  {f.tasaAsistencia === null ? "Sin datos" : `${f.tasaAsistencia}%`}
+                </TableCell>
+                <TableCell>{f.pacientesDistintos}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </section>
+  );
+}
 
 function inputClass() {
   return "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
@@ -445,6 +521,8 @@ function SucursalesPage() {
           </div>
           <NuevaSucursalDialog clinicId={clinicId} />
         </div>
+
+        <PanelDeRed clinicId={clinicId} branchCount={activeBranches.length} />
 
         <section className="card-clinical divide-y divide-hairline">
           {branchesQuery.isLoading && (

@@ -177,3 +177,80 @@ export const addOperatory = createServerFn({ method: "POST" })
     if (error) throw new Error("No tienes permisos para agregar boxes en esta sucursal.");
     return { ok: true };
   });
+
+export interface BranchComparisonRow {
+  branchId: string;
+  branchName: string;
+  totalCitas: number;
+  finalizadas: number;
+  ausentes: number;
+  /** `null` con menos de 5 citas — un porcentaje sobre pocos casos engaña. */
+  tasaAsistencia: number | null;
+  pacientesDistintos: number;
+}
+
+/**
+ * Panel de red: comparación operativa entre sucursales en el período dado.
+ * Gap de la auditoría comparativa vs. SuperClini (22-sep-2026) — "Panel de
+ * red" del competidor compara sucursales en una pantalla.
+ *
+ * Deliberadamente NO incluye facturación por sucursal: `payments` no tiene
+ * `branch_id` (los cobros son de la clínica, no de una sucursal puntual) y
+ * reconstruirlo vía `treatment_plans`/`patients` sería una atribución
+ * indirecta, no un dato real. Mejor mostrar menos y que sea cierto.
+ */
+export const getBranchComparison = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        clinicId: z.string().uuid(),
+        desde: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        hasta: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<BranchComparisonRow[]> => {
+    const desdeIso = `${data.desde}T00:00:00.000Z`;
+    const hastaIso = `${data.hasta}T23:59:59.999Z`;
+
+    const [{ data: branches, error: branchesError }, { data: citas, error: citasError }] =
+      await Promise.all([
+        context.supabase
+          .from("branches")
+          .select("id, name")
+          .eq("clinic_id", data.clinicId)
+          .eq("is_active", true)
+          .order("name", { ascending: true }),
+        context.supabase
+          .from("appointments")
+          .select("branch_id, status, patient_id")
+          .eq("clinic_id", data.clinicId)
+          .gte("starts_at", desdeIso)
+          .lte("starts_at", hastaIso),
+      ]);
+    if (branchesError)
+      throw new Error(mensajeDb(branchesError, "No pudimos cargar las sucursales."));
+    if (citasError)
+      throw new Error(mensajeDb(citasError, "No pudimos cargar las citas del período."));
+
+    return (branches ?? []).map((b) => {
+      const citasSucursal = (citas ?? []).filter((c) => c.branch_id === b.id);
+      const finalizadas = citasSucursal.filter((c) => c.status === "finalizada").length;
+      const ausentes = citasSucursal.filter((c) => c.status === "ausente").length;
+      const totalCitas = citasSucursal.length;
+      const denominadorAsistencia = finalizadas + ausentes;
+      return {
+        branchId: b.id,
+        branchName: b.name,
+        totalCitas,
+        finalizadas,
+        ausentes,
+        tasaAsistencia:
+          denominadorAsistencia >= 5
+            ? Math.round((finalizadas / denominadorAsistencia) * 100)
+            : null,
+        pacientesDistintos: new Set(citasSucursal.map((c) => c.patient_id)).size,
+      };
+    });
+  });

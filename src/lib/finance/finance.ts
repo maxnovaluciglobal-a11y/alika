@@ -272,6 +272,43 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   other: "Otro",
 };
 
+export const AGING_BUCKETS = ["0-30", "31-60", "61-90", "90+", "sin_fecha"] as const;
+export type AgingBucket = (typeof AGING_BUCKETS)[number];
+
+export const AGING_BUCKET_LABELS: Record<AgingBucket, string> = {
+  "0-30": "0-30 días",
+  "31-60": "31-60 días",
+  "61-90": "61-90 días",
+  "90+": "Más de 90 días",
+  sin_fecha: "Sin fecha de referencia",
+};
+
+/**
+ * Un paciente con saldo pendiente, para el reporte de morosidad. La
+ * "antigüedad" se cuenta desde el último pago vigente (no reversado); si el
+ * paciente nunca pagó nada, desde que se creó su plan de tratamiento activo
+ * más viejo. `referenceDate: null` = ninguna de las dos existe (caso raro:
+ * deuda sin plan ni pago, ej. producto de un ajuste manual) — bucket
+ * `sin_fecha`, no se inventa un día cero (regla 11).
+ */
+export interface AccountsReceivableAgingRow {
+  patientId: string;
+  patientName: string;
+  balanceCents: number;
+  currency: string;
+  referenceDate: string | null;
+  daysOverdue: number | null;
+  bucket: AgingBucket;
+}
+
+export function agingBucketFor(days: number | null): AgingBucket {
+  if (days === null) return "sin_fecha";
+  if (days <= 30) return "0-30";
+  if (days <= 60) return "31-60";
+  if (days <= 90) return "61-90";
+  return "90+";
+}
+
 export interface Payment {
   id: string;
   amountCents: number;
@@ -283,6 +320,10 @@ export interface Payment {
   treatmentPlanId: string | null;
   treatmentItemId: string | null;
   createdById: string;
+  /** `null` = pago vigente. Reversado = excluido de saldos/caja/reportes. */
+  reversedAt: string | null;
+  reversedById: string | null;
+  reversalReason: string | null;
 }
 
 export const LAB_ORDER_STATUSES = [

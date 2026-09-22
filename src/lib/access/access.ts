@@ -37,6 +37,14 @@ export const PERMISSIONS = [
   "clinical:write",
   "treatments:view",
   "finance:view",
+  /** Abrir/cerrar caja y hacer el arqueo del turno — separado de
+   * `finance:view` porque reception maneja caja a diario y no tiene (ni
+   * debería tener) visibilidad de los reportes financieros completos. */
+  "cash:manage",
+  /** Reversar un pago mal cargado. Más restrictivo que `cash:manage` a
+   * propósito: cualquiera que cobra puede abrir/cerrar caja, pero deshacer
+   * un cobro ya registrado queda para quien audita las finanzas. */
+  "payments:reverse",
   "inventory:view",
   "inventory:manage",
   "team:view",
@@ -82,8 +90,17 @@ const ROLE_PERMISSIONS: Record<ClinicRole, Permission[]> = {
     "treatments:view",
     "inventory:view",
     "team:view",
+    "cash:manage",
   ],
-  accounting: ["dashboard:view", "patients:view", "treatments:view", "finance:view", "team:view"],
+  accounting: [
+    "dashboard:view",
+    "patients:view",
+    "treatments:view",
+    "finance:view",
+    "team:view",
+    "cash:manage",
+    "payments:reverse",
+  ],
 };
 
 export function permissionsForRole(role: ClinicRole): Permission[] {

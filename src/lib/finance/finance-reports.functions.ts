@@ -7,6 +7,8 @@ import { mensajeDb } from "@/lib/db-errors";
 import { SUBSCRIPTION_STATUSES, trialInformesBloqueados, type Subscription } from "@/lib/billing";
 import type { Database } from "@/integrations/supabase/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { agingBucketFor, type AccountsReceivableAgingRow } from "@/lib/finance/finance";
+import { fetchPatientBalances } from "@/lib/patients/patients.functions";
 
 const SIN_ASIGNAR = "sin_asignar";
 
@@ -180,7 +182,8 @@ export const getFinanceSummary = createServerFn({ method: "GET" })
       .select("amount_cents, currency, method, method_name_snapshot, net_cents, paid_at")
       .eq("clinic_id", data.clinicId)
       .gte("paid_at", desdeIso)
-      .lte("paid_at", hastaIso);
+      .lte("paid_at", hastaIso)
+      .is("reversed_at", null);
     if (error) throw new Error(mensajeDb(error, "No pudimos cargar los pagos del período."));
 
     const rows = pagos ?? [];
@@ -473,7 +476,8 @@ export const getPanelDesempeno = createServerFn({ method: "GET" })
           .select("amount_cents, currency, paid_at")
           .eq("clinic_id", data.clinicId)
           .gte("paid_at", desdeIso)
-          .lte("paid_at", hastaIso),
+          .lte("paid_at", hastaIso)
+          .is("reversed_at", null),
         supabase
           .from("treatment_items")
           .select("price_cents")
@@ -497,7 +501,8 @@ export const getPanelDesempeno = createServerFn({ method: "GET" })
           .from("payments")
           .select("amount_cents, paid_at")
           .eq("clinic_id", data.clinicId)
-          .gte("paid_at", inicioSerie.toISOString()),
+          .gte("paid_at", inicioSerie.toISOString())
+          .is("reversed_at", null),
       ]);
 
     for (const r of [citasRes, pagosRes, itemsRes, quotesRes, serieItemsRes, seriePagosRes]) {
@@ -606,4 +611,95 @@ export const getPanelDesempeno = createServerFn({ method: "GET" })
       esperaMuestras: esperas.length,
       ocupacionPct,
     };
+  });
+
+/**
+ * Morosidad: pacientes con saldo pendiente, agrupados por antigüedad de la
+ * deuda. Gap identificado en la auditoría comparativa vs. SuperClini
+ * (22-sep-2026) — hasta ahora Alika mostraba el saldo por paciente en su
+ * ficha pero no había una vista consolidada de "a quién llamar hoy".
+ *
+ * Reusa `fetchPatientBalances` (misma cuenta que ya usa la ficha del
+ * paciente: `patient_cents ?? price_cents` de items en planes no
+ * cancelados, menos pagos vigentes) para no tener dos fórmulas de saldo que
+ * puedan divergir.
+ */
+export const getAccountsReceivableAging = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<AccountsReceivableAgingRow[]> => {
+    const { supabase, userId } = context;
+    await requireFinanceView(supabase, data.clinicId, userId);
+
+    const balances = await fetchPatientBalances(supabase, data.clinicId);
+    const deudores = [...balances.entries()].filter(([, b]) => b.billedCents - b.paidCents > 0);
+    if (deudores.length === 0) return [];
+
+    const patientIds = deudores.map(([id]) => id);
+
+    const [
+      { data: clinic },
+      { data: pacientes, error: pacientesErr },
+      { data: ultimosPagos, error: pagosErr },
+      { data: planes, error: planesErr },
+    ] = await Promise.all([
+      supabase.from("clinics").select("currency").eq("id", data.clinicId).maybeSingle(),
+      supabase.from("patients").select("id, full_name").in("id", patientIds),
+      supabase
+        .from("payments")
+        .select("patient_id, paid_at")
+        .eq("clinic_id", data.clinicId)
+        .in("patient_id", patientIds)
+        .is("reversed_at", null)
+        .order("paid_at", { ascending: false }),
+      supabase
+        .from("treatment_plans")
+        .select("patient_id, created_at")
+        .eq("clinic_id", data.clinicId)
+        .in("patient_id", patientIds)
+        .neq("status", "cancelled")
+        .order("created_at", { ascending: true }),
+    ]);
+    if (pacientesErr) throw new Error(mensajeDb(pacientesErr, "No pudimos cargar los pacientes."));
+    if (pagosErr) throw new Error(mensajeDb(pagosErr, "No pudimos cargar los últimos pagos."));
+    if (planesErr)
+      throw new Error(mensajeDb(planesErr, "No pudimos cargar los planes de tratamiento."));
+
+    const currency = clinic?.currency ?? "CLP";
+    const nombrePorPaciente = new Map((pacientes ?? []).map((p) => [p.id, p.full_name]));
+
+    // Ya vienen ordenados desc/asc: el primer valor que aparece por paciente
+    // es el que corresponde (último pago más reciente / plan más viejo).
+    const ultimoPagoPorPaciente = new Map<string, string>();
+    for (const p of ultimosPagos ?? []) {
+      if (!ultimoPagoPorPaciente.has(p.patient_id))
+        ultimoPagoPorPaciente.set(p.patient_id, p.paid_at);
+    }
+    const planMasViejoPorPaciente = new Map<string, string>();
+    for (const p of planes ?? []) {
+      if (!planMasViejoPorPaciente.has(p.patient_id))
+        planMasViejoPorPaciente.set(p.patient_id, p.created_at);
+    }
+
+    const ahora = Date.now();
+    const filas: AccountsReceivableAgingRow[] = deudores.map(([patientId, b]) => {
+      const referenceDate =
+        ultimoPagoPorPaciente.get(patientId) ?? planMasViejoPorPaciente.get(patientId) ?? null;
+      const daysOverdue = referenceDate
+        ? Math.floor((ahora - new Date(referenceDate).getTime()) / (1000 * 60 * 60 * 24))
+        : null;
+      return {
+        patientId,
+        patientName: nombrePorPaciente.get(patientId) ?? "Paciente sin nombre",
+        balanceCents: b.billedCents - b.paidCents,
+        currency,
+        referenceDate,
+        daysOverdue,
+        bucket: agingBucketFor(daysOverdue),
+      };
+    });
+
+    // Los más antiguos primero — son los que más urgen.
+    filas.sort((a, b) => (b.daysOverdue ?? -1) - (a.daysOverdue ?? -1));
+    return filas;
   });

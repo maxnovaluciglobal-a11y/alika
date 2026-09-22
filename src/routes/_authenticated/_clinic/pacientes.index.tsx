@@ -27,7 +27,9 @@ import {
   createPatient,
   importPatients,
   listPatients,
+  previewImportPatients,
   type ImportPatientsResult,
+  type ImportPreviewRow,
 } from "@/lib/patients/patients.functions";
 import { coincide, num, paginar, str } from "@/lib/search";
 import { cn } from "@/lib/utils";
@@ -230,15 +232,18 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
   const [sinNombre, setSinNombre] = useState(0);
   const [truncado, setTruncado] = useState(false);
   const [resultado, setResultado] = useState<ImportPatientsResult | null>(null);
+  const [preview, setPreview] = useState<ImportPreviewRow[] | null>(null);
 
   const queryClient = useQueryClient();
   const importFn = useServerFn(importPatients);
+  const previewFn = useServerFn(previewImportPatients);
 
   const reset = () => {
     setFilas([]);
     setSinNombre(0);
     setTruncado(false);
     setResultado(null);
+    setPreview(null);
   };
 
   const onFile = async (file: File) => {
@@ -275,6 +280,12 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
     });
   };
 
+  const cargarPreview = useMutation({
+    mutationFn: () => previewFn({ data: { clinicId, rows: filas } }),
+    onSuccess: (res) => setPreview(res),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const importar = useMutation({
     mutationFn: () => importFn({ data: { clinicId, rows: filas } }),
     onSuccess: (res) => {
@@ -283,6 +294,9 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const aCrear = (preview ?? []).filter((p) => p.action === "create").length;
+  const aSaltear = (preview ?? []).filter((p) => p.action === "skip_duplicate").length;
 
   return (
     <Dialog
@@ -306,7 +320,7 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
           </DialogDescription>
         </DialogHeader>
 
-        {!resultado && (
+        {!resultado && !preview && (
           <div className="space-y-3">
             <input
               type="file"
@@ -322,8 +336,7 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
               <div className="rounded-lg border border-hairline p-3 text-xs text-muted-foreground">
                 <p>
                   <strong className="text-foreground">{filas.length}</strong> paciente
-                  {filas.length === 1 ? "" : "s"} listo{filas.length === 1 ? "" : "s"} para
-                  importar.
+                  {filas.length === 1 ? "" : "s"} listo{filas.length === 1 ? "" : "s"} para revisar.
                   {sinNombre > 0 && ` ${sinNombre} fila(s) sin nombre se ignoraron.`}
                 </p>
                 {truncado && (
@@ -342,6 +355,33 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
                 </ul>
               </div>
             )}
+          </div>
+        )}
+
+        {!resultado && preview && (
+          <div className="space-y-2 rounded-lg border border-hairline p-3 text-sm">
+            <p>
+              <strong className="text-foreground">{aCrear}</strong> se van a crear
+              {aSaltear > 0 && (
+                <>
+                  {" "}
+                  · <strong className="text-muted-foreground">{aSaltear}</strong> se van a saltear
+                  (documento duplicado)
+                </>
+              )}
+              .
+            </p>
+            <ul className="max-h-48 space-y-1 overflow-y-auto text-xs text-muted-foreground">
+              {preview.map((p) => (
+                <li
+                  key={p.row}
+                  className={cn("truncate", p.action === "skip_duplicate" && "line-through")}
+                >
+                  {p.nombre} {p.documento ? `· ${p.documento}` : ""}
+                  {p.warning && ` · ${p.warning}`}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
@@ -370,17 +410,29 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
         )}
 
         <DialogFooter>
-          {!resultado ? (
-            <Button
-              onClick={() => importar.mutate()}
-              disabled={filas.length === 0 || importar.isPending}
-            >
-              {importar.isPending && <Loader2 className="size-3.5 animate-spin" />}
-              Importar {filas.length > 0 ? filas.length : ""} paciente
-              {filas.length === 1 ? "" : "s"}
-            </Button>
-          ) : (
+          {resultado ? (
             <Button onClick={() => setOpen(false)}>Listo</Button>
+          ) : preview ? (
+            <>
+              <Button variant="outline" onClick={() => setPreview(null)}>
+                Volver
+              </Button>
+              <Button
+                onClick={() => importar.mutate()}
+                disabled={aCrear === 0 || importar.isPending}
+              >
+                {importar.isPending && <Loader2 className="size-3.5 animate-spin" />}
+                Confirmar importación ({aCrear})
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={() => cargarPreview.mutate()}
+              disabled={filas.length === 0 || cargarPreview.isPending}
+            >
+              {cargarPreview.isPending && <Loader2 className="size-3.5 animate-spin" />}
+              Ver vista previa
+            </Button>
           )}
         </DialogFooter>
       </DialogContent>

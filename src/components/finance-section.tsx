@@ -79,6 +79,7 @@ import {
   listQuotes,
   listTreatmentPlans,
   registerPayment,
+  reversePayment,
   setQuoteStatus,
   setTreatmentItemStatus,
   updateQuote,
@@ -96,6 +97,8 @@ interface Props {
   currency: string;
   patientId: string;
   puedeEditar: boolean;
+  /** `payments:reverse` — más restrictivo que `puedeEditar` a propósito. */
+  puedeReversarPagos: boolean;
   /** Dueño de lo que quede en la cola offline (ver `offline-queue.ts`). */
   userId: string;
   /**
@@ -1316,6 +1319,7 @@ export function FinanceSection({
   currency: monedaClinica,
   patientId,
   puedeEditar,
+  puedeReversarPagos,
   userId,
   piezaSeed,
   onPiezaSeedConsumido,
@@ -1338,6 +1342,9 @@ export function FinanceSection({
   const fetchPlans = useServerFn(listTreatmentPlans);
   const fetchProcedures = useServerFn(listProcedures);
   const fetchPayments = useServerFn(listPayments);
+  const reversePaymentFn = useServerFn(reversePayment);
+  const [reversingPaymentId, setReversingPaymentId] = useState<string | null>(null);
+  const [reversalReason, setReversalReason] = useState("");
   const setStatusFn = useServerFn(setQuoteStatus);
   const setItemFn = useServerFn(setTreatmentItemStatus);
 
@@ -1433,6 +1440,18 @@ export function FinanceSection({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["quotes", clinicId, patientId] });
       setConfirmRejectId(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const reversePaymentMutation = useMutation({
+    mutationFn: (v: { id: string; reason: string }) =>
+      reversePaymentFn({ data: { id: v.id, clinicId, reason: v.reason } }),
+    onSuccess: () => {
+      toast.success("Pago reversado.");
+      queryClient.invalidateQueries({ queryKey: ["payments", clinicId, patientId] });
+      setReversingPaymentId(null);
+      setReversalReason("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -1905,12 +1924,20 @@ export function FinanceSection({
               return (
                 <div
                   key={pay.id}
-                  className="mb-2 flex items-center justify-between gap-3 rounded-lg border border-hairline px-4 py-2 text-xs"
+                  className={cn(
+                    "mb-2 flex items-center justify-between gap-3 rounded-lg border border-hairline px-4 py-2 text-xs",
+                    pay.reversedAt && "opacity-60",
+                  )}
                 >
                   <div className="flex items-center gap-3">
-                    <CircleDollarSign className="size-4 text-success" />
+                    <CircleDollarSign
+                      className={cn(
+                        "size-4",
+                        pay.reversedAt ? "text-muted-foreground" : "text-success",
+                      )}
+                    />
                     <div>
-                      <p className="text-sm font-medium">
+                      <p className={cn("text-sm font-medium", pay.reversedAt && "line-through")}>
                         {formatMoney(pay.amountCents, pay.currency)}
                       </p>
                       <p className="text-[11px] text-muted-foreground">
@@ -1918,21 +1945,81 @@ export function FinanceSection({
                         {plan && ` · ${plan.name}`}
                         {!plan && pay.treatmentPlanId === null && " · A cuenta"}
                         {pay.reference && ` · Ref. ${pay.reference}`}
+                        {pay.reversedAt && ` · Reversado: ${pay.reversalReason}`}
                       </p>
                     </div>
                   </div>
-                  <span className="text-muted-foreground">
-                    {new Date(pay.paidAt).toLocaleString("es-CL", {
-                      dateStyle: "short",
-                      timeStyle: "short",
-                    })}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">
+                      {new Date(pay.paidAt).toLocaleString("es-CL", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </span>
+                    {puedeReversarPagos && !pay.reversedAt && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-[11px] text-destructive hover:text-destructive"
+                        onClick={() => setReversingPaymentId(pay.id)}
+                      >
+                        Reversar
+                      </Button>
+                    )}
+                  </div>
                 </div>
               );
             })}
           </section>
         </div>
       )}
+
+      <AlertDialog
+        open={reversingPaymentId !== null}
+        onOpenChange={(next) => {
+          if (!next) {
+            setReversingPaymentId(null);
+            setReversalReason("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reversar pago</AlertDialogTitle>
+            <AlertDialogDescription>
+              El pago no se borra: queda tachado en el historial con el motivo, y deja de contar
+              para el saldo del paciente, la caja del turno y los reportes. No se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="motivo-reversa" className="text-xs">
+              Motivo (obligatorio)
+            </Label>
+            <textarea
+              id="motivo-reversa"
+              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              rows={2}
+              value={reversalReason}
+              onChange={(e) => setReversalReason(e.target.value)}
+              placeholder="Ej: se cargó dos veces por error"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                reversingPaymentId &&
+                reversePaymentMutation.mutate({ id: reversingPaymentId, reason: reversalReason })
+              }
+              disabled={reversePaymentMutation.isPending || reversalReason.trim().length < 3}
+            >
+              {reversePaymentMutation.isPending && <Loader2 className="size-3.5 animate-spin" />}
+              Reversar pago
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog
         open={confirmRejectId !== null}

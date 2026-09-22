@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import { mensajeDb } from "@/lib/db-errors";
+import { permissionsForRole, type ClinicRole } from "@/lib/access/access";
 import { TOOTH_SURFACES } from "@/lib/clinical/odontogram";
 import { filaYaCreada } from "@/lib/idempotency";
 import {
@@ -1259,7 +1260,7 @@ export const setTreatmentPlanStatus = createServerFn({ method: "POST" })
 // ─── PAYMENTS ────────────────────────────────────────────────────────────
 
 const PAYMENT_COLUMNS =
-  "id, amount_cents, currency, method, reference, paid_at, notes, treatment_plan_id, treatment_item_id, created_by";
+  "id, amount_cents, currency, method, reference, paid_at, notes, treatment_plan_id, treatment_item_id, created_by, reversed_at, reversed_by, reversal_reason";
 
 type PaymentRow = {
   id: string;
@@ -1272,6 +1273,9 @@ type PaymentRow = {
   treatment_plan_id: string | null;
   treatment_item_id: string | null;
   created_by: string;
+  reversed_at: string | null;
+  reversed_by: string | null;
+  reversal_reason: string | null;
 };
 
 function mapPayment(row: PaymentRow): Payment {
@@ -1286,6 +1290,9 @@ function mapPayment(row: PaymentRow): Payment {
     treatmentPlanId: row.treatment_plan_id,
     treatmentItemId: row.treatment_item_id,
     createdById: row.created_by,
+    reversedAt: row.reversed_at,
+    reversedById: row.reversed_by,
+    reversalReason: row.reversal_reason,
   };
 }
 
@@ -1368,9 +1375,22 @@ export const registerPayment = createServerFn({ method: "POST" })
       }
     }
 
+    // Vínculo opcional a la caja del turno (módulo Cajas). Solo cubre el caso
+    // de una sola caja abierta sin sucursal — una clínica con varias
+    // sucursales y varias cajas abiertas a la vez queda sin auto-vincular acá
+    // (placeholder nullable, regla 11: no adivinar a cuál corresponde).
+    const { data: cajaAbierta } = await context.supabase
+      .from("cash_registers")
+      .select("id")
+      .eq("clinic_id", data.clinicId)
+      .eq("status", "open")
+      .is("branch_id", null)
+      .maybeSingle();
+
     const { data: inserted, error } = await context.supabase
       .from("payments")
       .insert({
+        cash_register_id: cajaAbierta?.id ?? null,
         ...(data.id ? { id: data.id } : {}),
         clinic_id: data.clinicId,
         patient_id: data.patientId,
@@ -1410,6 +1430,58 @@ export const registerPayment = createServerFn({ method: "POST" })
       );
     }
     return { id: inserted.id };
+  });
+
+/**
+ * Reversa un pago mal cargado. No lo borra ni edita su monto/método — los
+ * deja intactos para la historia y agrega `reversed_at/by/reason`. Todo
+ * cálculo de saldo, caja o reportes que agregue pagos tiene que excluir los
+ * reversados (`reversed_at IS NULL`); ver `fetchPatientBalances`,
+ * `getFinanceSummary` y `closeCashRegister`.
+ */
+export const reversePayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        clinicId: z.string().uuid(),
+        reason: z.string().trim().min(3, "Contá por qué se reversa este pago.").max(500),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<void> => {
+    const { data: membership } = await context.supabase
+      .from("clinic_members")
+      .select("role")
+      .eq("clinic_id", data.clinicId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    const puedeReversar = membership?.role
+      ? permissionsForRole(membership.role as ClinicRole).includes("payments:reverse")
+      : false;
+    if (!puedeReversar) throw new Error("No tienes permisos para reversar pagos.");
+
+    const { data: existing, error: fetchError } = await context.supabase
+      .from("payments")
+      .select("id, reversed_at")
+      .eq("id", data.id)
+      .eq("clinic_id", data.clinicId)
+      .maybeSingle();
+    if (fetchError) throw new Error(mensajeDb(fetchError, "No pudimos leer el pago."));
+    if (!existing) throw new Error("Ese pago no existe.");
+    if (existing.reversed_at) throw new Error("Ese pago ya está reversado.");
+
+    const { error } = await context.supabase
+      .from("payments")
+      .update({
+        reversed_at: new Date().toISOString(),
+        reversed_by: context.userId,
+        reversal_reason: data.reason,
+      })
+      .eq("id", data.id)
+      .eq("clinic_id", data.clinicId);
+    if (error) throw new Error(mensajeDb(error, "No pudimos reversar el pago."));
   });
 
 // getPatientBalance eliminado: era dead code. El cálculo del saldo del

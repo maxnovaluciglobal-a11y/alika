@@ -2485,9 +2485,85 @@ export type Database = {
           },
         ];
       };
+      cash_registers: {
+        Row: {
+          branch_id: string | null;
+          clinic_id: string;
+          closed_at: string | null;
+          closed_by: string | null;
+          closing_notes: string | null;
+          created_at: string;
+          currency: string;
+          declared_closing_cents: number | null;
+          difference_cents: number | null;
+          expected_closing_cents: number | null;
+          id: string;
+          opened_at: string;
+          opened_by: string;
+          opening_amount_cents: number;
+          opening_notes: string | null;
+          status: Database["public"]["Enums"]["cash_register_status"];
+          updated_at: string;
+        };
+        Insert: {
+          branch_id?: string | null;
+          clinic_id: string;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          closing_notes?: string | null;
+          created_at?: string;
+          currency?: string;
+          declared_closing_cents?: number | null;
+          difference_cents?: number | null;
+          expected_closing_cents?: number | null;
+          id?: string;
+          opened_at?: string;
+          opened_by?: string;
+          opening_amount_cents: number;
+          opening_notes?: string | null;
+          status?: Database["public"]["Enums"]["cash_register_status"];
+          updated_at?: string;
+        };
+        Update: {
+          branch_id?: string | null;
+          clinic_id?: string;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          closing_notes?: string | null;
+          created_at?: string;
+          currency?: string;
+          declared_closing_cents?: number | null;
+          difference_cents?: number | null;
+          expected_closing_cents?: number | null;
+          id?: string;
+          opened_at?: string;
+          opened_by?: string;
+          opening_amount_cents?: number;
+          opening_notes?: string | null;
+          status?: Database["public"]["Enums"]["cash_register_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cash_registers_branch_id_fkey";
+            columns: ["branch_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cash_registers_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       payments: {
         Row: {
           amount_cents: number;
+          cash_register_id: string | null;
           clinic_id: string;
           created_at: string;
           created_by: string;
@@ -2501,12 +2577,16 @@ export type Database = {
           patient_id: string;
           payment_method_id: string | null;
           reference: string | null;
+          reversal_reason: string | null;
+          reversed_at: string | null;
+          reversed_by: string | null;
           treatment_item_id: string | null;
           treatment_plan_id: string | null;
           updated_at: string;
         };
         Insert: {
           amount_cents: number;
+          cash_register_id?: string | null;
           clinic_id: string;
           created_at?: string;
           created_by?: string;
@@ -2520,12 +2600,16 @@ export type Database = {
           patient_id: string;
           payment_method_id?: string | null;
           reference?: string | null;
+          reversal_reason?: string | null;
+          reversed_at?: string | null;
+          reversed_by?: string | null;
           treatment_item_id?: string | null;
           treatment_plan_id?: string | null;
           updated_at?: string;
         };
         Update: {
           amount_cents?: number;
+          cash_register_id?: string | null;
           clinic_id?: string;
           created_at?: string;
           created_by?: string;
@@ -2539,11 +2623,21 @@ export type Database = {
           patient_id?: string;
           payment_method_id?: string | null;
           reference?: string | null;
+          reversal_reason?: string | null;
+          reversed_at?: string | null;
+          reversed_by?: string | null;
           treatment_item_id?: string | null;
           treatment_plan_id?: string | null;
           updated_at?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "payments_cash_register_id_fkey";
+            columns: ["cash_register_id"];
+            isOneToOne: false;
+            referencedRelation: "cash_registers";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "payments_clinic_id_fkey";
             columns: ["clinic_id"];
@@ -3802,6 +3896,7 @@ export type Database = {
       app_role: "owner" | "admin" | "dentist" | "assistant" | "reception" | "accounting";
       appointment_status:
         "tentativa" | "confirmada" | "en-sala" | "ausente" | "finalizada" | "cancelada";
+      cash_register_status: "open" | "closed";
       clinical_entity_kind: "diagnosis" | "treatment" | "medication" | "allergy";
       inventory_movement_kind: "entrada" | "salida" | "ajuste";
       lab_order_status: "enviado" | "en_proceso" | "recibido" | "reprocesar" | "cancelado";
