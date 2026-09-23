@@ -8,6 +8,7 @@ import { sendMetaTextMessage } from "@/lib/messaging/whatsapp.functions";
 import { notifyClinicStaff, ROLES_BANDEJA } from "@/lib/messaging/notifications.functions";
 import { esConfirmacionDePaciente } from "@/lib/messaging/patient-confirmation";
 import { hoyEnLaClinica, interpretarMensajeDeAgenda } from "@/lib/messaging/intencion-de-agenda";
+import { interpretarConIA } from "@/lib/messaging/intencion-de-agenda-ia";
 import { captureException } from "@/lib/sentry";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -356,10 +357,15 @@ async function anotarSolicitudDeAgenda(
     .select("timezone")
     .eq("id", clinicId)
     .maybeSingle();
-  const lectura = interpretarMensajeDeAgenda(
-    bodyText,
-    hoyEnLaClinica(clinica?.timezone ?? "America/Santiago"),
-  );
+  const hoyClinica = hoyEnLaClinica(clinica?.timezone ?? "America/Santiago");
+  // Reglas primero, siempre. El modelo solo entra en el 20% que las reglas
+  // no pueden leer con confianza (`lectura === null`) — ver el encabezado de
+  // `intencion-de-agenda-ia.ts`. Sin GEMINI_API_KEY/OPENAI_API_KEY cargada,
+  // `interpretarConIA` devuelve null de inmediato y el comportamiento es
+  // idéntico al de antes de esta función existir.
+  const lectura =
+    interpretarMensajeDeAgenda(bodyText, hoyClinica) ??
+    (await interpretarConIA(bodyText, hoyClinica));
   if (!lectura) return null;
 
   const cuando = lectura.fecha

@@ -43,6 +43,8 @@ export const TABLES = [
   "notifications",
   "odontogram_marks",
   "operatories",
+  "ortho_cases",
+  "ortho_controls",
   "patient_consents",
   "patient_documents",
   "patient_medical_history",

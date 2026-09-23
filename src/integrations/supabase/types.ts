@@ -2297,6 +2297,147 @@ export type Database = {
           },
         ];
       };
+      ortho_cases: {
+        Row: {
+          clinic_id: string;
+          created_at: string;
+          created_by: string;
+          currency: string;
+          expected_end_on: string | null;
+          id: string;
+          kind: Database["public"]["Enums"]["ortho_case_kind"];
+          monthly_fee_cents: number | null;
+          notes: string | null;
+          patient_id: string;
+          professional_id: string | null;
+          started_on: string;
+          status: Database["public"]["Enums"]["ortho_case_status"];
+          treatment_plan_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          clinic_id: string;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          expected_end_on?: string | null;
+          id?: string;
+          kind: Database["public"]["Enums"]["ortho_case_kind"];
+          monthly_fee_cents?: number | null;
+          notes?: string | null;
+          patient_id: string;
+          professional_id?: string | null;
+          started_on: string;
+          status?: Database["public"]["Enums"]["ortho_case_status"];
+          treatment_plan_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          clinic_id?: string;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          expected_end_on?: string | null;
+          id?: string;
+          kind?: Database["public"]["Enums"]["ortho_case_kind"];
+          monthly_fee_cents?: number | null;
+          notes?: string | null;
+          patient_id?: string;
+          professional_id?: string | null;
+          started_on?: string;
+          status?: Database["public"]["Enums"]["ortho_case_status"];
+          treatment_plan_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ortho_cases_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ortho_cases_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ortho_cases_professional_id_fkey";
+            columns: ["professional_id"];
+            isOneToOne: false;
+            referencedRelation: "professionals";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ortho_cases_treatment_plan_id_fkey";
+            columns: ["treatment_plan_id"];
+            isOneToOne: false;
+            referencedRelation: "treatment_plans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ortho_controls: {
+        Row: {
+          attended: boolean;
+          clinic_id: string;
+          control_date: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          notes: string | null;
+          ortho_case_id: string;
+          payment_id: string | null;
+        };
+        Insert: {
+          attended?: boolean;
+          clinic_id: string;
+          control_date: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          notes?: string | null;
+          ortho_case_id: string;
+          payment_id?: string | null;
+        };
+        Update: {
+          attended?: boolean;
+          clinic_id?: string;
+          control_date?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          notes?: string | null;
+          ortho_case_id?: string;
+          payment_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ortho_controls_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ortho_controls_ortho_case_id_fkey";
+            columns: ["ortho_case_id"];
+            isOneToOne: false;
+            referencedRelation: "ortho_cases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ortho_controls_payment_id_fkey";
+            columns: ["payment_id"];
+            isOneToOne: false;
+            referencedRelation: "payments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       patients: {
         Row: {
           agreement_id: string | null;
@@ -3898,6 +4039,8 @@ export type Database = {
         "tentativa" | "confirmada" | "en-sala" | "ausente" | "finalizada" | "cancelada";
       cash_register_status: "open" | "closed";
       clinical_entity_kind: "diagnosis" | "treatment" | "medication" | "allergy";
+      ortho_case_kind: "brackets" | "aligners";
+      ortho_case_status: "active" | "on_hold" | "completed" | "cancelled";
       inventory_movement_kind: "entrada" | "salida" | "ajuste";
       lab_order_status: "enviado" | "en_proceso" | "recibido" | "reprocesar" | "cancelado";
       message_channel: "whatsapp" | "sms" | "email";

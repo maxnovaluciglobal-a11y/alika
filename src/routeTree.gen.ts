@@ -18,6 +18,7 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as NosotrosRouteImport } from './routes/nosotros'
 import { Route as PortalRouteImport } from './routes/portal'
+import { Route as PortalLaboratorioRouteImport } from './routes/portal-laboratorio'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SoftwareDentalLatamRouteImport } from './routes/software-dental-latam'
@@ -35,6 +36,8 @@ import { Route as DocsDatosYSeguridadRouteImport } from './routes/docs.datos-y-s
 import { Route as DocsPortalPacientesRouteImport } from './routes/docs.portal-pacientes'
 import { Route as DocsPrimerosPasosRouteImport } from './routes/docs.primeros-pasos'
 import { Route as DocsWhatsappRouteImport } from './routes/docs.whatsapp'
+import { Route as PortalLaboratorioTokenRouteImport } from './routes/portal-laboratorio.$token'
+import { Route as PortalLaboratorioInicioRouteImport } from './routes/portal-laboratorio.inicio'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as PortalInicioRouteImport } from './routes/portal.inicio'
@@ -60,6 +63,7 @@ import { Route as AuthenticatedClinicLaboratoriosRouteImport } from './routes/_a
 import { Route as AuthenticatedClinicMediosDePagoRouteImport } from './routes/_authenticated/_clinic/medios-de-pago'
 import { Route as AuthenticatedClinicMiAgendaRouteImport } from './routes/_authenticated/_clinic/mi-agenda'
 import { Route as AuthenticatedClinicMorosidadRouteImport } from './routes/_authenticated/_clinic/morosidad'
+import { Route as AuthenticatedClinicOrtodonciaRouteImport } from './routes/_authenticated/_clinic/ortodoncia'
 import { Route as AuthenticatedClinicPermisosRouteImport } from './routes/_authenticated/_clinic/permisos'
 import { Route as AuthenticatedClinicPreferenciasRouteImport } from './routes/_authenticated/_clinic/preferencias'
 import { Route as AuthenticatedClinicProfesionalesRouteImport } from './routes/_authenticated/_clinic/profesionales'
@@ -120,6 +124,11 @@ const NosotrosRoute = NosotrosRouteImport.update({
 const PortalRoute = PortalRouteImport.update({
   id: '/portal',
   path: '/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalLaboratorioRoute = PortalLaboratorioRouteImport.update({
+  id: '/portal-laboratorio',
+  path: '/portal-laboratorio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacidadRoute = PrivacidadRouteImport.update({
@@ -206,6 +215,16 @@ const DocsWhatsappRoute = DocsWhatsappRouteImport.update({
   id: '/whatsapp',
   path: '/whatsapp',
   getParentRoute: () => DocsRoute,
+} as any)
+const PortalLaboratorioTokenRoute = PortalLaboratorioTokenRouteImport.update({
+  id: '/$token',
+  path: '/$token',
+  getParentRoute: () => PortalLaboratorioRoute,
+} as any)
+const PortalLaboratorioInicioRoute = PortalLaboratorioInicioRouteImport.update({
+  id: '/inicio',
+  path: '/inicio',
+  getParentRoute: () => PortalLaboratorioRoute,
 } as any)
 const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/',
@@ -354,6 +373,12 @@ const AuthenticatedClinicMorosidadRoute =
     path: '/morosidad',
     getParentRoute: () => AuthenticatedClinicRouteRoute,
   } as any)
+const AuthenticatedClinicOrtodonciaRoute =
+  AuthenticatedClinicOrtodonciaRouteImport.update({
+    id: '/ortodoncia',
+    path: '/ortodoncia',
+    getParentRoute: () => AuthenticatedClinicRouteRoute,
+  } as any)
 const AuthenticatedClinicPermisosRoute =
   AuthenticatedClinicPermisosRouteImport.update({
     id: '/permisos',
@@ -457,6 +482,7 @@ export interface FileRoutesByFullPath {
   '/faq': typeof FaqRoute
   '/nosotros': typeof NosotrosRoute
   '/portal': typeof PortalRouteWithChildren
+  '/portal-laboratorio': typeof PortalLaboratorioRouteWithChildren
   '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/software-dental-latam': typeof SoftwareDentalLatamRoute
@@ -472,6 +498,8 @@ export interface FileRoutesByFullPath {
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
   '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
   '/docs/whatsapp': typeof DocsWhatsappRoute
+  '/portal-laboratorio/$token': typeof PortalLaboratorioTokenRoute
+  '/portal-laboratorio/inicio': typeof PortalLaboratorioInicioRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
   '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
@@ -498,6 +526,7 @@ export interface FileRoutesByFullPath {
   '/medios-de-pago': typeof AuthenticatedClinicMediosDePagoRoute
   '/mi-agenda': typeof AuthenticatedClinicMiAgendaRoute
   '/morosidad': typeof AuthenticatedClinicMorosidadRoute
+  '/ortodoncia': typeof AuthenticatedClinicOrtodonciaRoute
   '/permisos': typeof AuthenticatedClinicPermisosRoute
   '/preferencias': typeof AuthenticatedClinicPreferenciasRoute
   '/profesionales': typeof AuthenticatedClinicProfesionalesRoute
@@ -522,6 +551,7 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/faq': typeof FaqRoute
   '/nosotros': typeof NosotrosRoute
+  '/portal-laboratorio': typeof PortalLaboratorioRouteWithChildren
   '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/software-dental-latam': typeof SoftwareDentalLatamRoute
@@ -537,6 +567,8 @@ export interface FileRoutesByTo {
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
   '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
   '/docs/whatsapp': typeof DocsWhatsappRoute
+  '/portal-laboratorio/$token': typeof PortalLaboratorioTokenRoute
+  '/portal-laboratorio/inicio': typeof PortalLaboratorioInicioRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
   '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
@@ -563,6 +595,7 @@ export interface FileRoutesByTo {
   '/medios-de-pago': typeof AuthenticatedClinicMediosDePagoRoute
   '/mi-agenda': typeof AuthenticatedClinicMiAgendaRoute
   '/morosidad': typeof AuthenticatedClinicMorosidadRoute
+  '/ortodoncia': typeof AuthenticatedClinicOrtodonciaRoute
   '/permisos': typeof AuthenticatedClinicPermisosRoute
   '/preferencias': typeof AuthenticatedClinicPreferenciasRoute
   '/profesionales': typeof AuthenticatedClinicProfesionalesRoute
@@ -591,6 +624,7 @@ export interface FileRoutesById {
   '/faq': typeof FaqRoute
   '/nosotros': typeof NosotrosRoute
   '/portal': typeof PortalRouteWithChildren
+  '/portal-laboratorio': typeof PortalLaboratorioRouteWithChildren
   '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/software-dental-latam': typeof SoftwareDentalLatamRoute
@@ -607,6 +641,8 @@ export interface FileRoutesById {
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
   '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
   '/docs/whatsapp': typeof DocsWhatsappRoute
+  '/portal-laboratorio/$token': typeof PortalLaboratorioTokenRoute
+  '/portal-laboratorio/inicio': typeof PortalLaboratorioInicioRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
   '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
@@ -633,6 +669,7 @@ export interface FileRoutesById {
   '/_authenticated/_clinic/medios-de-pago': typeof AuthenticatedClinicMediosDePagoRoute
   '/_authenticated/_clinic/mi-agenda': typeof AuthenticatedClinicMiAgendaRoute
   '/_authenticated/_clinic/morosidad': typeof AuthenticatedClinicMorosidadRoute
+  '/_authenticated/_clinic/ortodoncia': typeof AuthenticatedClinicOrtodonciaRoute
   '/_authenticated/_clinic/permisos': typeof AuthenticatedClinicPermisosRoute
   '/_authenticated/_clinic/preferencias': typeof AuthenticatedClinicPreferenciasRoute
   '/_authenticated/_clinic/profesionales': typeof AuthenticatedClinicProfesionalesRoute
@@ -661,6 +698,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/nosotros'
     | '/portal'
+    | '/portal-laboratorio'
     | '/privacidad'
     | '/sitemap.xml'
     | '/software-dental-latam'
@@ -676,6 +714,8 @@ export interface FileRouteTypes {
     | '/docs/portal-pacientes'
     | '/docs/primeros-pasos'
     | '/docs/whatsapp'
+    | '/portal-laboratorio/$token'
+    | '/portal-laboratorio/inicio'
     | '/portal/$token'
     | '/portal/inicio'
     | '/recursos/fugas-clinica-dental'
@@ -702,6 +742,7 @@ export interface FileRouteTypes {
     | '/medios-de-pago'
     | '/mi-agenda'
     | '/morosidad'
+    | '/ortodoncia'
     | '/permisos'
     | '/preferencias'
     | '/profesionales'
@@ -726,6 +767,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/faq'
     | '/nosotros'
+    | '/portal-laboratorio'
     | '/privacidad'
     | '/sitemap.xml'
     | '/software-dental-latam'
@@ -741,6 +783,8 @@ export interface FileRouteTypes {
     | '/docs/portal-pacientes'
     | '/docs/primeros-pasos'
     | '/docs/whatsapp'
+    | '/portal-laboratorio/$token'
+    | '/portal-laboratorio/inicio'
     | '/portal/$token'
     | '/portal/inicio'
     | '/recursos/fugas-clinica-dental'
@@ -767,6 +811,7 @@ export interface FileRouteTypes {
     | '/medios-de-pago'
     | '/mi-agenda'
     | '/morosidad'
+    | '/ortodoncia'
     | '/permisos'
     | '/preferencias'
     | '/profesionales'
@@ -794,6 +839,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/nosotros'
     | '/portal'
+    | '/portal-laboratorio'
     | '/privacidad'
     | '/sitemap.xml'
     | '/software-dental-latam'
@@ -810,6 +856,8 @@ export interface FileRouteTypes {
     | '/docs/portal-pacientes'
     | '/docs/primeros-pasos'
     | '/docs/whatsapp'
+    | '/portal-laboratorio/$token'
+    | '/portal-laboratorio/inicio'
     | '/portal/$token'
     | '/portal/inicio'
     | '/recursos/fugas-clinica-dental'
@@ -836,6 +884,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_clinic/medios-de-pago'
     | '/_authenticated/_clinic/mi-agenda'
     | '/_authenticated/_clinic/morosidad'
+    | '/_authenticated/_clinic/ortodoncia'
     | '/_authenticated/_clinic/permisos'
     | '/_authenticated/_clinic/preferencias'
     | '/_authenticated/_clinic/profesionales'
@@ -864,6 +913,7 @@ export interface RootRouteChildren {
   FaqRoute: typeof FaqRoute
   NosotrosRoute: typeof NosotrosRoute
   PortalRoute: typeof PortalRouteWithChildren
+  PortalLaboratorioRoute: typeof PortalLaboratorioRouteWithChildren
   PrivacidadRoute: typeof PrivacidadRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SoftwareDentalLatamRoute: typeof SoftwareDentalLatamRoute
@@ -941,6 +991,13 @@ declare module '@tanstack/react-router' {
       path: '/portal'
       fullPath: '/portal'
       preLoaderRoute: typeof PortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal-laboratorio': {
+      id: '/portal-laboratorio'
+      path: '/portal-laboratorio'
+      fullPath: '/portal-laboratorio'
+      preLoaderRoute: typeof PortalLaboratorioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacidad': {
@@ -1061,6 +1118,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/docs/whatsapp'
       preLoaderRoute: typeof DocsWhatsappRouteImport
       parentRoute: typeof DocsRoute
+    }
+    '/portal-laboratorio/$token': {
+      id: '/portal-laboratorio/$token'
+      path: '/$token'
+      fullPath: '/portal-laboratorio/$token'
+      preLoaderRoute: typeof PortalLaboratorioTokenRouteImport
+      parentRoute: typeof PortalLaboratorioRoute
+    }
+    '/portal-laboratorio/inicio': {
+      id: '/portal-laboratorio/inicio'
+      path: '/inicio'
+      fullPath: '/portal-laboratorio/inicio'
+      preLoaderRoute: typeof PortalLaboratorioInicioRouteImport
+      parentRoute: typeof PortalLaboratorioRoute
     }
     '/portal/': {
       id: '/portal/'
@@ -1237,6 +1308,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClinicMorosidadRouteImport
       parentRoute: typeof AuthenticatedClinicRouteRoute
     }
+    '/_authenticated/_clinic/ortodoncia': {
+      id: '/_authenticated/_clinic/ortodoncia'
+      path: '/ortodoncia'
+      fullPath: '/ortodoncia'
+      preLoaderRoute: typeof AuthenticatedClinicOrtodonciaRouteImport
+      parentRoute: typeof AuthenticatedClinicRouteRoute
+    }
     '/_authenticated/_clinic/permisos': {
       id: '/_authenticated/_clinic/permisos'
       path: '/permisos'
@@ -1374,6 +1452,7 @@ interface AuthenticatedClinicRouteRouteChildren {
   AuthenticatedClinicMediosDePagoRoute: typeof AuthenticatedClinicMediosDePagoRoute
   AuthenticatedClinicMiAgendaRoute: typeof AuthenticatedClinicMiAgendaRoute
   AuthenticatedClinicMorosidadRoute: typeof AuthenticatedClinicMorosidadRoute
+  AuthenticatedClinicOrtodonciaRoute: typeof AuthenticatedClinicOrtodonciaRoute
   AuthenticatedClinicPermisosRoute: typeof AuthenticatedClinicPermisosRoute
   AuthenticatedClinicPreferenciasRoute: typeof AuthenticatedClinicPreferenciasRoute
   AuthenticatedClinicProfesionalesRoute: typeof AuthenticatedClinicProfesionalesRoute
@@ -1415,6 +1494,7 @@ const AuthenticatedClinicRouteRouteChildren: AuthenticatedClinicRouteRouteChildr
     AuthenticatedClinicMediosDePagoRoute: AuthenticatedClinicMediosDePagoRoute,
     AuthenticatedClinicMiAgendaRoute: AuthenticatedClinicMiAgendaRoute,
     AuthenticatedClinicMorosidadRoute: AuthenticatedClinicMorosidadRoute,
+    AuthenticatedClinicOrtodonciaRoute: AuthenticatedClinicOrtodonciaRoute,
     AuthenticatedClinicPermisosRoute: AuthenticatedClinicPermisosRoute,
     AuthenticatedClinicPreferenciasRoute: AuthenticatedClinicPreferenciasRoute,
     AuthenticatedClinicProfesionalesRoute:
@@ -1490,6 +1570,19 @@ const PortalRouteChildren: PortalRouteChildren = {
 const PortalRouteWithChildren =
   PortalRoute._addFileChildren(PortalRouteChildren)
 
+interface PortalLaboratorioRouteChildren {
+  PortalLaboratorioTokenRoute: typeof PortalLaboratorioTokenRoute
+  PortalLaboratorioInicioRoute: typeof PortalLaboratorioInicioRoute
+}
+
+const PortalLaboratorioRouteChildren: PortalLaboratorioRouteChildren = {
+  PortalLaboratorioTokenRoute: PortalLaboratorioTokenRoute,
+  PortalLaboratorioInicioRoute: PortalLaboratorioInicioRoute,
+}
+
+const PortalLaboratorioRouteWithChildren =
+  PortalLaboratorioRoute._addFileChildren(PortalLaboratorioRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -1500,6 +1593,7 @@ const rootRouteChildren: RootRouteChildren = {
   FaqRoute: FaqRoute,
   NosotrosRoute: NosotrosRoute,
   PortalRoute: PortalRouteWithChildren,
+  PortalLaboratorioRoute: PortalLaboratorioRouteWithChildren,
   PrivacidadRoute: PrivacidadRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SoftwareDentalLatamRoute: SoftwareDentalLatamRoute,

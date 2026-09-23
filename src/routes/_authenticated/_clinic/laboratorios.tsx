@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, Download, Loader2, Plus } from "lucide-react";
+import { AlertTriangle, Copy, Download, ExternalLink, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -40,6 +40,7 @@ import {
   listLabs,
   setLabOrderStatus,
 } from "@/lib/clinic-operations/clinic-operations.functions";
+import { generateLabPortalLink } from "@/lib/clinic-operations/lab-portal.functions";
 import { listPatients } from "@/lib/patients/patients.functions";
 import { exportarCsv } from "@/lib/csv-export";
 import { str } from "@/lib/search";
@@ -327,6 +328,69 @@ function NuevaOrdenDialog({
   );
 }
 
+/**
+ * Portal externo de laboratorio: cada laboratorio activo tiene su propio
+ * link firmado para ver y actualizar el estado de sus órdenes sin cuenta de
+ * staff en Alika. Self-contained (fetch propio de `listLabs`) para no
+ * meterle otra query al estado de `LaboratoriosPage`.
+ */
+function LabPortalSection({ clinicId }: { clinicId: string }) {
+  const fetchLabs = useServerFn(listLabs);
+  const generateLink = useServerFn(generateLabPortalLink);
+  const [generando, setGenerando] = useState<string | null>(null);
+
+  const { data: labs = [] } = useQuery({
+    queryKey: ["labs", clinicId],
+    queryFn: () => fetchLabs({ data: { clinicId } }),
+  });
+
+  const copiarLink = async (labId: string) => {
+    setGenerando(labId);
+    try {
+      const { url } = await generateLink({
+        data: { clinicId, labId, baseUrl: window.location.origin },
+      });
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copiado. Compartilo con el laboratorio (WhatsApp, email).");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No pudimos generar el link.");
+    } finally {
+      setGenerando(null);
+    }
+  };
+
+  if (labs.length === 0) return null;
+
+  return (
+    <section className="card-clinical space-y-2 p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Portal para el laboratorio
+      </p>
+      <p className="text-xs text-muted-foreground">
+        Cada link deja ver y actualizar solo las órdenes de ese laboratorio, sin login.
+      </p>
+      <div className="flex flex-wrap gap-2 pt-1">
+        {labs.map((l) => (
+          <Button
+            key={l.id}
+            variant="outline"
+            size="sm"
+            disabled={generando === l.id}
+            onClick={() => copiarLink(l.id)}
+          >
+            {generando === l.id ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <ExternalLink className="size-3.5" />
+            )}
+            {l.name} <Copy className="size-3 opacity-60" />
+          </Button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function LaboratoriosPage() {
   const { access } = Route.useRouteContext();
   const search = Route.useSearch();
@@ -406,6 +470,8 @@ function LaboratoriosPage() {
         <TrialDesbloqueo pantalla="Laboratorios" />
       ) : (
         <div className="space-y-5">
+          <LabPortalSection clinicId={clinicId!} />
+
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">
               {ordenes.length} {ordenes.length === 1 ? "orden" : "órdenes"}
