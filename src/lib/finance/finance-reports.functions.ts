@@ -683,17 +683,22 @@ export const getAccountsReceivableAging = createServerFn({ method: "GET" })
 
     const ahora = Date.now();
     const filas: AccountsReceivableAgingRow[] = deudores.map(([patientId, b]) => {
-      const referenceDate =
+      const referenceTimestamp =
         ultimoPagoPorPaciente.get(patientId) ?? planMasViejoPorPaciente.get(patientId) ?? null;
-      const daysOverdue = referenceDate
-        ? Math.floor((ahora - new Date(referenceDate).getTime()) / (1000 * 60 * 60 * 24))
+      const daysOverdue = referenceTimestamp
+        ? Math.floor((ahora - new Date(referenceTimestamp).getTime()) / (1000 * 60 * 60 * 24))
         : null;
       return {
         patientId,
         patientName: nombrePorPaciente.get(patientId) ?? "Paciente sin nombre",
         balanceCents: b.billedCents - b.paidCents,
         currency,
-        referenceDate,
+        // `formatoFecha` (clinic-data.ts) solo parsea "YYYY-MM-DD" — un
+        // timestamptz completo ("...T05:05:42+00:00") le hace fallar el
+        // split y devuelve "—" en silencio. Se recorta acá, una sola vez,
+        // en vez de que cada pantalla que use este reporte tenga que
+        // acordarse de hacerlo.
+        referenceDate: referenceTimestamp ? referenceTimestamp.slice(0, 10) : null,
         daysOverdue,
         bucket: agingBucketFor(daysOverdue),
       };
