@@ -13,8 +13,9 @@
     "build:vercel": "NITRO_PRESET=vercel vite build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "types:gen": "supabase gen types typescript --project-id hvfkygoguxvpmwslrccb > src/integrations/supabase/types.ts",
-    "prepare": "husky"
+    "types:gen": "supabase gen types typescript --project-id hvfkygoguxvpmwslrccb > src/integrations/supabase/types.ts && prettier --write src/integrations/supabase/types.ts",
+    "prepare": "husky",
+    "types:check": "node scripts/check-types-drift.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs}": [
@@ -108,6 +109,7 @@
     "nitro": "3.0.260603-beta",
     "pg": "^8.22.0",
     "prettier": "^3.7.3",
+    "supabase": "^2.116.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^8.0.16",
