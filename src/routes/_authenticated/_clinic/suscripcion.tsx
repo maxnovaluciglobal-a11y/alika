@@ -11,7 +11,7 @@ import {
   createCheckoutSession,
   getMySubscription,
 } from "@/lib/billing.functions";
-import { SUBSCRIPTION_STATUS_LABELS, isSubscriptionActive, trialDaysLeft } from "@/lib/billing";
+import { SUBSCRIPTION_STATUS_LABELS, trialDaysLeft } from "@/lib/billing";
 import { approxLocalPricesLabel } from "@/lib/pricing-display";
 import { consumePlanIntent } from "@/lib/marketing/plan-intent";
 
@@ -120,29 +120,40 @@ function BillingPage() {
 
   const [plan, setPlan] = useState<PlanKey>("clinica");
   const daysLeft = trialDaysLeft(sub ?? null);
-  const active = isSubscriptionActive(sub ?? null);
+  // Deliberadamente NO usa `isSubscriptionActive` (billing.ts): esa función
+  // trata un trial vigente como "activo" porque para el resto de la app
+  // (gate de features) un trial sin vencer da acceso igual que una
+  // suscripción pagada. Acá la pregunta es otra — "¿ya está cobrando
+  // Stripe?" — y con ese criterio invertido, una clínica recién creada
+  // (trial fresco, sin stripeCustomerId) nunca mostraba ningún botón de
+  // pago: rompía en el último paso el flujo de "Comprar Alika X" del
+  // landing (ver plan-intent.ts), que depende de este mismo botón para
+  // saltar el trial. `yaFacturando` solo es `true` con una suscripción
+  // realmente pagada — un trial, vencido o no, deja ver el botón.
+  const yaFacturando = sub?.status === "active";
   const hasCustomer = Boolean(sub?.stripeCustomerId);
   const activePlan = planFromPriceId(sub?.stripePriceId ?? null);
   const activePlanInfo = activePlan ? PLANS[activePlan] : null;
 
   // "Comprar Alika X" del landing termina acá: auth → onboarding → esta
   // pantalla, con el plan elegido esperando en sessionStorage (ver
-  // `plan-intent.ts`). Una vez que sabemos que no hay suscripción activa
-  // (`isLoading` ya resolvió), lo consumimos UNA sola vez —
-  // `consumePlanIntent` lo borra al leerlo— para preseleccionar el plan y
-  // disparar el mismo botón de checkout que ya existía, sin que el usuario
-  // tenga que volver a elegir nada. Si la clínica ya tiene sub activa no
-  // dispara nada: no tiene sentido re-cobrar a alguien que ya pagó.
+  // `plan-intent.ts`). Una vez que sabemos si ya está pagando (`isLoading`
+  // ya resolvió), lo consumimos UNA sola vez — `consumePlanIntent` lo borra
+  // al leerlo— para preseleccionar el plan y disparar el mismo botón de
+  // checkout que ya existía, sin que el usuario tenga que volver a elegir
+  // nada. Si la clínica ya tiene una suscripción pagada no dispara nada: no
+  // tiene sentido re-cobrar a alguien que ya pagó (un trial vigente SÍ
+  // dispara — es justo a quien está apuntado este atajo).
   const intentoDisparado = useRef(false);
   useEffect(() => {
     if (intentoDisparado.current || isLoading) return;
     intentoDisparado.current = true;
     const planComprado = consumePlanIntent();
-    if (!planComprado || active) return;
+    if (!planComprado || yaFacturando) return;
     setPlan(planComprado);
     startCheckout.mutate(planComprado);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, active]);
+  }, [isLoading, yaFacturando]);
 
   return (
     <AppShell title="Suscripción" access={access}>
@@ -221,7 +232,7 @@ function BillingPage() {
               : "Al activar la suscripción vas a Stripe para dejar el método de pago. Puedes cancelar durante el trial y no te cobramos."}
           </p>
 
-          {!active && (
+          {!yaFacturando && (
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {(Object.entries(PLANS) as [PlanKey, (typeof PLANS)[PlanKey]][]).map(
                 ([key, info]) => (
@@ -257,7 +268,7 @@ function BillingPage() {
           )}
 
           <div className="mt-4 flex flex-wrap gap-3">
-            {!active ? (
+            {!yaFacturando ? (
               <button
                 type="button"
                 onClick={() => startCheckout.mutate(undefined)}
