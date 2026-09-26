@@ -33,6 +33,14 @@ import {
 } from "@/lib/patients/patients.functions";
 import { coincide, num, paginar, str } from "@/lib/search";
 import { cn } from "@/lib/utils";
+import { CsvColumnMapper } from "@/components/csv-column-mapper";
+import {
+  aplicarMapeo,
+  autoDetectMapping,
+  faltanCamposObligatorios,
+  parseCsvRaw,
+  type CsvFieldSpec,
+} from "@/lib/csv/column-mapping";
 
 interface PacientesSearch {
   q: string;
@@ -199,35 +207,40 @@ interface FilaCsv {
 
 const MAX_FILAS_IMPORT = 2000;
 
-/** "Fecha de Nacimiento" / "fecha_nacimiento" / "Fecha nacimiento" → fecha_nacimiento. */
-function normalizarHeader(h: string): string {
-  return h
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, "_");
-}
-
-const CAMPO_POR_HEADER: Record<string, keyof FilaCsv> = {
-  nombre: "nombre",
-  nombre_completo: "nombre",
-  documento: "documento",
-  rut: "documento",
-  dni: "documento",
-  documento_id: "documento",
-  fecha_nacimiento: "fechaNacimiento",
-  fecha_de_nacimiento: "fechaNacimiento",
-  nacimiento: "fechaNacimiento",
-  telefono: "telefono",
-  celular: "telefono",
-  email: "email",
-  correo: "email",
-  mail: "email",
-};
+/** Especificacion de columnas para el mapeo manual (recomendacion #5 del
+ *  benchmark de onboarding, 25-sep-2026) - ver src/lib/csv/column-mapping.ts.
+ *  Los alias cubren los exports mas comunes; cuando no alcanzan,
+ *  `CsvColumnMapper` deja elegir la columna a mano en vez de descartar
+ *  filas en silencio. */
+const CAMPOS_PACIENTE: CsvFieldSpec[] = [
+  {
+    key: "nombre",
+    label: "Nombre",
+    required: true,
+    aliases: ["nombre", "nombre_completo"],
+  },
+  {
+    key: "documento",
+    label: "Documento",
+    required: false,
+    aliases: ["documento", "rut", "dni", "documento_id"],
+  },
+  {
+    key: "fechaNacimiento",
+    label: "Fecha nacimiento",
+    required: false,
+    aliases: ["fecha_nacimiento", "fecha_de_nacimiento", "nacimiento"],
+  },
+  { key: "telefono", label: "Telefono", required: false, aliases: ["telefono", "celular"] },
+  { key: "email", label: "Email", required: false, aliases: ["email", "correo", "mail"] },
+];
 
 function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
   const [open, setOpen] = useState(false);
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [rawRows, setRawRows] = useState<Record<string, string>[]>([]);
+  const [mapeo, setMapeo] = useState<Record<string, string | null>>({});
+  const [necesitaMapeo, setNecesitaMapeo] = useState(false);
   const [filas, setFilas] = useState<FilaCsv[]>([]);
   const [sinNombre, setSinNombre] = useState(0);
   const [truncado, setTruncado] = useState(false);
@@ -239,6 +252,10 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
   const previewFn = useServerFn(previewImportPatients);
 
   const reset = () => {
+    setHeaders([]);
+    setRawRows([]);
+    setMapeo({});
+    setNecesitaMapeo(false);
     setFilas([]);
     setSinNombre(0);
     setTruncado(false);
@@ -246,38 +263,52 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
     setPreview(null);
   };
 
+  const construirFilas = (
+    mapping: Record<string, string | null>,
+    rows: Record<string, string>[],
+  ) => {
+    const mapeadas = aplicarMapeo(rows, mapping, CAMPOS_PACIENTE);
+    const parseadas: FilaCsv[] = [];
+    let sinNombreCount = 0;
+    for (const m of mapeadas) {
+      if (!m.nombre) {
+        sinNombreCount += 1;
+        continue;
+      }
+      parseadas.push({
+        nombre: m.nombre,
+        documento: m.documento || undefined,
+        fechaNacimiento: m.fechaNacimiento || undefined,
+        telefono: m.telefono || undefined,
+        email: m.email || undefined,
+      });
+    }
+    setSinNombre(sinNombreCount);
+    setTruncado(parseadas.length > MAX_FILAS_IMPORT);
+    setFilas(parseadas.slice(0, MAX_FILAS_IMPORT));
+    setNecesitaMapeo(false);
+  };
+
   const onFile = async (file: File) => {
     reset();
-    // Import dinámico: papaparse solo hace falta en esta acción puntual de
-    // onboarding (una vez por clínica), pero se cargaba estático y era la
-    // mayor parte del peso de /pacientes — la ruta que el staff abre más
-    // veces por día de toda la app (auditoría de rendimiento, 01-sep).
-    const { default: Papa } = await import("papaparse");
-    Papa.parse<Record<string, string>>(file, {
-      header: true,
-      skipEmptyLines: true,
-      transformHeader: normalizarHeader,
-      complete: (res) => {
-        const parseadas: FilaCsv[] = [];
-        let sinNombreCount = 0;
-        for (const row of res.data) {
-          const fila: FilaCsv = { nombre: "" };
-          for (const [header, valor] of Object.entries(row)) {
-            const campo = CAMPO_POR_HEADER[header];
-            if (campo && valor?.trim()) fila[campo] = valor.trim();
-          }
-          if (!fila.nombre) {
-            sinNombreCount += 1;
-            continue;
-          }
-          parseadas.push(fila);
-        }
-        setSinNombre(sinNombreCount);
-        setTruncado(parseadas.length > MAX_FILAS_IMPORT);
-        setFilas(parseadas.slice(0, MAX_FILAS_IMPORT));
-      },
-      error: (err) => toast.error("No pudimos leer el CSV: " + err.message),
-    });
+    // Import dinamico: papaparse solo hace falta en esta accion puntual de
+    // onboarding (una vez por clinica), pero se cargaba estatico y era la
+    // mayor parte del peso de /pacientes - la ruta que el staff abre mas
+    // veces por dia de toda la app (auditoria de rendimiento, 01-sep).
+    try {
+      const { headers: hs, rows } = await parseCsvRaw(file);
+      const auto = autoDetectMapping(hs, CAMPOS_PACIENTE);
+      setHeaders(hs);
+      setRawRows(rows);
+      setMapeo(auto);
+      if (faltanCamposObligatorios(auto, CAMPOS_PACIENTE)) {
+        setNecesitaMapeo(true);
+      } else {
+        construirFilas(auto, rows);
+      }
+    } catch (err) {
+      toast.error("No pudimos leer el CSV: " + (err instanceof Error ? err.message : String(err)));
+    }
   };
 
   const cargarPreview = useMutation({
@@ -320,7 +351,17 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
           </DialogDescription>
         </DialogHeader>
 
-        {!resultado && !preview && (
+        {!resultado && !preview && necesitaMapeo && (
+          <CsvColumnMapper
+            fields={CAMPOS_PACIENTE}
+            headers={headers}
+            sampleRow={rawRows[0]}
+            mapping={mapeo}
+            onChange={(key, header) => setMapeo((prev) => ({ ...prev, [key]: header }))}
+          />
+        )}
+
+        {!resultado && !preview && !necesitaMapeo && (
           <div className="space-y-3">
             <input
               type="file"
@@ -425,6 +466,13 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
                 Confirmar importación ({aCrear})
               </Button>
             </>
+          ) : necesitaMapeo ? (
+            <Button
+              onClick={() => construirFilas(mapeo, rawRows)}
+              disabled={faltanCamposObligatorios(mapeo, CAMPOS_PACIENTE)}
+            >
+              Continuar
+            </Button>
           ) : (
             <Button
               onClick={() => cargarPreview.mutate()}

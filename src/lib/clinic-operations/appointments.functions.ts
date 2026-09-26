@@ -276,7 +276,7 @@ export type Solapamiento = { treatmentLabel: string; startsAt: string; endsAt: s
  * excluye la propia cita del choque de solapamiento (no puede "chocar
  * consigo misma" al reprogramarse) — de ahí `excludeAppointmentId`.
  */
-async function validarHorarioYSolapamiento(
+export async function validarHorarioYSolapamiento(
   supabase: SupabaseClient<Database>,
   params: {
     clinicId: string;

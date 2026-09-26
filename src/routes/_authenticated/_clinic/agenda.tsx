@@ -3,11 +3,13 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  AlertTriangle,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   CircleAlert,
   Clock,
+  FileUp,
   Inbox,
   Loader2,
   Pencil,
@@ -70,6 +72,20 @@ import {
   updateAppointment,
   type Solapamiento,
 } from "@/lib/clinic-operations/appointments.functions";
+import {
+  importAppointments,
+  previewImportAppointments,
+  type ImportAppointmentPreviewRow,
+  type ImportAppointmentsResult,
+} from "@/lib/clinic-operations/appointments-import.functions";
+import { CsvColumnMapper } from "@/components/csv-column-mapper";
+import {
+  aplicarMapeo,
+  autoDetectMapping,
+  faltanCamposObligatorios,
+  parseCsvRaw,
+  type CsvFieldSpec,
+} from "@/lib/csv/column-mapping";
 import {
   createWaitlistEntry,
   listWaitlist,
@@ -982,6 +998,300 @@ function AgregarListaEsperaDialog({
   );
 }
 
+const IMPORT_APPT_MAX_FILAS = 1000;
+
+type FilaCitaCsv = {
+  documentoPaciente: string;
+  profesional?: string;
+  sucursal?: string;
+  fechaHora: string;
+  tratamiento: string;
+  duracionMin?: number;
+};
+
+/** Especificacion de columnas para el mapeo (recomendacion #5 del benchmark
+ *  de onboarding, 25-sep-2026): los alias cubren los exports mas comunes
+ *  (Dentalink, planillas propias); cuando el CSV real trae otra cosa,
+ *  `CsvColumnMapper` deja elegir la columna a mano - ver
+ *  src/lib/csv/column-mapping.ts para el diseno completo. */
+const CAMPOS_CITA: CsvFieldSpec[] = [
+  {
+    key: "documentoPaciente",
+    label: "Documento paciente",
+    required: true,
+    aliases: ["documento", "documento_paciente", "rut", "rut_paciente"],
+  },
+  {
+    key: "profesional",
+    label: "Profesional",
+    required: false,
+    aliases: ["profesional", "dentista", "doctor"],
+  },
+  { key: "sucursal", label: "Sucursal", required: false, aliases: ["sucursal"] },
+  {
+    key: "fechaHora",
+    label: "Fecha y hora",
+    required: true,
+    aliases: ["fecha_hora", "fechahora", "fecha"],
+  },
+  { key: "tratamiento", label: "Tratamiento", required: true, aliases: ["tratamiento", "motivo"] },
+  {
+    key: "duracionMin",
+    label: "Duracion (min)",
+    required: false,
+    aliases: ["duracion", "duracion_min"],
+  },
+];
+
+/** Importador CSV de citas futuras - recomendacion #4 del benchmark de
+ * onboarding (25-sep-2026). A diferencia de `ImportarPacientesDialog`, cada
+ * fila puede fallar por ambiguedad de matching (profesional/sucursal no
+ * encontrados o duplicados) - por eso el preview siempre muestra el motivo
+ * exacto de cada skip, nunca solo un conteo. */
+function ImportarCitasDialog({ clinicId }: { clinicId: string }) {
+  const [open, setOpen] = useState(false);
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [rawRows, setRawRows] = useState<Record<string, string>[]>([]);
+  const [mapeo, setMapeo] = useState<Record<string, string | null>>({});
+  const [necesitaMapeo, setNecesitaMapeo] = useState(false);
+  const [filas, setFilas] = useState<FilaCitaCsv[]>([]);
+  const [incompletas, setIncompletas] = useState(0);
+  const [truncado, setTruncado] = useState(false);
+  const [preview, setPreview] = useState<ImportAppointmentPreviewRow[] | null>(null);
+  const [resultado, setResultado] = useState<ImportAppointmentsResult | null>(null);
+  const queryClient = useQueryClient();
+
+  const previewFn = useServerFn(previewImportAppointments);
+  const importFn = useServerFn(importAppointments);
+
+  const reset = () => {
+    setHeaders([]);
+    setRawRows([]);
+    setMapeo({});
+    setNecesitaMapeo(false);
+    setFilas([]);
+    setIncompletas(0);
+    setTruncado(false);
+    setPreview(null);
+    setResultado(null);
+  };
+
+  const construirFilas = (
+    mapping: Record<string, string | null>,
+    rows: Record<string, string>[],
+  ) => {
+    const mapeadas = aplicarMapeo(rows, mapping, CAMPOS_CITA);
+    const parseadas: FilaCitaCsv[] = [];
+    let incompletasCount = 0;
+    for (const m of mapeadas) {
+      if (!m.documentoPaciente || !m.fechaHora || !m.tratamiento) {
+        incompletasCount += 1;
+        continue;
+      }
+      const n = m.duracionMin ? Number(m.duracionMin) : NaN;
+      parseadas.push({
+        documentoPaciente: m.documentoPaciente,
+        profesional: m.profesional || undefined,
+        sucursal: m.sucursal || undefined,
+        fechaHora: m.fechaHora,
+        tratamiento: m.tratamiento,
+        duracionMin: Number.isFinite(n) ? n : undefined,
+      });
+    }
+    setIncompletas(incompletasCount);
+    setTruncado(parseadas.length > IMPORT_APPT_MAX_FILAS);
+    setFilas(parseadas.slice(0, IMPORT_APPT_MAX_FILAS));
+    setNecesitaMapeo(false);
+  };
+
+  const onFile = async (file: File) => {
+    reset();
+    try {
+      const { headers: hs, rows } = await parseCsvRaw(file);
+      const auto = autoDetectMapping(hs, CAMPOS_CITA);
+      setHeaders(hs);
+      setRawRows(rows);
+      setMapeo(auto);
+      if (faltanCamposObligatorios(auto, CAMPOS_CITA)) {
+        setNecesitaMapeo(true);
+      } else {
+        construirFilas(auto, rows);
+      }
+    } catch (err) {
+      toast.error("No pudimos leer el CSV: " + (err instanceof Error ? err.message : String(err)));
+    }
+  };
+
+  const cargarPreview = useMutation({
+    mutationFn: () => previewFn({ data: { clinicId, rows: filas } }),
+    onSuccess: (res) => setPreview(res),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const importar = useMutation({
+    mutationFn: () => importFn({ data: { clinicId, rows: filas } }),
+    onSuccess: (res) => {
+      setResultado(res);
+      queryClient.invalidateQueries({ queryKey: ["appointments", clinicId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const aCrear = (preview ?? []).filter((p) => p.action === "create").length;
+  const aSaltear = (preview ?? []).filter((p) => p.action === "skip").length;
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) reset();
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <FileUp className="size-4" /> Importar citas
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Importar citas futuras desde CSV</DialogTitle>
+          <DialogDescription>
+            Columnas: documento_paciente, fecha_hora (AAAA-MM-DD HH:mm), tratamiento. profesional y
+            sucursal son obligatorias solo si la clínica tiene más de una — si hay una sola, se
+            asigna sola. El paciente tiene que existir ya (importalo primero desde /pacientes).
+          </DialogDescription>
+        </DialogHeader>
+
+        {!resultado && !preview && necesitaMapeo && (
+          <CsvColumnMapper
+            fields={CAMPOS_CITA}
+            headers={headers}
+            sampleRow={rawRows[0]}
+            mapping={mapeo}
+            onChange={(key, header) => setMapeo((prev) => ({ ...prev, [key]: header }))}
+          />
+        )}
+
+        {!resultado && !preview && !necesitaMapeo && (
+          <div className="space-y-3">
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void onFile(file);
+              }}
+              className="w-full rounded-lg border border-dashed border-hairline px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium"
+            />
+            {filas.length > 0 && (
+              <div className="rounded-lg border border-hairline p-3 text-xs text-muted-foreground">
+                <p>
+                  <strong className="text-foreground">{filas.length}</strong> cita
+                  {filas.length === 1 ? "" : "s"} lista{filas.length === 1 ? "" : "s"} para revisar.
+                  {incompletas > 0 &&
+                    ` ${incompletas} fila(s) sin documento/fecha/tratamiento se ignoraron.`}
+                </p>
+                {truncado && (
+                  <p className="mt-1 flex items-center gap-1 text-warning">
+                    <AlertTriangle className="size-3.5" /> El archivo tiene más de{" "}
+                    {IMPORT_APPT_MAX_FILAS} filas — se importarán solo las primeras{" "}
+                    {IMPORT_APPT_MAX_FILAS}.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!resultado && preview && (
+          <div className="space-y-2 rounded-lg border border-hairline p-3 text-sm">
+            <p>
+              <strong className="text-foreground">{aCrear}</strong> se van a crear
+              {aSaltear > 0 && (
+                <>
+                  {" "}
+                  · <strong className="text-muted-foreground">{aSaltear}</strong> se van a saltear
+                </>
+              )}
+              .
+            </p>
+            <ul className="max-h-56 space-y-1 overflow-y-auto text-xs text-muted-foreground">
+              {preview.map((p) => (
+                <li key={p.row} className={cn(p.action === "skip" && "line-through")}>
+                  Fila {p.row}: {p.documentoPaciente} · {p.fechaHora}
+                  {p.action === "create" && p.profesionalNombre && ` · ${p.profesionalNombre}`}
+                  {p.nota && (
+                    <span className={p.action === "skip" ? "text-destructive" : "text-warning"}>
+                      {" "}
+                      · {p.nota}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {resultado && (
+          <div className="space-y-2 rounded-lg border border-hairline p-3 text-sm">
+            <p>
+              <strong className="text-success">{resultado.created}</strong> citas importadas.
+            </p>
+            {resultado.skipped > 0 && (
+              <p className="text-muted-foreground">{resultado.skipped} se saltearon.</p>
+            )}
+            {resultado.warnings.length > 0 && (
+              <p className="text-warning">
+                {resultado.warnings.length} con choque de horario (se crearon igual).
+              </p>
+            )}
+            {resultado.errors.length > 0 && (
+              <p className="text-destructive">
+                {resultado.errors.length} lote(s) fallaron: {resultado.errors[0].message}
+              </p>
+            )}
+          </div>
+        )}
+
+        <DialogFooter>
+          {resultado ? (
+            <Button onClick={() => setOpen(false)}>Listo</Button>
+          ) : preview ? (
+            <>
+              <Button variant="outline" onClick={() => setPreview(null)}>
+                Volver
+              </Button>
+              <Button
+                onClick={() => importar.mutate()}
+                disabled={importar.isPending || aCrear === 0}
+              >
+                {importar.isPending && <Loader2 className="size-3.5 animate-spin" />}
+                Importar {aCrear} cita{aCrear === 1 ? "" : "s"}
+              </Button>
+            </>
+          ) : necesitaMapeo ? (
+            <Button
+              onClick={() => construirFilas(mapeo, rawRows)}
+              disabled={faltanCamposObligatorios(mapeo, CAMPOS_CITA)}
+            >
+              Continuar
+            </Button>
+          ) : (
+            <Button
+              onClick={() => cargarPreview.mutate()}
+              disabled={cargarPreview.isPending || filas.length === 0}
+            >
+              {cargarPreview.isPending && <Loader2 className="size-3.5 animate-spin" />}
+              Revisar
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function AgendaPage() {
   const { access } = Route.useRouteContext();
   const search = Route.useSearch();
@@ -1163,7 +1473,10 @@ function AgendaPage() {
   return (
     <AppShell title="Agenda" access={access}>
       <div className="space-y-6">
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-2">
+          {clinicId && hasPermission(access.role, "agenda:manage") && (
+            <ImportarCitasDialog clinicId={clinicId} />
+          )}
           {clinicId && hasPermission(access.role, "agenda:manage") && (
             <NuevaCitaDialog
               clinicId={clinicId}
