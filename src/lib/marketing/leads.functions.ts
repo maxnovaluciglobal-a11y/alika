@@ -423,6 +423,7 @@ export const escribirLeadEnBase = createServerOnlyFn(async function escribirLead
   let dbError: { message: string } | null = null;
   let filaEscrita: InfoDescarga | null = null;
   const existente = await buscarExistente(supabaseAdmin, email, phone);
+  const esNuevo = !existente;
 
   if (existente) {
     const { error, data: dataActualizada } = await actualizar(existente);
@@ -484,6 +485,23 @@ export const escribirLeadEnBase = createServerOnlyFn(async function escribirLead
   }
 
   if (dbError) throw new Error("No pudimos registrar tus datos. Probá de nuevo.");
+
+  // Antes de esto, un lead quedaba invisible salvo que alguien entrara a
+  // `/admin/leads` por las suyas — ver notify-lead.server.ts. `await` a
+  // propósito (no fire-and-forget): la función nunca lanza (try/catch propio),
+  // así que no hay riesgo de que un fallo de Resend rompa el alta del lead,
+  // y esperar evita que el proceso serverless se congele/mate la request
+  // antes de que el envío termine.
+  const { notificarNuevoLead } = await import("@/lib/marketing/notify-lead.server");
+  await notificarNuevoLead({
+    esNuevo,
+    source: data.source,
+    countryCode: data.countryCode,
+    name: fila.name,
+    clinicName: fila.clinic_name,
+    email: fila.email,
+    phone: fila.phone,
+  });
 
   // Task 13: el checklist gatea un PDF detrás de un token de descarga. El
   // resto de los canales (calculadora, benchmark) no tienen nada que
