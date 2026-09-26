@@ -2,12 +2,13 @@ import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarClock, CircleAlert, Lock, Sparkles } from "lucide-react";
+import { CalendarClock, Check, CircleAlert, Lock, Sparkles, Upload, UserPlus } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { PanelDesempeno } from "@/components/panel-desempeno";
 import { requirePermission } from "@/lib/access/route-guards";
 import { hasPermission } from "@/lib/access/access";
+import { listClinicMembers } from "@/lib/access/access.functions";
 import { AgendaGrid } from "@/components/agenda-grid";
 import { getMySubscription } from "@/lib/billing.functions";
 import { trialInformesBloqueados } from "@/lib/billing";
@@ -43,6 +44,68 @@ export const Route = createFileRoute("/_authenticated/_clinic/dashboard")({
 function horaDeCita(inicio: number) {
   const total = 8 * 60 + inicio;
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+type PasoActivacion = {
+  hecho: boolean;
+  label: string;
+  to: "/pacientes" | "/agenda" | "/equipo";
+  cta: string;
+  icon: typeof Upload;
+};
+
+/**
+ * Checklist de activación post-onboarding (recomendación #1 del benchmark de
+ * onboarding/migración vs. Dentalink/Curve/Dentrix, 25-sep-2026): la primera
+ * semana es la ventana crítica de abandono, y un progreso visible de 3 pasos
+ * concretos supera al wizard silencioso que ya termina en `/dashboard` sin
+ * indicar qué hacer después. Se auto-oculta apenas los 3 pasos están hechos
+ * — no hay botón de "cerrar" porque no hace falta: no vuelve a aparecer solo
+ * una vez que la clínica tiene pacientes, una cita y más de un integrante.
+ */
+function ChecklistActivacion({ pasos }: { pasos: PasoActivacion[] }) {
+  if (pasos.every((p) => p.hecho)) return null;
+  const hechos = pasos.filter((p) => p.hecho).length;
+
+  return (
+    <div className="card-clinical p-5">
+      <div className="mb-4 flex items-baseline justify-between gap-2">
+        <h2 className="font-display text-base font-semibold">Primeros pasos con Alika</h2>
+        <span className="text-xs text-muted-foreground">
+          {hechos}/{pasos.length} listos
+        </span>
+      </div>
+      <ul className="space-y-2.5">
+        {pasos.map((paso) => (
+          <li key={paso.to} className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span
+                className={cn(
+                  "flex size-6 shrink-0 items-center justify-center rounded-full",
+                  paso.hecho
+                    ? "bg-success-soft text-success"
+                    : "bg-secondary text-muted-foreground",
+                )}
+              >
+                {paso.hecho ? <Check className="size-3.5" /> : <paso.icon className="size-3.5" />}
+              </span>
+              <span className={cn("text-sm", paso.hecho && "text-muted-foreground line-through")}>
+                {paso.label}
+              </span>
+            </div>
+            {!paso.hecho && (
+              <Link
+                to={paso.to}
+                className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-secondary"
+              >
+                {paso.cta}
+              </Link>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 /**
@@ -135,6 +198,18 @@ function Dashboard() {
     queryFn: () => fetchProfessionals({ data: { clinicId: clinicId! } }),
   });
 
+  // Checklist de activación (benchmark de onboarding, 25-sep): reusa las
+  // queries que el dashboard ya hacía (pacientes, citas) y suma una sola
+  // query nueva (miembros del equipo) — nada de estado propio, se deriva de
+  // datos reales, así que desaparece solo apenas la clínica cumple los 3
+  // pasos, sin depender de que alguien lo cierre a mano.
+  const fetchMembers = useServerFn(listClinicMembers);
+  const { data: miembros = [] } = useQuery({
+    queryKey: ["clinic-members", clinicId],
+    enabled: Boolean(clinicId),
+    queryFn: () => fetchMembers({ data: { clinicId: clinicId! } }),
+  });
+
   const citasHoy = useMemo(() => citas.filter((c) => c.fecha === hoy), [citas, hoy]);
   const en7Dias = useMemo(() => {
     const limite = new Date(hoy);
@@ -187,9 +262,42 @@ function Dashboard() {
   // siendo del día, que es lo que usa el equipo en el mostrador.
   const primerDiaDelMes = `${hoy.slice(0, 7)}-01`;
 
+  const pasosActivacion: PasoActivacion[] = [
+    {
+      hecho: pacientes.length > 0,
+      label: "Importa o carga tu primer paciente",
+      to: "/pacientes",
+      cta: "Ir a pacientes",
+      icon: Upload,
+    },
+    {
+      // `citas` solo trae hoy..+30 días (ver comentario más arriba) — una
+      // clínica que agendó una cita fuera de esa ventana igual la ve
+      // reflejada acá porque para eso ya tuvo que crearla desde adentro de
+      // Alika. Heurística suficiente para un checklist, no una métrica de
+      // auditoría (esa vive en /admin/clinicas, con la fecha real de
+      // `appointments.created_at`).
+      hecho: citas.length > 0,
+      label: "Agenda tu primera cita",
+      to: "/agenda",
+      cta: "Ir a la agenda",
+      icon: CalendarClock,
+    },
+    {
+      // El owner ya cuenta como 1 — "invitaste al equipo" recién es cierto
+      // con un segundo integrante.
+      hecho: miembros.length > 1,
+      label: "Invita a alguien más de tu equipo",
+      to: "/equipo",
+      cta: "Invitar",
+      icon: UserPlus,
+    },
+  ];
+
   return (
     <AppShell title="Vista de clínica" access={access}>
       <div className="space-y-8">
+        {clinicId && access.role === "owner" && <ChecklistActivacion pasos={pasosActivacion} />}
         {clinicId && hasPermission(access.role, "finance:view") && (
           <section className="space-y-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">

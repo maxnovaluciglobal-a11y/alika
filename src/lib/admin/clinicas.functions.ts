@@ -29,7 +29,30 @@ export type ClinicaStaffRow = {
   subscriptionStatus: string | null;
   trialEnd: string | null;
   onboardingCallAt: string | null;
+  /** Métrica de activación (benchmark de onboarding, 25-sep): fecha de la
+   *  PRIMERA cita real que se creó en esta clínica, o `null` si todavía no
+   *  agendó ninguna. Derivada de `appointments.created_at` — sin tabla ni
+   *  evento nuevo, para no necesitar una migración de schema. */
+  firstAppointmentAt: string | null;
 };
+
+const VENTANA_ACTIVACION_HORAS = 72;
+
+/** `true` si la clínica agendó su primera cita dentro de las 72h de darse de
+ *  alta — la métrica de activación de la recomendación #7 del benchmark de
+ *  onboarding. `null` (no `false`) cuando todavía no hay dato suficiente
+ *  (sin cita) para no mostrar una cruz roja a una clínica de ayer que puede
+ *  activarse mañana — mismo criterio que los placeholders nullable del
+ *  CLAUDE.md (regla 11: no fabricar un valor falso cuando no hay dato). */
+export function activadaEn72h(
+  createdAt: string,
+  firstAppointmentAt: string | null,
+): boolean | null {
+  if (!firstAppointmentAt) return null;
+  const horas =
+    (new Date(firstAppointmentAt).getTime() - new Date(createdAt).getTime()) / 3_600_000;
+  return horas >= 0 && horas <= VENTANA_ACTIVACION_HORAS;
+}
 
 /** Clínicas + su suscripción + si ya se hizo la llamada de puesta en marcha.
  *  Dos queries + Map en vez de un embedded `select('subscriptions(...)')` —
@@ -57,6 +80,26 @@ export const listClinicsForStaff = createServerFn({ method: "GET" })
 
     const subPorClinica = new Map((subs ?? []).map((s) => [s.clinic_id, s]));
 
+    // Primera cita por clínica: reducido en memoria en vez de una agregación
+    // SQL (GROUP BY MIN) porque supabase-js no la expresa directo y esta
+    // pantalla es interna/de pocas filas — no vale la pena un RPC nuevo para
+    // esto. Ordenado ascendente para que la primera aparición de cada
+    // `clinic_id` en el Map ya sea la más antigua.
+    const { data: primerasCitas } = clinicIds.length
+      ? await supabaseAdmin
+          .from("appointments")
+          .select("clinic_id, created_at")
+          .in("clinic_id", clinicIds)
+          .order("created_at", { ascending: true })
+      : { data: [] as { clinic_id: string; created_at: string }[] };
+
+    const primeraCitaPorClinica = new Map<string, string>();
+    for (const a of primerasCitas ?? []) {
+      if (!primeraCitaPorClinica.has(a.clinic_id)) {
+        primeraCitaPorClinica.set(a.clinic_id, a.created_at);
+      }
+    }
+
     return (clinics ?? []).map((c) => {
       const sub = subPorClinica.get(c.id);
       return {
@@ -66,6 +109,7 @@ export const listClinicsForStaff = createServerFn({ method: "GET" })
         subscriptionStatus: sub?.status ?? null,
         trialEnd: sub?.trial_end ?? null,
         onboardingCallAt: c.onboarding_call_at,
+        firstAppointmentAt: primeraCitaPorClinica.get(c.id) ?? null,
       };
     });
   });

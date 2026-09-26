@@ -12,6 +12,23 @@ function yyyymmddInTz(date: Date, timeZone: string): string {
 }
 
 /**
+ * Freno anti-ráfaga (hallazgo de la auditoría de service_role, 25-sep): esta
+ * función es pública y sin sesión a propósito, así que cualquiera puede
+ * llamarla en loop. El chequeo `lastReset === today` de abajo ya la vuelve
+ * un no-op el 99.9% del día — el único hueco real es la ventana de la
+ * medianoche de `DEMO_TIMEZONE`, donde varias requests concurrentes podrían
+ * pasar el chequeo antes de que la primera termine el DELETE+INSERT y
+ * disparar el RPC más de una vez en simultáneo. Este cooldown en memoria
+ * cierra ESE hueco específico — no es un rate limit general (eso ya lo
+ * cubre el chequeo por fecha) y es por-instancia, no distribuido (Vercel
+ * puede tener varias instancias tibias a la vez), pero alcanza porque el
+ * impacto de una carrera ganada es solo "la demo se resetea dos veces
+ * seguidas", nunca tocar datos de un tenant real — `DEMO_CLINIC_ID` es fijo.
+ */
+const COOLDOWN_MS = 60_000;
+let ultimoIntentoDeReset = 0;
+
+/**
  * Auto-reset de la clínica demo bajo demanda: el cron diario de Vercel
  * (vercel.json) llama a `/api/demo-reset`, pero depende de que
  * CRON_SECRET esté configurado — si no lo está (o el cron falla por
@@ -39,6 +56,10 @@ export const ensureDemoClinicFresh = createServerFn({ method: "POST" }).handler(
     : null;
 
   if (lastReset === today) return { reset: false };
+
+  const ahora = Date.now();
+  if (ahora - ultimoIntentoDeReset < COOLDOWN_MS) return { reset: false };
+  ultimoIntentoDeReset = ahora;
 
   const { error } = await supabaseAdmin.rpc("reset_demo_clinic");
   if (error) {

@@ -16,10 +16,11 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Phone, PhoneCall } from "lucide-react";
+import { CalendarCheck, Phone, PhoneCall } from "lucide-react";
 
 import { AlikaLogo } from "@/components/alika-logo";
 import {
+  activadaEn72h,
   listClinicsForStaff,
   marcarLlamadaHecha,
   type ClinicaStaffRow,
@@ -116,6 +117,31 @@ function comoSubscription(row: ClinicaStaffRow): Subscription | null {
   };
 }
 
+/** Métrica de activación del benchmark de onboarding (25-sep): sin cita
+ *  todavía no es una cruz roja (puede activarse mañana), solo "sin dato" —
+ *  ver `activadaEn72h` en clinicas.functions.ts para el porqué del `null`. */
+function Activacion({ row }: { row: ClinicaStaffRow }) {
+  if (!row.firstAppointmentAt) {
+    return <span className="text-xs text-muted-foreground">Sin cita todavía</span>;
+  }
+  const activada = activadaEn72h(row.createdAt, row.firstAppointmentAt);
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span
+        className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
+          activada ? "bg-success-soft text-success" : "bg-secondary text-muted-foreground"
+        }`}
+      >
+        <CalendarCheck className="size-3" />
+        {activada ? "Activada en <72h" : "Activada, pero después de 72h"}
+      </span>
+      <span className="whitespace-nowrap font-mono text-[11px] text-muted-foreground">
+        {formatFechaHora(row.firstAppointmentAt)}
+      </span>
+    </div>
+  );
+}
+
 function EstadoSuscripcion({ row }: { row: ClinicaStaffRow }) {
   const sub = comoSubscription(row);
   if (!sub) {
@@ -198,6 +224,7 @@ function AdminClinicasPage() {
                     <th className="px-4 py-2 text-left font-medium">Clínica</th>
                     <th className="px-3 py-2 text-left font-medium">Alta</th>
                     <th className="px-3 py-2 text-left font-medium">Suscripción</th>
+                    <th className="px-3 py-2 text-left font-medium">Activación</th>
                     <th className="px-3 py-2 text-left font-medium">Llamada de puesta en marcha</th>
                     <th className="px-3 py-2 text-right font-medium">Acción</th>
                   </tr>
@@ -211,6 +238,9 @@ function AdminClinicasPage() {
                       </td>
                       <td className="px-3 py-2">
                         <EstadoSuscripcion row={row} />
+                      </td>
+                      <td className="px-3 py-2">
+                        <Activacion row={row} />
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
                         {row.onboardingCallAt ? (
