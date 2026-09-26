@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
 import { Loader2 } from "lucide-react";
 
 import { getSupabase } from "@/integrations/supabase/lazy";
+import { peekPlanIntent } from "@/lib/marketing/plan-intent";
 
 function GoogleIcon() {
   return (
@@ -28,6 +29,13 @@ function GoogleIcon() {
 }
 
 export const Route = createFileRoute("/auth")({
+  // Opcional a propósito: si `signup` fuera requerido, TanStack Router exige
+  // `search={{ signup: ... }}` en TODO `<Link to="/auth">` del repo (varios,
+  // sin relación con "comprar"). Con `?: boolean` sigue siendo type-safe pero
+  // nadie más tiene que enterarse de este parámetro nuevo.
+  validateSearch: (search: Record<string, unknown>): { signup?: boolean } => ({
+    signup: search.signup === "1" || search.signup === true || undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Acceder a Alika — Gestión odontológica" },
@@ -52,7 +60,8 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const router = useRouter();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const { signup } = Route.useSearch();
+  const [mode, setMode] = useState<"signin" | "signup">(signup ? "signup" : "signin");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -74,7 +83,9 @@ function AuthPage() {
         data: { subscription },
       } = supabase.auth.onAuthStateChange((event) => {
         if (event === "SIGNED_IN") {
-          router.invalidate().then(() => navigate({ to: "/dashboard" }));
+          router
+            .invalidate()
+            .then(() => navigate({ to: peekPlanIntent() ? "/suscripcion" : "/dashboard" }));
         }
       });
       desuscribir = () => subscription.unsubscribe();
@@ -91,7 +102,9 @@ function AuthPage() {
       if (window.location.hash.includes("access_token")) {
         void supabase.auth.getSession().then(({ data }) => {
           if (cancelado || !data.session) return;
-          router.invalidate().then(() => navigate({ to: "/dashboard" }));
+          router
+            .invalidate()
+            .then(() => navigate({ to: peekPlanIntent() ? "/suscripcion" : "/dashboard" }));
         });
       }
     });
@@ -141,7 +154,7 @@ function AuthPage() {
           setMessage("Cuenta creada. Revisa tu correo para confirmarla y luego inicia sesión.");
         } else {
           await router.invalidate();
-          navigate({ to: "/dashboard" });
+          navigate({ to: peekPlanIntent() ? "/suscripcion" : "/dashboard" });
         }
       }
     } else {
@@ -150,7 +163,7 @@ function AuthPage() {
         setError(signInError.message);
       } else {
         await router.invalidate();
-        navigate({ to: "/dashboard" });
+        navigate({ to: peekPlanIntent() ? "/suscripcion" : "/dashboard" });
       }
     }
 

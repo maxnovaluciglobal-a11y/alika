@@ -7,6 +7,7 @@ import { Check, Loader2, Plus, Trash2 } from "lucide-react";
 import { completeClinicSetup, getMyClinics } from "@/lib/onboarding.functions";
 import { COUNTRIES, SPECIALTY_PRESETS } from "@/lib/onboarding-types";
 import { cn } from "@/lib/utils";
+import { peekPlanIntent } from "@/lib/marketing/plan-intent";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
@@ -103,7 +104,13 @@ function OnboardingPage() {
             .map((p) => ({ ...p })),
         },
       }),
-    onSuccess: () => navigate({ to: "/dashboard" }),
+    onSuccess: () => {
+      // No consumimos acá (borra recién en /suscripcion): si el checkout
+      // automático de esa pantalla falla o el usuario navega antes de que
+      // dispare, la intención de compra sigue viva para el próximo intento.
+      const plan = peekPlanIntent();
+      navigate({ to: plan ? "/suscripcion" : "/dashboard" });
+    },
     onError: (err: Error) => setError(err.message),
   });
 

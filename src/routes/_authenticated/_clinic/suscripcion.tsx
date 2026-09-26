@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -13,6 +13,7 @@ import {
 } from "@/lib/billing.functions";
 import { SUBSCRIPTION_STATUS_LABELS, isSubscriptionActive, trialDaysLeft } from "@/lib/billing";
 import { approxLocalPricesLabel } from "@/lib/pricing-display";
+import { consumePlanIntent } from "@/lib/marketing/plan-intent";
 
 export const Route = createFileRoute("/_authenticated/_clinic/suscripcion")({
   head: () => ({
@@ -83,12 +84,17 @@ function BillingPage() {
   });
 
   const startCheckout = useMutation({
-    mutationFn: async () => {
+    // Acepta un plan explícito para el disparo automático desde "Comprar
+    // Alika X" del landing (ver efecto de plan-intent más abajo) — ahí no
+    // podemos depender de que `setPlan` ya haya re-renderizado antes de
+    // llamar a `.mutate()`. El botón manual de abajo sigue llamando
+    // `.mutate()` sin argumento, que cae al `plan` seleccionado en pantalla.
+    mutationFn: async (planOverride?: PlanKey) => {
       const origin = window.location.origin;
       const { url } = await checkout({
         data: {
           clinicId,
-          plan,
+          plan: planOverride ?? plan,
           successUrl: `${origin}/suscripcion?checkout=success`,
           cancelUrl: `${origin}/suscripcion?checkout=cancel`,
         },
@@ -118,6 +124,25 @@ function BillingPage() {
   const hasCustomer = Boolean(sub?.stripeCustomerId);
   const activePlan = planFromPriceId(sub?.stripePriceId ?? null);
   const activePlanInfo = activePlan ? PLANS[activePlan] : null;
+
+  // "Comprar Alika X" del landing termina acá: auth → onboarding → esta
+  // pantalla, con el plan elegido esperando en sessionStorage (ver
+  // `plan-intent.ts`). Una vez que sabemos que no hay suscripción activa
+  // (`isLoading` ya resolvió), lo consumimos UNA sola vez —
+  // `consumePlanIntent` lo borra al leerlo— para preseleccionar el plan y
+  // disparar el mismo botón de checkout que ya existía, sin que el usuario
+  // tenga que volver a elegir nada. Si la clínica ya tiene sub activa no
+  // dispara nada: no tiene sentido re-cobrar a alguien que ya pagó.
+  const intentoDisparado = useRef(false);
+  useEffect(() => {
+    if (intentoDisparado.current || isLoading) return;
+    intentoDisparado.current = true;
+    const planComprado = consumePlanIntent();
+    if (!planComprado || active) return;
+    setPlan(planComprado);
+    startCheckout.mutate(planComprado);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, active]);
 
   return (
     <AppShell title="Suscripción" access={access}>
@@ -235,7 +260,7 @@ function BillingPage() {
             {!active ? (
               <button
                 type="button"
-                onClick={() => startCheckout.mutate()}
+                onClick={() => startCheckout.mutate(undefined)}
                 disabled={startCheckout.isPending}
                 className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
               >

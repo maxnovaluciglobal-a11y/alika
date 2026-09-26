@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { approxLocalPricesLabel } from "@/lib/pricing-display";
 import { canonicalHead } from "@/lib/seo";
+import { setPlanIntent, type PlanIntent } from "@/lib/marketing/plan-intent";
 
 export const Route = createFileRoute("/")({
   head: () => {
@@ -262,6 +263,10 @@ const faqs = [
   {
     q: "¿Es complicado? No soy técnico.",
     a: "Si sabes usar WhatsApp, sabes usar Alika. Configuras tu clínica en una tarde, y puedes probar la demo ahora mismo sin registrarte.",
+  },
+  {
+    q: "Ya uso otro sistema (o una planilla). ¿Tengo que migrar todo de una?",
+    a: "No. Importás tus pacientes por Excel en minutos y podés correr los dos sistemas en paralelo mientras probás Alika con casos reales — recién cuando confíes, dejás el anterior. Nadie te apura a cortar de golpe.",
   },
   {
     q: "¿Mi equipo lo va a usar?",
@@ -580,6 +585,7 @@ function Landing() {
                   {approxLocalPricesLabel(29)}{" "}
                   <span className="italic">(referencial, el cobro es en USD)</span>
                 </p>
+                <ComprarPlanLink plan="solo" className="mt-4 border-border hover:bg-secondary" />
               </div>
               <div className="relative rounded-2xl border-2 border-clay-strong bg-clay-soft p-6 pt-8 text-left">
                 <span className="absolute -top-3 left-6 rounded-full bg-clay-strong px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-clay-soft">
@@ -597,6 +603,10 @@ function Landing() {
                   {approxLocalPricesLabel(69)}{" "}
                   <span className="italic">(referencial, el cobro es en USD)</span>
                 </p>
+                <ComprarPlanLink
+                  plan="clinica"
+                  className="mt-4 border-clay-strong bg-clay-strong text-clay-soft hover:opacity-90"
+                />
               </div>
             </div>
             <p className="mx-auto mt-5 max-w-lg text-xs text-muted-foreground">
@@ -685,6 +695,31 @@ function Landing() {
 
       <SiteFooter />
     </div>
+  );
+}
+
+/**
+ * CTA de compra directa por tarjeta de precio. Alika es trial-first (no hay
+ * checkout público sin cuenta — `createCheckoutSession` necesita un
+ * `clinicId` real), así que "comprar" acá significa: guardar qué plan eligió
+ * ANTES de mandarlo a crear la cuenta, para que auth → onboarding →
+ * suscripción lo lleven derecho al checkout de Stripe sin que tenga que
+ * volver a elegir el plan ni encontrar el botón de pago por su cuenta (ver
+ * `src/lib/marketing/plan-intent.ts`).
+ */
+function ComprarPlanLink({ plan, className }: { plan: PlanIntent; className?: string }) {
+  return (
+    <Link
+      to="/auth"
+      search={{ signup: true }}
+      onClick={() => setPlanIntent(plan)}
+      className={cn(
+        "mt-4 flex items-center justify-center rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors",
+        className,
+      )}
+    >
+      Comprar Alika {plan === "solo" ? "Solo" : "Clínica"}
+    </Link>
   );
 }
 
