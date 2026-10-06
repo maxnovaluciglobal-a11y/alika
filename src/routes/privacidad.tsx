@@ -195,8 +195,8 @@ function Privacidad() {
         enviaste o el último mensaje que nos escribiste) si no llegaste a ser cliente: pasado ese
         plazo, borramos el contacto completo — email, teléfono, nombre y los rangos.{" "}
         <strong>Hoy ese borrado no es automático</strong> — no hay un proceso que lo ejecute solo
-        cuando se cumple el plazo, lo hacemos a mano. Si querés asegurarte de que se cumplió, o
-        pedirlo antes de los 24 meses, escribinos (ver &quot;Cómo te das de baja&quot; abajo) en vez
+        cuando se cumple el plazo, lo hacemos a mano. Si quieres asegurarte de que se cumplió, o
+        pedirlo antes de los 24 meses, escríbenos (ver &quot;Cómo te das de baja&quot; abajo) en vez
         de asumir que ya pasó.
       </LegalP>
       <LegalP>

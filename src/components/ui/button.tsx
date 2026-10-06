@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 // transparente) y nunca va relleno; el secundario lleva filete; el ghost es
 // solo texto. La tipografía de los botones es la de títulos (Cormorant 600).
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-transparent font-display text-[15px] font-semibold leading-none cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:pointer-events-none disabled:opacity-45 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border font-display text-[15px] font-semibold leading-none cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:pointer-events-none disabled:opacity-45 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -19,8 +19,8 @@ const buttonVariants = cva(
           "border-border bg-transparent text-foreground hover:bg-foreground/7 active:bg-foreground/14",
         secondary:
           "border-border bg-transparent text-foreground hover:bg-foreground/7 active:bg-foreground/14",
-        ghost: "text-foreground hover:bg-accent hover:text-accent-foreground",
-        link: "h-auto px-0 text-brand-700 underline-offset-4 hover:underline",
+        ghost: "border-transparent text-foreground hover:bg-accent hover:text-accent-foreground",
+        link: "h-auto border-transparent px-0 text-brand-700 underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2",

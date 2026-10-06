@@ -1,0 +1,19 @@
+// src/lib/marketing/contacto.ts
+//
+// Contacto comercial del sitio público. El número de WhatsApp de ventas es
+// público (no es un secreto) y se carga como `VITE_SALES_WHATSAPP` en Vercel;
+// mientras no exista, los CTA de WhatsApp caen al email de contacto en vez de
+// fingir un chat que no abre.
+import { buildWaMeUrl } from "@/lib/messaging/messaging";
+
+export const EMAIL_CONTACTO = "maxnovaluciglobal@gmail.com";
+
+const MENSAJE_INICIAL = "Hola, quiero conocer Alika para mi clínica.";
+
+export function enlaceWhatsAppVentas(): { href: string; esWhatsApp: boolean } {
+  const numero = import.meta.env.VITE_SALES_WHATSAPP as string | undefined;
+  const url = numero ? buildWaMeUrl(numero, MENSAJE_INICIAL) : null;
+  return url
+    ? { href: url, esWhatsApp: true }
+    : { href: `mailto:${EMAIL_CONTACTO}`, esWhatsApp: false };
+}

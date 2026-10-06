@@ -2,6 +2,9 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { AlikaLogo } from "@/components/alika-logo";
+import { buttonVariants } from "@/components/ui/button";
+import { EMAIL_CONTACTO, enlaceWhatsAppVentas } from "@/lib/marketing/contacto";
+import { registrarEvento } from "@/lib/marketing/eventos";
 import { cn } from "@/lib/utils";
 
 /** Header compartido por la landing y las páginas de contenido (legal/FAQ/docs).
@@ -15,38 +18,56 @@ import { cn } from "@/lib/utils";
  * correcto igual si alguna vez alguien imprime cualquier otra página. */
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md print:hidden">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-        <Link to="/" className="flex items-center gap-2">
-          <AlikaLogo size={32} />
-          <span className="font-display text-xl font-bold tracking-tight text-foreground">
+    <header className="sticky top-0 z-30 border-b border-hairline bg-background/90 backdrop-blur-sm print:hidden">
+      <nav
+        aria-label="Principal"
+        className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3"
+      >
+        <Link to="/" className="flex items-center gap-2.5">
+          <AlikaLogo size={30} />
+          <span className="font-display text-2xl font-semibold leading-none text-foreground">
             Alika
           </span>
         </Link>
-        <div className="flex items-center gap-1.5">
+        <ul className="hidden items-center gap-1 md:flex">
+          {navLinks.map((l) => (
+            <li key={l.label}>
+              <a
+                href={l.href}
+                className="rounded-md px-3 py-2 text-sm text-foreground/80 transition-colors hover:text-brand-700"
+              >
+                {l.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+        <div className="flex items-center gap-1">
+          <Link
+            to="/auth"
+            className="rounded-md px-3 py-2 text-sm text-foreground/80 transition-colors hover:text-brand-700"
+          >
+            Ingresar
+          </Link>
           <a
             href="/demo"
-            className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            onClick={() => registrarEvento("cta_click", { cta: "demo", lugar: "nav" })}
+            className={buttonVariants({ size: "sm" })}
           >
-            Ver demo
+            Ver la demo
           </a>
-          <Link
-            to="/auth"
-            className="hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:block"
-          >
-            Entrar
-          </Link>
-          <Link
-            to="/auth"
-            className="rounded-lg bg-foreground px-4 py-2 text-sm font-semibold text-background transition-opacity hover:opacity-90"
-          >
-            Empieza gratis
-          </Link>
         </div>
-      </div>
+      </nav>
     </header>
   );
 }
+
+/** Anclas a la home: desde otras páginas públicas también llevan a la sección. */
+const navLinks = [
+  { label: "Producto", href: "/#producto" },
+  { label: "Precios", href: "/#precios" },
+  { label: "Calculadora", href: "/#calculadora" },
+  { label: "Recursos", href: "/recursos/fugas-clinica-dental" },
+] as const;
 
 type FooterLink =
   | {
@@ -93,16 +114,12 @@ const footerColumns: { t: string; links: FooterLink[] }[] = [
     t: "Empresa",
     links: [
       { label: "Quiénes somos", kind: "route", to: "/nosotros" },
-      { label: "Contacto", kind: "external", href: "mailto:maxnovaluciglobal@gmail.com" },
-      // TODO(walter): sin número de WhatsApp real documentado en el repo,
-      // este link cae al mismo mailto de contacto como fallback consciente.
-      // Cuando haya un número de soporte, cambiar a buildWaMeUrl(...) (ver
-      // src/lib/messaging.ts) para abrir wa.me de verdad.
-      {
-        label: "WhatsApp",
-        kind: "external",
-        href: "mailto:maxnovaluciglobal@gmail.com",
-      },
+      { label: "Contacto", kind: "external", href: `mailto:${EMAIL_CONTACTO}` },
+      // Solo aparece con `VITE_SALES_WHATSAPP` cargado: sin número, "Contacto"
+      // ya cubre el email y un link "WhatsApp" que abre el correo engaña.
+      ...(enlaceWhatsAppVentas().esWhatsApp
+        ? [{ label: "WhatsApp", kind: "external" as const, href: enlaceWhatsAppVentas().href }]
+        : []),
     ],
   },
   {
@@ -123,9 +140,7 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-14 sm:grid-cols-4">
         {footerColumns.map((col) => (
           <div key={col.t}>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {col.t}
-            </p>
+            <p className="kicker">{col.t}</p>
             <ul className="mt-4 space-y-2.5">
               {col.links.map((l) => (
                 <li key={l.label}>
@@ -153,8 +168,8 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-6 py-6">
         <div className="flex flex-col items-center justify-between gap-4 border-t border-hairline pt-6 text-sm text-muted-foreground sm:flex-row">
           <span className="flex items-center gap-2">
-            <AlikaLogo size={24} className="rounded-md" />
-            <span className="font-display font-bold text-foreground">Alika</span>
+            <AlikaLogo size={24} />
+            <span className="font-display text-lg font-semibold text-foreground">Alika</span>
           </span>
           <span className="flex items-center gap-1.5 text-xs">
             Software de gestión dental · Hecho para Latinoamérica

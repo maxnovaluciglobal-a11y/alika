@@ -109,9 +109,9 @@ const FUGAS: Fuga[] = [
     numero: 4,
     titulo: "La comisión de la tarjeta que se descuenta sola",
     descripcion:
-      "Débito y crédito retienen un porcentaje de cada cobro antes de que ese dinero te llegue. Si tus precios se fijaron sin contar esa retención, la estás pagando vos, no el paciente.",
+      "Débito y crédito retienen un porcentaje de cada cobro antes de que ese dinero te llegue. Si tus precios se fijaron sin contar esa retención, la estás pagando tú, no el paciente.",
     pregunta:
-      "¿El precio de tus tratamientos ya contempla la retención del medio de pago, o la descubrís recién cuando llega la liquidación?",
+      "¿El precio de tus tratamientos ya contempla la retención del medio de pago, o la descubres recién cuando llega la liquidación?",
   },
   {
     numero: 5,
@@ -119,7 +119,7 @@ const FUGAS: Fuga[] = [
     descripcion:
       "Cada aseguradora o convenio corporativo suele pagar un porcentaje distinto sobre el mismo procedimiento. Liquidar de memoria, sin dejar registrado qué porcentaje le tocaba a cada paciente, es la forma más fácil de cobrar de más o de menos sin darte cuenta.",
     pregunta:
-      "Si tuvieras que liquidar hoy un convenio de hace dos meses, ¿tenés el dato de qué porcentaje correspondía a cada paciente, o hay que reconstruirlo?",
+      "Si tuvieras que liquidar hoy un convenio de hace dos meses, ¿tienes el dato de qué porcentaje correspondía a cada paciente, o hay que reconstruirlo?",
   },
   {
     numero: 6,
@@ -127,7 +127,7 @@ const FUGAS: Fuga[] = [
     descripcion:
       "Sin una fecha de envío y un costo por orden registrados en algún lado, no hay forma de saber si un trabajo se está demorando más de lo normal ni cuánto te está costando de verdad ese procedimiento.",
     pregunta:
-      "¿Podés decir hoy cuánto gastaste en laboratorio el mes pasado sin sumar facturas a mano?",
+      "¿Puedes decir hoy cuánto gastaste en laboratorio el mes pasado sin sumar facturas a mano?",
   },
   {
     numero: 7,
@@ -175,7 +175,7 @@ const FUGAS: Fuga[] = [
     descripcion:
       "Un paciente que terminó su tratamiento y no vuelve al control de rutina a los 6 o 12 meses no manda ninguna señal: no cancela nada, simplemente deja de aparecer. Sin una lista de a quién le toca volver, se pierde de vista.",
     pregunta:
-      "¿Tenés una lista de pacientes a los que ya les toca su control, y hace cuánto no la revisás?",
+      "¿Tienes una lista de pacientes a los que ya les toca su control, y hace cuánto no la revisas?",
   },
   {
     numero: 13,
@@ -191,7 +191,7 @@ const FUGAS: Fuga[] = [
     descripcion:
       "Facturar mucho no es lo mismo que ganar mucho: un tratamiento de ticket alto que consume mucho tiempo de sillón, insumos caros y laboratorio puede dejarte menos margen real que uno más chico y simple. Sin comparar ingreso contra costo por profesional o por tipo de procedimiento, esa diferencia queda invisible.",
     pregunta:
-      "¿Podés decir hoy qué profesional o qué tipo de tratamiento te deja más margen real, o sólo sabés cuál factura más?",
+      "¿Puedes decir hoy qué profesional o qué tipo de tratamiento te deja más margen real, o solo sabes cuál factura más?",
   },
   {
     numero: 15,
@@ -331,7 +331,7 @@ function FugasClinicaDental() {
       <LegalH2>¿Marcaste varias?</LegalH2>
       <LegalP>
         Es lo normal — casi ninguna clínica llega a diez minutos de auditoría sin encontrarse en
-        varias de estas quince. Dejanos tu contacto y nos ponemos en contacto para ayudarte a mirar,
+        varias de estas quince. Déjanos tu contacto y nos ponemos en contacto para ayudarte a mirar,
         de todas las que marcaste, cuál conviene resolver primero.
       </LegalP>
 

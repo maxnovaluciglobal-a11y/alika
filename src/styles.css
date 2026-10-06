@@ -276,6 +276,9 @@
     font-family: var(--font-body);
     font-size: 15px;
     line-height: 1.55;
+    /* Cormorant trae cifras de estilo antiguo por defecto ("14" se lee
+       "I4"): en una app de agenda y caja las cifras van siempre alineadas. */
+    font-feature-settings: "lnum" 1;
     -webkit-font-smoothing: antialiased;
   }
 

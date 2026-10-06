@@ -43,3 +43,24 @@ export function approxLocalPricesLabel(usd: number): string {
   const cop = roundApprox(usd * USD_TO_LOCAL_APPROX.COP);
   return `≈ $${formatLocal(clp)} CLP · $${formatLocal(mxn)} MXN · $${formatLocal(cop)} COP`;
 }
+
+/** Monedas del selector de precios de la landing. */
+export type MonedaPrecio = "CLP" | "PEN" | "MXN" | "USD";
+export const MONEDAS_PRECIO: readonly MonedaPrecio[] = ["CLP", "PEN", "MXN", "USD"];
+
+/** PEN se sumó el 06-oct-2026 para el selector de la landing (aprox. 3,7). */
+const USD_TO_PEN_APPROX = 3.7;
+
+/**
+ * Precio mensual mostrado en la moneda elegida. Mismo carácter decorativo
+ * que `approxLocalPricesLabel`: el cobro real sigue siendo en USD.
+ */
+export function precioEnMoneda(usd: number, moneda: MonedaPrecio): string {
+  if (moneda === "USD") return `US$${usd}`;
+  const tasa =
+    moneda === "PEN"
+      ? USD_TO_PEN_APPROX
+      : USD_TO_LOCAL_APPROX[moneda as keyof typeof USD_TO_LOCAL_APPROX];
+  const valor = roundApprox(usd * tasa);
+  return moneda === "PEN" ? `S/ ${formatLocal(valor)}` : `$${formatLocal(valor)}`;
+}

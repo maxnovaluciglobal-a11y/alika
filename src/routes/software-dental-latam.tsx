@@ -184,7 +184,7 @@ function SoftwareDentalLatam() {
           .
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          ¿Querés saber cuánto estás perdiendo hoy? Calculá la{" "}
+          ¿Quieres saber cuánto estás perdiendo hoy? Calcula la{" "}
           <Link
             to="/calculadora-rentabilidad-dental"
             className="text-brand-700 underline underline-offset-2"

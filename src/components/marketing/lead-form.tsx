@@ -75,7 +75,7 @@ export function LeadForm({
       // Mismo mensaje que el .refine() del server (EsquemaLead en
       // leads.functions.ts) — cubrimos acá el caso más común para evitar el
       // round-trip, pero el server sigue siendo la red de seguridad real.
-      setError("Dejanos un email o un WhatsApp para poder enviarte el material.");
+      setError("Déjanos un email o un WhatsApp para poder enviarte el material.");
       return;
     }
 

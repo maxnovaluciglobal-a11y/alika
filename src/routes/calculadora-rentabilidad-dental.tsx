@@ -72,7 +72,7 @@ export const Route = createFileRoute("/calculadora-rentabilidad-dental")({
     const canonical = canonicalHead("/calculadora-rentabilidad-dental");
     const titulo = "Calculadora de rentabilidad dental · Alika";
     const descripcion =
-      "Calculá el P&L y las fugas de dinero de tu clínica dental en Chile, México, Colombia, Perú o Argentina. Resultado completo al instante, sin registrarte.";
+      "Calcula el P&L y las fugas de dinero de tu clínica dental en Chile, México, Colombia, Perú o Argentina. Resultado completo al instante, sin registrarte.";
     const url = `${SITE_URL}/calculadora-rentabilidad-dental`;
     return {
       meta: [
@@ -284,7 +284,7 @@ function bucketConversion(
 function fraseAusentismo(pct: number, banda: Banda): string {
   const t = formatearPct(pct);
   if (banda === "alto")
-    return `tu ausentismo está alto (${t}) — activá recordatorios automáticos 48 h y 3 h antes, empezando por los pacientes que ya faltaron alguna vez`;
+    return `tu ausentismo está alto (${t}) — activa recordatorios automáticos 48 h y 3 h antes, empezando por los pacientes que ya faltaron alguna vez`;
   if (banda === "atencion")
     return `tu ausentismo está en zona de atención (${t}) — reforzá el recordatorio de 48 h con los turnos de esta semana`;
   if (banda === "bajo")
@@ -295,9 +295,9 @@ function fraseAusentismo(pct: number, banda: Banda): string {
 function fraseOverhead(pct: number, banda: Banda): string {
   const t = formatearPct(pct);
   if (banda === "alto")
-    return `tu overhead está alto (${t} de tus ingresos) — mirá primero sueldos e insumos, que suelen ser los rubros que más se salen de control`;
+    return `tu overhead está alto (${t} de tus ingresos) — mira primero sueldos e insumos, que suelen ser los rubros que más se salen de control`;
   if (banda === "atencion")
-    return `tu overhead está en zona de atención (${t}) — revisá si algún gasto fijo creció sin que lo renegociaras`;
+    return `tu overhead está en zona de atención (${t}) — revisa si algún gasto fijo creció sin que lo renegociaras`;
   if (banda === "bajo")
     return `tu overhead es inusualmente bajo (${t}) — puede que no estés cargando tu propio sueldo como costo`;
   return `tu overhead (${t}) está dentro del rango esperado`;
@@ -306,9 +306,9 @@ function fraseOverhead(pct: number, banda: Banda): string {
 function fraseMargen(pct: number, banda: Banda): string {
   const t = formatearPct(pct);
   if (banda === "alto")
-    return `tu margen está en zona crítica (${t}) — con estos números el negocio te está pagando muy poco por el riesgo que asumís como dueño`;
+    return `tu margen está en zona crítica (${t}) — con estos números el negocio te está pagando muy poco por el riesgo que asumes como dueño`;
   if (banda === "atencion")
-    return `tu margen está ajustado (${t}) — antes de bajar precios, mirá el rubro con overhead más alto`;
+    return `tu margen está ajustado (${t}) — antes de bajar precios, mira el rubro con overhead más alto`;
   if (banda === "bajo")
     return `tu margen es inusualmente alto (${t}) — antes de festejar, verificá que no te falte cargar algún costo`;
   return `tu margen (${t}) está dentro del rango esperado`;
@@ -687,9 +687,9 @@ function CalculadoraRentabilidadDental() {
           Calculadora de rentabilidad para tu clínica dental
         </h1>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-          Cargá los números de tu clínica y mirá al instante cuánto te queda, dónde se te está yendo
+          Carga los números de tu clínica y mira al instante cuánto te queda, dónde se te está yendo
           la plata y qué conviene resolver primero. El resultado se ve completo sin registrarte —
-          sólo te pedimos el email si querés guardarlo.
+          sólo te pedimos el email si quieres guardarlo.
         </p>
       </div>
 
@@ -742,7 +742,7 @@ function CalculadoraRentabilidadDental() {
                 texto={retencionTexto}
                 onTextoChange={setRetencionTexto}
                 suffix="%"
-                hint="Comisión de tarjeta débito/crédito. 0 si cobrás en efectivo o transferencia."
+                hint="Comisión de tarjeta débito/crédito. 0 si cobras en efectivo o transferencia."
               />
               <CampoMonto
                 id="pl-honorarios"
@@ -839,7 +839,7 @@ function CalculadoraRentabilidadDental() {
                 texto={aceptacionRefTexto}
                 onTextoChange={setAceptacionRefTexto}
                 suffix="%"
-                hint="Sin benchmark citable — vos definís contra qué compararte."
+                hint="Sin benchmark citable — tú defines contra qué compararte."
               />
               <CampoMonto
                 id="fugas-cobranza"
@@ -993,7 +993,7 @@ function CalculadoraRentabilidadDental() {
               Guardá este diagnóstico
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Dejanos tu email o WhatsApp y te ayudamos a mirar en detalle dónde tenés más para
+              Déjanos tu email o WhatsApp y te ayudamos a mirar en detalle dónde tienes más para
               ganar.
             </p>
             <div className="mt-4">

@@ -32,7 +32,7 @@ export function CsvColumnMapper({
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
-        No reconocimos automáticamente todas las columnas. Elegí qué columna de tu archivo
+        No reconocimos automáticamente todas las columnas. Elige qué columna de tu archivo
         corresponde a cada campo.
       </p>
       <div className="space-y-2">
