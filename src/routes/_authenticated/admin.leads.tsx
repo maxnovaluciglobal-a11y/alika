@@ -15,7 +15,7 @@
 // pantalla es específica de roles de clínica — `ROLE_LABELS`/`ClinicAccess`
 // no aplican acá).
 
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, type ErrorComponentProps } from "@tanstack/react-router";
 
 import { AlikaLogo } from "@/components/alika-logo";
 import { listMarketingLeads } from "@/lib/marketing/leads.functions";
@@ -48,7 +48,9 @@ export const Route = createFileRoute("/_authenticated/admin/leads")({
  * "algo falló" sin que el server function lo exponga, y no vale la pena
  * ensanchar esa superficie para una pantalla interna de lectura.
  */
-function AccesoRestringido({ error }: { error: Error }) {
+function AccesoRestringido({ error: errorDesconocido }: ErrorComponentProps) {
+  const error =
+    errorDesconocido instanceof Error ? errorDesconocido : new Error(String(errorDesconocido));
   return (
     <div className="grid min-h-screen place-items-center bg-surface px-6 text-foreground">
       <div className="card-clinical max-w-md p-8 text-center">

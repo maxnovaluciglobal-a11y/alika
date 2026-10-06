@@ -6,8 +6,9 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, type ReactNode, useMemo } from "react";
 
 import appCss from "../styles.css?url";
 import { reportBoundaryError } from "../lib/error-reporting";
@@ -45,7 +46,13 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error: errorDesconocido, reset }: ErrorComponentProps) {
+  // Desde @tanstack/react-router 1.170.4x el error llega como `unknown`.
+  const error = useMemo(
+    () =>
+      errorDesconocido instanceof Error ? errorDesconocido : new Error(String(errorDesconocido)),
+    [errorDesconocido],
+  );
   console.error(error);
   const router = useRouter();
   useEffect(() => {

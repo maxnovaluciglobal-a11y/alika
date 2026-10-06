@@ -1,5 +1,11 @@
-import { useEffect } from "react";
-import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
+import { useEffect, useMemo } from "react";
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  useRouter,
+  type ErrorComponentProps,
+} from "@tanstack/react-router";
 
 import { getMyAccess } from "@/lib/access/access.functions";
 import { ACCESS_QUERY_KEY, type ClinicAccess } from "@/lib/access/access";
@@ -107,7 +113,13 @@ export const Route = createFileRoute("/_authenticated/_clinic")({
 // armar el AppShell (nav lateral) porque esta rama del árbol nunca la monta
 // arriba del Outlet. El usuario perdía la navegación entera por un error de
 // una sola sección. Puesto acá (no en cada ruta hija) cubre todas de una.
-function ClinicSectionError({ error, reset }: { error: Error; reset: () => void }) {
+function ClinicSectionError({ error: errorDesconocido, reset }: ErrorComponentProps) {
+  // Desde @tanstack/react-router 1.170.4x el error llega como `unknown`.
+  const error = useMemo(
+    () =>
+      errorDesconocido instanceof Error ? errorDesconocido : new Error(String(errorDesconocido)),
+    [errorDesconocido],
+  );
   const router = useRouter();
   const { access } = Route.useRouteContext();
 

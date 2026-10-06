@@ -12,7 +12,7 @@
 // ruta no tiene en su contexto).
 
 import { useState } from "react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter, type ErrorComponentProps } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -50,7 +50,9 @@ export const Route = createFileRoute("/_authenticated/admin/clinicas")({
 
 /** Mismo criterio que `admin.leads.tsx`: `listClinicsForStaff` siempre tira
  *  con `Error("...")` con texto ya seguro para mostrar tal cual. */
-function AccesoRestringido({ error }: { error: Error }) {
+function AccesoRestringido({ error: errorDesconocido }: ErrorComponentProps) {
+  const error =
+    errorDesconocido instanceof Error ? errorDesconocido : new Error(String(errorDesconocido));
   return (
     <div className="grid min-h-screen place-items-center bg-surface px-6 text-foreground">
       <div className="card-clinical max-w-md p-8 text-center">
