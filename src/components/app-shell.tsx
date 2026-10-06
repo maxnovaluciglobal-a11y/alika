@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { LifeBuoy, LogOut, Moon, Settings, Sun } from "lucide-react";
+import { LifeBuoy, LogOut, Menu, Moon, Settings, Sun } from "lucide-react";
 
 import { AlikaLogo } from "@/components/alika-logo";
 import { ClinicSwitcher } from "@/components/clinic-switcher";
@@ -16,7 +16,9 @@ import { leerCola, pendientes } from "@/lib/offline/offline-queue";
 import { hasPermission, ROLE_LABELS, type ClinicAccess } from "@/lib/access/access";
 import { listPendingOutreach, listPendingReminders } from "@/lib/messaging/messaging.functions";
 import { countConversacionesSinResponder } from "@/lib/messaging/conversations.functions";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
+  type Destino,
   destinoDeRuta,
   destinosVisibles,
   esRutaDeAjustes,
@@ -27,6 +29,116 @@ import { cn } from "@/lib/utils";
 // Mismo destino de contacto que usan las páginas públicas (nosotros/privacidad/
 // términos/faq): no hay número de WhatsApp de soporte, solo este mailto.
 const SUPPORT_EMAIL = "maxnovaluciglobal@gmail.com";
+
+/**
+ * Barra inferior del celular (<768px, rediseño fase 5): los cinco destinos
+ * del mostrador — Hoy, Agenda, Pacientes, Mensajes, Caja — con objetivos de
+ * 44px+. Reportes, Ajustes y Ayuda van en "Más", para que la barra no pase
+ * de seis toques posibles.
+ */
+const DESTINOS_BARRA = ["hoy", "agenda", "pacientes", "mensajes", "caja"] as const;
+
+function BarraInferior({
+  destinos,
+  destinoActualId,
+  enAjustes,
+  badgePorDestino,
+  onSignOut,
+  signingOut,
+}: {
+  destinos: Destino[];
+  destinoActualId: string | null;
+  enAjustes: boolean;
+  badgePorDestino: Record<string, number>;
+  onSignOut: () => void;
+  signingOut: boolean;
+}) {
+  const [masAbierto, setMasAbierto] = useState(false);
+  const enBarra = destinos.filter((d) => (DESTINOS_BARRA as readonly string[]).includes(d.id));
+  const resto = destinos.filter((d) => !(DESTINOS_BARRA as readonly string[]).includes(d.id));
+  const masActivo = enAjustes || resto.some((d) => d.id === destinoActualId);
+
+  const item =
+    "flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] transition-colors";
+
+  return (
+    <nav
+      aria-label="Principal"
+      className="fixed inset-x-0 bottom-0 z-20 flex border-t border-border bg-background/95 backdrop-blur-sm md:hidden"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
+      {enBarra.map(({ id, label, icon: Icon, pestanas }) => {
+        const activo = destinoActualId === id;
+        const badge = badgePorDestino[id] ?? 0;
+        return (
+          <Link
+            key={id}
+            to={pestanas[0].to}
+            aria-current={activo ? "page" : undefined}
+            className={cn(item, activo ? "text-brand-800" : "text-muted-foreground")}
+          >
+            <span className="relative">
+              <Icon className={cn("size-5", activo && "text-brand")} aria-hidden />
+              {badge > 0 && (
+                <span className="absolute -top-1.5 -right-3 min-w-4 rounded-sm bg-brand-700 px-0.5 text-center text-[10px] leading-4 tabular-nums text-white">
+                  {badge > 9 ? "9+" : badge}
+                </span>
+              )}
+            </span>
+            {label}
+          </Link>
+        );
+      })}
+      <Sheet open={masAbierto} onOpenChange={setMasAbierto}>
+        <SheetTrigger className={cn(item, masActivo ? "text-brand-800" : "text-muted-foreground")}>
+          <Menu className={cn("size-5", masActivo && "text-brand")} aria-hidden />
+          Más
+        </SheetTrigger>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-lg pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+        >
+          <SheetTitle className="font-display text-xl">Más</SheetTitle>
+          <ul className="mt-4 divide-y divide-hairline border-y border-border">
+            {[
+              ...resto.map((d) => ({ to: d.pestanas[0].to, label: d.label })),
+              { to: "/ajustes", label: "Ajustes" },
+            ].map((l) => (
+              <li key={l.to}>
+                <Link
+                  to={l.to}
+                  onClick={() => setMasAbierto(false)}
+                  className="flex min-h-12 items-center text-base"
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+            <li>
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="flex min-h-12 items-center text-base">
+                Ayuda
+              </a>
+            </li>
+            <li className="flex min-h-12 items-center justify-between">
+              <span className="text-base">Tema</span>
+              <ThemeToggle />
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={onSignOut}
+                disabled={signingOut}
+                className="flex min-h-12 w-full items-center gap-2 text-base text-destructive disabled:opacity-60"
+              >
+                <LogOut className="size-4" aria-hidden /> Cerrar sesión
+              </button>
+            </li>
+          </ul>
+        </SheetContent>
+      </Sheet>
+    </nav>
+  );
+}
 
 const THEME_STORAGE_KEY = "alika:theme";
 
@@ -261,11 +373,13 @@ export function AppShell({
         >
           <h1 className="truncate font-display text-xl font-semibold">{title}</h1>
           <div className="flex items-center gap-3">
-            <div className="w-44 sm:w-56 lg:hidden">
+            <div className="sm:w-56 lg:hidden">
               <GlobalSearch access={access} />
             </div>
             <NotificationsBell userId={access.userId} />
-            <ThemeToggle />
+            <div className="hidden md:block">
+              <ThemeToggle />
+            </div>
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium">
                 {access.fullName ?? access.email ?? "Mi cuenta"}
@@ -294,7 +408,7 @@ export function AppShell({
               onClick={handleSignOut}
               disabled={signingOut}
               aria-label="Cerrar sesión"
-              className="grid size-9 place-items-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-60"
+              className="hidden size-9 place-items-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-60 md:grid"
             >
               <LogOut className="size-4" />
             </button>
@@ -305,7 +419,7 @@ export function AppShell({
 
         <nav
           aria-label="Principal"
-          className="flex gap-1 overflow-x-auto border-b border-border px-4 py-2 lg:hidden"
+          className="hidden gap-1 overflow-x-auto border-b border-border px-4 py-2 md:flex lg:hidden"
         >
           {[
             ...destinos.map((d) => ({
@@ -370,7 +484,16 @@ export function AppShell({
           </nav>
         )}
 
-        <div className="flex-1 p-5 sm:p-8">{children}</div>
+        <div className="flex-1 p-5 pb-28 sm:p-8 md:pb-8">{children}</div>
+
+        <BarraInferior
+          destinos={destinos}
+          destinoActualId={destinoActual?.id ?? null}
+          enAjustes={enAjustes}
+          badgePorDestino={badgePorDestino}
+          onSignOut={handleSignOut}
+          signingOut={signingOut}
+        />
       </main>
     </div>
   );

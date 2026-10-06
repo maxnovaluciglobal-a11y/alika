@@ -31,12 +31,12 @@ Plan: [`PLAN_EJECUCION.md`](./PLAN_EJECUCION.md). Si la sesión se cortó: `git 
 - [x] `status-strip.tsx` reemplaza los 5 banners
 - [x] Gates + commit
 
-## Fase 5 — Ficha y móvil · rama `redesign/fase-5`
+## Fase 5 — Ficha y móvil · rama `redesign/fase-5` ✅
 
-- [ ] Cabecera fija + pestañas en la ficha
-- [ ] Estados con texto
-- [ ] Barra inferior móvil + cola de confirmación
-- [ ] Gates + commit
+- [x] Cabecera fija + pestañas en la ficha
+- [x] Estados con texto
+- [x] Barra inferior móvil + cola de confirmación
+- [x] Gates + commit
 
 ## Registro
 
@@ -45,3 +45,5 @@ Plan: [`PLAN_EJECUCION.md`](./PLAN_EJECUCION.md). Si la sesión se cortó: `git 
 - 06-oct: Fase 2 cerrada. Lighthouse móvil con brotli: 98/100/100/100 (prod actual: 55). `demo_click` = `cta_click {cta:"demo"}` (el CHECK de marketing_events no admite nombres nuevos sin migración). Testimonio y logos ocultos hasta tener permiso; `VITE_SALES_WHATSAPP` pendiente de Walter.
 - 06-oct: Fase 3 cerrada. Modelo en `src/lib/access/navegacion.ts` (+7 tests: ≤7 entradas por rol, permisos = beforeLoad). Ninguna ruta se movió → no hicieron falta redirects. ⌘K real: páginas + `buscarPacientes` (con permiso en servidor).
 - 06-oct: Fase 4 cerrada. KPIs por rol según permisos reales ("por cobrar" solo con finance:view, igual que el servidor). StatusStrip elige uno de los banners existentes; selector de simulación movido a /ajustes.
+- 06-oct: Fase 5 cerrada. Ficha con cabecera fija + 6 pestañas (componentes intactos; odontograma→presupuesto cambia de pestaña). PagoDot con texto. Barra inferior <768px + menú Más (tema, salir). Cola de confirmación en Hoy (móvil): 'Confirmó' = 1 toque (setPatientConfirmation, eje del paciente).
+- PENDIENTE DE WALTER: revisar pantallas autenticadas con login real (no se pudo verificar visualmente sin credenciales), cargar VITE_SALES_WHATSAPP, permisos de testimonio/logos, y decidir merge (push a main = deploy).

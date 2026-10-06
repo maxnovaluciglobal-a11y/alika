@@ -87,10 +87,11 @@ export function GlobalSearch({ access }: { access: ClinicAccess }) {
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        className="flex h-9 w-full items-center gap-2 rounded-md border border-border px-3 text-sm text-muted-foreground transition-colors hover:border-brand/60 hover:text-foreground"
+        aria-label="Buscar paciente o página"
+        className="flex h-9 w-9 items-center justify-center gap-2 rounded-md border border-border text-sm text-muted-foreground transition-colors hover:border-brand/60 hover:text-foreground sm:w-full sm:justify-start sm:px-3"
       >
         <Search className="size-4 shrink-0" aria-hidden />
-        <span className="flex-1 truncate text-left">Buscar paciente…</span>
+        <span className="hidden flex-1 truncate text-left sm:inline">Buscar paciente…</span>
         <kbd className="hidden rounded-sm border border-border px-1.5 text-[11px] sm:inline">
           ⌘K
         </kbd>

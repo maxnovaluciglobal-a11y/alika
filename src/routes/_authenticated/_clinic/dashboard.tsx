@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { CalendarPlus, Check, Lock, Sparkles, UserPlus } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
+import { ColaConfirmacion } from "@/components/cola-confirmacion";
 import { PanelDesempeno } from "@/components/panel-desempeno";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/access/route-guards";
@@ -544,6 +545,20 @@ function Dashboard() {
             )}
           </div>
         </header>
+
+        {/* Celular de recepción: la cola de confirmación va primero, a un
+            toque de "Confirmó" (rediseño fase 5, panel 1e). */}
+        {clinicId && gestionaAgenda && (
+          <div className="md:hidden">
+            <ColaConfirmacion
+              clinicId={clinicId}
+              clinicaNombre={access.clinic?.name ?? "la clínica"}
+              citas={citas}
+              hoy={hoy}
+              nombreProfesional={nombreProfesional}
+            />
+          </div>
+        )}
 
         <FilaKpis kpis={kpis} cargando={isLoading} />
 
