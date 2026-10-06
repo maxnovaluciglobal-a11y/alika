@@ -347,8 +347,9 @@ function PacienteDetalle() {
     <AppShell title="Ficha del paciente" access={access}>
       <div className="mx-auto max-w-6xl">
         {/* Cabecera fija: identidad, acciones y los 4 datos que se consultan
-            en cada atención. Se queda visible al bajar por cualquier pestaña. */}
-        <header className="sticky top-16 z-[5] -mx-5 border-b border-border bg-background/95 px-5 pt-2 pb-5 backdrop-blur-sm sm:-mx-8 sm:px-8">
+            en cada atención. Se queda visible al bajar por cualquier pestaña (desde lg: en el
+            celular ocuparía media pantalla). */}
+        <header className="-mx-5 lg:sticky lg:top-16 lg:z-[5] border-b border-border bg-background/95 px-5 pt-2 pb-5 backdrop-blur-sm sm:-mx-8 sm:px-8">
           <Link
             to="/pacientes"
             search={{
