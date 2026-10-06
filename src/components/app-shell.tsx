@@ -8,11 +8,7 @@ import { AlikaLogo } from "@/components/alika-logo";
 import { ClinicSwitcher } from "@/components/clinic-switcher";
 import { GlobalSearch } from "@/components/global-search";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { RoleSimulationBar } from "@/components/role-simulation-bar";
-import { TrialBanner } from "@/components/trial-banner";
-import { DemoBanner } from "@/components/demo-banner";
-import { OfflineBanner } from "@/components/offline-banner";
-import { PendingSyncBanner } from "@/components/pending-sync-banner";
+import { StatusStrip } from "@/components/status-strip";
 import { getSupabase } from "@/integrations/supabase/lazy";
 import { resetOfflineCache } from "@/lib/offline/offline-cache";
 import { useSincronizacionAutomatica } from "@/hooks/use-offline-mutation";
@@ -305,14 +301,7 @@ export function AppShell({
           </div>
         </header>
 
-        <RoleSimulationBar access={access} />
-        <OfflineBanner />
-        <PendingSyncBanner userId={access.userId} />
-        {access.clinic?.isDemo ? (
-          <DemoBanner />
-        ) : (
-          access.clinic && <TrialBanner clinicId={access.clinic.id} />
-        )}
+        <StatusStrip access={access} />
 
         <nav
           aria-label="Principal"

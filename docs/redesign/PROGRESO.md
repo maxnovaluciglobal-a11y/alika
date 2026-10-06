@@ -25,11 +25,11 @@ Plan: [`PLAN_EJECUCION.md`](./PLAN_EJECUCION.md). Si la sesión se cortó: `git 
 - [x] ⌘K arriba del sidebar
 - [x] Gates + commit
 
-## Fase 4 — Hoy por rol · rama `redesign/fase-4`
+## Fase 4 — Hoy por rol · rama `redesign/fase-4` ✅
 
-- [ ] Dashboard nuevo por rol
-- [ ] `status-strip.tsx` reemplaza los 5 banners
-- [ ] Gates + commit
+- [x] Dashboard nuevo por rol
+- [x] `status-strip.tsx` reemplaza los 5 banners
+- [x] Gates + commit
 
 ## Fase 5 — Ficha y móvil · rama `redesign/fase-5`
 
@@ -44,3 +44,4 @@ Plan: [`PLAN_EJECUCION.md`](./PLAN_EJECUCION.md). Si la sesión se cortó: `git 
 - 06-oct: Fase 1 cerrada. Nota: las pantallas autenticadas no se verificaron visualmente (el demo escribe un lead en prod); revisar con login real.
 - 06-oct: Fase 2 cerrada. Lighthouse móvil con brotli: 98/100/100/100 (prod actual: 55). `demo_click` = `cta_click {cta:"demo"}` (el CHECK de marketing_events no admite nombres nuevos sin migración). Testimonio y logos ocultos hasta tener permiso; `VITE_SALES_WHATSAPP` pendiente de Walter.
 - 06-oct: Fase 3 cerrada. Modelo en `src/lib/access/navegacion.ts` (+7 tests: ≤7 entradas por rol, permisos = beforeLoad). Ninguna ruta se movió → no hicieron falta redirects. ⌘K real: páginas + `buscarPacientes` (con permiso en servidor).
+- 06-oct: Fase 4 cerrada. KPIs por rol según permisos reales ("por cobrar" solo con finance:view, igual que el servidor). StatusStrip elige uno de los banners existentes; selector de simulación movido a /ajustes.

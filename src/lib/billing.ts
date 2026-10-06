@@ -117,3 +117,13 @@ export function requiereLlamadaOSuscripcion(
   // En trial sin agendar: bloqueado.
   return true;
 }
+
+/**
+ * Si el banner tiene algo que decir. La usa `StatusStrip` para decidir la
+ * prioridad sin renderizar el banner: mismas condiciones que `TrialBanner`.
+ */
+export function trialBannerVisible(sub: Subscription | null | undefined): boolean {
+  if (sub === undefined) return false;
+  if (sub === null) return true;
+  return !(isSubscriptionActive(sub) && sub.status === "active");
+}

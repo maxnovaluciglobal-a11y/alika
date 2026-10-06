@@ -93,3 +93,22 @@ describe("limpiarTerminoDeBusqueda", () => {
     expect(limpiarTerminoDeBusqueda("  María   José ")).toBe("María José");
   });
 });
+
+describe("trialBannerVisible (franja de estado)", () => {
+  it("no muestra nada mientras carga ni con suscripción activa", async () => {
+    const { trialBannerVisible } = await import("@/lib/billing");
+    expect(trialBannerVisible(undefined)).toBe(false);
+    expect(trialBannerVisible(null)).toBe(true);
+    const base = {
+      clinicId: "c",
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+      stripePriceId: null,
+      trialEnd: null,
+      currentPeriodEnd: new Date(Date.now() + 864e5).toISOString(),
+      cancelAtPeriodEnd: false,
+    };
+    expect(trialBannerVisible({ ...base, status: "active" })).toBe(false);
+    expect(trialBannerVisible({ ...base, status: "past_due" })).toBe(true);
+  });
+});

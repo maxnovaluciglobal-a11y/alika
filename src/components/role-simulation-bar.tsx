@@ -15,12 +15,21 @@ import { guardarRolSimulado, puedeSimular } from "@/lib/access/role-simulation";
  * la interfaz para verificar qué botones y flujos se habilitan por rol.
  * La autorización real siempre la aplica RLS con el rol verdadero.
  */
-export function RoleSimulationBar({ access }: { access: ClinicAccess }) {
+export function RoleSimulationBar({
+  access,
+  soloSiSimula = false,
+}: {
+  access: ClinicAccess;
+  /** En la franja de estado solo aparece mientras se está simulando; el
+   *  selector completo vive en /ajustes (rediseño, fase 4). */
+  soloSiSimula?: boolean;
+}) {
   const router = useRouter();
   const realRole = access.realRole ?? access.role;
   const simulado = access.simulatedRole ?? null;
 
   if (!puedeSimular(realRole)) return null;
+  if (soloSiSimula && !simulado) return null;
 
   const aplicar = (valor: string) => {
     guardarRolSimulado(valor === "real" ? null : (valor as ClinicRole));
