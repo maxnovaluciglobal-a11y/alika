@@ -1,0 +1,33 @@
+name: Resumen diario (disparo horario)
+
+# Reemplaza el cron horario de vercel.json: el plan Hobby de Vercel solo
+# permite crons diarios y rechazaba todos los deploys de Alika (oct-2026).
+# El endpoint corre cada hora y filtra por la hora local de cada clínica;
+# es idempotente (no repite el resumen del día), así que un reintento o
+# un disparo manual no duplica avisos.
+on:
+  schedule:
+    # Minuto 7 para esquivar la congestión de GitHub en el minuto 0.
+    - cron: "7 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: daily-digest
+  cancel-in-progress: false
+
+jobs:
+  disparar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Llamar a /api/daily-digest
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "::error::Falta el secret CRON_SECRET"; exit 1; fi
+          status=$(curl -sS -o respuesta.txt -w "%{http_code}" --retry 3 --retry-delay 20 --max-time 120 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            https://alika-omega.vercel.app/api/daily-digest)
+          echo "HTTP $status"; head -c 500 respuesta.txt; echo
+          [ "$status" = "200" ] || { echo "::error::daily-digest respondió $status"; exit 1; }
