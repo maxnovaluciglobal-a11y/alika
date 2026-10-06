@@ -69,9 +69,9 @@ function MiniAgenda() {
     { h: "11:15", n: "M. Silva", t: "Endodoncia", chip: "En sala", tone: "sala" as const },
   ];
   const tones = {
-    ok: "bg-clay-soft text-clay-strong",
-    wa: "bg-clay-soft text-clay-strong",
-    sala: "bg-ink/10 text-ink",
+    ok: "bg-brand-100 text-brand-700",
+    wa: "bg-brand-100 text-brand-700",
+    sala: "bg-foreground/10 text-foreground",
   };
   return (
     <div className="overflow-hidden rounded-xl border border-hairline bg-card">
@@ -102,7 +102,7 @@ function MiniCaja() {
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Cobrado hoy
         </p>
-        <p className="font-precise text-2xl font-bold text-clay-strong">{clp.format(275000)}</p>
+        <p className="font-display text-2xl font-bold text-brand-700">{clp.format(275000)}</p>
       </div>
       <div className="flex items-center justify-between px-4 py-2.5 text-xs">
         <span className="text-muted-foreground">Por cobrar</span>
@@ -110,7 +110,7 @@ function MiniCaja() {
       </div>
       <div className="flex items-center justify-between border-t border-hairline px-4 py-2.5 text-xs">
         <span className="text-muted-foreground">Débito · Efectivo · Transferencia</span>
-        <span className="font-medium text-clay-strong">8 pagos</span>
+        <span className="font-medium text-brand-700">8 pagos</span>
       </div>
     </div>
   );
@@ -119,9 +119,9 @@ function MiniCaja() {
 const dientesFDI = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
 function MiniOdontograma() {
   const marcados: Record<number, string> = {
-    14: "border-ink bg-ink/10",
-    16: "border-clay bg-clay-soft",
-    26: "border-clay bg-clay-soft",
+    14: "border-foreground bg-foreground/10",
+    16: "border-brand bg-brand-100",
+    26: "border-brand bg-brand-100",
   };
   return (
     <div className="overflow-hidden rounded-xl border border-hairline bg-card">
@@ -173,8 +173,8 @@ function MiniWhatsAppOps() {
     },
   ];
   const tones = {
-    wa: "bg-clay-soft text-clay-strong",
-    lead: "bg-ink/10 text-ink",
+    wa: "bg-brand-100 text-brand-700",
+    lead: "bg-foreground/10 text-foreground",
   };
   return (
     <div className="overflow-hidden rounded-xl border border-hairline bg-card">
@@ -286,7 +286,7 @@ const faqs = [
 
 function Landing() {
   return (
-    <div className="min-h-screen bg-background text-ink">
+    <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
 
       <main id="main-content">
@@ -301,18 +301,16 @@ function Landing() {
               negativo escapa hasta el fondo de TODA la página (detrás del
               bg-background opaco del layout) y queda invisible aunque el
               elemento exista y tenga los colores correctos en el DOM. */}
-          <div className="hero-aurora" aria-hidden="true" />
-          <div className="hero-grain" aria-hidden="true" />
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-16 sm:py-20 lg:grid-cols-[1fr_0.92fr] lg:gap-14">
-            <div className="animate-rise-in">
-              <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-clay/30 bg-clay-soft px-3 py-1 text-xs font-semibold text-clay-strong">
-                <span className="size-1.5 rounded-full bg-clay" />
+            <div className="">
+              <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-700">
+                <span className="size-1.5 rounded-full bg-brand-700" />
                 Software de gestión dental · Latinoamérica
               </span>
-              <h1 className="font-precise text-[2.9rem] font-extrabold leading-[0.95] text-balance sm:text-6xl lg:text-[4.25rem]">
+              <h1 className="font-display text-[2.9rem] font-extrabold leading-[0.95] text-balance sm:text-6xl lg:text-[4.25rem]">
                 Menos ausencias.
                 <br />
-                <span className="relative inline-block text-clay-strong">
+                <span className="relative inline-block text-brand-700">
                   Cobras mejor.
                   <svg
                     viewBox="0 0 220 18"
@@ -326,7 +324,7 @@ function Landing() {
                       stroke="currentColor"
                       strokeWidth="4"
                       strokeLinecap="round"
-                      className="animate-swash"
+                      className=""
                     />
                   </svg>
                 </span>
@@ -340,7 +338,7 @@ function Landing() {
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <a
                   href="/demo"
-                  className="group flex items-center gap-2 rounded-xl bg-ink px-5 py-3.5 text-sm font-semibold text-ink-foreground shadow-lg shadow-ink/20 transition-all hover:-translate-y-0.5 hover:shadow-xl"
+                  className="group flex items-center gap-2 rounded-xl bg-foreground px-5 py-3.5 text-sm font-semibold text-background shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
                 >
                   Prueba la demo ahora
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
@@ -354,20 +352,20 @@ function Landing() {
               </div>
               <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
-                  <Check className="size-3.5 text-clay-strong" /> Sin registro
+                  <Check className="size-3.5 text-brand-700" /> Sin registro
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Check className="size-3.5 text-clay-strong" /> Sin tarjeta
+                  <Check className="size-3.5 text-brand-700" /> Sin tarjeta
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Check className="size-3.5 text-clay-strong" /> Tus datos son tuyos
+                  <Check className="size-3.5 text-brand-700" /> Tus datos son tuyos
                 </span>
               </p>
             </div>
 
             {/* Foto + producto flotante (hero híbrido) */}
-            <div className="relative animate-rise-in [animation-delay:120ms]">
-              <div className="overflow-hidden rounded-2xl border border-border shadow-2xl shadow-ink/15">
+            <div className="relative [animation-delay:120ms]">
+              <div className="overflow-hidden rounded-2xl border border-border shadow-2xl">
                 <img
                   src="/landing/dentist.jpg"
                   alt="Dentista atendiendo a un paciente en su consultorio"
@@ -380,9 +378,9 @@ function Landing() {
               <div className="absolute -bottom-6 -left-6 w-52 rotate-[-2deg]">
                 <MiniCaja />
               </div>
-              <div className="absolute -right-4 -top-4 hidden rounded-xl border border-hairline bg-card px-3 py-2 shadow-xl shadow-ink/10 sm:block">
+              <div className="absolute -right-4 -top-4 hidden rounded-xl border border-hairline bg-card px-3 py-2 shadow-xl sm:block">
                 <div className="flex items-center gap-2">
-                  <span className="grid size-7 place-items-center rounded-full bg-clay-soft text-clay-strong">
+                  <span className="grid size-7 place-items-center rounded-full bg-brand-100 text-brand-700">
                     <MessageCircle className="size-3.5" />
                   </span>
                   <div>
@@ -398,17 +396,17 @@ function Landing() {
         {/* El dolor */}
         <section className="mx-auto max-w-6xl px-6 py-20">
           <div className="mb-12 max-w-2xl">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-clay-strong">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-brand-700">
               El problema
             </p>
-            <h2 className="font-precise text-3xl font-bold leading-tight sm:text-4xl">
+            <h2 className="font-display text-3xl font-bold leading-tight sm:text-4xl">
               Si tu clínica todavía corre en Excel, WhatsApp y cuadernos, ya sabes lo que se pierde.
             </h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {dolores.map(({ icon: Icon, t, d }) => (
               <div key={t} className="flex gap-4 rounded-2xl border border-hairline bg-card p-6">
-                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-bone text-ink">
+                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-muted text-foreground">
                   <Icon className="size-5" />
                 </span>
                 <div>
@@ -424,10 +422,10 @@ function Landing() {
         <section>
           <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-20 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-clay-strong">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-brand-700">
                 Pruébala tú mismo
               </p>
-              <h2 className="font-precise text-3xl font-bold leading-tight sm:text-[2.75rem]">
+              <h2 className="font-display text-3xl font-bold leading-tight sm:text-[2.75rem]">
                 No te pedimos que nos creas. Entra y compruébalo.
               </h2>
               <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
@@ -436,7 +434,7 @@ function Landing() {
               </p>
               <a
                 href="/demo"
-                className="group mt-8 inline-flex items-center gap-2 rounded-xl bg-ink px-6 py-3.5 text-sm font-semibold text-ink-foreground shadow-lg shadow-ink/20 transition-all hover:-translate-y-0.5"
+                className="group mt-8 inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3.5 text-sm font-semibold text-background shadow-lg transition-all hover:-translate-y-0.5"
               >
                 <PlayCircle className="size-4" />
                 Entrar a la demo
@@ -452,17 +450,17 @@ function Landing() {
         {/* Cómo funciona */}
         <section className="mx-auto max-w-6xl px-6 py-20">
           <div className="mb-12 max-w-xl">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-clay-strong">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-brand-700">
               Cómo funciona
             </p>
-            <h2 className="font-precise text-3xl font-bold sm:text-4xl">
+            <h2 className="font-display text-3xl font-bold sm:text-4xl">
               De cero a tu primera cita agendada, hoy mismo.
             </h2>
           </div>
           <div className="grid gap-8 sm:grid-cols-3">
             {pasos.map(({ n, t, d }) => (
               <div key={n}>
-                <span className="mb-4 grid size-11 place-items-center rounded-full bg-ink font-precise text-base font-bold text-clay">
+                <span className="mb-4 grid size-11 place-items-center rounded-full bg-foreground font-display text-base font-bold text-brand-700">
                   {n}
                 </span>
                 <h3 className="mb-1.5 text-lg font-semibold">{t}</h3>
@@ -476,10 +474,10 @@ function Landing() {
         <section>
           <div className="mx-auto max-w-6xl space-y-16 px-6 py-20">
             <div className="max-w-xl">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-clay-strong">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-brand-700">
                 Lo que ganas
               </p>
-              <h2 className="font-precise text-3xl font-bold sm:text-4xl">
+              <h2 className="font-display text-3xl font-bold sm:text-4xl">
                 No son features. Son resultados.
               </h2>
             </div>
@@ -519,7 +517,7 @@ function Landing() {
 
         {/* Resultado humano + IA */}
         <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 lg:grid-cols-2">
-          <div className="overflow-hidden rounded-2xl border border-border shadow-xl shadow-ink/10">
+          <div className="overflow-hidden rounded-2xl border border-border shadow-xl">
             <img
               src="/landing/patient.jpg"
               alt="Paciente sonriendo con su resultado en el consultorio"
@@ -530,10 +528,10 @@ function Landing() {
             />
           </div>
           <div>
-            <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-clay-strong">
+            <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-700">
               <Sparkles className="size-4" /> Asistente con IA
             </p>
-            <h2 className="font-precise text-3xl font-bold leading-tight sm:text-4xl">
+            <h2 className="font-display text-3xl font-bold leading-tight sm:text-4xl">
               Menos trabajo administrativo. Más tiempo con el paciente.
             </h2>
             <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
@@ -541,17 +539,17 @@ function Landing() {
               listos para la siguiente consulta. Alika se ocupa de lo repetitivo para que tú te
               ocupes de atender.
             </p>
-            <div className="mt-6 rounded-xl border border-clay/25 bg-clay-soft p-4">
-              {/* Newsreader (font-serif-display) — definida en el sistema de
+            <div className="mt-6 rounded-xl border border-brand/25 bg-brand-100 p-4">
+              {/* Newsreader (font-display) — definida en el sistema de
                   diseño desde el rebrand pero sin ningún uso real todavía
                   (auditoría de UI, 30-ago). Un pull-quote es el lugar
                   clásico para un serif editorial: contraste tipográfico
                   sobre el grotesco del resto de la página. */}
-              <p className="font-serif-display text-base italic leading-relaxed text-ink">
+              <p className="font-display text-base italic leading-relaxed text-foreground">
                 “Control de ortodoncia. Ajuste de arco superior, sin molestias referidas. Próximo
                 control en 4 semanas.”
               </p>
-              <p className="mt-2 text-[11px] font-semibold text-clay-strong">Resumido con IA</p>
+              <p className="mt-2 text-[11px] font-semibold text-brand-700">Resumido con IA</p>
             </div>
           </div>
         </section>
@@ -559,10 +557,10 @@ function Landing() {
         {/* Precio / prueba */}
         <section>
           <div className="mx-auto max-w-3xl px-6 py-20 text-center">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-clay-strong">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-brand-700">
               Precio fundador
             </p>
-            <h2 className="font-precise text-3xl font-bold sm:text-4xl">
+            <h2 className="font-display text-3xl font-bold sm:text-4xl">
               Prueba 14 días gratis, sin tarjeta.
             </h2>
             <p className="mx-auto mt-5 max-w-lg text-base text-muted-foreground">
@@ -572,7 +570,7 @@ function Landing() {
 
             <div className="mx-auto mt-10 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="relative rounded-2xl border border-border bg-card p-6 pt-8 text-left">
-                <span className="absolute -top-3 left-6 rounded-full bg-ink px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-ink-foreground">
+                <span className="absolute -top-3 left-6 rounded-full bg-foreground px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-background">
                   Precio de por vida
                 </span>
                 <p className="text-sm font-semibold">Alika Solo</p>
@@ -587,25 +585,25 @@ function Landing() {
                 </p>
                 <ComprarPlanLink plan="solo" className="mt-4 border-border hover:bg-secondary" />
               </div>
-              <div className="relative rounded-2xl border-2 border-clay-strong bg-clay-soft p-6 pt-8 text-left">
-                <span className="absolute -top-3 left-6 rounded-full bg-clay-strong px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-clay-soft">
+              <div className="relative rounded-2xl border-2 border-brand bg-brand-100 p-6 pt-8 text-left">
+                <span className="absolute -top-3 left-6 rounded-full bg-brand-700 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-brand-200">
                   Precio de por vida
                 </span>
                 <p className="text-sm font-semibold">Alika Clínica</p>
-                {/* text-ink/70 en vez de text-muted-foreground: sobre bg-clay-soft el
+                {/* text-muted-foreground en vez de text-muted-foreground: sobre bg-brand-100 el
                     muted-foreground estándar caía a 4.29:1, debajo del 4.5:1 de WCAG AA. */}
-                <p className="text-xs text-ink/70">Hasta 3 profesionales / sillones</p>
+                <p className="text-xs text-muted-foreground">Hasta 3 profesionales / sillones</p>
                 <p className="mt-3 text-3xl font-bold">
-                  US$69<span className="text-sm font-normal text-ink/70">/mes</span>
+                  US$69<span className="text-sm font-normal text-muted-foreground">/mes</span>
                 </p>
-                <p className="text-sm text-ink/70 line-through">US$99/mes</p>
-                <p className="mt-1 text-xs text-ink/70">
+                <p className="text-sm text-muted-foreground line-through">US$99/mes</p>
+                <p className="mt-1 text-xs text-muted-foreground">
                   {approxLocalPricesLabel(69)}{" "}
                   <span className="italic">(referencial, el cobro es en USD)</span>
                 </p>
                 <ComprarPlanLink
                   plan="clinica"
-                  className="mt-4 border-clay-strong bg-clay-strong text-clay-soft hover:opacity-90"
+                  className="mt-4 border-brand bg-brand-700 text-brand-200 hover:opacity-90"
                 />
               </div>
             </div>
@@ -617,7 +615,7 @@ function Landing() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
                 to="/auth"
-                className="rounded-xl bg-ink px-6 py-3.5 text-sm font-semibold text-ink-foreground transition-opacity hover:opacity-90"
+                className="rounded-xl bg-foreground px-6 py-3.5 text-sm font-semibold text-background transition-opacity hover:opacity-90"
               >
                 Empieza gratis
               </Link>
@@ -625,7 +623,7 @@ function Landing() {
                 href="/demo"
                 className="flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
               >
-                <PlayCircle className="size-4 text-clay-strong" />
+                <PlayCircle className="size-4 text-brand-700" />
                 Ver la demo primero
               </a>
             </div>
@@ -634,7 +632,7 @@ function Landing() {
 
         {/* Objeciones */}
         <section className="mx-auto max-w-3xl px-6 py-20">
-          <h2 className="mb-10 font-precise text-3xl font-bold sm:text-4xl">
+          <h2 className="mb-10 font-display text-3xl font-bold sm:text-4xl">
             Las dudas de siempre.
           </h2>
           <div className="space-y-2">
@@ -657,7 +655,7 @@ function Landing() {
         {/* CTA final */}
         <section>
           <div className="mx-auto max-w-3xl px-6 py-20 text-center">
-            <h2 className="font-precise text-3xl font-bold leading-tight sm:text-5xl">
+            <h2 className="font-display text-3xl font-bold leading-tight sm:text-5xl">
               Ordena tu clínica de una vez.
             </h2>
             <p className="mx-auto mt-5 max-w-md text-base text-muted-foreground">
@@ -666,7 +664,7 @@ function Landing() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <a
                 href="/demo"
-                className="group flex items-center gap-2 rounded-xl bg-ink px-6 py-3.5 text-sm font-semibold text-ink-foreground shadow-lg shadow-ink/20 transition-all hover:-translate-y-0.5"
+                className="group flex items-center gap-2 rounded-xl bg-foreground px-6 py-3.5 text-sm font-semibold text-background shadow-lg transition-all hover:-translate-y-0.5"
               >
                 Prueba la demo ahora
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
@@ -741,11 +739,11 @@ function FeatureRow({
   return (
     <div className="grid min-w-0 items-center gap-8 lg:grid-cols-2 lg:gap-14">
       <div className={cn("min-w-0", flip && "lg:order-2")}>
-        <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-clay-strong">
+        <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-700">
           <Icon className="size-4" />
           {tag}
         </p>
-        <h3 className="font-precise text-2xl font-bold leading-snug sm:text-3xl">{title}</h3>
+        <h3 className="font-display text-2xl font-bold leading-snug sm:text-3xl">{title}</h3>
         <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">{text}</p>
       </div>
       {/* min-w-0: sin esto, el track de grid en mobile (una sola columna) se

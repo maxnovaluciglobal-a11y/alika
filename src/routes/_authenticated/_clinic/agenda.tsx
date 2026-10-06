@@ -668,7 +668,7 @@ function EditarCitaDialog({
           type="button"
           title="Editar cita"
           aria-label="Editar cita"
-          className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-ink"
+          className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
         >
           <Pencil className="size-3.5" />
         </button>

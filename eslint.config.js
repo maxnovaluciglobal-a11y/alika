@@ -6,7 +6,16 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", ".output", ".vinxi", ".vercel"] },
+  {
+    ignores: [
+      "dist",
+      ".output",
+      ".vinxi",
+      ".vercel",
+      ".claude",
+      "docs/design_handoff_alika_rediseno",
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

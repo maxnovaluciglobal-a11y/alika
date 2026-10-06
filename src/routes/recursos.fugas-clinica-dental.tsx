@@ -224,18 +224,18 @@ function FilaFuga({ fuga }: { fuga: Fuga }) {
   return (
     <li className="border-b border-hairline py-7 first:pt-0 last:border-b-0">
       <div className="flex items-start gap-4">
-        <span className="font-precise flex size-8 shrink-0 items-center justify-center rounded-full bg-clay-soft text-sm font-bold text-clay-strong">
+        <span className="font-display flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">
           {fuga.numero}
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="font-precise text-lg font-bold text-ink">{fuga.titulo}</h3>
-          <p className="mt-2 text-[15px] leading-relaxed text-ink/80">{fuga.descripcion}</p>
+          <h3 className="font-display text-lg font-bold text-foreground">{fuga.titulo}</h3>
+          <p className="mt-2 text-[15px] leading-relaxed text-foreground/80">{fuga.descripcion}</p>
           <div className="mt-4 flex items-start gap-2.5">
             <CasillaDecorativa />
             <span className="text-sm text-muted-foreground">Se aplica a mi clínica</span>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-ink/70">
-            <span className="font-semibold text-clay-strong">Detectala:</span> {fuga.pregunta}
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            <span className="font-semibold text-brand-700">Detectala:</span> {fuga.pregunta}
           </p>
         </div>
       </div>
@@ -263,8 +263,8 @@ function SelectorPais({
             className={cn(
               "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
               activo
-                ? "border-ink bg-ink text-ink-foreground"
-                : "border-hairline bg-card text-muted-foreground hover:border-ink/40 hover:text-ink",
+                ? "border-foreground bg-foreground text-background"
+                : "border-hairline bg-card text-muted-foreground hover:border-foreground/40 hover:text-foreground",
             )}
           >
             {c.label}
@@ -341,7 +341,7 @@ function FugasClinicaDental() {
           formulario, no tiene sentido que el PDF que se lleva lo incluya
           otra vez. */}
       <div className="mt-8 rounded-3xl border border-hairline bg-card p-6 sm:p-8 print:hidden">
-        <p className="font-precise text-xs font-bold uppercase tracking-wider text-ink/60">
+        <p className="font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
           País de tu clínica
         </p>
         <SelectorPais value={paisCode} onChange={setPaisCode} />

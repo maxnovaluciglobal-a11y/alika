@@ -428,7 +428,7 @@ function IndicadorSemaforo({
   if (pct === null || banda === null) {
     return (
       <div className="rounded-xl border border-dashed border-hairline p-4">
-        <p className="font-precise text-sm font-semibold text-ink">{titulo}</p>
+        <p className="font-display text-sm font-semibold text-foreground">{titulo}</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Completa los datos para ver este indicador.
         </p>
@@ -444,7 +444,7 @@ function IndicadorSemaforo({
         <Icono className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
         <div className="min-w-0">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <p className="font-precise font-semibold">
+            <p className="font-display font-semibold">
               {titulo}: {formatearPct(pct)}
             </p>
             <span className="text-xs font-bold uppercase tracking-wide">{etiqueta}</span>
@@ -461,7 +461,7 @@ function FilaSinJuicio({ label, valor }: { label: string; valor: string }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-hairline/70 py-2 text-sm last:border-b-0">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium tabular-nums text-ink">{valor}</span>
+      <span className="font-medium tabular-nums text-foreground">{valor}</span>
     </div>
   );
 }
@@ -470,7 +470,7 @@ function FilaResultado({ label, valor }: { label: string; valor: string }) {
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold tabular-nums text-ink">{valor}</span>
+      <span className="font-semibold tabular-nums text-foreground">{valor}</span>
     </div>
   );
 }
@@ -680,10 +680,10 @@ function CalculadoraRentabilidadDental() {
   return (
     <PublicPageShell>
       <div className="max-w-3xl">
-        <p className="font-precise text-xs font-bold uppercase tracking-wider text-clay-strong">
+        <p className="font-display text-xs font-bold uppercase tracking-wider text-brand-700">
           Calculadora gratuita
         </p>
-        <h1 className="mt-2 font-precise text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+        <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           Calculadora de rentabilidad para tu clínica dental
         </h1>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground">
@@ -694,7 +694,7 @@ function CalculadoraRentabilidadDental() {
       </div>
 
       <div className="mt-8">
-        <p className="font-precise text-xs font-bold uppercase tracking-wider text-ink/60">
+        <p className="font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
           País de tu clínica
         </p>
         <div role="group" aria-label="País de tu clínica" className="mt-3 flex flex-wrap gap-2">
@@ -709,8 +709,8 @@ function CalculadoraRentabilidadDental() {
                 className={cn(
                   "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
                   activo
-                    ? "border-ink bg-ink text-ink-foreground"
-                    : "border-hairline bg-card text-muted-foreground hover:border-ink/40 hover:text-ink",
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-hairline bg-card text-muted-foreground hover:border-foreground/40 hover:text-foreground",
                 )}
               >
                 {c.label} <span className="opacity-70">· {c.currency}</span>
@@ -724,7 +724,7 @@ function CalculadoraRentabilidadDental() {
         {/* Columna izquierda: inputs. P&L primero, fugas después (regla #4). */}
         <div className="space-y-10">
           <section>
-            <h2 className="font-precise text-xl font-bold text-ink">1. Tu P&L del mes</h2>
+            <h2 className="font-display text-xl font-bold text-foreground">1. Tu P&L del mes</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Lo que factura tu clínica y en qué se va.
             </p>
@@ -792,7 +792,7 @@ function CalculadoraRentabilidadDental() {
           </section>
 
           <section>
-            <h2 className="font-precise text-xl font-bold text-ink">2. Fugas de dinero</h2>
+            <h2 className="font-display text-xl font-bold text-foreground">2. Fugas de dinero</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Ausencias y presupuestos que no se cierran son plata que ya generaste y no cobraste.
             </p>
@@ -860,11 +860,11 @@ function CalculadoraRentabilidadDental() {
             className="space-y-6 rounded-3xl border border-hairline bg-card p-6 shadow-sm"
           >
             <div>
-              <p className="font-precise text-xs font-bold uppercase tracking-wider text-clay-strong">
+              <p className="font-display text-xs font-bold uppercase tracking-wider text-brand-700">
                 Resultado en vivo · {paisActual.label} ({currency})
               </p>
               {diagnostico ? (
-                <p className="mt-2 text-sm leading-relaxed text-ink">{diagnostico}</p>
+                <p className="mt-2 text-sm leading-relaxed text-foreground">{diagnostico}</p>
               ) : (
                 <p className="mt-2 text-sm italic leading-relaxed text-muted-foreground">
                   Completá al menos tus ingresos y costos del mes para ver tu diagnóstico acá.
@@ -925,10 +925,10 @@ function CalculadoraRentabilidadDental() {
             </div>
 
             <div className="space-y-1 border-t border-hairline pt-4">
-              <p className="font-precise text-sm font-semibold text-ink">
+              <p className="font-display text-sm font-semibold text-foreground">
                 Sin comparación (todavía)
               </p>
-              <div className="rounded-xl border border-dashed border-hairline bg-bone/60 p-3 text-xs leading-relaxed text-muted-foreground">
+              <div className="rounded-xl border border-dashed border-hairline bg-muted/60 p-3 text-xs leading-relaxed text-muted-foreground">
                 Para personal, insumos, laboratorio, arriendo, aceptación de presupuestos y cobranza
                 no existe un benchmark público confiable para clínicas de Latinoamérica. Te
                 mostramos tu número tal cual, sin compararlo contra nada que no podamos citar.
@@ -966,7 +966,7 @@ function CalculadoraRentabilidadDental() {
             </div>
 
             <div className="space-y-2 border-t border-hairline pt-4">
-              <p className="font-precise text-sm font-semibold text-ink">
+              <p className="font-display text-sm font-semibold text-foreground">
                 Fugas recuperables al mes
               </p>
               <FilaResultado
@@ -989,7 +989,9 @@ function CalculadoraRentabilidadDental() {
           </div>
 
           <div className="mt-6 rounded-3xl border border-hairline bg-card p-6">
-            <h2 className="font-precise text-lg font-bold text-ink">Guardá este diagnóstico</h2>
+            <h2 className="font-display text-lg font-bold text-foreground">
+              Guardá este diagnóstico
+            </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Dejanos tu email o WhatsApp y te ayudamos a mirar en detalle dónde tenés más para
               ganar.
@@ -1007,19 +1009,21 @@ function CalculadoraRentabilidadDental() {
       </div>
 
       <details className="mt-14 rounded-2xl border border-hairline bg-card p-6">
-        <summary className="cursor-pointer font-precise font-semibold text-ink">
+        <summary className="cursor-pointer font-display font-semibold text-foreground">
           De dónde salen estos números (nota metodológica)
         </summary>
         <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">
           <p>
-            <strong className="text-ink">Ausentismo (10-30%, referencia 15%).</strong> Literatura
-            revisada por pares indexada en PubMed: media 15,2% y mediana 12,9% en una revisión
-            sistemática de inasistencias a citas de salud, y 14,3% en un estudio pediátrico dental
-            sobre 7.379 visitas. Es el único indicador de esta calculadora con respaldo académico
-            directo — por eso es el único que no lleva la etiqueta "referencia EE.UU."
+            <strong className="text-foreground">Ausentismo (10-30%, referencia 15%).</strong>{" "}
+            Literatura revisada por pares indexada en PubMed: media 15,2% y mediana 12,9% en una
+            revisión sistemática de inasistencias a citas de salud, y 14,3% en un estudio pediátrico
+            dental sobre 7.379 visitas. Es el único indicador de esta calculadora con respaldo
+            académico directo — por eso es el único que no lleva la etiqueta "referencia EE.UU."
           </p>
           <p>
-            <strong className="text-ink">Overhead total (≈58%) y margen del dueño (≈24%).</strong>{" "}
+            <strong className="text-foreground">
+              Overhead total (≈58%) y margen del dueño (≈24%).
+            </strong>{" "}
             ADA Health Policy Institute, <em>2026 Survey of Dental Practice</em> (datos del
             ejercicio 2025), n=423 para overhead y n=367 para margen. Son cifras de clínicas de
             Estados Unidos: el mix de seguros, el costo laboral y el costo de laboratorio son
@@ -1027,7 +1031,7 @@ function CalculadoraRentabilidadDental() {
             tratalas como una brújula ajena, no como una sentencia local.
           </p>
           <p>
-            <strong className="text-ink">
+            <strong className="text-foreground">
               Personal, insumos, laboratorio, arriendo, aceptación de presupuestos y cobranza: sin
               semáforo, a propósito.
             </strong>{" "}

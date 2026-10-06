@@ -5,23 +5,41 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Oralia — sistema de diseño "Precision clinical mint".
- * Marca: teal clínico (#0d9488). Acento IA: violeta (#8b5cf6).
- * Tipografía: Outfit (display) + Schibsted Grotesk (texto).
- * Todos los colores en oklch. Nunca escribir colores literales en componentes.
+ * Alika — sistema visual único ("Classical", handoff de rediseño 06-oct-2026,
+ * docs/design_handoff_alika_rediseno/). Una sola identidad para la landing y
+ * la app: papel cálido, tinta casi negra y un acento ocre que vive en trazos,
+ * filetes e íconos, nunca como relleno grande.
+ *
+ * Tipografía: Cormorant Garamond (títulos; máx. 600, display a 400) + Lora
+ * (cuerpo). Las cifras van con `tabular-nums`.
+ *
+ * Nombres: la rampa del acento se expone como `brand-100..900` y no como
+ * `accent-*`, porque shadcn ya usa `accent` para el fondo de hover y
+ * `border-accent` chocaría. Texto de acento a tamaño de cuerpo = `brand-700`
+ * (el ocre puro da ~3:1 sobre el papel, no llega a AA).
  */
 
 @theme inline {
   --font-sans: var(--font-body);
   --font-display: var(--font-heading);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 7px;
+  --radius-xl: 7px;
+  --radius-2xl: 7px;
+  --radius-3xl: 7px;
+  --radius-4xl: 7px;
+
+  --spacing-hair: 4.6px;
+
+  --shadow-2xs: 0 1px 1px var(--shadow-ink-soft);
+  --shadow-xs: 0 1px 2px var(--shadow-ink-soft);
+  --shadow-sm: 0 1px 2px var(--shadow-ink-soft);
+  --shadow-md: 0 3px 10px var(--shadow-ink-mid);
+  --shadow-lg: 0 12px 32px var(--shadow-ink-strong);
+  --shadow-xl: 0 12px 32px var(--shadow-ink-strong);
+  --shadow-2xl: 0 12px 32px var(--shadow-ink-strong);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -44,34 +62,30 @@
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
 
-  /* Tokens propios de Oralia */
+  /* Acento de marca (ocre) y su rampa tonal */
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-brand-soft: var(--brand-soft);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+
   --color-ai: var(--ai);
   --color-ai-foreground: var(--ai-foreground);
   --color-ai-soft: var(--ai-soft);
   --color-surface: var(--surface);
   --color-hairline: var(--hairline);
+  --color-divider: var(--divider);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
-
-  /* Landing pública: solo la sección de marketing usa estos — el resto de
-     la app (Operate) sigue con --brand/--font-heading para no repetir el
-     desajuste de verde admin-vs-portal que ya pasó en GastroCore. */
-  --color-clay: var(--clay);
-  --color-clay-strong: var(--clay-strong);
-  --color-clay-foreground: var(--clay-foreground);
-  --color-clay-soft: var(--clay-soft);
-  --color-ink: var(--ink);
-  --color-ink-foreground: var(--ink-foreground);
-  --color-mint: var(--mint);
-  --color-mint-strong: var(--mint-strong);
-  --color-mint-soft: var(--mint-soft);
-  --color-bone: var(--bone);
-  --font-serif-display: var(--font-landing-display);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -89,150 +103,157 @@
 }
 
 :root {
-  --radius: 0.75rem;
-  --font-heading: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-landing-display: "Newsreader", ui-serif, Georgia, serif;
+  --radius: 4px;
+  --font-heading: "Cormorant Garamond", ui-serif, Georgia, serif;
+  --font-body: "Lora", ui-serif, Georgia, serif;
 
-  /* Acento cálido solo para la landing pública — arcilla/terracota, no
-     compite con el teal de marca que ya vive en toda la app autenticada.
-     Auditoría 19-sep: el acento declarado en este comentario nunca se usaba
-     de verdad, todo el marketing corría con --mint-strong (el mismo verde
-     de la app autenticada) — cero diferenciación entre "te vendemos" y "ya
-     sos cliente". Se agrega --clay-strong (mismo motivo que --mint-strong:
-     0.62 da ~3.1:1 sobre blanco, insuficiente para texto AA) y clay pasa a
-     ser el acento real de eyebrows/CTAs/números destacados en marketing. */
-  --clay: oklch(0.62 0.15 45);
-  --clay-strong: oklch(0.48 0.15 45);
-  --clay-foreground: oklch(0.99 0.012 60);
-  --clay-soft: oklch(0.96 0.03 50);
+  --space-1: 4.6px;
+  --space-2: 9.2px;
+  --space-3: 13.8px;
+  --space-4: 18.4px;
+  --space-5: 23px;
+  --space-6: 27.6px;
+  --space-7: 32.2px;
+  --space-8: 36.8px;
 
-  /* Paleta "Nácar" — landing pública. Clínica premium: tinta navy profunda
-     para drama + menta eléctrica como único acento decidido + hueso frío
-     para bandas. Solo la usa la landing, no la app autenticada. */
-  --ink: oklch(0.28 0.05 250);
-  --ink-foreground: oklch(0.98 0.005 220);
-  --mint: oklch(0.74 0.15 168);
-  /* 0.50 en vez de 0.62: el tono anterior daba 3.19:1 sobre blanco en los
-     labels de 12px (eyebrow uppercase, badges) — falla WCAG AA (necesita
-     4.5:1 para texto que no es "large text"). Este valor da ~5.3:1. */
-  --mint-strong: oklch(0.5 0.14 168);
-  --mint-soft: oklch(0.96 0.03 168);
-  --bone: oklch(0.972 0.006 220);
+  /* Papel y tinta */
+  --background: #f3f2f2;
+  --surface: #eae9e9;
+  --foreground: #201f1d;
+  --card: #f3f2f2;
+  --card-foreground: #201f1d;
+  --popover: #f8f6f6;
+  --popover-foreground: #201f1d;
 
-  --surface: oklch(0.984 0.003 247.858);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.208 0.042 265.755);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.208 0.042 265.755);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.208 0.042 265.755);
+  /* Rampa del acento */
+  --brand: #b68235;
+  --brand-100: #fff3e4;
+  --brand-200: #ffe3bf;
+  --brand-300: #facb8d;
+  --brand-400: #e1ad66;
+  --brand-500: #c28d41;
+  --brand-600: #a06f24;
+  --brand-700: #7d5411;
+  --brand-800: #5a3b0a;
+  --brand-900: #3a270d;
+  /* Tinta sobre ocre (~5,5:1): el blanco sobre #b68235 no llega a AA. */
+  --brand-foreground: #201f1d;
+  --brand-soft: #fff3e4;
 
-  --brand: oklch(0.58 0.099 183.5);
-  --brand-foreground: oklch(0.99 0.01 180);
-  --brand-soft: oklch(0.975 0.02 180);
-  --ai: oklch(0.606 0.208 292.7);
-  --ai-foreground: oklch(0.99 0.005 290);
-  --ai-soft: oklch(0.965 0.02 292);
+  /* IA: el segundo acento del sistema, en la misma familia cálida. */
+  --ai: #79561f;
+  --ai-foreground: #ffffff;
+  --ai-soft: #fff3e4;
 
-  --primary: oklch(0.58 0.099 183.5);
-  --primary-foreground: oklch(0.99 0.01 180);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.975 0.02 180);
-  --accent-foreground: oklch(0.48 0.09 183.5);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --success: oklch(0.6 0.13 155);
-  --success-soft: oklch(0.965 0.03 155);
-  --warning: oklch(0.68 0.14 65);
-  --warning-soft: oklch(0.97 0.03 80);
+  /* Semánticos shadcn re-mapeados: así cambian los 48 componentes de ui/. */
+  --primary: #7d5411;
+  --primary-foreground: #ffffff;
+  --secondary: #eae9e9;
+  --secondary-foreground: #201f1d;
+  --muted: #eae9e9;
+  --muted-foreground: #5f5c59;
+  --accent: color-mix(in srgb, #b68235 10%, transparent);
+  --accent-foreground: #5a3b0a;
+  --destructive: #a3301c;
+  --destructive-foreground: #ffffff;
+  --success: #4a6a2c;
+  --success-soft: #eaf0df;
+  --warning: #8a5d14;
+  --warning-soft: #fff3e4;
 
-  --border: oklch(0.929 0.013 255.508);
-  --hairline: oklch(0.958 0.008 250);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.58 0.099 183.5);
+  --divider: color-mix(in srgb, #201f1d 16%, transparent);
+  --border: color-mix(in srgb, #201f1d 16%, transparent);
+  --hairline: color-mix(in srgb, #201f1d 9%, transparent);
+  --input: color-mix(in srgb, #201f1d 22%, transparent);
+  --ring: #b68235;
 
-  --chart-1: oklch(0.58 0.099 183.5);
-  --chart-2: oklch(0.606 0.208 292.7);
-  --chart-3: oklch(0.6 0.13 155);
-  --chart-4: oklch(0.68 0.14 65);
-  --chart-5: oklch(0.554 0.046 257.417);
+  --shadow-ink-soft: rgb(45 43 43 / 0.14);
+  --shadow-ink-mid: rgb(45 43 43 / 0.16);
+  --shadow-ink-strong: rgb(45 43 43 / 0.22);
 
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-primary: oklch(0.58 0.099 183.5);
-  --sidebar-primary-foreground: oklch(0.99 0.01 180);
-  --sidebar-accent: oklch(0.975 0.02 180);
-  --sidebar-accent-foreground: oklch(0.48 0.09 183.5);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.58 0.099 183.5);
+  --chart-1: #b68235;
+  --chart-2: #605d5d;
+  --chart-3: #4a6a2c;
+  --chart-4: #e1ad66;
+  --chart-5: #9b9797;
+
+  --sidebar: #eae9e9;
+  --sidebar-foreground: #201f1d;
+  --sidebar-primary: #7d5411;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: color-mix(in srgb, #b68235 12%, transparent);
+  --sidebar-accent-foreground: #5a3b0a;
+  --sidebar-border: color-mix(in srgb, #201f1d 12%, transparent);
+  --sidebar-ring: #b68235;
 }
 
+/* Modo oscuro: la misma rampa leída sobre tinta. El acento sube a los
+   pasos claros para conservar contraste. */
 .dark {
-  --clay: oklch(0.74 0.14 45);
-  --clay-strong: oklch(0.68 0.14 45);
-  --clay-foreground: oklch(0.18 0.03 45);
-  --clay-soft: oklch(0.32 0.05 45);
+  --background: #1d1c1b;
+  --surface: #171615;
+  --foreground: #ece9e4;
+  --card: #1d1c1b;
+  --card-foreground: #ece9e4;
+  --popover: #252322;
+  --popover-foreground: #ece9e4;
 
-  --ink: oklch(0.22 0.04 250);
-  --ink-foreground: oklch(0.98 0.005 220);
-  --mint: oklch(0.78 0.15 168);
-  --mint-strong: oklch(0.7 0.15 168);
-  --mint-soft: oklch(0.3 0.06 168);
-  --bone: oklch(0.24 0.02 240);
+  --brand: #e1ad66;
+  --brand-100: #3a270d;
+  --brand-200: #5a3b0a;
+  --brand-300: #7d5411;
+  --brand-400: #a06f24;
+  --brand-500: #c28d41;
+  --brand-600: #e1ad66;
+  --brand-700: #facb8d;
+  --brand-800: #ffe3bf;
+  --brand-900: #fff3e4;
+  --brand-foreground: #1d1c1b;
+  --brand-soft: #3a270d;
 
-  --surface: oklch(0.17 0.02 250);
-  --background: oklch(0.2 0.022 252);
-  --foreground: oklch(0.97 0.005 247);
-  --card: oklch(0.235 0.022 252);
-  --card-foreground: oklch(0.97 0.005 247);
-  --popover: oklch(0.235 0.022 252);
-  --popover-foreground: oklch(0.97 0.005 247);
+  --ai: #facb8d;
+  --ai-foreground: #1d1c1b;
+  --ai-soft: #3a270d;
 
-  --brand: oklch(0.72 0.11 180);
-  --brand-foreground: oklch(0.18 0.03 190);
-  --brand-soft: oklch(0.3 0.045 185);
-  --ai: oklch(0.72 0.16 292);
-  --ai-foreground: oklch(0.18 0.03 292);
-  --ai-soft: oklch(0.31 0.06 292);
+  --primary: #facb8d;
+  --primary-foreground: #1d1c1b;
+  --secondary: #2a2827;
+  --secondary-foreground: #ece9e4;
+  --muted: #2a2827;
+  --muted-foreground: #b3aea8;
+  --accent: color-mix(in srgb, #e1ad66 14%, transparent);
+  --accent-foreground: #ffe3bf;
+  --destructive: #e07a64;
+  --destructive-foreground: #1d1c1b;
+  --success: #a9c486;
+  --success-soft: #26301c;
+  --warning: #e1ad66;
+  --warning-soft: #3a270d;
 
-  --primary: oklch(0.72 0.11 180);
-  --primary-foreground: oklch(0.18 0.03 190);
-  --secondary: oklch(0.28 0.025 252);
-  --secondary-foreground: oklch(0.97 0.005 247);
-  --muted: oklch(0.28 0.025 252);
-  --muted-foreground: oklch(0.72 0.02 250);
-  --accent: oklch(0.3 0.045 185);
-  --accent-foreground: oklch(0.9 0.06 180);
-  --destructive: oklch(0.68 0.18 22);
-  --destructive-foreground: oklch(0.98 0.003 247);
-  --success: oklch(0.72 0.13 155);
-  --success-soft: oklch(0.3 0.05 155);
-  --warning: oklch(0.78 0.13 75);
-  --warning-soft: oklch(0.32 0.05 75);
+  --divider: color-mix(in srgb, #ece9e4 16%, transparent);
+  --border: color-mix(in srgb, #ece9e4 16%, transparent);
+  --hairline: color-mix(in srgb, #ece9e4 9%, transparent);
+  --input: color-mix(in srgb, #ece9e4 22%, transparent);
+  --ring: #e1ad66;
 
-  --border: oklch(1 0 0 / 10%);
-  --hairline: oklch(1 0 0 / 7%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.72 0.11 180);
+  --shadow-ink-soft: rgb(0 0 0 / 0.3);
+  --shadow-ink-mid: rgb(0 0 0 / 0.35);
+  --shadow-ink-strong: rgb(0 0 0 / 0.45);
 
-  --chart-1: oklch(0.72 0.11 180);
-  --chart-2: oklch(0.72 0.16 292);
-  --chart-3: oklch(0.72 0.13 155);
-  --chart-4: oklch(0.78 0.13 75);
-  --chart-5: oklch(0.72 0.02 250);
+  --chart-1: #e1ad66;
+  --chart-2: #b3aea8;
+  --chart-3: #a9c486;
+  --chart-4: #facb8d;
+  --chart-5: #7d7979;
 
-  --sidebar: oklch(0.235 0.022 252);
-  --sidebar-foreground: oklch(0.97 0.005 247);
-  --sidebar-primary: oklch(0.72 0.11 180);
-  --sidebar-primary-foreground: oklch(0.18 0.03 190);
-  --sidebar-accent: oklch(0.3 0.045 185);
-  --sidebar-accent-foreground: oklch(0.9 0.06 180);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.72 0.11 180);
+  --sidebar: #171615;
+  --sidebar-foreground: #ece9e4;
+  --sidebar-primary: #facb8d;
+  --sidebar-primary-foreground: #1d1c1b;
+  --sidebar-accent: color-mix(in srgb, #e1ad66 14%, transparent);
+  --sidebar-accent-foreground: #ffe3bf;
+  --sidebar-border: color-mix(in srgb, #ece9e4 12%, transparent);
+  --sidebar-ring: #e1ad66;
 }
 
 @layer base {
@@ -250,17 +271,31 @@
   }
 
   body {
-    background-color: var(--color-surface);
+    background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
   }
 
   h1,
   h2,
-  h3 {
+  h3,
+  h4 {
     font-family: var(--font-heading);
+    font-weight: 600;
     letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-brand) 30%, transparent);
   }
 
   * {
@@ -274,169 +309,51 @@
   }
 }
 
-@utility card-clinical {
-  background-color: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-2xl);
+/* Kicker: la única etiqueta en mayúsculas del sistema (fecha, sección). */
+@utility kicker {
+  font-family: var(--font-body);
+  font-size: 11px;
+  line-height: 1.3;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-brand-700);
 }
 
-/* Único momento de motion autorizado en la landing: entrada del preview
-   del producto en el hero. Expo-out desde un estado ya casi visible. */
+/* Display: titulares grandes, en el corte normal de Cormorant. */
+@utility font-display-light {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* Fotografía con tratamiento de lámina: mat de papel + filete de 1px. */
+@utility plate {
+  filter: sepia(0.22) saturate(0.82) contrast(1.05);
+  border: 6px solid var(--color-surface);
+  outline: 1px solid var(--color-divider);
+}
+
+@utility card-clinical {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+/* Único momento de motion de la landing: el panel "Hoy" del hero entra
+   desde un estado ya casi visible. */
 @keyframes landing-rise {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.985);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
 @utility animate-landing-rise {
   animation: landing-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
-}
-
-/* ── Hero de impacto (solo landing pública) ──────────────────────────
-   Atmósfera: malla aurora en tonos de marca (clay/teal/violeta) que
-   deriva muy lento detrás del hero, + grano finísimo por encima. Todo
-   CSS, cero assets, cero costo de red. Se apaga con reduced-motion. */
-@keyframes aurora-drift {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(2%, -1.5%, 0) scale(1.06);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-@utility hero-aurora {
-  position: absolute;
-  inset: -25% -10% auto -10%;
-  height: 130%;
-  z-index: -20;
-  pointer-events: none;
-  background:
-    radial-gradient(38% 44% at 18% 22%, oklch(0.62 0.15 45 / 0.22), transparent 70%),
-    radial-gradient(42% 40% at 82% 18%, oklch(0.58 0.099 183.5 / 0.2), transparent 72%),
-    radial-gradient(46% 46% at 62% 88%, oklch(0.606 0.208 292.7 / 0.13), transparent 70%);
-  filter: blur(24px) saturate(1.05);
-  animation: aurora-drift 26s ease-in-out infinite;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
-}
-
-:root:not([data-theme="light"]) .dark & .hero-aurora,
-.dark .hero-aurora {
-  background:
-    radial-gradient(38% 44% at 18% 22%, oklch(0.74 0.14 45 / 0.24), transparent 70%),
-    radial-gradient(42% 40% at 82% 18%, oklch(0.62 0.11 183.5 / 0.22), transparent 72%),
-    radial-gradient(46% 46% at 62% 88%, oklch(0.62 0.19 292.7 / 0.18), transparent 70%);
-}
-
-/* Grano fino tramado — SVG inline como data-uri (permitido por img-src
-   'self' data:). Multiplica sobre la aurora para dar textura de papel. */
-@utility hero-grain {
-  position: absolute;
-  inset: 0;
-  z-index: -19;
-  pointer-events: none;
-  opacity: 0.5;
-  mix-blend-mode: soft-light;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
-}
-
-/* Pulso al confirmarse una cita en el demo vivo del hero. */
-@keyframes confirm-pop {
-  0% {
-    transform: scale(0.9);
-  }
-  60% {
-    transform: scale(1.08);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@utility animate-confirm-pop {
-  animation: confirm-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
-}
-
-/* Flotación sutil del preview del producto (respiración lenta). */
-@keyframes preview-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-@utility animate-preview-float {
-  animation: preview-float 7s ease-in-out infinite;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
-}
-
-/* Trazo dibujado a mano bajo la palabra clave del titular. */
-@keyframes swash-draw {
-  from {
-    stroke-dashoffset: 260;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@utility animate-swash {
-  stroke-dasharray: 260;
-  animation: swash-draw 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-    stroke-dashoffset: 0;
-  }
-}
-
-/* Tipografía suiza precisa para los titulares de la landing "Nácar":
-   grotesca de texto (Schibsted Grotesk, corregido 01-sep — antes Inter,
-   demasiado genérica) con tracking ajustado y gran contraste de tamaño. */
-@utility font-precise {
-  font-family: var(--font-body);
-  letter-spacing: -0.035em;
-}
-
-/* Entrada al scroll (una sola, discreta) para bloques de la landing. */
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@utility animate-rise-in {
-  animation: rise-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;

@@ -160,7 +160,7 @@ export function MedicalHistoryCard({
             type="button"
             onClick={guardar}
             disabled={guardarOffline.enCurso}
-            className="flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-brand-foreground hover:opacity-90 disabled:opacity-60"
+            className="flex items-center gap-1.5 rounded-lg border border-brand bg-transparent px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand/12 disabled:opacity-60"
           >
             {guardarOffline.enCurso ? (
               <Loader2 className="size-3.5 animate-spin" />

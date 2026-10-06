@@ -25,11 +25,11 @@ function Nosotros() {
   return (
     <LegalPage label="Empresa" title="Quiénes somos">
       <div className="flex items-start gap-4 rounded-xl border border-hairline bg-card p-5">
-        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-ink font-precise text-lg font-bold text-ink-foreground">
+        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-foreground font-display text-lg font-bold text-background">
           W
         </span>
         <div>
-          <p className="text-base leading-relaxed text-ink">
+          <p className="text-base leading-relaxed text-foreground">
             "Soy Walter. Hice Alika porque vi clínicas ahogadas en planillas y recordatorios a mano.
             Está pensado para cómo se trabaja en LatAm. Si lo pruebas y algo te traba, escríbeme —
             te respondo yo."
@@ -71,7 +71,7 @@ function Nosotros() {
       <LegalP>
         Alika es operado por MAXNOVA &amp; LUCI Global LLC, una LLC constituida en Estados Unidos.
         Más detalles de cómo tratamos los datos de tu clínica y tus pacientes están en la{" "}
-        <a href="/privacidad" className="text-clay-strong underline underline-offset-2">
+        <a href="/privacidad" className="text-brand-700 underline underline-offset-2">
           Política de Privacidad
         </a>
         .
@@ -82,7 +82,7 @@ function Nosotros() {
         Para consultas, piloto o soporte:{" "}
         <a
           href="mailto:maxnovaluciglobal@gmail.com"
-          className="text-clay-strong underline underline-offset-2"
+          className="text-brand-700 underline underline-offset-2"
         >
           maxnovaluciglobal@gmail.com
         </a>

@@ -413,7 +413,7 @@ function Hilo({
           <button
             type="submit"
             disabled={!texto.trim() || mutation.isPending}
-            className="flex h-11 shrink-0 items-center gap-2 rounded-lg bg-brand px-4 text-sm font-medium text-brand-foreground disabled:opacity-50"
+            className="flex h-11 shrink-0 items-center gap-2 rounded-lg border border-brand bg-transparent px-4 text-sm font-medium text-brand-700 disabled:opacity-50"
           >
             {mutation.isPending ? (
               <Loader2 className="size-4 animate-spin" />

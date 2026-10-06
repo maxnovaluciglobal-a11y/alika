@@ -489,7 +489,7 @@ function OnboardingPage() {
                 type="button"
                 onClick={() => setStep((s) => s + 1)}
                 disabled={!stepValid}
-                className="rounded-lg bg-brand px-5 py-2 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+                className="rounded-lg border border-brand bg-transparent px-5 py-2 text-sm font-medium text-brand-700 transition-opacity hover:bg-brand/12 disabled:opacity-40"
               >
                 Continuar
               </button>
@@ -501,7 +501,7 @@ function OnboardingPage() {
                   mutation.mutate();
                 }}
                 disabled={!stepValid || mutation.isPending}
-                className="inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-2 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-lg border border-brand bg-transparent px-5 py-2 text-sm font-medium text-brand-700 transition-opacity hover:bg-brand/12 disabled:opacity-40"
               >
                 {mutation.isPending && <Loader2 className="size-4 animate-spin" />}
                 Finalizar configuración

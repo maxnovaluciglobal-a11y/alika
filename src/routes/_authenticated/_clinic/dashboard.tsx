@@ -135,7 +135,7 @@ function DesempenoBloqueado() {
       </div>
       <Link
         to="/suscripcion"
-        className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-brand px-4 py-2 text-xs font-medium text-brand-foreground transition-opacity hover:opacity-90"
+        className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-brand bg-transparent px-4 py-2 text-xs font-medium text-brand-700 transition-opacity hover:bg-brand/12"
       >
         <Sparkles className="size-3.5" /> Activar suscripción
       </Link>

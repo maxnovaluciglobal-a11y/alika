@@ -80,7 +80,7 @@ function SoftwareDentalLatam() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-6 py-16">
-        <h1 className="font-precise text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           Software dental para clínicas de Latinoamérica
         </h1>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground">
@@ -91,14 +91,14 @@ function SoftwareDentalLatam() {
         </p>
 
         <section className="mt-12">
-          <h2 className="font-precise text-sm font-bold uppercase tracking-wider text-ink/60">
+          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">
             Países con alta guiada
           </h2>
           <div className="mt-4 space-y-3">
             {COUNTRIES.map((pais) => (
               <div key={pais.code} className="rounded-lg border border-hairline p-4">
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <h3 className="font-precise font-semibold text-ink">{pais.label}</h3>
+                  <h3 className="font-display font-semibold text-foreground">{pais.label}</h3>
                   <span className="text-xs text-muted-foreground">
                     {pais.currency} · {pais.timezone}
                     {SIN_DECIMALES.has(pais.currency) ? " · moneda sin decimales" : ""}
@@ -113,40 +113,44 @@ function SoftwareDentalLatam() {
         </section>
 
         <section className="mt-12">
-          <h2 className="font-precise text-sm font-bold uppercase tracking-wider text-ink/60">
+          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">
             Lo mismo en los cinco
           </h2>
           <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
             <li>
-              <strong className="text-ink">Agenda en hora local.</strong> Cada sucursal guarda su
-              propia zona horaria, así que una clínica con sedes en dos ciudades no ve las citas
-              corridas.
+              <strong className="text-foreground">Agenda en hora local.</strong> Cada sucursal
+              guarda su propia zona horaria, así que una clínica con sedes en dos ciudades no ve las
+              citas corridas.
             </li>
             <li>
-              <strong className="text-ink">WhatsApp sin obligación de conectar nada.</strong> Alika
-              arma la cola de recordatorios y tu equipo la despacha. Si conectas tu número, el envío
-              sale por la API; si no, por un link de wa.me. Ningún recordatorio ni mensaje de
+              <strong className="text-foreground">WhatsApp sin obligación de conectar nada.</strong>{" "}
+              Alika arma la cola de recordatorios y tu equipo la despacha. Si conectas tu número, el
+              envío sale por la API; si no, por un link de wa.me. Ningún recordatorio ni mensaje de
               seguimiento sale solo: los dispara siempre alguien de tu clínica. La única excepción
               es un saludo automático la primera vez que escribe alguien que todavía no es paciente
               tuyo — y sólo si conectaste tu número.
             </li>
             <li>
-              <strong className="text-ink">Sigue funcionando sin internet.</strong> Agenda, fichas,
-              cobros y odontograma quedan guardados en el equipo y se sincronizan solos.
+              <strong className="text-foreground">Sigue funcionando sin internet.</strong> Agenda,
+              fichas, cobros y odontograma quedan guardados en el equipo y se sincronizan solos.
             </li>
             <li>
-              <strong className="text-ink">Los montos no se redondean mal.</strong> Cada importe se
-              guarda en la unidad mínima de su moneda y la moneda es obligatoria en cada registro.
+              <strong className="text-foreground">Los montos no se redondean mal.</strong> Cada
+              importe se guarda en la unidad mínima de su moneda y la moneda es obligatoria en cada
+              registro.
             </li>
           </ul>
         </section>
 
         <section className="mt-12">
-          <h2 className="font-precise text-sm font-bold uppercase tracking-wider text-ink/60">
+          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">
             Lo que Alika no hace
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            Alika <strong className="text-ink">no emite documentos tributarios electrónicos</strong>{" "}
+            Alika{" "}
+            <strong className="text-foreground">
+              no emite documentos tributarios electrónicos
+            </strong>{" "}
             en ningún país: ni boleta ni factura electrónica en Chile, ni CFDI en México, ni sus
             equivalentes. Registra cobros, saldos, medios de pago con su retención y comisiones de
             profesionales, pero la emisión fiscal sigue en el sistema que ya uses. Preferimos
@@ -155,13 +159,13 @@ function SoftwareDentalLatam() {
         </section>
 
         <section className="mt-12">
-          <h2 className="font-precise text-sm font-bold uppercase tracking-wider text-ink/60">
+          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">
             Preguntas frecuentes
           </h2>
           <dl className="mt-4 space-y-6">
             {PREGUNTAS.map((p) => (
               <div key={p.q}>
-                <dt className="font-semibold text-ink">{p.q}</dt>
+                <dt className="font-semibold text-foreground">{p.q}</dt>
                 <dd className="mt-1 text-sm leading-relaxed text-muted-foreground">{p.a}</dd>
               </div>
             ))}
@@ -170,11 +174,11 @@ function SoftwareDentalLatam() {
 
         <p className="mt-12 text-sm text-muted-foreground">
           Podés{" "}
-          <Link to="/demo" className="text-clay-strong underline underline-offset-2">
+          <Link to="/demo" className="text-brand-700 underline underline-offset-2">
             probar la demo sin registrarte
           </Link>{" "}
           o mirar el{" "}
-          <Link to="/faq" className="text-clay-strong underline underline-offset-2">
+          <Link to="/faq" className="text-brand-700 underline underline-offset-2">
             resto de las preguntas frecuentes
           </Link>
           .
@@ -183,7 +187,7 @@ function SoftwareDentalLatam() {
           ¿Querés saber cuánto estás perdiendo hoy? Calculá la{" "}
           <Link
             to="/calculadora-rentabilidad-dental"
-            className="text-clay-strong underline underline-offset-2"
+            className="text-brand-700 underline underline-offset-2"
           >
             rentabilidad de tu clínica
           </Link>

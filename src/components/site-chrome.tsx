@@ -18,25 +18,27 @@ export function SiteHeader() {
     <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md print:hidden">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
         <Link to="/" className="flex items-center gap-2">
-          <AlikaLogo tone="ink" size={32} />
-          <span className="font-precise text-xl font-bold tracking-tight text-ink">Alika</span>
+          <AlikaLogo size={32} />
+          <span className="font-display text-xl font-bold tracking-tight text-foreground">
+            Alika
+          </span>
         </Link>
         <div className="flex items-center gap-1.5">
           <a
             href="/demo"
-            className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-ink"
+            className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             Ver demo
           </a>
           <Link
             to="/auth"
-            className="hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-ink sm:block"
+            className="hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:block"
           >
             Entrar
           </Link>
           <Link
             to="/auth"
-            className="rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-ink-foreground transition-opacity hover:opacity-90"
+            className="rounded-lg bg-foreground px-4 py-2 text-sm font-semibold text-background transition-opacity hover:opacity-90"
           >
             Empieza gratis
           </Link>
@@ -130,14 +132,14 @@ export function SiteFooter() {
                   {l.kind === "route" ? (
                     <Link
                       to={l.to}
-                      className="text-sm text-ink/80 transition-colors hover:text-ink"
+                      className="text-sm text-foreground/80 transition-colors hover:text-foreground"
                     >
                       {l.label}
                     </Link>
                   ) : (
                     <a
                       href={l.href}
-                      className="text-sm text-ink/80 transition-colors hover:text-ink"
+                      className="text-sm text-foreground/80 transition-colors hover:text-foreground"
                     >
                       {l.label}
                     </a>
@@ -151,8 +153,8 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-6 py-6">
         <div className="flex flex-col items-center justify-between gap-4 border-t border-hairline pt-6 text-sm text-muted-foreground sm:flex-row">
           <span className="flex items-center gap-2">
-            <AlikaLogo tone="ink" size={24} className="rounded-md" />
-            <span className="font-precise font-bold text-ink">Alika</span>
+            <AlikaLogo size={24} className="rounded-md" />
+            <span className="font-display font-bold text-foreground">Alika</span>
           </span>
           <span className="flex items-center gap-1.5 text-xs">
             Software de gestión dental · Hecho para Latinoamérica

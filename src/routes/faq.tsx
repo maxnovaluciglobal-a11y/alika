@@ -133,18 +133,18 @@ export const Route = createFileRoute("/faq")({
 
 function Faq() {
   return (
-    <div className="min-h-screen bg-background text-ink">
+    <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
       <main id="main-content" className="mx-auto max-w-2xl px-6 py-16 sm:py-20">
-        <p className="text-xs font-semibold uppercase tracking-wider text-clay-strong">Recursos</p>
-        <h1 className="font-precise mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
+        <p className="text-xs font-semibold uppercase tracking-wider text-brand-700">Recursos</p>
+        <h1 className="font-display mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
           Preguntas frecuentes
         </h1>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground">
           ¿No encuentras lo que buscas? Escríbenos a{" "}
           <a
             href="mailto:maxnovaluciglobal@gmail.com"
-            className="text-clay-strong underline underline-offset-2"
+            className="text-brand-700 underline underline-offset-2"
           >
             maxnovaluciglobal@gmail.com
           </a>
@@ -154,7 +154,7 @@ function Faq() {
         <div className="mt-10 space-y-10">
           {grupos.map((g) => (
             <section key={g.t}>
-              <h2 className="font-precise text-sm font-bold uppercase tracking-wider text-ink/60">
+              <h2 className="font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">
                 {g.t}
               </h2>
               <Accordion type="single" collapsible className="mt-3">
@@ -173,7 +173,7 @@ function Faq() {
 
         <p className="mt-12 text-sm text-muted-foreground">
           ¿Quieres más detalle técnico? Mira la{" "}
-          <Link to="/docs" className="text-clay-strong underline underline-offset-2">
+          <Link to="/docs" className="text-brand-700 underline underline-offset-2">
             documentación
           </Link>
           .

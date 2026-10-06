@@ -377,7 +377,7 @@ export function AppShell({
       <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-card lg:flex">
         <div className="p-6">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <AlikaLogo tone="brand" size={32} />
+            <AlikaLogo size={32} />
             <span className="font-display text-xl font-bold tracking-tight text-brand">Alika</span>
           </Link>
           <ClinicSwitcher access={access} />

@@ -390,7 +390,7 @@ function SandboxEmailPage() {
               type="button"
               disabled={!listo || config.mode === "production"}
               onClick={guardarAllowlist}
-              className="mt-3 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="mt-3 rounded-lg border border-brand bg-transparent px-3 py-2 text-sm font-medium text-brand-700 transition-opacity hover:bg-brand/12 disabled:opacity-50"
             >
               Guardar lista
             </button>

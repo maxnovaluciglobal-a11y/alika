@@ -116,7 +116,7 @@ export function PortalLinkButton({ clinicId, patientId, bloqueado }: Props) {
           <button
             type="button"
             onClick={openWhatsApp}
-            className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand px-2 py-1.5 text-[11px] font-medium text-brand-foreground outline-none hover:bg-brand/90 focus-visible:ring-1 focus-visible:ring-ring"
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-brand bg-transparent px-2 py-1.5 text-[11px] font-medium text-brand-700 outline-none hover:bg-brand/12 focus-visible:ring-1 focus-visible:ring-ring"
           >
             <MessageCircle className="size-3.5" /> WhatsApp
           </button>

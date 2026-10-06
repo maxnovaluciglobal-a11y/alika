@@ -29,14 +29,14 @@ export function TrialBanner({ clinicId }: { clinicId: string }) {
     return (
       <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-5 py-2 text-sm sm:px-8">
         <div className="flex items-center gap-2">
-          <Sparkles className="size-4 text-mint-strong" />
+          <Sparkles className="size-4 text-success" />
           <span>
             Tienes acceso completo. Activa tu plan cuando quieras — primeros 14 días sin cargo.
           </span>
         </div>
         <Link
           to="/suscripcion"
-          className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
+          className="rounded-md border border-brand bg-transparent px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand/12"
         >
           Ver plan · desde US$29/mes
         </Link>
@@ -71,7 +71,7 @@ export function TrialBanner({ clinicId }: { clinicId: string }) {
         </div>
         <Link
           to="/suscripcion"
-          className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
+          className="rounded-md border border-brand bg-transparent px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand/12"
         >
           Activar suscripción
         </Link>

@@ -76,7 +76,7 @@ export function TrialDesbloqueo({ pantalla }: { pantalla: string }) {
       <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
         <Link
           to="/suscripcion"
-          className="inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90"
+          className="inline-flex items-center gap-2 rounded-lg border border-brand bg-transparent px-5 py-2.5 text-sm font-medium text-brand-700 transition-opacity hover:bg-brand/12"
         >
           <Sparkles className="size-4" /> Activar suscripción
         </Link>

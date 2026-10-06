@@ -34,14 +34,14 @@ const nav = [
 function DocsLayout() {
   const { pathname } = useLocation();
   return (
-    <div className="min-h-screen bg-background text-ink">
+    <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
       <main
         id="main-content"
         className="mx-auto grid max-w-5xl gap-10 px-6 py-12 sm:py-16 lg:grid-cols-[200px_1fr]"
       >
         <nav className="lg:sticky lg:top-20 lg:self-start">
-          <p className="text-xs font-semibold uppercase tracking-wider text-clay-strong">
+          <p className="text-xs font-semibold uppercase tracking-wider text-brand-700">
             Documentación
           </p>
           <ul className="mt-4 space-y-1">
@@ -52,8 +52,8 @@ function DocsLayout() {
                   className={cn(
                     "block rounded-lg px-3 py-1.5 text-sm transition-colors",
                     pathname === item.to
-                      ? "bg-clay-soft font-medium text-clay-strong"
-                      : "text-ink/70 hover:bg-secondary hover:text-ink",
+                      ? "bg-brand-100 font-medium text-brand-700"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                   )}
                 >
                   {item.label}
