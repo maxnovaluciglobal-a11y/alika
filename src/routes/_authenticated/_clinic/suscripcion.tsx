@@ -259,7 +259,7 @@ function BillingPage() {
                         {usd(info.regularCents)}
                       </span>
                     </p>
-                    <p className="text-[11px] font-medium text-brand-700">
+                    <p className="text-xs font-medium text-brand-700">
                       Precio de fundador — por tiempo limitado
                     </p>
                   </button>

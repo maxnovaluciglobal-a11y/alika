@@ -117,7 +117,7 @@ function MiAgendaPage() {
               <h2 className="flex items-center gap-1.5 font-display text-lg font-semibold text-warning">
                 <CircleCheck className="size-4" /> Por aceptar
                 {porAceptar.length > 0 && (
-                  <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning">
+                  <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-semibold text-warning">
                     {porAceptar.length}
                   </span>
                 )}
@@ -184,7 +184,7 @@ function MiAgendaPage() {
                         {c.pacienteConfirmo && <PatientConfirmedBadge />}
                         <span
                           className={cn(
-                            "shrink-0 rounded border px-1.5 py-0.5 text-[11px] font-medium",
+                            "shrink-0 rounded border px-1.5 py-0.5 text-xs font-medium",
                             clasePastilla[tonoDeEstadoCita[c.estado]],
                           )}
                         >

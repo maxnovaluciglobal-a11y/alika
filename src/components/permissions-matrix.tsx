@@ -104,7 +104,7 @@ export function PermissionsMatrix() {
                 <tr key={permiso} className="border-b border-hairline last:border-0">
                   <th scope="row" className="px-5 py-3 text-left font-normal">
                     {PERMISSION_LABELS[permiso]}
-                    <span className="ml-2 text-[10px] text-muted-foreground">{permiso}</span>
+                    <span className="ml-2 text-[11px] text-muted-foreground">{permiso}</span>
                   </th>
                   {CLINIC_ROLES.map((rol) => (
                     <td key={rol} className="px-3 py-3 text-center">
@@ -175,7 +175,7 @@ export function PermissionsMatrix() {
                       <td key={rol} className="px-3 py-3 text-center">
                         <span
                           title={r.detalle}
-                          className={`inline-block rounded-full px-2 py-0.5 text-[11px] ${ESTILO_VEREDICTO[r.verdict]}`}
+                          className={`inline-block rounded-full px-2 py-0.5 text-xs ${ESTILO_VEREDICTO[r.verdict]}`}
                         >
                           {TEXTO_VEREDICTO[r.verdict]}
                         </span>

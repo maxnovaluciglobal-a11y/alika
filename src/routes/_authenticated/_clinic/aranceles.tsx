@@ -862,15 +862,15 @@ function ArancelesPage() {
           porCategoria.map(([categoria, items]) => (
             <section key={categoria} className="card-clinical overflow-hidden">
               <div className="flex items-center justify-between gap-3 border-b border-hairline bg-secondary/40 px-4 py-2">
-                <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {categoria}
                 </h2>
-                <span className="text-[11px] text-muted-foreground">{items.length}</span>
+                <span className="text-xs text-muted-foreground">{items.length}</span>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[46rem] text-sm">
                   <thead>
-                    <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <tr className="border-b border-hairline text-xs uppercase tracking-wider text-muted-foreground">
                       <th className="px-4 py-2 text-left font-medium">Prestación</th>
                       <th className="px-3 py-2 text-left font-medium">Código</th>
                       <th className="px-3 py-2 text-right font-medium">Precio</th>
@@ -892,7 +892,7 @@ function ArancelesPage() {
                         <td className="px-4 py-2">
                           {p.name}
                           {!p.isActive && (
-                            <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                            <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
                               De baja
                             </span>
                           )}

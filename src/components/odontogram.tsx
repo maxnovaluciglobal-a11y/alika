@@ -134,7 +134,7 @@ function ToothCell({
   return (
     <div className="flex flex-col items-center gap-1">
       <span
-        className="tabular-nums text-[10px] text-muted-foreground"
+        className="tabular-nums text-[11px] text-muted-foreground"
         title={nombreComun ? `${tooth} · ${nombreComun}` : undefined}
       >
         {tooth}
@@ -280,7 +280,7 @@ function TablaOdontograma({
           Piezas con al menos una condición distinta de sano, con su superficie y diagnóstico
         </caption>
         <thead>
-          <tr className="border-b border-hairline text-[10px] uppercase tracking-wider text-muted-foreground">
+          <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
             <th scope="col" className="py-2 pr-3 font-semibold">
               Pieza
             </th>
@@ -557,7 +557,7 @@ export function Odontogram({
             )}
           </div>
 
-          <p className="flex items-center gap-1.5 pt-2 text-[11px] text-muted-foreground">
+          <p className="flex items-center gap-1.5 pt-2 text-xs text-muted-foreground">
             <Info className="size-3" />
             {denticion === "permanente"
               ? "Arriba: piezas 18→11 · 21→28. Abajo: 48→41 · 31→38."
@@ -565,7 +565,7 @@ export function Odontogram({
             Pasa el mouse sobre el número, o abre una pieza, para ver su nombre común.
           </p>
 
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1 text-[10px] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1 text-[11px] text-muted-foreground">
             {TOOTH_CONDITIONS.map((c) => (
               <span key={c} className="inline-flex items-center gap-1">
                 <span
@@ -589,7 +589,7 @@ export function Odontogram({
             <div className="mb-2 flex items-start justify-between gap-2">
               <div>
                 <p className="text-sm font-medium">Pieza {selection.tooth}</p>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {toothCommonName(selection.tooth) ? `${toothCommonName(selection.tooth)} · ` : ""}
                   {SURFACE_LABELS[selection.surface]}
                 </p>
@@ -608,13 +608,13 @@ export function Odontogram({
                   onPresupuestarPieza({ tooth: selection.tooth, surface: selection.surface });
                   setSelection(null);
                 }}
-                className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-md border border-brand bg-transparent px-2 py-1.5 text-[11px] font-medium text-brand-700 transition-colors hover:bg-brand/12"
+                className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-md border border-brand bg-transparent px-2 py-1.5 text-xs font-medium text-brand-700 transition-colors hover:bg-brand/12"
               >
                 <Receipt className="size-3.5" /> Presupuestar esta pieza
               </button>
             )}
             {!puedeEditar ? (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Tu rol no puede modificar el odontograma.
               </p>
             ) : (
@@ -625,7 +625,7 @@ export function Odontogram({
                     onClick={() => marcar(cond)}
                     disabled={save.enCurso}
                     className={cn(
-                      "flex items-center gap-1.5 rounded-md border border-hairline px-2 py-1.5 text-[11px] font-medium transition-colors hover:bg-secondary/60 disabled:opacity-50",
+                      "flex items-center gap-1.5 rounded-md border border-hairline px-2 py-1.5 text-xs font-medium transition-colors hover:bg-secondary/60 disabled:opacity-50",
                     )}
                   >
                     <span
@@ -637,7 +637,7 @@ export function Odontogram({
                   </button>
                 ))}
                 {save.enCurso && (
-                  <span className="col-span-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <span className="col-span-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
                     <Loader2 className="size-3 animate-spin" /> Guardando…
                   </span>
                 )}
@@ -649,7 +649,7 @@ export function Odontogram({
 
       {showHistory && (
         <div className="mt-6 space-y-1.5 border-t border-hairline pt-4">
-          <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <RotateCcw className="size-3" /> Historia de marcas
           </p>
           {history.length === 0 && (
@@ -662,7 +662,7 @@ export function Odontogram({
             <div
               key={h.id}
               className={cn(
-                "flex items-center justify-between gap-3 rounded-md border border-hairline px-3 py-2 text-[11px]",
+                "flex items-center justify-between gap-3 rounded-md border border-hairline px-3 py-2 text-xs",
                 h.supersededAt && "opacity-60",
               )}
             >
@@ -679,7 +679,7 @@ export function Odontogram({
                 <span className="text-muted-foreground">{SURFACE_LABELS[h.surface]}</span>
                 <span className="font-medium">{CONDITION_LABELS[h.condition]}</span>
                 {h.supersededAt && (
-                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
                     · archivada
                   </span>
                 )}

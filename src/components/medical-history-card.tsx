@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, Loader2, Plus, Save, X } from "lucide-react";
@@ -23,6 +23,7 @@ function ChipListEditor({
   tone?: "destructive";
 }) {
   const [draft, setDraft] = useState("");
+  const inputId = useId();
 
   function agregar() {
     const value = draft.trim();
@@ -33,7 +34,13 @@ function ChipListEditor({
 
   return (
     <div className="space-y-1.5">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      {disabled ? (
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      ) : (
+        <label htmlFor={inputId} className="block text-xs font-medium text-muted-foreground">
+          {label}
+        </label>
+      )}
       <div className="flex flex-wrap gap-1.5">
         {items.length === 0 && (
           <span className="text-xs text-muted-foreground">Sin registrar.</span>
@@ -52,9 +59,10 @@ function ChipListEditor({
               <button
                 type="button"
                 onClick={() => onChange(items.filter((i) => i !== item))}
+                aria-label={`Quitar ${item}`}
                 className="opacity-60 hover:opacity-100"
               >
-                <X className="size-3" />
+                <X aria-hidden className="size-3" />
               </button>
             )}
           </span>
@@ -63,6 +71,7 @@ function ChipListEditor({
       {!disabled && (
         <div className="flex gap-2">
           <input
+            id={inputId}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
@@ -78,9 +87,10 @@ function ChipListEditor({
             type="button"
             onClick={agregar}
             disabled={!draft.trim()}
+            aria-label={`Agregar a ${label.toLowerCase()}`}
             className="rounded-lg border border-hairline px-2.5 text-xs text-muted-foreground hover:bg-secondary disabled:opacity-40"
           >
-            <Plus className="size-3.5" />
+            <Plus aria-hidden className="size-3.5" />
           </button>
         </div>
       )}
@@ -204,6 +214,7 @@ export function MedicalHistoryCard({
             <p className="text-xs font-medium text-muted-foreground">Notas adicionales</p>
             {puedeEditar ? (
               <textarea
+                aria-label="Notas adicionales"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}

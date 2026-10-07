@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -49,6 +49,7 @@ const INPUT =
   "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 function CajasPage() {
+  const fid = useId();
   const { access } = Route.useRouteContext();
   const clinicId = access.clinic?.id;
   const currency = access.clinic?.currency ?? "CLP";
@@ -183,16 +184,18 @@ function CajasPage() {
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Monto contado</Label>
+                      <Label htmlFor={`${fid}-contado`}>Monto contado</Label>
                       <MoneyInput
+                        id={`${fid}-contado`}
                         valueCents={declaredAmount}
                         onValueChange={setDeclaredAmount}
                         currency={currency}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Notas (opcional)</Label>
+                      <Label htmlFor={`${fid}-notas-cierre`}>Notas (opcional)</Label>
                       <textarea
+                        id={`${fid}-notas-cierre`}
                         className={INPUT}
                         rows={3}
                         value={closingNotes}
@@ -232,16 +235,18 @@ function CajasPage() {
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Monto inicial</Label>
+                      <Label htmlFor={`${fid}-inicial`}>Monto inicial</Label>
                       <MoneyInput
+                        id={`${fid}-inicial`}
                         valueCents={openingAmount}
                         onValueChange={setOpeningAmount}
                         currency={currency}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Notas (opcional)</Label>
+                      <Label htmlFor={`${fid}-notas-apertura`}>Notas (opcional)</Label>
                       <textarea
+                        id={`${fid}-notas-apertura`}
                         className={INPUT}
                         rows={2}
                         value={openingNotes}

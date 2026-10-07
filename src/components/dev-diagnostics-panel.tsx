@@ -17,7 +17,7 @@ const VERDICTO_LABEL: Record<string, string> = {
 
 function Fila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
-    <div className="flex gap-2 text-[11px]">
+    <div className="flex gap-2 text-xs">
       <span className="w-28 shrink-0 text-muted-foreground">{etiqueta}</span>
       <span className="min-w-0 flex-1 break-words">{valor}</span>
     </div>
@@ -29,7 +29,7 @@ function Tarjeta({ d }: { d: Diagnostico }) {
     <div className="rounded-lg border border-hairline bg-card p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="font-medium text-xs">{d.accionLabel}</span>
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-[11px] text-muted-foreground">
           {new Date(d.ts).toLocaleTimeString("es-MX")}
         </span>
       </div>
@@ -56,7 +56,7 @@ function Tarjeta({ d }: { d: Diagnostico }) {
         <Fila etiqueta="Mensaje" valor={d.mensaje || "(sin mensaje)"} />
       </div>
       {d.discrepancia && (
-        <p className="mt-2 rounded-md bg-destructive/10 px-2 py-1 text-[10px] text-destructive">
+        <p className="mt-2 rounded-md bg-destructive/10 px-2 py-1 text-[11px] text-destructive">
           Discrepancia: la UI habilitó la acción pero el servidor la bloqueó. Revisa el trigger o la
           política correspondiente.
         </p>
@@ -83,7 +83,7 @@ export function DevDiagnosticsPanel() {
           <div className="flex items-center justify-between gap-2 border-b border-hairline px-3 py-2">
             <div>
               <p className="text-xs font-semibold">Diagnóstico de bloqueos</p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground">
                 Solo desarrollo · sin datos clínicos ni identificadores
               </p>
             </div>
@@ -108,7 +108,7 @@ export function DevDiagnosticsPanel() {
           </div>
           <div className="flex-1 space-y-2 overflow-y-auto p-3">
             {registros.length === 0 ? (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Sin bloqueos registrados. Intenta una acción no permitida para ver la explicación.
               </p>
             ) : (
@@ -125,7 +125,7 @@ export function DevDiagnosticsPanel() {
           <Bug className="size-3.5" />
           Diagnóstico
           {registros.length > 0 && (
-            <span className="rounded-full bg-destructive px-1.5 text-[10px] text-destructive-foreground">
+            <span className="rounded-full bg-destructive px-1.5 text-[11px] text-destructive-foreground">
               {registros.length}
             </span>
           )}

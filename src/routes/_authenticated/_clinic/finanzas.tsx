@@ -163,7 +163,7 @@ function FinanzasPage() {
                 como el desglose que lo explica. */}
               <section className="grid gap-4 sm:grid-cols-3">
                 <div className="card-clinical p-5">
-                  <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <CircleDollarSign className="size-3.5" /> Cobrado
                   </p>
                   <p className="font-display text-2xl font-semibold tabular-nums">
@@ -177,7 +177,7 @@ function FinanzasPage() {
                   )}
                 </div>
                 <div className="card-clinical p-5">
-                  <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <Receipt className="size-3.5" /> Gastos
                   </p>
                   <p className="font-display text-2xl font-semibold tabular-nums">
@@ -190,7 +190,7 @@ function FinanzasPage() {
                   </p>
                 </div>
                 <div className="card-clinical p-5">
-                  <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <TrendingUp className="size-3.5" /> Resultado
                   </p>
                   <p
@@ -211,7 +211,7 @@ function FinanzasPage() {
 
               <section className="grid gap-4 sm:grid-cols-2">
                 <div className="card-clinical p-5">
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Pagos registrados
                   </p>
                   <p className="font-display text-xl font-semibold tabular-nums">
@@ -219,7 +219,7 @@ function FinanzasPage() {
                   </p>
                 </div>
                 <div className="card-clinical p-5">
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Ticket promedio
                   </p>
                   <p className="font-display text-xl font-semibold tabular-nums">
@@ -229,7 +229,7 @@ function FinanzasPage() {
               </section>
 
               <section className="card-clinical p-5">
-                <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Gastos por categoría
                 </p>
                 {resumen.byExpenseCategory.length === 0 ? (
@@ -257,7 +257,7 @@ function FinanzasPage() {
               </section>
 
               <section className="card-clinical p-5">
-                <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Conversión de presupuestos
                 </p>
                 {!conversion || conversion.created === 0 ? (
@@ -305,7 +305,7 @@ function FinanzasPage() {
               </section>
 
               <section className="card-clinical overflow-hidden">
-                <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {agrupadoPorSemana ? "Caja por semana" : "Caja por día"}
                 </div>
                 {serieCaja.length === 0 ? (
@@ -336,7 +336,7 @@ function FinanzasPage() {
 
               <section className="grid gap-6 lg:grid-cols-2">
                 <div className="card-clinical overflow-hidden">
-                  <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Por método de pago
                   </div>
                   <div className="divide-y divide-hairline">
@@ -364,7 +364,7 @@ function FinanzasPage() {
                 </div>
 
                 <div className="card-clinical overflow-hidden">
-                  <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Producción por profesional
                   </div>
                   <div className="divide-y divide-hairline">

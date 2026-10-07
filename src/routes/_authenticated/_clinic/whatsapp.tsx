@@ -499,7 +499,7 @@ function LeadsSection({ clinicId }: { clinicId: string }) {
     <div className="space-y-3">
       <h2 className="flex items-center gap-1.5 font-display text-lg font-semibold">
         Leads nuevos
-        <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-700">
+        <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand-700">
           {leads.length}
         </span>
       </h2>
@@ -510,7 +510,7 @@ function LeadsSection({ clinicId }: { clinicId: string }) {
               <p className="flex items-center gap-1.5 text-sm font-medium">
                 {lead.name || lead.phone}
                 {isAutoReplyStale(lead) && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[11px] font-medium text-destructive">
                     <AlertTriangle className="size-3" aria-hidden="true" />
                     Sin auto-respuesta
                   </span>
@@ -518,13 +518,13 @@ function LeadsSection({ clinicId }: { clinicId: string }) {
               </p>
               {lead.name && <p className="text-xs text-muted-foreground">{lead.phone}</p>}
               {isAutoReplyStale(lead) && (
-                <p className="text-[11px] text-destructive">
+                <p className="text-xs text-destructive">
                   La auto-respuesta no se pudo mandar — contactalo a mano.
                 </p>
               )}
               <p className="mt-1 truncate text-xs text-muted-foreground">{lead.firstMessage}</p>
               {lead.referredByName && (
-                <p className="mt-1 text-[11px] font-medium text-brand-700">
+                <p className="mt-1 text-xs font-medium text-brand-700">
                   Referido por {lead.referredByName}
                 </p>
               )}
@@ -535,7 +535,7 @@ function LeadsSection({ clinicId }: { clinicId: string }) {
                 onClick={() => mutation.mutate({ id: lead.id, status: "converted" })}
                 disabled={mutation.isPending}
                 title="Convertir en paciente"
-                className="inline-flex items-center gap-1 rounded-lg border border-hairline px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-brand hover:text-brand-700 disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-lg border border-hairline px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-brand hover:text-brand-700 disabled:opacity-50"
               >
                 <UserPlus className="size-3.5" /> Convertir
               </button>

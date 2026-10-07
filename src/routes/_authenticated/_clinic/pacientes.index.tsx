@@ -620,7 +620,7 @@ function PacientesPage() {
         </FilterBar>
 
         <div className="card-clinical overflow-hidden">
-          <div className="hidden grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-4 border-b border-hairline bg-secondary/40 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground md:grid">
+          <div className="hidden grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-4 border-b border-hairline bg-secondary/40 px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground md:grid">
             <span>Paciente</span>
             <span>Sucursal</span>
             <span>Última visita</span>
@@ -658,7 +658,7 @@ function PacientesPage() {
                           className="size-9 rounded-full object-cover"
                         />
                       ) : (
-                        <span className="grid size-9 place-items-center rounded-full bg-secondary text-[11px] font-semibold text-muted-foreground">
+                        <span className="grid size-9 place-items-center rounded-full bg-secondary text-xs font-semibold text-muted-foreground">
                           {p.nombre
                             .split(" ")
                             .map((n) => n[0])
@@ -677,7 +677,7 @@ function PacientesPage() {
                     <span className="text-xs text-muted-foreground">{p.ultimaVisita}</span>
                     <span
                       className={cn(
-                        "w-fit rounded px-1.5 py-0.5 text-[10px] font-medium",
+                        "w-fit rounded px-1.5 py-0.5 text-[11px] font-medium",
                         p.estado === "activo"
                           ? "bg-success-soft text-success"
                           : p.estado === "nuevo"
@@ -703,7 +703,7 @@ function PacientesPage() {
                     </span>
                     <span
                       className={cn(
-                        "w-fit rounded px-1.5 py-0.5 text-[10px] font-medium",
+                        "w-fit rounded px-1.5 py-0.5 text-[11px] font-medium",
                         p.riesgoAusencia == null
                           ? "bg-secondary text-muted-foreground"
                           : p.riesgoAusencia > 50

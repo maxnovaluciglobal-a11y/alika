@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -46,6 +46,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/consentimientos")(
 });
 
 function NuevaPlantillaDialog({ clinicId }: { clinicId: string }) {
+  const fid = useId();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -81,8 +82,9 @@ function NuevaPlantillaDialog({ clinicId }: { clinicId: string }) {
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label>Título</Label>
+            <Label htmlFor={`${fid}-titulo`}>Título</Label>
             <input
+              id={`${fid}-titulo`}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className={inputClass()}
@@ -90,8 +92,9 @@ function NuevaPlantillaDialog({ clinicId }: { clinicId: string }) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Texto</Label>
+            <Label htmlFor={`${fid}-texto`}>Texto</Label>
             <textarea
+              id={`${fid}-texto`}
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={8}

@@ -179,10 +179,10 @@ export function PatientDocumentsCard({
                   ) : (
                     <FileImage className="size-6" />
                   )}
-                  <span className="px-2 text-center text-[10px]">{doc.filename}</span>
+                  <span className="px-2 text-center text-[11px]">{doc.filename}</span>
                 </a>
               )}
-              <div className="flex items-center justify-between gap-1 bg-surface/90 px-2 py-1.5 text-[10px] text-muted-foreground">
+              <div className="flex items-center justify-between gap-1 bg-surface/90 px-2 py-1.5 text-[11px] text-muted-foreground">
                 <span>{formatFecha(doc.createdAt)}</span>
                 {puedeEditar && (
                   <button

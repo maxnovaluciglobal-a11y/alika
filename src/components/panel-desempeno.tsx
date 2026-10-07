@@ -28,7 +28,7 @@ function Indicador({
 }) {
   return (
     <div className="card-clinical p-4">
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </p>
       <p
@@ -39,7 +39,7 @@ function Indicador({
       >
         {valor}
       </p>
-      {nota && <p className="mt-0.5 text-[11px] text-muted-foreground">{nota}</p>}
+      {nota && <p className="mt-0.5 text-xs text-muted-foreground">{nota}</p>}
     </div>
   );
 }
@@ -68,10 +68,10 @@ function SerieMensual({ serie, currency }: { serie: PanelMes[]; currency: string
   return (
     <div className="card-clinical p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Ventas y recaudación · 12 meses
         </p>
-        <div className="flex gap-4 text-[11px]">
+        <div className="flex gap-4 text-xs">
           <span className="inline-flex items-center gap-1.5">
             <span className="size-2.5 rounded-sm bg-brand" aria-hidden />
             Producción {formatMoney(totalVentas, currency)}
@@ -144,7 +144,7 @@ function SerieMensual({ serie, currency }: { serie: PanelMes[]; currency: string
                 return (
                   <span
                     key={m.mes}
-                    className="absolute -translate-x-1/2 text-[9px] text-muted-foreground"
+                    className="absolute -translate-x-1/2 text-[11px] text-muted-foreground"
                     style={{ left: `${centro}%` }}
                   >
                     {mesCorto(m.mes)}

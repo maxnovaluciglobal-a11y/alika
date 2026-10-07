@@ -492,11 +492,11 @@ export function NotasClinicas({
             >
               <FileText className="size-3" />
               {n.title}
-              <span className="text-[10px] opacity-70">v{n.version}</span>
+              <span className="text-[11px] opacity-70">v{n.version}</span>
               {n.status === "signed" && <ShieldCheck className="size-3" />}
               {n.reviewStatus !== "none" && (
                 <span
-                  className={`rounded-full border px-1.5 text-[9px] ${REVIEW_BADGE[n.reviewStatus]}`}
+                  className={`rounded-full border px-1.5 text-[11px] ${REVIEW_BADGE[n.reviewStatus]}`}
                 >
                   {REVIEW_STATUS_LABELS[n.reviewStatus]}
                 </span>
@@ -511,10 +511,11 @@ export function NotasClinicas({
           {puedeEditar && !bloqueada && (
             <div className="rounded-lg border border-hairline p-3">
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Plantilla
                 </span>
                 <select
+                  aria-label="Especialidad de la plantilla"
                   value={especialidad}
                   onChange={(e) => setEspecialidad(e.target.value)}
                   className="rounded-lg border border-input bg-transparent px-2 py-1 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
@@ -528,7 +529,7 @@ export function NotasClinicas({
                 {templateId && (
                   <button
                     onClick={() => setTemplateId(null)}
-                    className="text-[11px] text-muted-foreground hover:text-foreground"
+                    className="text-xs text-muted-foreground hover:text-foreground"
                   >
                     Quitar plantilla
                   </button>
@@ -549,7 +550,7 @@ export function NotasClinicas({
                   </button>
                 ))}
               </div>
-              <p className="mt-2 text-[11px] text-muted-foreground">
+              <p className="mt-2 text-xs text-muted-foreground">
                 {templateId
                   ? "La IA seguirá esta estructura al redactar o pulir la nota."
                   : "Elige un motivo de consulta para partir desde un formato predefinido."}
@@ -558,6 +559,7 @@ export function NotasClinicas({
           )}
 
           <input
+            aria-label="Título de la nota"
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             disabled={!puedeEditar || bloqueada}
@@ -565,6 +567,7 @@ export function NotasClinicas({
             className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base disabled:opacity-60"
           />
           <textarea
+            aria-label="Contenido de la nota"
             value={contenido}
             onChange={(e) => setContenido(e.target.value)}
             disabled={!puedeEditar || bloqueada}
@@ -647,18 +650,18 @@ export function NotasClinicas({
           {notaActual && (
             <div className="rounded-xl border border-hairline p-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <UserCheck className="size-3" /> Revisión y aprobación
                 </p>
                 <span
-                  className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${REVIEW_BADGE[notaActual.reviewStatus]}`}
+                  className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${REVIEW_BADGE[notaActual.reviewStatus]}`}
                 >
                   {REVIEW_STATUS_LABELS[notaActual.reviewStatus]}
                 </span>
               </div>
 
               {notaActual.reviewStatus !== "none" && (
-                <p className="mb-3 text-[11px] text-muted-foreground">
+                <p className="mb-3 text-xs text-muted-foreground">
                   Revisor: {notaActual.reviewerName ?? "sin asignar"}
                   {notaActual.reviewRequestedByName
                     ? ` · Solicitada por ${notaActual.reviewRequestedByName}`
@@ -675,6 +678,7 @@ export function NotasClinicas({
               {puedeSolicitarRevision && !revisionPendiente && (
                 <div className="flex flex-wrap items-center gap-2">
                   <select
+                    aria-label="Revisor"
                     value={revisorId}
                     onChange={(e) => setRevisorId(e.target.value)}
                     className="rounded-lg border border-input bg-transparent px-2 py-1.5 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
@@ -706,12 +710,12 @@ export function NotasClinicas({
                     Enviar a revisión
                   </button>
                   {notaActual.status !== "signed" && (
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       Firma la nota para poder solicitar aprobación.
                     </span>
                   )}
                   {revisores.length === 0 && (
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       No hay otros profesionales habilitados como revisores.
                     </span>
                   )}
@@ -720,6 +724,7 @@ export function NotasClinicas({
 
               {(puedeResolver || esSolicitante || puedeEditar) && (
                 <textarea
+                  aria-label={revisionPendiente ? "Comentario del revisor" : "Nota para el revisor"}
                   value={comentarioRevision}
                   onChange={(e) => setComentarioRevision(e.target.value)}
                   rows={2}
@@ -772,7 +777,7 @@ export function NotasClinicas({
               )}
 
               {revisionPendiente && !puedeResolver && (
-                <p className="mt-2 text-[11px] text-muted-foreground">
+                <p className="mt-2 text-xs text-muted-foreground">
                   Esperando la aprobación de {notaActual.reviewerName ?? "el revisor asignado"}.
                 </p>
               )}
@@ -781,7 +786,7 @@ export function NotasClinicas({
 
           {resumen && (
             <div className="rounded-xl border border-ai/15 bg-ai-soft p-4">
-              <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-ai">
+              <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-ai">
                 <Sparkles className="size-3" /> Resumen IA
               </p>
               <p className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
@@ -792,18 +797,18 @@ export function NotasClinicas({
 
           {entidades.length > 0 && (
             <div className="rounded-xl border border-hairline p-4">
-              <p className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <ListTree className="size-3" /> Historia clínica estructurada
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 {ENTITY_KIND_ORDER.filter((k) => entidadesPorTipo.get(k)?.length).map((kind) => (
                   <div key={kind}>
-                    <p className="mb-1.5 text-[11px] font-medium">{ENTITY_KIND_LABELS[kind]}</p>
+                    <p className="mb-1.5 text-xs font-medium">{ENTITY_KIND_LABELS[kind]}</p>
                     <ul className="space-y-1.5">
                       {(entidadesPorTipo.get(kind) ?? []).map((e) => (
                         <li
                           key={e.id}
-                          className={`group rounded-lg border px-2.5 py-2 text-[11px] ${
+                          className={`group rounded-lg border px-2.5 py-2 text-xs ${
                             e.confirmed ? "border-brand/30 bg-brand-soft" : "border-hairline"
                           }`}
                         >
@@ -857,14 +862,14 @@ export function NotasClinicas({
                   </div>
                 ))}
               </div>
-              <p className="mt-3 text-[10px] text-muted-foreground">
+              <p className="mt-3 text-[11px] text-muted-foreground">
                 Campos extraídos por IA para búsqueda y facturación. Valídalos antes de usarlos en
                 un cobro.
               </p>
             </div>
           )}
           {aiUsada && (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Texto generado con IA sin guardar. Revísalo: la versión quedará marcada como asistida
               por IA.
             </p>
@@ -908,22 +913,20 @@ export function NotasClinicas({
                         v{v.version} · {v.title}
                       </p>
                       {v.aiAssisted && (
-                        <span className="rounded bg-ai-soft px-1.5 py-0.5 text-[10px] text-ai">
+                        <span className="rounded bg-ai-soft px-1.5 py-0.5 text-[11px] text-ai">
                           {AI_ACTION_LABELS[v.aiAction ?? ""] ?? "IA"}
                         </span>
                       )}
                     </div>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       {v.authorName ?? "Usuario"} · {formatoFechaHora(v.createdAt)}
                     </p>
-                    <p className="mt-1.5 line-clamp-2 text-[11px] text-muted-foreground">
-                      {v.content}
-                    </p>
+                    <p className="mt-1.5 line-clamp-2 text-xs text-muted-foreground">{v.content}</p>
                     <div className="mt-2 flex items-center gap-3">
                       {v.version > 1 && (
                         <button
                           onClick={() => setComparar({ desde: v.version - 1, hasta: v.version })}
-                          className="inline-flex items-center gap-1 text-[11px] text-brand-700 hover:underline"
+                          className="inline-flex items-center gap-1 text-xs text-brand-700 hover:underline"
                         >
                           <GitCompare className="size-3" /> Comparar con v{v.version - 1}
                         </button>
@@ -944,7 +947,7 @@ export function NotasClinicas({
                               ? "Resuelve la revisión pendiente antes de revertir"
                               : `Revertir a v${v.version} como nuevo borrador`
                           }
-                          className="inline-flex items-center gap-1 text-[11px] text-brand-700 hover:underline disabled:opacity-50"
+                          className="inline-flex items-center gap-1 text-xs text-brand-700 hover:underline disabled:opacity-50"
                         >
                           <RotateCcw className="size-3" /> Revertir a v{v.version}
                         </button>
@@ -997,22 +1000,22 @@ export function NotasClinicas({
                           <div className="flex items-start justify-between gap-2">
                             <p className="text-xs font-medium">{REVIEW_ACTION_LABELS[r.action]}</p>
                             {r.noteVersion != null && (
-                              <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium">
+                              <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[11px] font-medium">
                                 v{r.noteVersion}
                               </span>
                             )}
                           </div>
                           {etiquetaHito && (
-                            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                            <p className="mt-0.5 text-[11px] uppercase tracking-wide text-muted-foreground">
                               {etiquetaHito}
                             </p>
                           )}
-                          <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          <p className="mt-0.5 text-xs text-muted-foreground">
                             {r.actorName ?? "Usuario"} · {formatoFechaHora(r.createdAt)}
                             {r.reviewerName ? ` · Revisor: ${r.reviewerName}` : ""}
                           </p>
                           {r.comment && (
-                            <p className="mt-1 whitespace-pre-wrap text-[11px] leading-relaxed">
+                            <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed">
                               {r.comment}
                             </p>
                           )}
@@ -1021,7 +1024,7 @@ export function NotasClinicas({
                               onClick={() =>
                                 setComparar({ desde: anterior.noteVersion, hasta: r.noteVersion })
                               }
-                              className="mt-2 inline-flex items-center gap-1 text-[11px] text-brand-700 hover:underline"
+                              className="mt-2 inline-flex items-center gap-1 text-xs text-brand-700 hover:underline"
                             >
                               <GitCompare className="size-3" /> Comparar v{anterior.noteVersion} → v
                               {r.noteVersion}
@@ -1034,7 +1037,7 @@ export function NotasClinicas({
                     <li className="relative rounded-lg border border-brand/30 bg-brand-soft p-3">
                       <span className="absolute -left-[21px] top-4 size-2.5 rounded-full bg-brand ring-2 ring-background" />
                       <p className="text-xs font-medium">Versión final · v{notaActual.version}</p>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      <p className="mt-0.5 text-xs text-muted-foreground">
                         Contenido vigente de la nota
                       </p>
                     </li>
@@ -1052,7 +1055,7 @@ export function NotasClinicas({
                     <History className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
                     <div>
                       <p className="text-xs font-medium">{AUDIT_LABELS[a.action] ?? a.action}</p>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {a.actorName ?? "Usuario"} · {formatoFechaHora(a.createdAt)}
                         {a.detail ? ` · ${a.detail}` : ""}
                       </p>

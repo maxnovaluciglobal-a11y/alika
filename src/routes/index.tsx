@@ -120,7 +120,7 @@ function PantallaHoy() {
             </span>
             <span
               className={cn(
-                "rounded-sm border px-2 py-0.5 text-[11px] whitespace-nowrap",
+                "rounded-sm border px-2 py-0.5 text-xs whitespace-nowrap",
                 tonoEstado[f.tono],
               )}
             >

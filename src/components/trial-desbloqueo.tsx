@@ -51,7 +51,7 @@ export function TrialDesbloqueo({ pantalla }: { pantalla: string }) {
 
       <div className="grid w-full gap-4 text-left sm:grid-cols-2">
         <section className="card-clinical p-5">
-          <h2 className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-success">
+          <h2 className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-success">
             <CheckCircle2 className="size-3.5" /> Abierto siempre
           </h2>
           <ul className="space-y-1.5 text-sm text-muted-foreground">
@@ -62,7 +62,7 @@ export function TrialDesbloqueo({ pantalla }: { pantalla: string }) {
         </section>
 
         <section className="card-clinical p-5">
-          <h2 className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <h2 className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <Lock className="size-3.5" /> Se activa al suscribirte
           </h2>
           <ul className="space-y-1.5 text-sm text-muted-foreground">

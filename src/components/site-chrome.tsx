@@ -211,7 +211,12 @@ export function PublicPageShell({
   return (
     <div className={cn("min-h-screen bg-background", outerClassName)}>
       <SiteHeader />
-      <main className={cn("mx-auto max-w-6xl px-6 py-12 sm:py-16", mainClassName)}>{children}</main>
+      <main
+        id="main-content"
+        className={cn("mx-auto max-w-6xl px-6 py-12 sm:py-16", mainClassName)}
+      >
+        {children}
+      </main>
       <SiteFooter />
     </div>
   );

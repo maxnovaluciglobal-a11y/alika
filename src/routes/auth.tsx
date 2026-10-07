@@ -173,7 +173,10 @@ function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-4 py-12">
+    <main
+      id="main-content"
+      className="flex min-h-screen items-center justify-center bg-surface px-4 py-12"
+    >
       <div className="w-full max-w-md">
         <div className="mb-8 flex items-center justify-center gap-2">
           <span className="grid size-8 place-items-center rounded-lg bg-brand">
@@ -204,7 +207,7 @@ function AuthPage() {
             Continuar con Google
           </button>
 
-          <div className="my-5 flex items-center gap-3 text-[11px] uppercase tracking-wider text-muted-foreground">
+          <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wider text-muted-foreground">
             <span className="h-px flex-1 bg-border" />o con tu correo
             <span className="h-px flex-1 bg-border" />
           </div>
@@ -285,6 +288,6 @@ function AuthPage() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

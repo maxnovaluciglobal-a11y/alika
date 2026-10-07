@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -59,6 +59,7 @@ const INPUT =
   "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 function NuevoCasoDialog({ clinicId }: { clinicId: string }) {
+  const fid = useId();
   const [open, setOpen] = useState(false);
   const [patientId, setPatientId] = useState("");
   const [kind, setKind] = useState<OrthoCaseKind>("brackets");
@@ -109,8 +110,9 @@ function NuevoCasoDialog({ clinicId }: { clinicId: string }) {
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label>Paciente</Label>
+            <Label htmlFor={`${fid}-paciente`}>Paciente</Label>
             <PatientCombobox
+              id={`${fid}-paciente`}
               value={patientId}
               onChange={setPatientId}
               pacientes={(pacientesRes?.items ?? []).map((p) => ({ id: p.id, nombre: p.nombre }))}
@@ -144,8 +146,13 @@ function NuevoCasoDialog({ clinicId }: { clinicId: string }) {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Cuota mensual (opcional)</Label>
-            <MoneyInput valueCents={monthlyFee} onValueChange={setMonthlyFee} currency="CLP" />
+            <Label htmlFor={`${fid}-cuota`}>Cuota mensual (opcional)</Label>
+            <MoneyInput
+              id={`${fid}-cuota`}
+              valueCents={monthlyFee}
+              onValueChange={setMonthlyFee}
+              currency="CLP"
+            />
           </div>
         </div>
         <DialogFooter>

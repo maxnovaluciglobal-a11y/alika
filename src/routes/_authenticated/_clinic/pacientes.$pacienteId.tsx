@@ -191,7 +191,7 @@ function ConvenioDelPaciente({
   if (editando) {
     return (
       <div className="space-y-1.5">
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Convenio</p>
+        <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Convenio</p>
         <Select
           value={seleccion || "particular"}
           onValueChange={(v) => setSeleccion(v === "particular" ? "" : v)}
@@ -221,13 +221,13 @@ function ConvenioDelPaciente({
           <button
             onClick={() => guardar.mutate()}
             disabled={guardar.isPending}
-            className="min-h-9 rounded px-1.5 text-[11px] font-medium text-brand-700 outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+            className="min-h-9 rounded px-1.5 text-xs font-medium text-brand-700 outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
           >
             Guardar
           </button>
           <button
             onClick={() => setEditando(false)}
-            className="min-h-9 rounded px-1.5 text-[11px] text-muted-foreground outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring"
+            className="min-h-9 rounded px-1.5 text-xs text-muted-foreground outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring"
           >
             Cancelar
           </button>
@@ -242,7 +242,7 @@ function ConvenioDelPaciente({
       <p className="mt-1 truncate font-display text-xl font-semibold leading-tight">
         {actual?.name ?? "Particular"}
       </p>
-      {afiliado && <p className="text-[11px] text-muted-foreground">Afiliado {afiliado}</p>}
+      {afiliado && <p className="text-xs text-muted-foreground">Afiliado {afiliado}</p>}
       {puedeEditar && (
         <button
           onClick={() => {
@@ -250,7 +250,7 @@ function ConvenioDelPaciente({
             setNroAfiliado(afiliado ?? "");
             setEditando(true);
           }}
-          className="inline-flex min-h-9 items-center gap-1 rounded border border-dashed border-brand/40 px-1.5 text-[11px] font-medium text-brand-700 outline-none hover:bg-brand-soft focus-visible:ring-1 focus-visible:ring-ring"
+          className="inline-flex min-h-9 items-center gap-1 rounded border border-dashed border-brand/40 px-1.5 text-xs font-medium text-brand-700 outline-none hover:bg-brand-soft focus-visible:ring-1 focus-visible:ring-ring"
         >
           <Pencil className="size-3" /> Cambiar
         </button>

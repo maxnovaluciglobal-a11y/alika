@@ -68,7 +68,7 @@ export function AgendaWeek({
               className={cn("border-l border-hairline p-2 text-center", d === hoy && "bg-brand/5")}
             >
               <p className="text-[11px] font-semibold capitalize">{DOW_CORTO[i]}</p>
-              <p className={cn("text-[10px] text-muted-foreground", d === hoy && "text-brand-700")}>
+              <p className={cn("text-[11px] text-muted-foreground", d === hoy && "text-brand-700")}>
                 {nroDiaISO(d)}
               </p>
             </div>
@@ -79,7 +79,7 @@ export function AgendaWeek({
           className="relative grid"
           style={{ height: alto, gridTemplateColumns: `56px repeat(7, minmax(0, 1fr))` }}
         >
-          <div className="flex flex-col pr-1 pt-1 text-right text-[10px] text-muted-foreground">
+          <div className="flex flex-col pr-1 pt-1 text-right text-[11px] text-muted-foreground">
             {Array.from({ length: HORAS_VISIBLES }).map((_, i) => (
               <div
                 key={i}
@@ -112,13 +112,14 @@ export function AgendaWeek({
                     params={{ pacienteId: c.pacienteId }}
                     title={`${c.paciente} · ${c.tratamiento}`}
                     className={cn(
-                      "absolute left-0.5 right-0.5 overflow-hidden rounded border-l-2 px-1 py-0.5 text-[9px] leading-tight transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
+                      "absolute left-0.5 right-0.5 overflow-hidden rounded border-l-2 px-1 text-[11px] leading-[1.15] transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
                       estadoClases[c.estado],
                       c.estado === "ausente" && "opacity-70",
                     )}
                     style={{
                       top: c.inicio * PIXELES_POR_MINUTO,
-                      height: Math.max(c.duracion * PIXELES_POR_MINUTO - 2, 12),
+                      // 11px × 1.15 ≈ 13px: el piso deja ver al menos una línea entera.
+                      height: Math.max(c.duracion * PIXELES_POR_MINUTO - 2, 14),
                       borderLeftColor: colores.get(c.profesionalId),
                     }}
                   >
@@ -161,7 +162,7 @@ export function AgendaMonth({
     <div className="card-clinical overflow-hidden">
       <div className="grid grid-cols-7 border-b border-hairline bg-secondary/40 text-center">
         {DOW_CORTO.map((d) => (
-          <div key={d} className="p-2 text-[10px] font-semibold uppercase text-muted-foreground">
+          <div key={d} className="p-2 text-[11px] font-semibold uppercase text-muted-foreground">
             {d}
           </div>
         ))}
@@ -193,7 +194,7 @@ export function AgendaMonth({
                 <span
                   key={c.id}
                   className={cn(
-                    "truncate rounded border-l-2 px-1 text-[9px] leading-tight",
+                    "truncate rounded border-l-2 px-1 text-[11px] leading-[1.2]",
                     estadoClases[c.estado],
                   )}
                   style={{ borderLeftColor: colores.get(c.profesionalId) }}
@@ -203,7 +204,9 @@ export function AgendaMonth({
                 </span>
               ))}
               {delDia.length > 3 && (
-                <span className="text-[9px] text-muted-foreground">+{delDia.length - 3} más</span>
+                <span className="text-[11px] leading-[1.2] text-muted-foreground">
+                  +{delDia.length - 3} más
+                </span>
               )}
             </button>
           );

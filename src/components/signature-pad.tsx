@@ -95,7 +95,7 @@ export function SignaturePad({
         aria-label="Área de firma manuscrita — dibuja con el mouse, el trackpad o el dedo"
         className="w-full touch-none rounded-lg border border-hairline bg-secondary/20 text-foreground"
       />
-      <p className="text-[11px] text-muted-foreground">Firma con el dedo o el mouse.</p>
+      <p className="text-xs text-muted-foreground">Firma con el dedo o el mouse.</p>
       <p role="status" className="sr-only">
         {capturada ? "Firma capturada." : ""}
       </p>

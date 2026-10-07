@@ -104,14 +104,12 @@ function FusionarFichasPage() {
           return (
             <section key={`${g.motivo}-${g.clave}`} className="card-clinical overflow-hidden">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline bg-secondary/40 px-4 py-2">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {g.motivo === "documento"
                     ? `Mismo documento · ${g.clave}`
                     : `Mismo nombre · ${g.pacientes[0]?.nombre}`}
                 </p>
-                <span className="text-[11px] text-muted-foreground">
-                  {g.pacientes.length} fichas
-                </span>
+                <span className="text-xs text-muted-foreground">{g.pacientes.length} fichas</span>
               </div>
 
               <div className="divide-y divide-hairline">
@@ -139,17 +137,17 @@ function FusionarFichasPage() {
                       )}
                     </span>
                     {p.id === elegido ? (
-                      <span className="shrink-0 rounded bg-success-soft px-1.5 py-0.5 text-[10px] font-medium text-success">
+                      <span className="shrink-0 rounded bg-success-soft px-1.5 py-0.5 text-[11px] font-medium text-success">
                         Sobrevive
                       </span>
                     ) : (
-                      <span className="shrink-0 text-[10px] text-muted-foreground">Se fusiona</span>
+                      <span className="shrink-0 text-[11px] text-muted-foreground">Se fusiona</span>
                     )}
                     <Link
                       to="/pacientes/$pacienteId"
                       params={{ pacienteId: p.id }}
                       onClick={(e) => e.stopPropagation()}
-                      className="shrink-0 text-[11px] font-medium text-brand-700 hover:underline"
+                      className="shrink-0 text-xs font-medium text-brand-700 hover:underline"
                     >
                       Ver ficha
                     </Link>
