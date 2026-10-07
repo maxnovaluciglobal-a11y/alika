@@ -285,7 +285,7 @@ function WhatsAppPage() {
       <div className="max-w-2xl space-y-6">
         <p className="text-sm text-muted-foreground">
           {requiereLlamada && (!platformConfigured || account?.status !== "connected")
-            ? "Conecta el WhatsApp de tu clínica para mandar recordatorios, recall y avisos de saldo por acá — cada clínica usa su propio número, nunca compartimos uno entre clínicas."
+            ? "Conecta el WhatsApp de tu clínica para mandar recordatorios, recall y avisos de saldo desde aquí — cada clínica usa su propio número, nunca compartimos uno entre clínicas."
             : "Conecta el WhatsApp de tu clínica para mandar recordatorios, recall y avisos de saldo automáticamente. Cada clínica usa su propio número — nunca compartimos uno entre clínicas."}
         </p>
 
@@ -437,7 +437,7 @@ function WaMeLinkCard({ displayPhone }: { displayPhone: string }) {
       <div className="card-clinical p-6">
         <p className="text-sm font-medium">Link para captar pacientes nuevos</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          No pudimos generar el link automático para el número {displayPhone}. Escribinos a soporte
+          No pudimos generar el link automático para el número {displayPhone}. Escríbenos a soporte
           y lo resolvemos.
         </p>
       </div>

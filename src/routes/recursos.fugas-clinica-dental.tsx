@@ -85,15 +85,15 @@ const FUGAS: Fuga[] = [
     numero: 1,
     titulo: "El sillón vacío que nadie vuelve a llenar",
     descripcion:
-      "Un turno que se cae a último momento casi nunca se recupera ese mismo día: el hueco queda vacío y esa hora de sillón — que tiene costo fijo la ocupes o no — se pierde para siempre, no se corre para mañana.",
+      "Una cita que se cae a último momento casi nunca se recupera ese mismo día: el hueco queda vacío y esa hora de sillón — que tiene costo fijo la ocupes o no — se pierde para siempre, no se corre para mañana.",
     pregunta:
-      "¿Sabés cuántos turnos se cayeron el mes pasado y cuántos de esos huecos se volvieron a ocupar?",
+      "¿Sabes cuántas citas se cayeron el mes pasado y cuántos de esos huecos se volvieron a ocupar?",
   },
   {
     numero: 2,
     titulo: "El presupuesto que el paciente aceptó y nadie agendó",
     descripcion:
-      'Aceptar un presupuesto no es lo mismo que sacar el turno para hacerlo. Si nadie se ocupa de convertir ese "sí" en una fecha concreta, el ingreso queda flotando en un papel firmado.',
+      'Aceptar un presupuesto no es lo mismo que agendar la cita para hacerlo. Si nadie se ocupa de convertir ese "sí" en una fecha concreta, el ingreso queda flotando en un papel firmado.',
     pregunta:
       "¿Puedes nombrar ahora mismo un presupuesto aceptado este mes que todavía no tiene fecha de tratamiento?",
   },
@@ -181,9 +181,9 @@ const FUGAS: Fuga[] = [
     numero: 13,
     titulo: "El saldo pendiente que nadie vuelve a pedir",
     descripcion:
-      "Un plan de pago en cuotas que se atrasa una vez rara vez se pone al día solo. Sin alguien que revise quién debe y desde cuándo, la plata pendiente de cobro se acumula en silencio, cita tras cita.",
+      "Un plan de pago en cuotas que se atrasa una vez rara vez se pone al día solo. Sin alguien que revise quién debe y desde cuándo, el dinero pendiente de cobro se acumula en silencio, cita tras cita.",
     pregunta:
-      "¿Sabés hoy, sin ponerte a buscar, cuánto te deben en total tus pacientes y quiénes son los más atrasados?",
+      "¿Sabes hoy, sin ponerte a buscar, cuánto te deben en total tus pacientes y quiénes son los más atrasados?",
   },
   {
     numero: 14,
@@ -197,7 +197,7 @@ const FUGAS: Fuga[] = [
     numero: 15,
     titulo: "El hueco en la agenda que se descubre demasiado tarde",
     descripcion:
-      "Un espacio libre entre dos citas de la misma tarde, si nadie lo mira con anticipación, casi nunca se llena — se detecta recién cuando ya es tarde para ofrecérselo a otro paciente que estaba esperando turno.",
+      "Un espacio libre entre dos citas de la misma tarde, si nadie lo mira con anticipación, casi nunca se llena — se detecta recién cuando ya es tarde para ofrecérselo a otro paciente que estaba esperando una cita.",
     pregunta:
       "¿Alguien revisa la agenda de mañana con un día de anticipación buscando huecos que todavía se puedan llenar, o se descubren en el momento?",
   },

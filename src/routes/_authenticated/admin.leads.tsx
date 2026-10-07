@@ -230,7 +230,7 @@ function AdminLeadsPage() {
             </p>
             <p className="mx-auto max-w-md text-sm text-muted-foreground">
               En cuanto alguien complete la calculadora o el checklist de la landing, va a aparecer
-              acá.
+              aquí.
             </p>
           </div>
         ) : (

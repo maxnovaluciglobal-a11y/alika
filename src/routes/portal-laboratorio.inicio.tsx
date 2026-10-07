@@ -54,7 +54,7 @@ function LabPortalInicio() {
     return (
       <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-3 p-6 text-center">
         <p className="text-sm font-medium">Tu sesión venció.</p>
-        <p className="text-xs text-muted-foreground">Pedile a la clínica un enlace nuevo.</p>
+        <p className="text-xs text-muted-foreground">Pide a la clínica un enlace nuevo.</p>
       </div>
     );
   }

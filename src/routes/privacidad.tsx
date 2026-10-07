@@ -37,8 +37,8 @@ function Privacidad() {
         clínica nos indique.
         <br />
         <br />
-        Si llegaste acá desde la calculadora o desde un material gratuito y todavía no eres paciente
-        ni tienes cuenta, lo tuyo es distinto y está separado a propósito en la{" "}
+        Si llegaste aquí desde la calculadora o desde un material gratuito y todavía no eres
+        paciente ni tienes cuenta, lo tuyo es distinto y está separado a propósito en la{" "}
         <strong>sección 3</strong>: ahí no somos encargados de nadie, el responsable de esos datos
         somos nosotros.
       </LegalNotice>
@@ -73,7 +73,7 @@ function Privacidad() {
           pagos.
         </LegalLi>
         <LegalLi>
-          <strong>Datos del portal de auto-agendamiento</strong>: cuando un paciente pide un turno
+          <strong>Datos del portal de auto-agendamiento</strong>: cuando un paciente pide una cita
           por el link que le comparte la clínica.
         </LegalLi>
         <LegalLi>
@@ -98,7 +98,7 @@ function Privacidad() {
           de sus pacientes — la razón de ser de la aplicación.
         </LegalLi>
         <LegalLi>
-          <strong>Procesar los turnos que un paciente pide</strong> por el link del portal de
+          <strong>Procesar las citas que un paciente pide</strong> por el link del portal de
           auto-agendamiento.
         </LegalLi>
         <LegalLi>
@@ -117,7 +117,7 @@ function Privacidad() {
         cuentas de staff, la base es el contrato de servicio entre Alika y la clínica: sin cuenta no
         hay aplicación que usar. Los datos de quien todavía no es paciente ni cliente van por otro
         camino, con sus propias finalidades y sus propias bases, y por eso tienen su sección aparte
-        acá abajo.
+        más abajo.
       </LegalP>
 
       <LegalH2>3. Si usaste la calculadora o pediste un material nuestro</LegalH2>
@@ -211,7 +211,7 @@ function Privacidad() {
         diciendo que quieres la baja: dejamos de escribirte apenas lo leemos y borramos tu email y
         tu teléfono dentro de los 30 días.{" "}
         <strong>Todavía no existe un enlace de un click para darte de baja solo.</strong> Cuando
-        exista, va a estar en cada mensaje que te mandemos y lo vas a leer acá. Preferimos decirlo
+        exista, va a estar en cada mensaje que te mandemos y lo vas a leer aquí. Preferimos decirlo
         así antes que prometer un botón que no está.
       </LegalP>
       <LegalP>
@@ -408,7 +408,7 @@ function Privacidad() {
 
       <LegalH2>12. Cambios a esta política</LegalH2>
       <LegalP>
-        Si hacemos un cambio importante en cómo tratamos los datos, lo vamos a reflejar acá con la
+        Si hacemos un cambio importante en cómo tratamos los datos, lo vamos a reflejar aquí con la
         versión y la fecha actualizadas y, si corresponde, avisamos por email a las clínicas.
       </LegalP>
       <LegalUl>

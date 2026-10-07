@@ -176,7 +176,7 @@ function ConsentimientosPage() {
         <div className="card-clinical p-8 text-center text-sm text-muted-foreground">
           <FileSignature className="mx-auto mb-3 size-6" />
           Todavía no hay plantillas. Puedes firmar consentimientos redactando el texto en el momento
-          desde la ficha del paciente, o crear una plantilla acá para reusar.
+          desde la ficha del paciente, o crear una plantilla aquí para reusar.
         </div>
       ) : (
         <div className="space-y-2">

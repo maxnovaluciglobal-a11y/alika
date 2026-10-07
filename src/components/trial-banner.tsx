@@ -65,8 +65,8 @@ export function TrialBanner({ clinicId }: { clinicId: string }) {
           <Clock className={urgente ? "size-4 text-brand-700" : "size-4 text-muted-foreground"} />
           <span>
             {daysLeft === 0
-              ? "Tu trial vence hoy."
-              : `Tu trial vence en ${daysLeft} día${daysLeft === 1 ? "" : "s"}.`}
+              ? "Tu prueba gratis vence hoy."
+              : `Tu prueba gratis vence en ${daysLeft} día${daysLeft === 1 ? "" : "s"}.`}
           </span>
         </div>
         <Link

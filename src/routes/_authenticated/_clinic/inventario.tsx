@@ -372,7 +372,7 @@ function EditarItemDialog({
         <DialogHeader>
           <DialogTitle>Editar {item.name}</DialogTitle>
           <DialogDescription>
-            El stock actual no se edita acá — se ajusta con un movimiento.
+            El stock actual no se edita aquí — se ajusta con un movimiento.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
@@ -885,7 +885,7 @@ function HistorialMovimientosDialog({ clinicId, item }: { clinicId: string; item
           )}
           {movementsQuery.data?.truncated && (
             <p className="pt-3 text-xs text-muted-foreground">
-              Hay más movimientos de los que se muestran acá.
+              Hay más movimientos de los que se muestran aquí.
             </p>
           )}
         </div>

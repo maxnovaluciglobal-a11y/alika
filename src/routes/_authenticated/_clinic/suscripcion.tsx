@@ -175,7 +175,7 @@ function BillingPage() {
                 <span className="font-medium">
                   {usd(activePlanInfo?.promoCents ?? PLANS.clinica.promoCents)} / mes
                 </span>{" "}
-                · trial de 14 días.
+                · prueba gratis de 14 días.
               </p>
               <p className="mt-1 text-xs text-muted-foreground/80">
                 {approxLocalPricesLabel(
@@ -209,7 +209,7 @@ function BillingPage() {
               {sub.status === "trialing" && daysLeft !== null && (
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Días de trial restantes
+                    Días de prueba restantes
                   </dt>
                   <dd className="mt-1 text-sm font-medium">
                     {daysLeft} {daysLeft === 1 ? "día" : "días"}
@@ -233,8 +233,8 @@ function BillingPage() {
             </dl>
           ) : (
             <p className="mt-6 text-sm text-muted-foreground">
-              Aún no tienes una suscripción activa. Empieza tu trial de 14 días abajo — no cobramos
-              hasta que termine.
+              Aún no tienes una suscripción activa. Empieza tu prueba gratis de 14 días abajo — no
+              cobramos hasta que termine.
             </p>
           )}
         </section>
@@ -244,7 +244,7 @@ function BillingPage() {
           <p className="text-sm text-muted-foreground">
             {hasCustomer
               ? "Gestiona método de pago, descarga facturas o cancela desde el portal seguro de Stripe."
-              : "Al activar la suscripción vas a Stripe para dejar el método de pago. Puedes cancelar durante el trial y no te cobramos."}
+              : "Al activar la suscripción vas a Stripe para dejar el método de pago. Puedes cancelar durante la prueba y no te cobramos."}
           </p>
 
           {!yaFacturando && (

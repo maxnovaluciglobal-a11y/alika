@@ -399,7 +399,7 @@ function outreachVariables(item: PendingOutreachItem): Record<string, string> {
       // google_review_url cargado, o queda vacío (el placeholder desaparece
       // sin dejar undefined ni un hueco feo) cuando no lo tiene.
       return {
-        link_resena: item.googleReviewUrl ? ` Directo acá: ${item.googleReviewUrl}` : "",
+        link_resena: item.googleReviewUrl ? ` Directo aquí: ${item.googleReviewUrl}` : "",
       };
     case "payment_due":
       return {

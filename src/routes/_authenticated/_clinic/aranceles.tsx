@@ -445,7 +445,7 @@ function RecetaDialog({
           <DialogTitle>Receta de insumos — {procedure.name}</DialogTitle>
           <DialogDescription>
             Insumos que se descuentan automáticamente del inventario al marcar este tratamiento como
-            realizado. Sin líneas acá, no se descuenta nada.
+            realizado. Sin líneas aquí, no se descuenta nada.
           </DialogDescription>
         </DialogHeader>
 
@@ -855,7 +855,7 @@ function ArancelesPage() {
           <div className="card-clinical p-8 text-center">
             <p className="mb-1 font-display text-lg font-semibold">Tu arancel está vacío</p>
             <p className="mx-auto mb-4 max-w-md text-sm text-muted-foreground">
-              Carga tu lista de precios una vez y después presupuestas eligiendo de acá, sin
+              Carga tu lista de precios una vez y después presupuestas eligiendo de aquí, sin
               escribir el nombre y el monto en cada presupuesto. Si ya la tienes en una planilla,
               impórtala.
             </p>

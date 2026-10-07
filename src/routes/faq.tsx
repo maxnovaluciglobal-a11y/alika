@@ -60,7 +60,7 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
     items: [
       {
         q: "¿Cómo funcionan los recordatorios por WhatsApp?",
-        a: "Alika arma la cola de recordatorios (48h y 3h antes del turno) y tu equipo los despacha con un clic desde /recordatorios. Nunca se manda un mensaje sin que alguien de tu clínica lo dispare.",
+        a: "Alika arma la cola de recordatorios (48h y 3h antes de la cita) y tu equipo los despacha con un clic desde /recordatorios. Nunca se manda un mensaje sin que alguien de tu clínica lo dispare.",
       },
       {
         q: "¿Tengo que conectar mi número de WhatsApp?",
@@ -76,7 +76,7 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
     t: "Pacientes y datos",
     items: [
       {
-        q: "¿Mis pacientes pueden agendar turno solos?",
+        q: "¿Mis pacientes pueden agendar una cita solos?",
         a: "Sí, por un link de portal que tu clínica les comparte — sin que necesiten crear una cuenta.",
       },
       {
@@ -98,7 +98,7 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
     items: [
       {
         q: "¿Cuánto cuesta Alika?",
-        a: "Desde US$29/mes (Solo, 1 profesional) o US$69/mes (Clínica, hasta 3) — sin cobro por sucursal. Las primeras clínicas quedan con este precio fundador de por vida. Trial de 14 días sin tarjeta.",
+        a: "Desde US$29/mes (Solo, 1 profesional) o US$69/mes (Clínica, hasta 3) — sin cobro por sucursal. Las primeras clínicas quedan con este precio fundador de por vida. Prueba gratis de 14 días sin tarjeta.",
       },
     ],
   },

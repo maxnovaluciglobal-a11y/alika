@@ -165,7 +165,7 @@ export function PatientConsentsCard({
                 <DialogTitle>Firmar consentimiento</DialogTitle>
                 <DialogDescription>
                   El paciente firma en esta pantalla. El texto queda guardado tal como se muestra
-                  acá, aunque la plantilla cambie después.
+                  aquí, aunque la plantilla cambie después.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-3">

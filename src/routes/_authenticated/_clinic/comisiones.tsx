@@ -227,7 +227,7 @@ function ComisionesPage() {
           {!isLoading && !veTodo && !soloMiProfessionalId && (
             <p className="rounded-lg border border-warning/30 bg-warning/5 px-4 py-2.5 text-xs text-warning">
               Todavía no hay una ficha de profesional vinculada a tu cuenta en esta clínica — no
-              podemos mostrarte tu comisión. Pedile a un administrador que revise tu perfil en
+              podemos mostrarte tu comisión. Pide a un administrador que revise tu perfil en
               Profesionales.
             </p>
           )}

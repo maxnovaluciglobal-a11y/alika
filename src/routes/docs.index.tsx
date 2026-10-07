@@ -12,7 +12,7 @@ const cards = [
     to: "/docs/primeros-pasos" as const,
     icon: Sparkles,
     title: "Primeros pasos",
-    text: "Cómo dar de alta tu clínica, cargar pacientes y agendar tu primer turno.",
+    text: "Cómo dar de alta tu clínica, cargar pacientes y agendar tu primera cita.",
   },
   {
     to: "/docs/whatsapp" as const,
@@ -24,7 +24,7 @@ const cards = [
     to: "/docs/portal-pacientes" as const,
     icon: CalendarDays,
     title: "Portal de pacientes",
-    text: "Cómo tus pacientes piden turno solos, sin crear una cuenta.",
+    text: "Cómo tus pacientes piden citas solos, sin crear una cuenta.",
   },
   {
     to: "/docs/datos-y-seguridad" as const,

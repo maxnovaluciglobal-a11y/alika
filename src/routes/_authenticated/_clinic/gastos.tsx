@@ -479,8 +479,8 @@ function GastosPage() {
             <div className="card-clinical p-8 text-center">
               <p className="mb-1 font-display text-lg font-semibold">Sin gastos en este período</p>
               <p className="mx-auto max-w-md text-sm text-muted-foreground">
-                Carga arriendo, sueldos, insumos y laboratorio acá. Finanzas los resta de lo cobrado
-                y te dice si el mes cerró en verde.
+                Carga arriendo, sueldos, insumos y laboratorio aquí. Finanzas los resta de lo
+                cobrado y te dice si el mes cerró en verde.
               </p>
             </div>
           )}

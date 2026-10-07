@@ -160,7 +160,7 @@ function EstadoSuscripcion({ row }: { row: ClinicaStaffRow }) {
       </span>
       {dias !== null && (
         <span className="text-xs text-muted-foreground">
-          {dias === 0 ? "vence hoy" : `${dias} ${dias === 1 ? "día" : "días"} de trial`}
+          {dias === 0 ? "vence hoy" : `${dias} ${dias === 1 ? "día" : "días"} de prueba`}
         </span>
       )}
     </div>
@@ -215,7 +215,7 @@ function AdminClinicasPage() {
           <div className="card-clinical p-8 text-center">
             <p className="mb-1 font-display text-lg font-semibold">Todavía no hay clínicas</p>
             <p className="mx-auto max-w-md text-sm text-muted-foreground">
-              En cuanto se dé de alta la primera clínica, va a aparecer acá.
+              En cuanto se dé de alta la primera clínica, va a aparecer aquí.
             </p>
           </div>
         ) : (

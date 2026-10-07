@@ -72,7 +72,7 @@ export const Route = createFileRoute("/calculadora-rentabilidad-dental")({
     const canonical = canonicalHead("/calculadora-rentabilidad-dental");
     const titulo = "Calculadora de rentabilidad dental · Alika";
     const descripcion =
-      "Calcula el P&L y las fugas de dinero de tu clínica dental en Chile, México, Colombia, Perú o Argentina. Resultado completo al instante, sin registrarte.";
+      "Calcula el estado de resultados y las fugas de dinero de tu clínica dental en Chile, México, Colombia, Perú o Argentina. Resultado completo al instante, sin registrarte.";
     const url = `${SITE_URL}/calculadora-rentabilidad-dental`;
     return {
       meta: [
@@ -286,7 +286,7 @@ function fraseAusentismo(pct: number, banda: Banda): string {
   if (banda === "alto")
     return `tu ausentismo está alto (${t}) — activa recordatorios automáticos 48 h y 3 h antes, empezando por los pacientes que ya faltaron alguna vez`;
   if (banda === "atencion")
-    return `tu ausentismo está en zona de atención (${t}) — refuerza el recordatorio de 48 h con los turnos de esta semana`;
+    return `tu ausentismo está en zona de atención (${t}) — refuerza el recordatorio de 48 h con las citas de esta semana`;
   if (banda === "bajo")
     return `tu ausentismo es inusualmente bajo (${t}) — vale la pena confirmar que estés registrando todas las inasistencias`;
   return `tu ausentismo (${t}) está dentro del rango esperado`;
@@ -688,7 +688,7 @@ function CalculadoraRentabilidadDental() {
         </h1>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground">
           Carga los números de tu clínica y mira al instante cuánto te queda, dónde se te está yendo
-          la plata y qué conviene resolver primero. El resultado se ve completo sin registrarte —
+          el dinero y qué conviene resolver primero. El resultado se ve completo sin registrarte —
           sólo te pedimos el email si quieres guardarlo.
         </p>
       </div>
@@ -724,7 +724,9 @@ function CalculadoraRentabilidadDental() {
         {/* Columna izquierda: inputs. P&L primero, fugas después (regla #4). */}
         <div className="space-y-10">
           <section>
-            <h2 className="font-display text-xl font-bold text-foreground">1. Tu P&L del mes</h2>
+            <h2 className="font-display text-xl font-bold text-foreground">
+              1. Tu estado de resultados del mes
+            </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Lo que factura tu clínica y en qué se va.
             </p>
@@ -794,7 +796,7 @@ function CalculadoraRentabilidadDental() {
           <section>
             <h2 className="font-display text-xl font-bold text-foreground">2. Fugas de dinero</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Ausencias y presupuestos que no se cierran son plata que ya generaste y no cobraste.
+              Ausencias y presupuestos que no se cierran son dinero que ya generaste y no cobraste.
             </p>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <CampoNumero
@@ -867,7 +869,7 @@ function CalculadoraRentabilidadDental() {
                 <p className="mt-2 text-sm leading-relaxed text-foreground">{diagnostico}</p>
               ) : (
                 <p className="mt-2 text-sm italic leading-relaxed text-muted-foreground">
-                  Completa al menos tus ingresos y costos del mes para ver tu diagnóstico acá.
+                  Completa al menos tus ingresos y costos del mes para ver tu diagnóstico aquí.
                 </p>
               )}
             </div>
@@ -1038,7 +1040,7 @@ function CalculadoraRentabilidadDental() {
             No existe un benchmark público y verificable para clínicas dentales de Latinoamérica en
             ninguno de estos rubros. Las cifras específicas por categoría (personal, insumos,
             laboratorio, arriendo) que circulan atribuidas al ADA son una atribución falsa: el ADA
-            no publica ese desglose. No las repetimos acá. Te mostramos tu número tal cual lo
+            no publica ese desglose. No las repetimos aquí. Te mostramos tu número tal cual lo
             cargaste, sin compararlo contra nada que no podamos citar.
           </p>
           <p>
