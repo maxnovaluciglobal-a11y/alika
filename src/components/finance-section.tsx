@@ -482,11 +482,13 @@ function PagoDot({
   return (
     <span
       title={detalle}
-      aria-label={detalle}
       className="inline-flex shrink-0 items-center gap-1 text-xs whitespace-nowrap text-muted-foreground"
     >
       <span aria-hidden className={cn("size-2 rounded-full", tono[estado])} />
+      {/* El texto corto es visual; el lector de pantalla recibe el detalle
+          completo (estado + monto pagado) en el span sr-only. */}
       <span aria-hidden>{CORTO[estado]}</span>
+      <span className="sr-only">{detalle}</span>
     </span>
   );
 }
