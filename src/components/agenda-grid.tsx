@@ -179,149 +179,158 @@ export function AgendaGrid({
   }
 
   return (
+    // Columnas de al menos 9rem con desplazamiento horizontal propio: en el
+    // celular cuatro profesionales en 390px dejaban columnas de ~70px, con el
+    // nombre partido en cinco líneas (revisión en producción, 07-oct-2026).
+    // La columna de horas queda fija a la izquierda.
     <div className="card-clinical overflow-hidden">
-      <div
-        className="grid border-b border-hairline bg-secondary/40"
-        style={{ gridTemplateColumns: `72px repeat(${profesionales.length}, minmax(0, 1fr))` }}
-      >
-        <div className="p-3" />
-        {profesionales.map((p) => (
-          <div key={p.id} className="border-l border-hairline p-3 text-center">
-            <p className="text-xs font-semibold">
-              {p.nombre} <span className="font-normal text-muted-foreground">({p.box})</span>
-            </p>
-            {!compacta && <p className="text-[11px] text-muted-foreground">{p.especialidad}</p>}
-          </div>
-        ))}
-      </div>
-
-      <div
-        className="relative grid"
-        style={{
-          height: alto,
-          gridTemplateColumns: `72px repeat(${profesionales.length}, minmax(0, 1fr))`,
-        }}
-      >
-        <div className="flex flex-col pr-2 pt-1 text-right text-[11px] text-muted-foreground">
-          {Array.from({ length: HORAS_VISIBLES }).map((_, i) => (
-            <div
-              key={i}
-              style={{ height: 60 * PIXELES_POR_MINUTO }}
-              className="border-b border-hairline"
-            >
-              {horaLabel(i)}
+      <div className="overflow-x-auto">
+        <div
+          className="grid border-b border-hairline bg-secondary/40"
+          style={{ gridTemplateColumns: `72px repeat(${profesionales.length}, minmax(9rem, 1fr))` }}
+        >
+          <div className="sticky left-0 z-20 bg-secondary p-3" />
+          {profesionales.map((p) => (
+            <div key={p.id} className="border-l border-hairline p-3 text-center">
+              <p className="text-xs font-semibold">
+                {p.nombre}{" "}
+                <span className="hidden font-normal text-muted-foreground sm:inline">
+                  ({p.box})
+                </span>
+              </p>
+              {!compacta && <p className="text-[11px] text-muted-foreground">{p.especialidad}</p>}
             </div>
           ))}
         </div>
 
-        {profesionales.map((p, colIdx) => (
-          <div key={p.id} className="relative border-l border-hairline">
+        <div
+          className="relative grid"
+          style={{
+            height: alto,
+            gridTemplateColumns: `72px repeat(${profesionales.length}, minmax(9rem, 1fr))`,
+          }}
+        >
+          <div className="sticky left-0 z-20 flex flex-col bg-card pr-2 pt-1 text-right text-[11px] text-muted-foreground">
             {Array.from({ length: HORAS_VISIBLES }).map((_, i) => (
               <div
                 key={i}
                 style={{ height: 60 * PIXELES_POR_MINUTO }}
                 className="border-b border-hairline"
-              />
+              >
+                {horaLabel(i)}
+              </div>
             ))}
+          </div>
 
-            {(huecosPorProfesional.get(p.id) ?? []).map((m) => {
-              const clave = claveHueco(p.id, m);
-              return (
-                <button
-                  key={clave}
-                  ref={(el) => {
-                    if (el) refsHuecos.current.set(clave, el);
-                    else refsHuecos.current.delete(clave);
-                  }}
-                  type="button"
-                  tabIndex={clave === claveTabulable ? 0 : -1}
-                  aria-label={etiquetaHueco(p.nombre, m)}
-                  onFocus={() => setHuecoActivo(clave)}
-                  onKeyDown={(e) => moverFoco(e, colIdx, m)}
-                  onClick={(e) => agendarEnHueco(e, p, m)}
-                  className="group absolute inset-x-0 flex cursor-pointer items-center px-2 text-left text-[11px] leading-none text-brand-700 transition-colors hover:bg-brand/5 focus-visible:z-10 focus-visible:bg-brand/5 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
-                  style={{ top: m * PIXELES_POR_MINUTO, height: ALTO_HUECO }}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+          {profesionales.map((p, colIdx) => (
+            <div key={p.id} className="relative border-l border-hairline">
+              {Array.from({ length: HORAS_VISIBLES }).map((_, i) => (
+                <div
+                  key={i}
+                  style={{ height: 60 * PIXELES_POR_MINUTO }}
+                  className="border-b border-hairline"
+                />
+              ))}
+
+              {(huecosPorProfesional.get(p.id) ?? []).map((m) => {
+                const clave = claveHueco(p.id, m);
+                return (
+                  <button
+                    key={clave}
+                    ref={(el) => {
+                      if (el) refsHuecos.current.set(clave, el);
+                      else refsHuecos.current.delete(clave);
+                    }}
+                    type="button"
+                    tabIndex={clave === claveTabulable ? 0 : -1}
+                    aria-label={etiquetaHueco(p.nombre, m)}
+                    onFocus={() => setHuecoActivo(clave)}
+                    onKeyDown={(e) => moverFoco(e, colIdx, m)}
+                    onClick={(e) => agendarEnHueco(e, p, m)}
+                    className="group absolute inset-x-0 flex cursor-pointer items-center px-2 text-left text-[11px] leading-none text-brand-700 transition-colors hover:bg-brand/5 focus-visible:z-10 focus-visible:bg-brand/5 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
+                    style={{ top: m * PIXELES_POR_MINUTO, height: ALTO_HUECO }}
                   >
-                    + {horaDeMinutos(m)}
-                  </span>
-                </button>
-              );
-            })}
+                    <span
+                      aria-hidden="true"
+                      className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                    >
+                      + {horaDeMinutos(m)}
+                    </span>
+                  </button>
+                );
+              })}
 
-            {(citasPorProfesional.get(p.id) ?? []).map((c) => {
-              const corta = c.duracion < 30;
-              return (
-                <Link
-                  key={c.id}
-                  to="/pacientes/$pacienteId"
-                  params={{ pacienteId: c.pacienteId }}
-                  className={cn(
-                    "absolute left-1.5 right-1.5 overflow-hidden rounded-md border px-2 leading-[1.15] transition-shadow hover:shadow-md focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                    corta ? "py-0" : "py-[3px]",
-                    estadoClases[c.estado],
-                    c.estado === "ausente" && "opacity-70",
-                  )}
-                  style={{
-                    top: c.inicio * PIXELES_POR_MINUTO + 1,
-                    height: c.duracion * PIXELES_POR_MINUTO - 3,
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-1.5">
-                    <p className="flex min-w-0 items-start gap-1.5 text-xs font-semibold">
-                      <span
-                        aria-hidden="true"
-                        className="mt-[5px] size-1.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: p.color }}
-                      />
-                      {/* ≥30 min hay alto para dos líneas: el apellido no se
+              {(citasPorProfesional.get(p.id) ?? []).map((c) => {
+                const corta = c.duracion < 30;
+                return (
+                  <Link
+                    key={c.id}
+                    to="/pacientes/$pacienteId"
+                    params={{ pacienteId: c.pacienteId }}
+                    className={cn(
+                      "absolute left-1.5 right-1.5 overflow-hidden rounded-md border px-2 leading-[1.15] transition-shadow hover:shadow-md focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                      corta ? "py-0" : "py-[3px]",
+                      estadoClases[c.estado],
+                      c.estado === "ausente" && "opacity-70",
+                    )}
+                    style={{
+                      top: c.inicio * PIXELES_POR_MINUTO + 1,
+                      height: c.duracion * PIXELES_POR_MINUTO - 3,
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-1.5">
+                      <p className="flex min-w-0 items-start gap-1.5 text-xs font-semibold">
+                        <span
+                          aria-hidden="true"
+                          className="mt-[5px] size-1.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: p.color }}
+                        />
+                        {/* ≥30 min hay alto para dos líneas: el apellido no se
                           pierde en columnas angostas. */}
-                      <span className={corta ? "truncate" : "line-clamp-2 break-words"}>
-                        {c.paciente}
+                        <span className={corta ? "truncate" : "line-clamp-2 break-words"}>
+                          {c.paciente}
+                        </span>
+                        <AllergyAlertIcon allergies={allergyAlerts?.[c.pacienteId]} />
+                      </p>
+                      <span className="flex shrink-0 items-center gap-1">
+                        {c.prioridad && c.duracion < 60 && (
+                          <Sparkles className="size-3 text-ai" aria-label="Prioridad" />
+                        )}
+                        {c.pacienteConfirmo && <PatientConfirmedBadge soloIcono />}
+                        <span className="rounded bg-card/70 px-1 py-px text-[11px] font-medium">
+                          {etiquetaEstado[c.estado]}
+                        </span>
                       </span>
-                      <AllergyAlertIcon allergies={allergyAlerts?.[c.pacienteId]} />
-                    </p>
-                    <span className="flex shrink-0 items-center gap-1">
-                      {c.prioridad && c.duracion < 60 && (
-                        <Sparkles className="size-3 text-ai" aria-label="Prioridad" />
-                      )}
-                      {c.pacienteConfirmo && <PatientConfirmedBadge soloIcono />}
-                      <span className="rounded bg-card/70 px-1 py-px text-[11px] font-medium">
-                        {etiquetaEstado[c.estado]}
+                    </div>
+                    {c.duracion >= 45 && (
+                      <p className="mt-0.5 truncate text-[11px] opacity-80">{c.tratamiento}</p>
+                    )}
+                    {c.prioridad && c.duracion >= 60 && (
+                      <span className="mt-1 inline-flex items-center gap-1 rounded bg-ai/15 px-1.5 py-px text-[11px] text-ai">
+                        <Sparkles className="size-3" /> Prioridad
                       </span>
-                    </span>
-                  </div>
-                  {c.duracion >= 45 && (
-                    <p className="mt-0.5 truncate text-[11px] opacity-80">{c.tratamiento}</p>
-                  )}
-                  {c.prioridad && c.duracion >= 60 && (
-                    <span className="mt-1 inline-flex items-center gap-1 rounded bg-ai/15 px-1.5 py-px text-[11px] text-ai">
-                      <Sparkles className="size-3" /> Prioridad
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        ))}
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
 
-        {ahoraVisible && (
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 z-20 flex items-center"
-            style={{ top: minutosAhora * PIXELES_POR_MINUTO }}
-          >
-            <span className="w-[72px] -translate-y-px pr-1 text-right text-[11px] font-semibold tabular-nums text-destructive">
-              {horaDeMinutos(minutosAhora)}
-            </span>
-            <span className="relative h-px flex-1 bg-destructive">
-              <span className="absolute -left-1 -top-[3px] size-[7px] rounded-full bg-destructive" />
-            </span>
-          </div>
-        )}
+          {ahoraVisible && (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 z-20 flex items-center"
+              style={{ top: minutosAhora * PIXELES_POR_MINUTO }}
+            >
+              <span className="w-[72px] -translate-y-px pr-1 text-right text-[11px] font-semibold tabular-nums text-destructive">
+                {horaDeMinutos(minutosAhora)}
+              </span>
+              <span className="relative h-px flex-1 bg-destructive">
+                <span className="absolute -left-1 -top-[3px] size-[7px] rounded-full bg-destructive" />
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
