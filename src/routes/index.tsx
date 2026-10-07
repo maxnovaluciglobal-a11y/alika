@@ -21,6 +21,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, MessageCircle } from "lucide-react";
 
+import { PreciosPlanes } from "@/components/marketing/precios";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,8 +30,6 @@ import { calcularFugas } from "@/lib/marketing/calculadora";
 import { enlaceWhatsAppVentas } from "@/lib/marketing/contacto";
 import { registrarEvento } from "@/lib/marketing/eventos";
 import { detectarPaisVisitante, monedaPorPais } from "@/lib/marketing/pais-visitante";
-import { setPlanIntent, type PlanIntent } from "@/lib/marketing/plan-intent";
-import { MONEDAS_PRECIO, precioEnMoneda, type MonedaPrecio } from "@/lib/pricing-display";
 import { canonicalHead } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
@@ -303,7 +302,7 @@ function CalculadoraFugas() {
   );
 }
 
-// ── Resultados y precios ────────────────────────────────────────────
+// ── Resultados ────────────────────────────────────────────
 
 const resultados = [
   {
@@ -328,183 +327,6 @@ const resultados = [
     cta: "Ver una ficha",
   },
 ] as const;
-
-type Plan = {
-  id: "solo" | "clinica" | "red";
-  alcance: string;
-  nombre: string;
-  usd: number | null;
-  incluye: readonly string[];
-  recomendado?: boolean;
-};
-
-const planes: readonly Plan[] = [
-  {
-    id: "solo",
-    alcance: "1 profesional",
-    nombre: "Solo",
-    usd: 29,
-    incluye: [
-      "Agenda y ficha clínica",
-      "Recordatorios por WhatsApp",
-      "Caja y presupuestos",
-      "Importación de pacientes por planilla",
-      "Soporte directo con el equipo que lo construye",
-    ],
-  },
-  {
-    id: "clinica",
-    alcance: "Hasta 3 profesionales",
-    nombre: "Clínica",
-    usd: 69,
-    recomendado: true,
-    incluye: ["Todo lo de Solo", "Comisiones y roles", "Portal de pacientes"],
-  },
-  {
-    id: "red",
-    alcance: "Varias sedes",
-    nombre: "Red",
-    usd: null,
-    incluye: [
-      "Todo lo de Clínica",
-      "Multisede e inventario",
-      "Reportes por sede",
-      "Migración acompañada",
-    ],
-  },
-];
-
-function Precios() {
-  const [moneda, setMoneda] = useState<MonedaPrecio>("USD");
-  const whatsapp = enlaceWhatsAppVentas();
-
-  // La moneda por defecto sigue al país probable del visitante (zona
-  // horaria), la misma regla que la calculadora. En cliente, para no romper
-  // la hidratación con un valor distinto del SSR.
-  useEffect(() => {
-    setMoneda(monedaPorPais(detectarPaisVisitante()));
-  }, []);
-
-  return (
-    <section id="precios" className="scroll-mt-20">
-      <div className="flex flex-wrap items-end justify-between gap-6">
-        <div>
-          <h2 className="font-display text-4xl font-normal leading-tight sm:text-5xl">
-            Precio fundador, de por vida.
-          </h2>
-          <p className="mt-3 max-w-xl text-muted-foreground">
-            14 días gratis y sin tarjeta. Quienes entran en esta etapa conservan este precio
-            mientras sean clientes.
-          </p>
-        </div>
-        <div
-          role="radiogroup"
-          aria-label="Moneda"
-          className="flex rounded-md border border-border p-0.5"
-        >
-          {MONEDAS_PRECIO.map((m) => (
-            <button
-              key={m}
-              type="button"
-              role="radio"
-              aria-checked={moneda === m}
-              onClick={() => setMoneda(m)}
-              className={cn(
-                "min-h-9 rounded-sm px-3 text-sm tabular-nums transition-colors",
-                moneda === m
-                  ? "bg-brand-100 text-brand-800"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {m}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-10 grid gap-5 md:grid-cols-3">
-        {planes.map((p) => (
-          <article
-            key={p.id}
-            className={cn(
-              "flex flex-col rounded-lg border p-7",
-              p.recomendado ? "border-brand" : "border-border",
-            )}
-          >
-            <p className="kicker">
-              {p.alcance}
-              {p.recomendado && " · Recomendado"}
-            </p>
-            <h3 className="mt-2 font-display text-3xl font-semibold">{p.nombre}</h3>
-            {p.usd === null ? (
-              <>
-                <p className="mt-4 font-display text-4xl font-normal">A medida</p>
-                <p className="mt-1 text-sm text-muted-foreground">Desde 4 profesionales</p>
-              </>
-            ) : (
-              <>
-                <p className="mt-4 font-display text-4xl font-normal tabular-nums">
-                  {precioEnMoneda(p.usd, moneda)}
-                  <span className="ml-1 font-body text-base text-muted-foreground">/mes</span>
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  US${p.usd} al mes
-                  {moneda !== "USD" && " · referencial, el cobro es en USD"}
-                </p>
-              </>
-            )}
-            <ul className="mt-6 flex-1 space-y-2 text-sm">
-              {p.incluye.map((i) => (
-                <li key={i} className="flex gap-2">
-                  <span aria-hidden className="text-brand-700">
-                    —
-                  </span>
-                  {i}
-                </li>
-              ))}
-            </ul>
-            {p.id === "red" ? (
-              <a
-                href={whatsapp.href}
-                onClick={() => registrarEvento("cta_click", { cta: "red", lugar: "precios" })}
-                className={cn(buttonVariants({ variant: "outline" }), "mt-8 w-full")}
-              >
-                {whatsapp.esWhatsApp ? "Cotizar por WhatsApp" : "Escríbenos"}
-              </a>
-            ) : (
-              <ComprarPlanLink plan={p.id} recomendado={p.recomendado} />
-            )}
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/**
- * CTA de compra directa por tarjeta de precio. Alika es trial-first (no hay
- * checkout público sin cuenta — `createCheckoutSession` necesita un
- * `clinicId` real), así que "comprar" acá significa: guardar qué plan eligió
- * ANTES de mandarlo a crear la cuenta, para que auth → onboarding →
- * suscripción lo lleven derecho al checkout de Stripe sin que tenga que
- * volver a elegir el plan ni encontrar el botón de pago por su cuenta (ver
- * `src/lib/marketing/plan-intent.ts`).
- */
-function ComprarPlanLink({ plan, recomendado }: { plan: PlanIntent; recomendado?: boolean }) {
-  return (
-    <Link
-      to="/auth"
-      search={{ signup: true }}
-      onClick={() => setPlanIntent(plan)}
-      className={cn(
-        buttonVariants({ variant: recomendado ? "default" : "outline" }),
-        "mt-8 w-full",
-      )}
-    >
-      Empezar con {plan === "solo" ? "Solo" : "Clínica"}
-    </Link>
-  );
-}
 
 // ── Página ──────────────────────────────────────────────────────────
 
@@ -644,9 +466,9 @@ function Landing() {
           )}
         </section>
 
-        <div className="mx-auto max-w-6xl px-6 py-16">
-          <Precios />
-        </div>
+        <section id="precios" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16">
+          <PreciosPlanes lugar="precios" />
+        </section>
 
         {/* Cierre */}
         {/* Cierre en banda de tinta (nivel "entre medio y audaz" que eligió
