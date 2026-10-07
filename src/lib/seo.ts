@@ -49,11 +49,24 @@ export function siteJsonLdScripts() {
       url: SITE_URL,
       description:
         "Agenda, ficha clínica, odontograma, presupuestos, cobranza y WhatsApp integrado para clínicas dentales.",
+      inLanguage: "es",
+      // Mismos 5 países que /software-dental-latam y el alta guiada.
+      areaServed: [
+        ["CL", "Chile"],
+        ["PE", "Perú"],
+        ["MX", "México"],
+        ["CO", "Colombia"],
+        ["AR", "Argentina"],
+      ].map(([identifier, name]) => ({ "@type": "Country", identifier, name })),
+      // Solo (US$29) y Clínica (US$69), ver src/lib/stripe.server.ts. Sin
+      // aggregateRating hasta tener reseñas reales.
       offers: {
-        "@type": "Offer",
+        "@type": "AggregateOffer",
         priceCurrency: "USD",
-        price: "29",
-        description: "Plan Solo, 1 profesional, desde US$29/mes.",
+        lowPrice: "29",
+        highPrice: "69",
+        offerCount: 2,
+        description: "Plan Solo desde US$29/mes y plan Clínica US$69/mes, 14 días gratis.",
       },
     }),
   ];

@@ -124,7 +124,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Alika" },
-      { property: "og:locale", content: "es_LA" },
+      { property: "og:locale", content: "es_419" },
       { property: "og:image", content: SOCIAL_IMAGE_URL },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },

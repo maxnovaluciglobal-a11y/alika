@@ -163,7 +163,12 @@ function Faq() {
                     <AccordionTrigger className="text-left font-semibold hover:no-underline">
                       {item.q}
                     </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground">{item.a}</AccordionContent>
+                    {/* forceMount: la respuesta queda en el HTML del SSR aunque esté
+                        cerrada (Radix la oculta con el atributo hidden). Sin
+                        esto, Google y los crawlers de LLM ven solo preguntas. */}
+                    <AccordionContent forceMount className="text-muted-foreground">
+                      {item.a}
+                    </AccordionContent>
                   </AccordionItem>
                 ))}
               </Accordion>
