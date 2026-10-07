@@ -692,7 +692,7 @@ function EditarCitaDialog({
           type="button"
           title="Editar cita"
           aria-label="Editar cita"
-          className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="inline-flex size-6 pointer-coarse:size-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
         >
           <Pencil className="size-3.5" />
         </button>
@@ -1581,7 +1581,7 @@ function AgendaPage() {
                   type="button"
                   aria-label="Período anterior"
                   onClick={() => set({ fecha: desplazarPeriodo(search.vista, fecha, -1) })}
-                  className="grid size-8 place-items-center rounded-lg border border-hairline hover:bg-secondary/60"
+                  className="grid size-8 pointer-coarse:size-11 place-items-center rounded-lg border border-control hover:bg-secondary/60"
                 >
                   <ChevronLeft className="size-4" />
                 </button>
@@ -1596,7 +1596,7 @@ function AgendaPage() {
                   type="button"
                   aria-label="Período siguiente"
                   onClick={() => set({ fecha: desplazarPeriodo(search.vista, fecha, 1) })}
-                  className="grid size-8 place-items-center rounded-lg border border-hairline hover:bg-secondary/60"
+                  className="grid size-8 pointer-coarse:size-11 place-items-center rounded-lg border border-control hover:bg-secondary/60"
                 >
                   <ChevronRight className="size-4" />
                 </button>
@@ -1612,7 +1612,7 @@ function AgendaPage() {
                       type="button"
                       onClick={() => set({ vista: v })}
                       className={cn(
-                        "rounded-md px-2.5 py-1 font-medium capitalize",
+                        "rounded-md px-2.5 py-1 font-medium capitalize pointer-coarse:min-h-11 pointer-coarse:px-3.5",
                         search.vista === v
                           ? "bg-secondary text-foreground"
                           : "text-muted-foreground hover:text-foreground",
@@ -1867,7 +1867,7 @@ function AgendaPage() {
                         disabled={quitarDeEspera.isPending}
                         title="Quitar de la lista"
                         aria-label="Quitar de la lista"
-                        className="inline-flex size-7 items-center justify-center rounded-md border border-hairline text-muted-foreground transition-colors hover:border-destructive/40 hover:text-destructive disabled:opacity-50"
+                        className="inline-flex size-7 pointer-coarse:size-11 items-center justify-center rounded-md border border-hairline text-muted-foreground transition-colors hover:border-destructive/40 hover:text-destructive disabled:opacity-50"
                       >
                         <X className="size-3.5" />
                       </button>
