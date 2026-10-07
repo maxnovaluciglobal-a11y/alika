@@ -3,7 +3,7 @@
 // Landing (rediseño 06-oct-2026, panel 1b del handoff en
 // docs/design_handoff_alika_rediseno/). Orden: hero con la pantalla "Hoy"
 // construida en HTML → clínicas piloto → calculadora de fugas → tres
-// resultados → nota clínica → precios → cierre.
+// resultados → nota clínica → seguridad de datos → precios → cierre.
 //
 // Reglas de veracidad que el mockup no podía saber:
 // - Las cifras del mockup (−40% ausencias, etc.) eran ilustrativas. Acá solo
@@ -17,9 +17,13 @@
 //   responder: los montos se ven en la pantalla Hoy, no llegan "cada mañana".
 // - Ningún recordatorio sale solo: Alika arma la lista y alguien del equipo
 //   la despacha. No escribir "Alika confirma tus citas".
+// - La franja de seguridad solo dice lo que el producto hace hoy: RLS por
+//   clínica, permisos por rol y HTTPS salen de /docs/datos-y-seguridad; el
+//   respaldo diario cifrado fuera de Supabase, de .github/workflows/backup.yml
+//   (Backblaze B2, cifrado con age). Sin sellos ni certificaciones que no hay.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight, DatabaseBackup, Lock, MessageCircle, ShieldCheck, Users } from "lucide-react";
 
 import { PreciosPlanes } from "@/components/marketing/precios";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
@@ -328,6 +332,65 @@ const resultados = [
   },
 ] as const;
 
+// ── Seguridad de datos ──────────────────────────────────────────────
+
+const garantias = [
+  {
+    icono: ShieldCheck,
+    titulo: "Cada clínica, aislada",
+    texto:
+      "La base de datos verifica que perteneces a la clínica antes de devolver una sola fila (row-level security), no solo la pantalla.",
+  },
+  {
+    icono: Users,
+    titulo: "Cada rol ve lo suyo",
+    texto: "Recepción ve agenda y contactos, pero no la historia clínica ni los pagos.",
+  },
+  {
+    icono: DatabaseBackup,
+    titulo: "Respaldo todos los días",
+    texto: "Una copia diaria cifrada de tus datos, guardada fuera de la plataforma principal.",
+  },
+  {
+    icono: Lock,
+    titulo: "Cifrado en tránsito",
+    texto: "Todo viaja por HTTPS. Los servidores están en São Paulo, Brasil.",
+  },
+] as const;
+
+function FranjaSeguridad() {
+  return (
+    <section aria-labelledby="seguridad-titulo" className="mx-auto max-w-6xl px-6 py-14">
+      <div className="border-y border-border py-10">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h2
+            id="seguridad-titulo"
+            className="max-w-xl font-display text-3xl font-normal leading-tight sm:text-4xl"
+          >
+            Los datos de tus pacientes, protegidos.
+          </h2>
+          <Link
+            to="/docs/datos-y-seguridad"
+            className="inline-flex items-center gap-1.5 text-sm text-brand-700 underline-offset-4 hover:underline"
+          >
+            Cómo protegemos tus datos
+            <ArrowRight className="size-3.5" aria-hidden />
+          </Link>
+        </div>
+        <ul className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {garantias.map((g) => (
+            <li key={g.titulo} className="min-w-0">
+              <g.icono className="size-5 text-brand-700" aria-hidden />
+              <h3 className="mt-3 font-medium">{g.titulo}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{g.texto}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
 // ── Página ──────────────────────────────────────────────────────────
 
 function Landing() {
@@ -465,6 +528,8 @@ function Landing() {
             </figure>
           )}
         </section>
+
+        <FranjaSeguridad />
 
         <section id="precios" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16">
           <PreciosPlanes lugar="precios" />
