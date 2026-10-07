@@ -376,17 +376,20 @@ function Dashboard() {
     refetchInterval: 2 * 60_000,
   });
 
-  // Checklist de activación: solo para el dueño, con datos reales.
+  // Checklist de activación: solo para el dueño, con datos reales. En la
+  // clínica demo no va: ya viene sembrada y es de solo lectura, así que
+  // "Activa tu clínica" invitaría a pasos que el visitante no puede hacer.
   const esDueno = access.role === "owner";
+  const mostrarActivacion = esDueno && !access.clinic?.isDemo;
   const { data: hayPacientes } = useQuery({
     queryKey: ["patients", clinicId],
-    enabled: Boolean(clinicId) && esDueno,
+    enabled: Boolean(clinicId) && mostrarActivacion,
     queryFn: () => fetchPatients({ data: { clinicId: clinicId! } }),
     select: (res) => res.items.length > 0,
   });
   const { data: miembros = [] } = useQuery({
     queryKey: ["clinic-members", clinicId],
-    enabled: Boolean(clinicId) && esDueno,
+    enabled: Boolean(clinicId) && mostrarActivacion,
     queryFn: () => fetchMembers({ data: { clinicId: clinicId! } }),
   });
 
@@ -761,7 +764,7 @@ function Dashboard() {
               </div>
             )}
             <ColaAccionable tareas={tareas} />
-            {clinicId && esDueno && <ChecklistActivacion pasos={pasosActivacion} />}
+            {clinicId && mostrarActivacion && <ChecklistActivacion pasos={pasosActivacion} />}
           </div>
         </div>
 
