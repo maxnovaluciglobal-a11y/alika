@@ -443,7 +443,7 @@ function Landing() {
               <li aria-hidden>·</li>
               <li>Sin tarjeta</li>
               <li aria-hidden>·</li>
-              <li>Exportas tus datos cuando quieras</li>
+              <li>Si te vas, te llevas tus datos</li>
             </ul>
           </div>
           <PantallaHoy />

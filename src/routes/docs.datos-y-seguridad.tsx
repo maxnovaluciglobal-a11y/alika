@@ -53,6 +53,14 @@ function DocsSeguridad() {
         anotó qué y cuándo, sin posibilidad de reescribir el historial clínico de un paciente.
       </LegalP>
 
+      <LegalH2>Respaldos fuera de la plataforma</LegalH2>
+      <LegalP>
+        Además de los respaldos propios del proveedor de base de datos, todos los días se hace una
+        copia completa de la base, se cifra antes de salir y se guarda en un almacenamiento de otro
+        proveedor (Backblaze B2). Si la plataforma principal tuviera un problema grave, los datos
+        siguen existiendo en otro lugar.
+      </LegalP>
+
       <LegalH2>Trabajar durante un corte de internet</LegalH2>
       <LegalP>
         Cobrar, agendar, editar una nota clínica y marcar el odontograma funcionan sin conexión: la
