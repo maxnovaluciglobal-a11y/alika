@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -49,8 +49,10 @@ import { formatMoney } from "@/lib/finance/finance";
 import { getPatient } from "@/lib/patients/patients.functions";
 import { cn } from "@/lib/utils";
 import { mensajeDeError } from "@/lib/mensaje-error";
+import { validarBusquedaFicha } from "@/components/ficha-busqueda";
 
 export const Route = createFileRoute("/_authenticated/_clinic/pacientes/$pacienteId")({
+  validateSearch: validarBusquedaFicha,
   // Datos demográficos (nombre, teléfono, próximo control) son de agenda/recepción,
   // no solo del equipo clínico — separado de "clinical:view" que gatea las notas.
   beforeLoad: requirePermission("patients:view"),
@@ -296,6 +298,25 @@ function PacienteDetalle() {
   // dos veces la misma pieza vuelva a abrir el diálogo.
   const [piezaSeed, setPiezaSeed] = useState<PiezaSeed | null>(null);
   const [abrirPago, setAbrirPago] = useState(false);
+  // `?cobrar=1` (botón "Cobrar" del popover de la agenda): abre el pago una
+  // sola vez y se limpia de la URL, así recargar no lo vuelve a abrir. Sin
+  // permiso de facturar solo se limpia: el botón de la agenda ya no se ofrece
+  // a ese rol, pero el link se puede escribir a mano.
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  useEffect(() => {
+    if (!search.cobrar) return;
+    if (puedeFacturar) {
+      setPestana("finanzas");
+      setAbrirPago(true);
+    }
+    void navigate({
+      search: (prev) => ({ ...prev, cobrar: undefined }),
+      replace: true,
+      resetScroll: false,
+    });
+  }, [search.cobrar, puedeFacturar, navigate]);
+
   const presupuestarPieza = puedeFacturar
     ? (pieza: Omit<PiezaSeed, "nonce">) => {
         setPiezaSeed({ ...pieza, nonce: Date.now() });

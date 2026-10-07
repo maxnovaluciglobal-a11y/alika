@@ -1,6 +1,14 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 import { Link } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
+import { ArrowUpRight, Sparkles } from "lucide-react";
 
 import { AllergyAlertIcon } from "@/components/medical-history-card";
 import {
@@ -23,6 +31,9 @@ import {
   type SemillaCita,
 } from "@/components/agenda-hueco";
 import { claseBloque, tonoDeEstadoCita } from "@/lib/clinic-operations/estado-cita-tono";
+import { claseEstadoBadge, etiquetaBloqueCita, rangoHorarioCita } from "@/components/cita-acciones";
+import { buttonVariants } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 // El borde izquierdo identifica al profesional (color guardado en
@@ -69,6 +80,7 @@ export function AgendaGrid({
   esHoy = false,
   zonaHoraria,
   onAgendarHueco,
+  renderAcciones,
 }: {
   compacta?: boolean;
   citas: Cita[];
@@ -85,6 +97,10 @@ export function AgendaGrid({
   /** Si viene, los huecos libres son botones que abren "Nueva cita"
    * precargada. Quien llama decide el permiso (`agenda:manage`). */
   onAgendarHueco?: (semilla: SemillaCita, origen: HTMLElement) => void;
+  /** Acciones extra del popover de cada cita (cambiar estado, cobrar,
+   * WhatsApp). Quien llama decide qué ofrece según los permisos del rol; la
+   * grilla siempre agrega "Ver ficha". */
+  renderAcciones?: (cita: Cita, profesional: Profesional) => ReactNode;
 }) {
   const alto = HORAS_VISIBLES * 60 * PIXELES_POR_MINUTO;
   // rendimiento 01-sep: antes .filter() por profesional adentro del .map()
@@ -260,66 +276,15 @@ export function AgendaGrid({
                 );
               })}
 
-              {(citasPorProfesional.get(p.id) ?? []).map((c) => {
-                const corta = c.duracion < 30;
-                return (
-                  <Link
-                    key={c.id}
-                    to="/pacientes/$pacienteId"
-                    params={{ pacienteId: c.pacienteId }}
-                    className={cn(
-                      "@container absolute left-1.5 right-1.5 overflow-hidden rounded-md border px-2 leading-[1.15] transition-shadow hover:shadow-md focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                      corta ? "py-0" : "py-[3px]",
-                      estadoClases[c.estado],
-                      c.estado === "ausente" && "opacity-70",
-                    )}
-                    style={{
-                      top: c.inicio * PIXELES_POR_MINUTO + 1,
-                      height: c.duracion * PIXELES_POR_MINUTO - 3,
-                    }}
-                  >
-                    {/* En columnas angostas (celular) el estado baja a su
-                        propia línea: en la misma fila le comía el nombre al
-                        paciente ("Isi d.."). */}
-                    <div className="flex flex-col gap-px @[11rem]:flex-row @[11rem]:items-start @[11rem]:justify-between @[11rem]:gap-1.5">
-                      <p className="flex min-w-0 items-start gap-1.5 text-xs font-semibold">
-                        <span
-                          aria-hidden="true"
-                          className="mt-[5px] size-1.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: p.color }}
-                        />
-                        {/* ≥30 min hay alto para dos líneas: el apellido no se
-                          pierde en columnas angostas. */}
-                        <span
-                          className={
-                            corta ? "truncate" : "line-clamp-1 break-words @[11rem]:line-clamp-2"
-                          }
-                        >
-                          {c.paciente}
-                        </span>
-                        <AllergyAlertIcon allergies={allergyAlerts?.[c.pacienteId]} />
-                      </p>
-                      <span className="flex shrink-0 items-center gap-1">
-                        {c.prioridad && c.duracion < 60 && (
-                          <Sparkles className="size-3 text-ai" aria-label="Prioridad" />
-                        )}
-                        {c.pacienteConfirmo && <PatientConfirmedBadge soloIcono />}
-                        <span className="rounded bg-card/70 px-1 py-px text-[11px] font-medium">
-                          {etiquetaEstado[c.estado]}
-                        </span>
-                      </span>
-                    </div>
-                    {c.duracion >= 45 && (
-                      <p className="mt-0.5 truncate text-[11px] opacity-80">{c.tratamiento}</p>
-                    )}
-                    {c.prioridad && c.duracion >= 60 && (
-                      <span className="mt-1 inline-flex items-center gap-1 rounded bg-ai/15 px-1.5 py-px text-[11px] text-ai">
-                        <Sparkles className="size-3" /> Prioridad
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
+              {(citasPorProfesional.get(p.id) ?? []).map((c) => (
+                <BloqueCita
+                  key={c.id}
+                  cita={c}
+                  profesional={p}
+                  allergies={allergyAlerts?.[c.pacienteId]}
+                  renderAcciones={renderAcciones}
+                />
+              ))}
             </div>
           ))}
 
@@ -340,5 +305,125 @@ export function AgendaGrid({
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Bloque de una cita en la grilla de día. Antes era un `<Link>` a la ficha;
+ * ahora es un botón que abre un popover con el resumen de la cita y sus
+ * acciones (cambiar estado, cobrar, WhatsApp, ver ficha) sin salir de la
+ * agenda. Radix devuelve el foco al bloque al cerrar el popover.
+ *
+ * Adentro del botón solo va contenido de frase (`<span>`): un `<div>` o un
+ * `<p>` dentro de `<button>` es HTML inválido.
+ */
+function BloqueCita({
+  cita: c,
+  profesional: p,
+  allergies,
+  renderAcciones,
+}: {
+  cita: Cita;
+  profesional: Profesional;
+  allergies: string[] | undefined;
+  renderAcciones?: (cita: Cita, profesional: Profesional) => ReactNode;
+}) {
+  const corta = c.duracion < 30;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={etiquetaBloqueCita(c)}
+          className={cn(
+            "@container absolute left-1.5 right-1.5 block overflow-hidden rounded-md border px-2 text-left leading-[1.15] transition-shadow hover:shadow-md focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=open]:z-10 data-[state=open]:shadow-md",
+            corta ? "py-0" : "py-[3px]",
+            estadoClases[c.estado],
+            c.estado === "ausente" && "opacity-70",
+          )}
+          style={{
+            top: c.inicio * PIXELES_POR_MINUTO + 1,
+            height: c.duracion * PIXELES_POR_MINUTO - 3,
+          }}
+        >
+          {/* En columnas angostas (celular) el estado baja a su propia
+              línea: en la misma fila le comía el nombre al paciente ("Isi d.."). */}
+          <span className="flex flex-col gap-px @[11rem]:flex-row @[11rem]:items-start @[11rem]:justify-between @[11rem]:gap-1.5">
+            <span className="flex min-w-0 items-start gap-1.5 text-xs font-semibold">
+              <span
+                aria-hidden="true"
+                className="mt-[5px] size-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: p.color }}
+              />
+              {/* ≥30 min hay alto para dos líneas: el apellido no se pierde
+                  en columnas angostas. */}
+              <span
+                className={corta ? "truncate" : "line-clamp-1 break-words @[11rem]:line-clamp-2"}
+              >
+                {c.paciente}
+              </span>
+              <AllergyAlertIcon allergies={allergies} />
+            </span>
+            <span className="flex shrink-0 items-center gap-1">
+              {c.prioridad && c.duracion < 60 && (
+                <Sparkles className="size-3 text-ai" aria-label="Prioridad" />
+              )}
+              {c.pacienteConfirmo && <PatientConfirmedBadge soloIcono />}
+              <span className="rounded bg-card/70 px-1 py-px text-[11px] font-medium">
+                {etiquetaEstado[c.estado]}
+              </span>
+            </span>
+          </span>
+          {c.duracion >= 45 && (
+            <span className="mt-0.5 block truncate text-[11px] opacity-80">{c.tratamiento}</span>
+          )}
+          {c.prioridad && c.duracion >= 60 && (
+            <span className="mt-1 inline-flex items-center gap-1 rounded bg-ai/15 px-1.5 py-px text-[11px] text-ai">
+              <Sparkles className="size-3" /> Prioridad
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" side="right" collisionPadding={16} className="w-72 space-y-4">
+        <div className="space-y-1">
+          <p className="flex items-start gap-1.5 font-display text-base font-semibold leading-tight">
+            <span className="min-w-0 break-words">{c.paciente}</span>
+            <AllergyAlertIcon allergies={allergies} />
+          </p>
+          <p className="text-sm tabular-nums text-muted-foreground">
+            {rangoHorarioCita(c)} · {c.duracion} min
+          </p>
+        </div>
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-sm">
+          <dt className="text-muted-foreground">Tratamiento</dt>
+          <dd className="break-words">{c.tratamiento || "Sin tratamiento"}</dd>
+          <dt className="text-muted-foreground">Profesional</dt>
+          <dd className="flex items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className="size-2 shrink-0 rounded-full"
+              style={{ backgroundColor: p.color }}
+            />
+            <span className="truncate">{p.nombre}</span>
+          </dd>
+          <dt className="text-muted-foreground">Estado</dt>
+          <dd className="flex flex-wrap items-center gap-1.5">
+            <span className={claseEstadoBadge(c.estado)}>{etiquetaEstado[c.estado]}</span>
+            {c.pacienteConfirmo && <PatientConfirmedBadge compacto />}
+          </dd>
+        </dl>
+        <div className="flex flex-col gap-2">
+          {renderAcciones?.(c, p)}
+          <Link
+            to="/pacientes/$pacienteId"
+            params={{ pacienteId: c.pacienteId }}
+            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "justify-between")}
+          >
+            Ver ficha
+            <ArrowUpRight aria-hidden />
+          </Link>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
