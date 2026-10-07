@@ -450,7 +450,7 @@ function WaMeLinkCard({ displayPhone }: { displayPhone: string }) {
           onClick={copy}
           className={cn(
             "shrink-0 rounded-lg border border-hairline bg-background p-1.5 text-muted-foreground hover:text-foreground",
-            copiedAt && "text-brand",
+            copiedAt && "text-brand-700",
           )}
           aria-label="Copiar link"
         >
@@ -498,7 +498,7 @@ function LeadsSection({ clinicId }: { clinicId: string }) {
     <div className="space-y-3">
       <h2 className="flex items-center gap-1.5 font-display text-lg font-semibold">
         Leads nuevos
-        <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand">
+        <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-700">
           {leads.length}
         </span>
       </h2>
@@ -523,7 +523,7 @@ function LeadsSection({ clinicId }: { clinicId: string }) {
               )}
               <p className="mt-1 truncate text-xs text-muted-foreground">{lead.firstMessage}</p>
               {lead.referredByName && (
-                <p className="mt-1 text-[11px] font-medium text-brand">
+                <p className="mt-1 text-[11px] font-medium text-brand-700">
                   Referido por {lead.referredByName}
                 </p>
               )}
@@ -534,7 +534,7 @@ function LeadsSection({ clinicId }: { clinicId: string }) {
                 onClick={() => mutation.mutate({ id: lead.id, status: "converted" })}
                 disabled={mutation.isPending}
                 title="Convertir en paciente"
-                className="inline-flex items-center gap-1 rounded-lg border border-hairline px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-brand hover:text-brand disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-lg border border-hairline px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-brand hover:text-brand-700 disabled:opacity-50"
               >
                 <UserPlus className="size-3.5" /> Convertir
               </button>

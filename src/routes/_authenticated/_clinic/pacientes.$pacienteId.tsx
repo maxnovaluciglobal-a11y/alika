@@ -100,7 +100,7 @@ function PacienteNoEncontrado() {
             hasta: "",
             page: 1,
           }}
-          className="text-brand hover:underline"
+          className="text-brand-700 hover:underline"
         >
           Volver al listado
         </Link>
@@ -126,7 +126,7 @@ function PacienteError() {
             hasta: "",
             page: 1,
           }}
-          className="text-brand hover:underline"
+          className="text-brand-700 hover:underline"
         >
           Volver al listado
         </Link>
@@ -213,14 +213,14 @@ function ConvenioDelPaciente({
             onChange={(e) => setNroAfiliado(e.target.value)}
             placeholder="Nº de afiliado"
             aria-label="Número de afiliado"
-            className="w-full rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
+            className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
           />
         )}
         <div className="flex gap-1">
           <button
             onClick={() => guardar.mutate()}
             disabled={guardar.isPending}
-            className="min-h-9 rounded px-1.5 text-[11px] font-medium text-brand outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+            className="min-h-9 rounded px-1.5 text-[11px] font-medium text-brand-700 outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
           >
             Guardar
           </button>
@@ -249,7 +249,7 @@ function ConvenioDelPaciente({
             setNroAfiliado(afiliado ?? "");
             setEditando(true);
           }}
-          className="inline-flex min-h-9 items-center gap-1 rounded border border-dashed border-brand/40 px-1.5 text-[11px] font-medium text-brand outline-none hover:bg-brand-soft focus-visible:ring-1 focus-visible:ring-ring"
+          className="inline-flex min-h-9 items-center gap-1 rounded border border-dashed border-brand/40 px-1.5 text-[11px] font-medium text-brand-700 outline-none hover:bg-brand-soft focus-visible:ring-1 focus-visible:ring-ring"
         >
           <Pencil className="size-3" /> Cambiar
         </button>

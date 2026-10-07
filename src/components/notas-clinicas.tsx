@@ -66,7 +66,7 @@ import type { Paciente } from "@/lib/clinic-operations/clinic-data";
 const REVIEW_BADGE: Record<NoteReviewStatus, string> = {
   none: "border-hairline text-muted-foreground",
   pending: "border-ai/30 bg-ai-soft text-ai",
-  approved: "border-brand/30 bg-brand-soft text-brand",
+  approved: "border-brand/30 bg-brand-soft text-brand-700",
   changes_requested: "border-destructive/30 bg-destructive/10 text-destructive",
 };
 
@@ -485,7 +485,7 @@ export function NotasClinicas({
               onClick={() => abrirNota(n.id)}
               className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs transition-colors ${
                 n.id === noteId
-                  ? "border-brand/40 bg-brand-soft text-brand"
+                  ? "border-brand/40 bg-brand-soft text-brand-700"
                   : "border-hairline text-muted-foreground hover:bg-secondary/60"
               }`}
             >
@@ -516,7 +516,7 @@ export function NotasClinicas({
                 <select
                   value={especialidad}
                   onChange={(e) => setEspecialidad(e.target.value)}
-                  className="rounded-lg border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
+                  className="rounded-lg border border-input bg-transparent px-2 py-1 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
                 >
                   {NOTE_TEMPLATE_SPECIALTIES.map((s) => (
                     <option key={s} value={s}>
@@ -540,7 +540,7 @@ export function NotasClinicas({
                     onClick={() => aplicarPlantilla(t.id)}
                     className={`rounded-lg border px-2.5 py-1 text-xs transition-colors ${
                       t.id === templateId
-                        ? "border-brand/40 bg-brand-soft text-brand"
+                        ? "border-brand/40 bg-brand-soft text-brand-700"
                         : "border-hairline text-muted-foreground hover:bg-secondary/60"
                     }`}
                   >
@@ -561,7 +561,7 @@ export function NotasClinicas({
             onChange={(e) => setTitulo(e.target.value)}
             disabled={!puedeEditar || bloqueada}
             placeholder="Título de la nota"
-            className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50 disabled:opacity-60"
+            className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base disabled:opacity-60"
           />
           <textarea
             value={contenido}
@@ -569,7 +569,7 @@ export function NotasClinicas({
             disabled={!puedeEditar || bloqueada}
             rows={12}
             placeholder="Escribe apuntes rápidos (ej: molestia molar 36, sensibilidad al frío, se realiza obturación) y deja que la IA los convierta en una nota SOAP."
-            className="w-full resize-y rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm leading-relaxed outline-none focus:border-brand/50 disabled:opacity-60"
+            className="w-full resize-y rounded-lg border border-input bg-transparent px-3 py-2 text-sm leading-relaxed focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base disabled:opacity-60"
           />
 
           {puedeEditar && (
@@ -676,7 +676,7 @@ export function NotasClinicas({
                   <select
                     value={revisorId}
                     onChange={(e) => setRevisorId(e.target.value)}
-                    className="rounded-lg border border-hairline bg-transparent px-2 py-1.5 text-xs outline-none focus:border-brand/50"
+                    className="rounded-lg border border-input bg-transparent px-2 py-1.5 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
                   >
                     <option value="">Elegir revisor…</option>
                     {revisores.map((r) => (
@@ -727,7 +727,7 @@ export function NotasClinicas({
                       ? "Comentario del revisor (obligatorio al solicitar cambios)"
                       : "Nota para el revisor (opcional)"
                   }
-                  className="mt-2 w-full resize-y rounded-lg border border-hairline bg-transparent px-3 py-2 text-xs outline-none focus:border-brand/50"
+                  className="mt-2 w-full resize-y rounded-lg border border-input bg-transparent px-3 py-2 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
                 />
               )}
 
@@ -835,7 +835,7 @@ export function NotasClinicas({
                                     validar.mutate({ entityId: e.id, confirmed: !e.confirmed })
                                   }
                                   className={`rounded p-1 hover:bg-secondary ${
-                                    e.confirmed ? "text-brand" : "text-muted-foreground"
+                                    e.confirmed ? "text-brand-700" : "text-muted-foreground"
                                   }`}
                                 >
                                   <Check className="size-3" />
@@ -922,7 +922,7 @@ export function NotasClinicas({
                       {v.version > 1 && (
                         <button
                           onClick={() => setComparar({ desde: v.version - 1, hasta: v.version })}
-                          className="inline-flex items-center gap-1 text-[11px] text-brand hover:underline"
+                          className="inline-flex items-center gap-1 text-[11px] text-brand-700 hover:underline"
                         >
                           <GitCompare className="size-3" /> Comparar con v{v.version - 1}
                         </button>
@@ -943,7 +943,7 @@ export function NotasClinicas({
                               ? "Resuelve la revisión pendiente antes de revertir"
                               : `Revertir a v${v.version} como nuevo borrador`
                           }
-                          className="inline-flex items-center gap-1 text-[11px] text-brand hover:underline disabled:opacity-50"
+                          className="inline-flex items-center gap-1 text-[11px] text-brand-700 hover:underline disabled:opacity-50"
                         >
                           <RotateCcw className="size-3" /> Revertir a v{v.version}
                         </button>
@@ -1020,7 +1020,7 @@ export function NotasClinicas({
                               onClick={() =>
                                 setComparar({ desde: anterior.noteVersion, hasta: r.noteVersion })
                               }
-                              className="mt-2 inline-flex items-center gap-1 text-[11px] text-brand hover:underline"
+                              className="mt-2 inline-flex items-center gap-1 text-[11px] text-brand-700 hover:underline"
                             >
                               <GitCompare className="size-3" /> Comparar v{anterior.noteVersion} → v
                               {r.noteVersion}

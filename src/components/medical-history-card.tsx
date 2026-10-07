@@ -72,7 +72,7 @@ function ChipListEditor({
               }
             }}
             placeholder={placeholder}
-            className="w-full max-w-xs rounded-lg border border-hairline bg-transparent px-3 py-1.5 text-xs outline-none focus:border-brand/50"
+            className="w-full max-w-xs rounded-lg border border-input bg-transparent px-3 py-1.5 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
           />
           <button
             type="button"
@@ -208,7 +208,7 @@ export function MedicalHistoryCard({
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
                 placeholder="Ej. embarazo, precauciones al anestesiar…"
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-xs outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               />
             ) : (
               <p className="text-xs text-muted-foreground">{notes || "Sin notas."}</p>

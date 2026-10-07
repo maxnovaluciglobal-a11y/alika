@@ -104,7 +104,7 @@ function PanelDeRed({ clinicId, branchCount }: { clinicId: string; branchCount: 
 }
 
 function inputClass() {
-  return "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
+  return "w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base";
 }
 
 type BranchFormState = {

@@ -479,7 +479,7 @@ function GastosPage() {
               <button
                 type="button"
                 onClick={() => set({ categoria: "" })}
-                className="text-sm text-brand hover:underline"
+                className="text-sm text-brand-700 hover:underline"
               >
                 Ver todas las categorías
               </button>

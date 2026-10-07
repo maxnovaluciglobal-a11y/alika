@@ -73,7 +73,7 @@ function EstadoDialog({
   const [canonical, setCanonical] = useState<Canonico>(
     (estado?.canonical as Canonico) ?? "tentativa",
   );
-  const [color, setColor] = useState(estado?.color ?? "#94a3b8");
+  const [color, setColor] = useState(estado?.color ?? "#8e8984");
   const queryClient = useQueryClient();
   const upsertFn = useServerFn(upsertAppointmentStatus);
 

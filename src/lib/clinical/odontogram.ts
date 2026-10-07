@@ -51,20 +51,20 @@ export const CONDITION_LABELS: Record<ToothCondition, string> = {
  * pensados para leerse bien tanto en claro como en oscuro.
  */
 export const CONDITION_COLORS: Record<ToothCondition, string> = {
-  sano: "#e2e8f0",
-  caries: "#dc2626",
-  obturacion: "#2563eb",
-  endodoncia: "#7c3aed",
-  corona: "#f59e0b",
-  implante: "#0d9488",
+  sano: "#e4e1dc",
+  caries: "#b8432f",
+  obturacion: "#2f5f9e",
+  endodoncia: "#6b4a8a",
+  corona: "#c08a2e",
+  implante: "#2c6a78",
   // #525252 original medía ~2.1:1 contra el fondo de tarjeta en modo oscuro
   // (oklch(0.235 0.022 252)) — bajo el mínimo WCAG 1.4.11 de 3:1 para
   // elementos gráficos no textuales. Este gris más claro da ~4.7:1 en claro
   // y ~3.5:1 en oscuro, sin perder la lectura de "ausente" (gris neutro).
   ausente: "#737373",
-  sellante: "#22c55e",
-  fractura: "#ea580c",
-  protesis: "#a855f7",
+  sellante: "#4f7a55",
+  fractura: "#c0622f",
+  protesis: "#7a4a6e",
 };
 
 /**

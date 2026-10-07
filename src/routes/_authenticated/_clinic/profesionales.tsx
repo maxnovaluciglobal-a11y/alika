@@ -37,7 +37,7 @@ import { formatMoney, fromCents, toCents } from "@/lib/finance/finance";
 import { requirePermission } from "@/lib/access/route-guards";
 
 function inputClass() {
-  return "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
+  return "w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base";
 }
 
 /** Orden de despliegue lunes→domingo. El value es el day_of_week real
@@ -68,7 +68,7 @@ const EMPTY_FORM: ProfessionalFormState = {
   email: "",
   phone: "",
   licenseNumber: "",
-  color: "#0d9488",
+  color: "#a8772c",
   branchId: null,
   specialtyId: null,
 };

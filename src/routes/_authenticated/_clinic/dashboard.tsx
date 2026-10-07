@@ -30,6 +30,12 @@ import { formatMoney } from "@/lib/finance/finance";
 import { countConversacionesSinResponder } from "@/lib/messaging/conversations.functions";
 import { listPendingOutreach, listPendingReminders } from "@/lib/messaging/messaging.functions";
 import { listPatients } from "@/lib/patients/patients.functions";
+import {
+  clasePastilla,
+  claseTexto,
+  tonoDeCita,
+  type TonoEstado,
+} from "@/lib/clinic-operations/estado-cita-tono";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/dashboard")({
@@ -111,7 +117,9 @@ function ChecklistActivacion({ pasos }: { pasos: PasoActivacion[] }) {
   );
 }
 
-type Kpi = { label: string; valor: string; nota: string };
+/** `tono` colorea la cifra y `tonoNota` la nota solo cuando hay algo que
+ * mirar (auditoría 07-oct-2026: las cifras de Hoy eran todas tinta). */
+type Kpi = { label: string; valor: string; nota: string; tono?: TonoEstado; tonoNota?: TonoEstado };
 
 function FilaKpis({ kpis, cargando }: { kpis: Kpi[]; cargando: boolean }) {
   return (
@@ -128,7 +136,12 @@ function FilaKpis({ kpis, cargando }: { kpis: Kpi[]; cargando: boolean }) {
           )}
         >
           <dt className="kicker">{k.label}</dt>
-          <dd className="mt-2 font-display text-4xl font-normal leading-none tabular-nums">
+          <dd
+            className={cn(
+              "mt-2 font-display text-4xl font-normal leading-none tabular-nums",
+              k.tono && claseTexto[k.tono],
+            )}
+          >
             {cargando ? (
               <span
                 className="inline-block h-9 w-14 animate-pulse rounded-sm bg-muted"
@@ -138,20 +151,19 @@ function FilaKpis({ kpis, cargando }: { kpis: Kpi[]; cargando: boolean }) {
               k.valor
             )}
           </dd>
-          <dd className="mt-1.5 text-sm text-muted-foreground">{k.nota}</dd>
+          <dd
+            className={cn(
+              "mt-1.5 text-sm",
+              k.tonoNota ? claseTexto[k.tonoNota] : "text-muted-foreground",
+            )}
+          >
+            {k.nota}
+          </dd>
         </div>
       ))}
     </dl>
   );
 }
-
-const tonoEstado: Record<Cita["estado"], string> = {
-  confirmada: "border-success/40 text-success",
-  "en-sala": "border-brand/50 text-brand-700",
-  finalizada: "border-border text-muted-foreground",
-  ausente: "border-destructive/40 text-destructive",
-  tentativa: "border-destructive/40 text-destructive",
-};
 
 /** Siempre con texto: el tono acompaña, no informa solo (auditoría 04-sep). */
 function EstadoCita({ cita }: { cita: Cita }) {
@@ -165,9 +177,7 @@ function EstadoCita({ cita }: { cita: Cita }) {
     <span
       className={cn(
         "inline-flex whitespace-nowrap rounded-sm border px-2 py-0.5 text-xs",
-        cita.estado === "tentativa" && cita.pacienteConfirmo
-          ? "border-success/40 text-success"
-          : tonoEstado[cita.estado],
+        clasePastilla[tonoDeCita(cita)],
       )}
     >
       {texto}
@@ -399,6 +409,8 @@ function Dashboard() {
     label: "Confirmadas",
     valor: String(confirmadas),
     nota: `${sinRespuestaHoy} sin respuesta`,
+    tono: confirmadas > 0 ? "success" : undefined,
+    tonoNota: sinRespuestaHoy > 0 ? "warning" : undefined,
   };
   // Regla 11: mientras los saldos cargan (o si fallan) no se fabrica un $0.
   const saldosSinDatos = pacientesHoy.length > 0 && (saldosPendientes || saldosConError);
@@ -412,6 +424,7 @@ function Dashboard() {
         label: "Por cobrar hoy",
         valor: formatMoney(porCobrarHoy, currency),
         nota: `${conDeuda.length} paciente${conDeuda.length === 1 ? "" : "s"}`,
+        tono: porCobrarHoy > 0 ? "warning" : undefined,
       };
   // Dueño y contabilidad (finance:view): plata primero. Recepción y el
   // equipo clínico: el movimiento del día. "Por cobrar" exige finance:view
@@ -437,6 +450,7 @@ function Dashboard() {
         {
           label: "En sala",
           valor: String(enSala.length),
+          tono: enSala.length > 0 ? "info" : undefined,
           nota: enSala[0]
             ? `${enSala[0].paciente} · ${horaDeCita(enSala[0].inicio)}`
             : "Nadie esperando",
@@ -445,6 +459,7 @@ function Dashboard() {
           label: "Sin confirmar",
           valor: String(sinConfirmar48h),
           nota: "Próximas 48 h",
+          tono: sinConfirmar48h > 0 ? "warning" : undefined,
         },
       ];
 

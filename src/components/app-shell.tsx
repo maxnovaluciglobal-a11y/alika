@@ -78,7 +78,7 @@ function BarraInferior({
             className={cn(item, activo ? "text-brand-800" : "text-muted-foreground")}
           >
             <span className="relative">
-              <Icon className={cn("size-5", activo && "text-brand")} aria-hidden />
+              <Icon className={cn("size-5", activo && "text-brand-700")} aria-hidden />
               {badge > 0 && (
                 <span className="absolute -top-1.5 -right-3 min-w-4 rounded-sm bg-brand-700 px-0.5 text-center text-[10px] leading-4 tabular-nums text-white">
                   {badge > 9 ? "9+" : badge}
@@ -91,7 +91,7 @@ function BarraInferior({
       })}
       <Sheet open={masAbierto} onOpenChange={setMasAbierto}>
         <SheetTrigger className={cn(item, masActivo ? "text-brand-800" : "text-muted-foreground")}>
-          <Menu className={cn("size-5", masActivo && "text-brand")} aria-hidden />
+          <Menu className={cn("size-5", masActivo && "text-brand-700")} aria-hidden />
           Más
         </SheetTrigger>
         <SheetContent
@@ -325,7 +325,7 @@ export function AppShell({
                     )}
                   >
                     <Icon
-                      className={cn("size-4", activo ? "text-brand" : "text-muted-foreground")}
+                      className={cn("size-4", activo ? "text-brand-700" : "text-muted-foreground")}
                     />
                     <span>{label}</span>
                     {badge > 0 && (
@@ -352,7 +352,7 @@ export function AppShell({
             )}
           >
             <Settings
-              className={cn("size-4", enAjustes ? "text-brand" : "text-muted-foreground")}
+              className={cn("size-4", enAjustes ? "text-brand-700" : "text-muted-foreground")}
             />
             Ajustes
           </Link>

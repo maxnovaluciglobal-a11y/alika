@@ -408,7 +408,7 @@ function QuoteItemsEditor({
         onClick={() =>
           setItems((arr) => [...arr, emptyItem({ phaseLabel: arr.at(-1)?.phaseLabel ?? "" })])
         }
-        className="inline-flex items-center gap-1 text-[11px] font-medium text-brand hover:underline"
+        className="inline-flex items-center gap-1 text-[11px] font-medium text-brand-700 hover:underline"
       >
         <Plus className="size-3" /> Agregar otro ítem
       </button>
@@ -588,7 +588,7 @@ function NuevoProcedimientoInline({
       <DialogTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-1 text-[11px] font-medium text-brand hover:underline"
+          className="inline-flex items-center gap-1 text-[11px] font-medium text-brand-700 hover:underline"
         >
           <Plus className="size-3" /> Nuevo procedimiento
         </button>

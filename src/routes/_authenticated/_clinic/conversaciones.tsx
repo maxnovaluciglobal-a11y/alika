@@ -235,7 +235,7 @@ function ListaConversaciones({
                   <span className="truncate">{c.lastMessageBody}</span>
                 </span>
                 {pendiente && c.inboundStreak > 1 && (
-                  <span className="mt-1 inline-block rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand">
+                  <span className="mt-1 inline-block rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand-700">
                     {c.inboundStreak} mensajes sin responder
                   </span>
                 )}

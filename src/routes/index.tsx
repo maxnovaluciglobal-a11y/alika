@@ -75,9 +75,9 @@ const filasHoy = [
 ] as const;
 
 const tonoEstado = {
-  ok: "border-success/40 text-success",
-  sala: "border-brand/50 text-brand-700",
-  pendiente: "border-destructive/40 text-destructive",
+  ok: "border-success-border bg-success-soft text-success",
+  sala: "border-info-border bg-info-soft text-info",
+  pendiente: "border-dashed border-warning-border bg-warning-soft text-warning",
 } as const;
 
 function PantallaHoy() {

@@ -97,6 +97,17 @@
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
+  --color-success-border: var(--success-border);
+  --color-warning-border: var(--warning-border);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-border: var(--info-border);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-destructive-border: var(--destructive-border);
+  --color-neutral: var(--neutral);
+  --color-neutral-soft: var(--neutral-soft);
+  --color-neutral-border: var(--neutral-border);
+  --color-control: var(--control);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -129,11 +140,15 @@
 
   /* Papel y tinta */
   --background: #f3f2f2;
-  --surface: #eae9e9;
+  /* La superficie (sidebar, franjas) se separa del papel y las tarjetas
+     quedan un paso más claras: antes papel, superficie y tarjeta daban
+     1,04–1,08:1 entre sí y todo se leía como un mismo gris (auditoría
+     07-oct-2026). */
+  --surface: #e4e1dc;
   --foreground: #201f1d;
-  --card: #f3f2f2;
+  --card: #fbfaf8;
   --card-foreground: #201f1d;
-  --popover: #f8f6f6;
+  --popover: #fbfaf8;
   --popover-foreground: #201f1d;
 
   /* Rampa del acento */
@@ -159,24 +174,40 @@
   /* Semánticos shadcn re-mapeados: así cambian los 48 componentes de ui/. */
   --primary: #7d5411;
   --primary-foreground: #ffffff;
-  --secondary: #eae9e9;
+  --secondary: #e9e6e1;
   --secondary-foreground: #201f1d;
-  --muted: #eae9e9;
+  --muted: #e9e6e1;
   --muted-foreground: #5f5c59;
   --accent: color-mix(in srgb, #b68235 10%, transparent);
   --accent-foreground: #5a3b0a;
-  --destructive: #a3301c;
+  /* Estados: cuatro tintas de pigmento con la luminosidad del ocre 700.
+     Texto ≥ 5,2:1 sobre su fondo suave y sobre el papel; borde ≥ 3:1.
+     La advertencia es siena y ya no comparte el fondo con la marca. */
+  --destructive: #9c2c1c;
   --destructive-foreground: #ffffff;
-  --success: #4a6a2c;
-  --success-soft: #eaf0df;
-  --warning: #8a5d14;
-  --warning-soft: #fff3e4;
+  --destructive-soft: #f7e2dc;
+  --destructive-border: #c4604c;
+  --success: #3b6b3f;
+  --success-soft: #e4eee2;
+  --success-border: #6f9a6f;
+  --warning: #8f4a12;
+  --warning-soft: #fbe9d8;
+  --warning-border: #c47a3c;
+  --info: #1f5866;
+  --info-soft: #e0ecee;
+  --info-border: #5b8f9a;
+  --neutral: #57534f;
+  --neutral-soft: #e6e4e2;
+  --neutral-border: #8e8984;
 
   --divider: color-mix(in srgb, #201f1d 16%, transparent);
   --border: color-mix(in srgb, #201f1d 16%, transparent);
   --hairline: color-mix(in srgb, #201f1d 9%, transparent);
-  --input: color-mix(in srgb, #201f1d 22%, transparent);
-  --ring: #b68235;
+  /* Bordes de controles (campos, botones de contorno): ≥ 3:1 sobre papel
+     y tarjeta (WCAG 1.4.11). Tarjetas y divisores siguen en --border. */
+  --input: color-mix(in srgb, #201f1d 50%, transparent);
+  --control: color-mix(in srgb, #201f1d 50%, transparent);
+  --ring: #7d5411;
 
   --shadow-ink-soft: rgb(45 43 43 / 0.14);
   --shadow-ink-mid: rgb(45 43 43 / 0.16);
@@ -184,11 +215,11 @@
 
   --chart-1: #b68235;
   --chart-2: #605d5d;
-  --chart-3: #4a6a2c;
-  --chart-4: #e1ad66;
-  --chart-5: #9b9797;
+  --chart-3: #6f9a6f;
+  --chart-4: #5b8f9a;
+  --chart-5: #c47a3c;
 
-  --sidebar: #eae9e9;
+  --sidebar: #e4e1dc;
   --sidebar-foreground: #201f1d;
   --sidebar-primary: #7d5411;
   --sidebar-primary-foreground: #ffffff;
@@ -204,7 +235,7 @@
   --background: #1d1c1b;
   --surface: #171615;
   --foreground: #ece9e4;
-  --card: #1d1c1b;
+  --card: #232120;
   --card-foreground: #ece9e4;
   --popover: #252322;
   --popover-foreground: #ece9e4;
@@ -234,18 +265,29 @@
   --muted-foreground: #b3aea8;
   --accent: color-mix(in srgb, #e1ad66 14%, transparent);
   --accent-foreground: #ffe3bf;
-  --destructive: #e07a64;
+  --destructive: #f09482;
   --destructive-foreground: #1d1c1b;
-  --success: #a9c486;
-  --success-soft: #26301c;
-  --warning: #e1ad66;
-  --warning-soft: #3a270d;
+  --destructive-soft: #3b1d17;
+  --destructive-border: #b95a48;
+  --success: #9fcb98;
+  --success-soft: #1f2e20;
+  --success-border: #5f8f5e;
+  --warning: #f0a868;
+  --warning-soft: #3a2412;
+  --warning-border: #b06e33;
+  --info: #8cc6d2;
+  --info-soft: #15292e;
+  --info-border: #4f8c98;
+  --neutral: #b8b2ab;
+  --neutral-soft: #2a2827;
+  --neutral-border: #7a7570;
 
   --divider: color-mix(in srgb, #ece9e4 16%, transparent);
   --border: color-mix(in srgb, #ece9e4 16%, transparent);
   --hairline: color-mix(in srgb, #ece9e4 9%, transparent);
-  --input: color-mix(in srgb, #ece9e4 22%, transparent);
-  --ring: #e1ad66;
+  --input: color-mix(in srgb, #ece9e4 45%, transparent);
+  --control: color-mix(in srgb, #ece9e4 45%, transparent);
+  --ring: #facb8d;
 
   --shadow-ink-soft: rgb(0 0 0 / 0.3);
   --shadow-ink-mid: rgb(0 0 0 / 0.35);
@@ -253,9 +295,9 @@
 
   --chart-1: #e1ad66;
   --chart-2: #b3aea8;
-  --chart-3: #a9c486;
-  --chart-4: #facb8d;
-  --chart-5: #7d7979;
+  --chart-3: #9fcb98;
+  --chart-4: #8cc6d2;
+  --chart-5: #f0a868;
 
   --sidebar: #171615;
   --sidebar-foreground: #ece9e4;
@@ -304,7 +346,8 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-brand);
+    /* Ocre 700: el ocre puro da 2,8:1 sobre la superficie. */
+    outline: 2px solid var(--color-brand-700);
     outline-offset: 2px;
   }
 

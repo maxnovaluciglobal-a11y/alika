@@ -206,7 +206,7 @@ function PortalInicio() {
             <button
               type="button"
               onClick={() => setEnviado(false)}
-              className="mt-2 text-xs text-brand underline"
+              className="mt-2 text-xs text-brand-700 underline"
             >
               Pedir otra
             </button>
@@ -219,7 +219,7 @@ function PortalInicio() {
                 <PopoverTrigger asChild>
                   <button
                     type="button"
-                    className="flex w-full items-center justify-between rounded-lg border border-border/60 bg-transparent px-3 py-2 text-left text-sm outline-none focus:border-brand/50"
+                    className="flex w-full items-center justify-between rounded-lg border border-border/60 bg-transparent px-3 py-2 text-left text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
                   >
                     <span className="capitalize">{formatoFechaLarga(preferredDate)}</span>
                     <CalendarDays className="size-4 shrink-0 text-muted-foreground" />
@@ -254,7 +254,7 @@ function PortalInicio() {
                 placeholder="Por ejemplo: dolor en la muela superior derecha…"
                 rows={3}
                 maxLength={500}
-                className="w-full rounded-lg border border-border/60 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-border/60 bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               />
             </div>
             <div className="space-y-1.5">
@@ -262,7 +262,7 @@ function PortalInicio() {
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as typeof priority)}
-                className="w-full rounded-lg border border-border/60 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-border/60 bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               >
                 <option value="baja">Baja — puedo esperar</option>
                 <option value="media">Media — esta semana</option>

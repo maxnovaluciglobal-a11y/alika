@@ -148,7 +148,7 @@ function FusionarFichasPage() {
                       to="/pacientes/$pacienteId"
                       params={{ pacienteId: p.id }}
                       onClick={(e) => e.stopPropagation()}
-                      className="shrink-0 text-[11px] font-medium text-brand hover:underline"
+                      className="shrink-0 text-[11px] font-medium text-brand-700 hover:underline"
                     >
                       Ver ficha
                     </Link>

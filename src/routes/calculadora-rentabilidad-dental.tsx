@@ -227,7 +227,7 @@ const BANDA_ESTILO: Record<Banda, { etiqueta: string; icono: LucideIcon; clases:
   bajo: {
     etiqueta: "Atípico",
     icono: Info,
-    clases: "border-sky-400/30 bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300",
+    clases: "border-info-border bg-info-soft text-info",
   },
 };
 

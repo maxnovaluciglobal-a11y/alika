@@ -158,7 +158,7 @@ function CajasPage() {
           ) : openRegister ? (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <LockOpen className="h-5 w-5 text-emerald-600" />
+                <LockOpen className="h-5 w-5 text-success" />
                 <span className="font-medium">Caja abierta</span>
                 <span className="text-sm text-muted-foreground">
                   desde {formatoFecha(openRegister.openedAt)}
@@ -304,7 +304,7 @@ function CajasPage() {
                         r.differenceCents === null
                           ? ""
                           : r.differenceCents === 0
-                            ? "text-emerald-600"
+                            ? "text-success"
                             : "text-destructive"
                       }`}
                     >

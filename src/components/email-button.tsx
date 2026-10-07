@@ -70,7 +70,7 @@ export function EmailButton({
         title={label ?? "Enviar por email"}
         aria-label={label ?? "Enviar por email"}
         className={cn(
-          "inline-flex size-7 items-center justify-center rounded-md border border-hairline text-muted-foreground transition-colors hover:border-brand hover:text-brand disabled:opacity-50",
+          "inline-flex size-7 items-center justify-center rounded-md border border-hairline text-muted-foreground transition-colors hover:border-brand hover:text-brand-700 disabled:opacity-50",
         )}
       >
         {send.isPending ? (
@@ -87,7 +87,7 @@ export function EmailButton({
       type="button"
       onClick={handleClick}
       disabled={pending || send.isPending}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium transition-colors hover:border-brand hover:text-brand disabled:opacity-50"
+      className="inline-flex items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium transition-colors hover:border-brand hover:text-brand-700 disabled:opacity-50"
     >
       {send.isPending ? (
         <Loader2 className="size-3.5 animate-spin" />

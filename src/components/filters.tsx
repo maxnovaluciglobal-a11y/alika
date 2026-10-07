@@ -18,7 +18,7 @@ export function FilterBar({
         <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           <SlidersHorizontal className="size-3.5" /> Filtros avanzados
           {activos > 0 && (
-            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand">
+            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand-700">
               {activos} activo{activos > 1 ? "s" : ""}
             </span>
           )}

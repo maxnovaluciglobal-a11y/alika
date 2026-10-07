@@ -13,6 +13,7 @@ import {
   listAppointments,
   setAppointmentStatus,
 } from "@/lib/clinic-operations/appointments.functions";
+import { clasePastilla, tonoDeEstadoCita } from "@/lib/clinic-operations/estado-cita-tono";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/mi-agenda")({
@@ -103,7 +104,7 @@ function MiAgendaPage() {
                 estado: "",
                 page: 1,
               }}
-              className="font-medium text-brand underline"
+              className="font-medium text-brand-700 underline"
             >
               la agenda general
             </Link>
@@ -182,12 +183,8 @@ function MiAgendaPage() {
                         {c.pacienteConfirmo && <PatientConfirmedBadge />}
                         <span
                           className={cn(
-                            "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium",
-                            c.estado === "confirmada" || c.estado === "finalizada"
-                              ? "bg-brand-soft text-brand"
-                              : c.estado === "ausente"
-                                ? "bg-destructive/10 text-destructive"
-                                : "bg-ai-soft text-ai",
+                            "shrink-0 rounded border px-1.5 py-0.5 text-[11px] font-medium",
+                            clasePastilla[tonoDeEstadoCita[c.estado]],
                           )}
                         >
                           {etiquetaEstado[c.estado]}

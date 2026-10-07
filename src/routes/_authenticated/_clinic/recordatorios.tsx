@@ -51,7 +51,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/recordatorios")({
 function filaClass(kind: PendingReminder["reminderKind"]) {
   return kind === "appointment_checkin"
     ? "bg-warning-soft text-warning"
-    : "bg-brand-soft text-brand";
+    : "bg-brand-soft text-brand-700";
 }
 
 const OUTREACH_META: Record<
@@ -61,7 +61,7 @@ const OUTREACH_META: Record<
   hygiene_recall: {
     label: "Recall de higiene",
     icon: Sparkles,
-    badgeClass: "bg-brand-soft text-brand",
+    badgeClass: "bg-brand-soft text-brand-700",
   },
   review_request: {
     label: "Pedido de reseña",
@@ -86,7 +86,7 @@ const OUTREACH_META: Record<
   treatment_followup: {
     label: "Seguimiento post-tratamiento",
     icon: Stethoscope,
-    badgeClass: "bg-brand-soft text-brand",
+    badgeClass: "bg-brand-soft text-brand-700",
   },
   referral_invite: {
     label: "Invitación a referir",
@@ -96,7 +96,7 @@ const OUTREACH_META: Record<
   nps_survey: {
     label: "Encuesta de satisfacción",
     icon: Star,
-    badgeClass: "bg-brand-soft text-brand",
+    badgeClass: "bg-brand-soft text-brand-700",
   },
 };
 
@@ -199,7 +199,7 @@ function RecordatoriosPage() {
           <section className="space-y-3">
             <h2 className="flex items-center gap-1.5 font-display text-lg font-semibold">
               <Clock className="size-4 text-brand" /> Recordatorio de 48h
-              <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand">
+              <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-700">
                 {recordatorio48h.length}
               </span>
             </h2>

@@ -210,7 +210,7 @@ function BillingPage() {
               {sub.cancelAtPeriodEnd && (
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-muted-foreground">Aviso</dt>
-                  <dd className="mt-1 text-sm text-amber-700 dark:text-amber-400">
+                  <dd className="mt-1 text-sm text-warning">
                     Cancelada — vence el {formatDate(sub.currentPeriodEnd)}
                   </dd>
                 </div>
@@ -258,7 +258,7 @@ function BillingPage() {
                         {usd(info.regularCents)}
                       </span>
                     </p>
-                    <p className="text-[11px] font-medium text-brand">
+                    <p className="text-[11px] font-medium text-brand-700">
                       Precio de fundador — por tiempo limitado
                     </p>
                   </button>

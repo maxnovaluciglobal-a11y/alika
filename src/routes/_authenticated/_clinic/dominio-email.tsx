@@ -62,7 +62,7 @@ const ESTADO_UI: Record<
   },
   warn: {
     label: "Aviso",
-    clase: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    clase: "border-warning-border bg-warning-soft text-warning",
     Icono: AlertTriangle,
   },
   fail: {
@@ -147,7 +147,7 @@ function DominioEmailPage() {
             "flex items-start gap-3 rounded-xl border p-5",
             puerta.permitido
               ? "border-primary/30 bg-primary/5 text-primary"
-              : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+              : "border-warning-border bg-warning-soft text-warning",
           )}
           role="status"
         >
@@ -229,7 +229,7 @@ function DominioEmailPage() {
                         r.state === "pass"
                           ? "text-primary"
                           : r.state === "warn"
-                            ? "text-amber-500"
+                            ? "text-warning"
                             : "text-destructive",
                       )}
                       aria-hidden

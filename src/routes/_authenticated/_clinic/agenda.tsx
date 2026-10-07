@@ -98,6 +98,7 @@ import {
   type PendingAppointmentRequest,
 } from "@/lib/patients/portal.functions";
 import { coincide, num, paginar, str } from "@/lib/search";
+import { clasePastilla, tonoDeEstadoCita } from "@/lib/clinic-operations/estado-cita-tono";
 import { cn } from "@/lib/utils";
 
 type VistaAgenda = "dia" | "semana" | "mes";
@@ -234,16 +235,8 @@ function puedeConfirmarCita(access: ClinicAccess, professionalId: string): boole
 
 function claseEstadoBadge(estado: EstadoCita) {
   return cn(
-    "w-fit rounded px-1.5 py-0.5 text-[10px] font-medium",
-    estado === "ausente"
-      ? "bg-destructive/10 text-destructive"
-      : estado === "en-sala"
-        ? "bg-warning-soft text-warning"
-        : estado === "tentativa"
-          ? "bg-ai-soft text-ai"
-          : estado === "finalizada"
-            ? "bg-secondary text-muted-foreground"
-            : "bg-brand-soft text-brand",
+    "w-fit rounded border px-1.5 py-0.5 text-[11px] font-medium",
+    clasePastilla[tonoDeEstadoCita[estado]],
   );
 }
 
@@ -493,7 +486,7 @@ function NuevaCitaDialog({
                   setSucursalId(e.target.value);
                   setProfesionalId("");
                 }}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               >
                 <option value="">Elegir sucursal…</option>
                 {sucursales.map((s) => (
@@ -509,7 +502,7 @@ function NuevaCitaDialog({
                 id="nc-profesional"
                 value={profesionalId}
                 onChange={(e) => setProfesionalId(e.target.value)}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               >
                 <option value="">Elegir profesional…</option>
                 {disponibles.map((p) => (
@@ -528,7 +521,7 @@ function NuevaCitaDialog({
               onChange={(e) => setTratamiento(e.target.value)}
               placeholder="Ej: Control, limpieza…"
               list="nc-procedimientos"
-              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
             />
             <datalist id="nc-procedimientos">
               {(proceduresQuery.data ?? []).map((p) => (
@@ -549,7 +542,7 @@ function NuevaCitaDialog({
                 type="datetime-local"
                 value={startsAt}
                 onChange={(e) => setStartsAt(e.target.value)}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               />
             </div>
             <div className="space-y-1.5">
@@ -562,7 +555,7 @@ function NuevaCitaDialog({
                 step={5}
                 value={duracion}
                 onChange={(e) => setDuracion(Number(e.target.value))}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               />
             </div>
           </div>
@@ -691,7 +684,7 @@ function EditarCitaDialog({
                   setSucursalId(e.target.value);
                   setProfesionalId("");
                 }}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               >
                 <option value="">Elegir sucursal…</option>
                 {sucursales.map((s) => (
@@ -707,7 +700,7 @@ function EditarCitaDialog({
                 id="ec-profesional"
                 value={profesionalId}
                 onChange={(e) => setProfesionalId(e.target.value)}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               >
                 <option value="">Elegir profesional…</option>
                 {disponibles.map((p) => (
@@ -726,7 +719,7 @@ function EditarCitaDialog({
               onChange={(e) => setTratamiento(e.target.value)}
               placeholder="Ej: Control, limpieza…"
               list="ec-procedimientos"
-              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
             />
             <datalist id="ec-procedimientos">
               {(proceduresQuery.data ?? []).map((p) => (
@@ -742,7 +735,7 @@ function EditarCitaDialog({
                 type="datetime-local"
                 value={startsAt}
                 onChange={(e) => setStartsAt(e.target.value)}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               />
             </div>
             <div className="space-y-1.5">
@@ -755,7 +748,7 @@ function EditarCitaDialog({
                 step={5}
                 value={duracion}
                 onChange={(e) => setDuracion(Number(e.target.value))}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               />
             </div>
           </div>
@@ -854,7 +847,7 @@ function AgendarSolicitudDialog({
                   setSucursalId(e.target.value);
                   setProfesionalId("");
                 }}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               >
                 <option value="">Elegir sucursal…</option>
                 {sucursales.map((s) => (
@@ -870,7 +863,7 @@ function AgendarSolicitudDialog({
                 id="as-profesional"
                 value={profesionalId}
                 onChange={(e) => setProfesionalId(e.target.value)}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               >
                 <option value="">Elegir profesional…</option>
                 {disponibles.map((p) => (
@@ -889,7 +882,7 @@ function AgendarSolicitudDialog({
                 type="datetime-local"
                 value={startsAt}
                 onChange={(e) => setStartsAt(e.target.value)}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               />
             </div>
             <div className="space-y-1.5">
@@ -902,7 +895,7 @@ function AgendarSolicitudDialog({
                 step={5}
                 value={duracion}
                 onChange={(e) => setDuracion(Number(e.target.value))}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               />
             </div>
           </div>
@@ -983,7 +976,7 @@ function AgregarListaEsperaDialog({
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
               placeholder="Ej: Control, limpieza…"
-              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
             />
           </div>
         </div>
@@ -1737,7 +1730,7 @@ function AgendaPage() {
               <>
                 <h2 className="flex items-center gap-1.5 font-display text-xl font-semibold text-muted-foreground">
                   <Inbox className="size-4" /> Solicitudes del portal
-                  <span className="ml-1 rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand">
+                  <span className="ml-1 rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-700">
                     {solicitudes.length}
                   </span>
                 </h2>
@@ -1874,7 +1867,7 @@ function AgendaPage() {
                             type="button"
                             onClick={() => aceptarCita.mutate(c.id)}
                             disabled={aceptarCita.isPending}
-                            className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold text-brand transition-colors hover:bg-brand-soft disabled:opacity-50"
+                            className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold text-brand-700 transition-colors hover:bg-brand-soft disabled:opacity-50"
                           >
                             Aceptar
                           </button>

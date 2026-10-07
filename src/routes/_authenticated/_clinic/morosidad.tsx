@@ -37,9 +37,9 @@ export const Route = createFileRoute("/_authenticated/_clinic/morosidad")({
 
 const BUCKET_TONE: Record<AgingBucket, string> = {
   "0-30": "bg-muted text-muted-foreground",
-  "31-60": "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  "61-90": "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300",
-  "90+": "bg-destructive/15 text-destructive",
+  "31-60": "bg-warning-soft text-warning",
+  "61-90": "bg-destructive-soft text-destructive",
+  "90+": "bg-destructive text-destructive-foreground",
   sin_fecha: "bg-muted text-muted-foreground",
 };
 
