@@ -33,6 +33,7 @@ import {
   type PeriodontalChart as PeriodontalChartData,
   type PeriodontalPoint,
 } from "@/lib/clinical/periodontal";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 type Props = {
   clinicId: string;
@@ -221,7 +222,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
       setDrafts({});
       setNotes("");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const puedeCrear = toothList.length > 0 && !create.isPending;

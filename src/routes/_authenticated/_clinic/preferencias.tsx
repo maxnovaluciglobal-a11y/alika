@@ -22,6 +22,7 @@ import {
 } from "@/lib/clinic-operations/clinic-catalog.functions";
 import { hasPermission } from "@/lib/access/access";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/preferencias")({
   head: () => ({
@@ -102,7 +103,7 @@ function BranchReviewLinkRow({
       toast.success(`Link de reseña de ${branch.name} guardado`);
       onSaved();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const dirty = value.trim() !== (branch.googleReviewUrl ?? "");
@@ -204,7 +205,7 @@ function PreferenciasPage() {
       queryClient.setQueryData(["notification-preferences"], nuevo);
       toast.success("Preferencias guardadas");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const bloqueado = isLoading || mutation.isPending;

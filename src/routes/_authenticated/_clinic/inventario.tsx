@@ -62,6 +62,7 @@ import {
 } from "@/lib/clinic-operations/inventory-counts.functions";
 import type { ConsumptionType } from "@/lib/clinic-operations/procedure-supply-consumption";
 import { requirePermission } from "@/lib/access/route-guards";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 const MOVEMENT_LABELS: Record<InventoryMovementKind, string> = {
   entrada: "Entrada",
@@ -187,7 +188,7 @@ function CrearItemDialog({
       setConsumptionType("fixed");
       setYieldPct("100");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -357,7 +358,7 @@ function EditarItemDialog({
       toast.success("Ítem actualizado.");
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -533,7 +534,7 @@ function RegistrarMovimientoDialog({
       setKind("entrada");
       setWarehouseId("");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -719,7 +720,7 @@ function ConteoFisicoDialog({
       setNotes("");
       setWarehouseId("");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (

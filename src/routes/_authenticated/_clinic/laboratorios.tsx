@@ -45,6 +45,7 @@ import { listPatients } from "@/lib/patients/patients.functions";
 import { exportarCsv } from "@/lib/csv-export";
 import { str } from "@/lib/search";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface LabSearch {
   estado: string;
@@ -96,7 +97,7 @@ function NuevoLaboratorioDialog({ clinicId }: { clinicId: string }) {
       setName("");
       setPhone("");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -209,7 +210,7 @@ function NuevaOrdenDialog({
       setDueOn("");
       setCost(null);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const listo = patientId && description.trim() && !crear.isPending;
@@ -438,7 +439,7 @@ function LaboratoriosPage() {
       queryClient.invalidateQueries({ queryKey: ["lab-orders", clinicId] });
       toast.success("Estado actualizado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const atrasadas = useMemo(() => ordenes.filter((o) => ordenAtrasada(o, hoy)), [ordenes, hoy]);

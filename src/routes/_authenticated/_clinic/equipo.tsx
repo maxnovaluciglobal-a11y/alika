@@ -33,6 +33,7 @@ import {
   removeMember,
   updateMemberRole,
 } from "@/lib/access/access.functions";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 const INVITABLE_ROLES = CLINIC_ROLES.filter((r) => r !== "owner");
 
@@ -60,7 +61,7 @@ function InvitarMiembroDialog({ clinicId }: { clinicId: string }) {
       setFullName("");
       setRole("assistant");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (

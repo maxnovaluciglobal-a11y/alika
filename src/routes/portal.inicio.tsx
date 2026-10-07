@@ -30,6 +30,7 @@ import {
   getMyPortalOverview,
   requestPortalAppointment,
 } from "@/lib/patients/portal.functions";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 /**
  * El portal no tiene sesión de Supabase (sin `access.clinic?.timezone`
@@ -114,7 +115,7 @@ function PortalInicio() {
       setReason("");
       queryClient.invalidateQueries({ queryKey: ["portal-overview"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   if (overview.isError) {

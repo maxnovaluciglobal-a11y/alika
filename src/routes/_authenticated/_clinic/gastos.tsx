@@ -45,6 +45,7 @@ import {
 import { listBranches } from "@/lib/clinic-operations/clinic-catalog.functions";
 import { str } from "@/lib/search";
 import { exportarCsv } from "@/lib/csv-export";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface GastosSearch {
   desde: string;
@@ -161,7 +162,7 @@ function GastoDialog({
       setOpen(false);
       if (!expense) setD(inicial());
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const listo =
@@ -367,7 +368,7 @@ function GastosPage() {
       toast.success("Gasto borrado");
       setConfirmDeleteId(null);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const categorias = useMemo(() => [...new Set(gastos.map((g) => g.category))].sort(), [gastos]);

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { sendEmailFromTemplate } from "@/lib/messaging/messaging.functions";
 import type { MessageTemplateKind } from "@/lib/messaging/messaging";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface Props {
   clinicId: string;
@@ -53,7 +54,7 @@ export function EmailButton({
         toast.error(result.reason ?? "No se pudo enviar el email.");
       }
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const handleClick = () => {

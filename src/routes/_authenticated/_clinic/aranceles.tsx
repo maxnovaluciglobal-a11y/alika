@@ -42,6 +42,7 @@ import { coincide, str } from "@/lib/search";
 import { exportarCsv } from "@/lib/csv-export";
 import { hoyISO } from "@/lib/clinic-operations/clinic-data";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface ArancelesSearch {
   q: string;
@@ -212,7 +213,7 @@ function PrestacionDialog({
       setOpen(false);
       if (!procedure) setD(draftVacio());
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -411,7 +412,7 @@ function RecetaDialog({
       toast.success("Receta de insumos guardada");
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const agregarLinea = () => {
@@ -625,7 +626,7 @@ function ImportarCsvDialog({ clinicId, currency }: { clinicId: string; currency:
       setPreview(null);
       if (fileRef.current) fileRef.current.value = "";
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -745,7 +746,7 @@ function ArancelesPage() {
       queryClient.invalidateQueries({ queryKey: ["procedures", clinicId] });
       toast.success(v.isActive ? "Prestación reactivada" : "Prestación dada de baja");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const categorias = useMemo(

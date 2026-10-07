@@ -31,6 +31,7 @@ import {
   type Subscription,
   type SubscriptionStatus,
 } from "@/lib/billing";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/admin/clinicas")({
   loader: () => listClinicsForStaff({}),
@@ -184,7 +185,7 @@ function AdminClinicasPage() {
       await router.invalidate();
       toast.success("Llamada marcada como hecha");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
     onSettled: () => setClinicIdEnVuelo(null),
   });
 

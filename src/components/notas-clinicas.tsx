@@ -62,6 +62,7 @@ import { exportarNotaPdf } from "@/lib/clinical/note-pdf";
 
 import type { ClinicRole } from "@/lib/access/access";
 import type { Paciente } from "@/lib/clinic-operations/clinic-data";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 const REVIEW_BADGE: Record<NoteReviewStatus, string> = {
   none: "border-hairline text-muted-foreground",
@@ -161,7 +162,7 @@ export function NotasClinicas({
   const autorNota =
     (data?.versions ?? []).find((v) => v.noteId === noteId && v.version === 1)?.authorId ?? null;
   const diagError = (accion: NoteAction) => (e: Error) => {
-    toast.error(e.message);
+    toast.error(mensajeDeError(e));
     reportarBloqueo({
       accion,
       estado: estadoNota(notaActual?.status ?? "draft", notaActual?.reviewStatus ?? "none"),

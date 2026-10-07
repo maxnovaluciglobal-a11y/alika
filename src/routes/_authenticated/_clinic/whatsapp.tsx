@@ -41,6 +41,7 @@ import {
   type WhatsAppLead,
 } from "@/lib/messaging/whatsapp.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/whatsapp")({
   beforeLoad: requirePermission("team:manage"),
@@ -208,7 +209,7 @@ function WhatsAppPage() {
       toast.success("WhatsApp conectado. Ya puedes mandar mensajes automáticos.");
       invalidar();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const disconnectMutation = useMutation({
@@ -217,7 +218,7 @@ function WhatsAppPage() {
       toast.success("WhatsApp desconectado. Los envíos vuelven a wa.me manual.");
       invalidar();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const sdkReady = useFacebookSdk();
@@ -489,7 +490,7 @@ function LeadsSection({ clinicId }: { clinicId: string }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["whatsapp-leads", clinicId] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   if (isLoading || leads.length === 0) return null;

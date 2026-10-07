@@ -29,6 +29,7 @@ import {
   listCashRegisters,
   openCashRegister,
 } from "@/lib/finance/cash-registers.functions";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/cajas")({
   beforeLoad: requirePermission("cash:manage"),
@@ -103,7 +104,7 @@ function CajasPage() {
       queryClient.invalidateQueries({ queryKey: openQueryKey });
       queryClient.invalidateQueries({ queryKey: historyQueryKey });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(mensajeDeError(error)),
   });
 
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
@@ -134,7 +135,7 @@ function CajasPage() {
       queryClient.invalidateQueries({ queryKey: openQueryKey });
       queryClient.invalidateQueries({ queryKey: historyQueryKey });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(mensajeDeError(error)),
   });
 
   if (!clinicId) return null;

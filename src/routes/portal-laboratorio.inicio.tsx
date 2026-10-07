@@ -10,6 +10,7 @@ import {
   getMyLabPortalOrders,
   updateLabOrderStatusFromPortal,
 } from "@/lib/clinic-operations/lab-portal.functions";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/portal-laboratorio/inicio")({
   head: () => ({ meta: [{ name: "robots", content: "noindex" }] }),
@@ -38,7 +39,7 @@ function LabPortalInicio() {
       toast.success("Estado actualizado.");
       queryClient.invalidateQueries({ queryKey: ["lab-portal-orders"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   if (isLoading) {

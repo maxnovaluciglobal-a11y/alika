@@ -40,6 +40,7 @@ import {
 } from "@/lib/finance/clinic-finance.functions";
 import { listProcedures } from "@/lib/finance/finance.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/convenios")({
   beforeLoad: requirePermission("settings:manage"),
@@ -109,7 +110,7 @@ function ConvenioDialog({ clinicId, convenio }: { clinicId: string; convenio?: A
       toast.success(convenio ? "Convenio actualizado" : "Convenio creado");
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -267,7 +268,7 @@ function FilaCobertura({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["agreement-coverage", clinicId, agreementId] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const previsualizacion = repartirCobertura(
@@ -425,7 +426,7 @@ function ConveniosPage() {
       queryClient.invalidateQueries({ queryKey: ["agreements", clinicId] });
       toast.success(v.isActive ? "Convenio reactivado" : "Convenio dado de baja");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (

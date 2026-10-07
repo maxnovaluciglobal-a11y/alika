@@ -48,6 +48,7 @@ import type { Paciente } from "@/lib/clinic-operations/clinic-data";
 import { formatMoney } from "@/lib/finance/finance";
 import { getPatient } from "@/lib/patients/patients.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/pacientes/$pacienteId")({
   // Datos demográficos (nombre, teléfono, próximo control) son de agenda/recepción,
@@ -182,7 +183,7 @@ function ConvenioDelPaciente({
       setEditando(false);
       toast.success("Convenio actualizado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const actual = convenios.find((c) => c.id === convenioId);

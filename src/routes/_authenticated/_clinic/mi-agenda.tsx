@@ -15,6 +15,7 @@ import {
 } from "@/lib/clinic-operations/appointments.functions";
 import { clasePastilla, tonoDeEstadoCita } from "@/lib/clinic-operations/estado-cita-tono";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/mi-agenda")({
   // Mismo permiso que /agenda — no es un rol nuevo, es una vista alternativa
@@ -81,7 +82,7 @@ function MiAgendaPage() {
       queryClient.invalidateQueries({ queryKey: ["appointments", clinicId] });
       toast.success("Cita confirmada");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const sinFichaPropia = !esGestor && !access.myProfessionalId;

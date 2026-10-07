@@ -89,6 +89,7 @@ import { cn } from "@/lib/utils";
 import { listPaymentMethods } from "@/lib/finance/clinic-finance.functions";
 import { useOfflineMutation } from "@/hooks/use-offline-mutation";
 import { listProcedureSupplies } from "@/lib/clinic-operations/procedure-supplies.functions";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface Props {
   clinicId: string;
@@ -587,7 +588,7 @@ function NuevoProcedimientoInline({
       setPrice(null);
       toast.success("Procedimiento agregado al catálogo");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -777,7 +778,7 @@ function NuevoPresupuestoDialog({
       setDescuentoPct(0);
       setItems([emptyItem()]);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const puedeCrear = items.some((it) => it.nameSnapshot.trim()) && !create.isPending;
@@ -916,7 +917,7 @@ function EditarPresupuestoDialog({
       toast.success(`Presupuesto ${quote.number} actualizado`);
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const puedeGuardar = items.some((it) => it.nameSnapshot.trim()) && !update.isPending;
@@ -1462,7 +1463,7 @@ export function FinanceSection({
         toast.success("Presupuesto aceptado y convertido en plan de tratamiento");
       }
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const reject = useMutation({
@@ -1471,7 +1472,7 @@ export function FinanceSection({
       queryClient.invalidateQueries({ queryKey: ["quotes", clinicId, patientId] });
       setConfirmRejectId(null);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const reversePaymentMutation = useMutation({
@@ -1483,7 +1484,7 @@ export function FinanceSection({
       setReversingPaymentId(null);
       setReversalReason("");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const setItem = useMutation({
@@ -1505,7 +1506,7 @@ export function FinanceSection({
         );
       }
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   // Tanda 2 — antes de completar un ítem con procedimiento, chequeamos en

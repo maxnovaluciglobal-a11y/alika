@@ -100,6 +100,7 @@ import {
 import { coincide, num, paginar, str } from "@/lib/search";
 import { clasePastilla, tonoDeEstadoCita } from "@/lib/clinic-operations/estado-cita-tono";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 type VistaAgenda = "dia" | "semana" | "mes";
 
@@ -680,7 +681,7 @@ function EditarCitaDialog({
       toast.success("Cita actualizada.");
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const puedeGuardar = sucursalId && profesionalId && tratamiento.trim() && startsAt;
@@ -855,7 +856,7 @@ function AgendarSolicitudDialog({
       avisarSiSolapa({ solapamiento });
       onOpenChange(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const puedeAgendar = sucursalId && profesionalId && startsAt;
@@ -973,7 +974,7 @@ function AgregarListaEsperaDialog({
       setPacienteId("");
       setMotivo("");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -1149,7 +1150,7 @@ function ImportarCitasDialog({ clinicId }: { clinicId: string }) {
   const cargarPreview = useMutation({
     mutationFn: () => previewFn({ data: { clinicId, rows: filas } }),
     onSuccess: (res) => setPreview(res),
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const importar = useMutation({
@@ -1158,7 +1159,7 @@ function ImportarCitasDialog({ clinicId }: { clinicId: string }) {
       setResultado(res);
       queryClient.invalidateQueries({ queryKey: ["appointments", clinicId] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const aCrear = (preview ?? []).filter((p) => p.action === "create").length;
@@ -1401,7 +1402,7 @@ function AgendaPage() {
       queryClient.invalidateQueries({ queryKey: ["appointment-requests", clinicId] });
       toast.success("Solicitud rechazada");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const removeWaitlistFn = useServerFn(removeWaitlistEntry);
@@ -1411,7 +1412,7 @@ function AgendaPage() {
       queryClient.invalidateQueries({ queryKey: ["waitlist", clinicId] });
       toast.success("Sacado de la lista de espera");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const setEstadoFn = useServerFn(setAppointmentStatus);
@@ -1422,7 +1423,7 @@ function AgendaPage() {
       queryClient.invalidateQueries({ queryKey: ["appointments", clinicId] });
       toast.success("Cita confirmada");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const set = (patch: Partial<AgendaSearch>) =>

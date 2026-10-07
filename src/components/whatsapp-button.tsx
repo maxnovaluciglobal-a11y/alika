@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { sendWhatsAppFromTemplate } from "@/lib/messaging/messaging.functions";
 import type { MessageTemplateKind } from "@/lib/messaging/messaging";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface Props {
   clinicId: string;
@@ -76,7 +77,7 @@ export function WhatsAppButton({
       toast.success("Mensaje registrado y abierto en WhatsApp.");
       onSent?.();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const handleClick = () => {

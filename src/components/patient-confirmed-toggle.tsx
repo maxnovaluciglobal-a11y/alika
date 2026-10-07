@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { setPatientConfirmation } from "@/lib/clinic-operations/appointments.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 /**
  * Anota a mano que el paciente avisó que viene (llamó, o lo dijo en el
@@ -31,7 +32,7 @@ export function PatientConfirmedToggle({
         confirmado ? "Se quitó el aviso del paciente." : "Anotado: el paciente avisó que viene.",
       );
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (

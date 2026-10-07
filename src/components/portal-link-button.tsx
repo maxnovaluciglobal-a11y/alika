@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { LlamadaDesbloqueo } from "@/components/llamada-desbloqueo";
 import { generatePortalLink, revokePortalAccess } from "@/lib/patients/portal.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface Props {
   clinicId: string;
@@ -41,7 +42,7 @@ export function PortalLinkButton({ clinicId, patientId, bloqueado }: Props) {
           ttlDays: 7,
         },
       }),
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   if (bloqueado) {
@@ -137,7 +138,7 @@ export function RevokePortalAccessButton({ clinicId, patientId }: Props) {
   const mut = useMutation({
     mutationFn: () => revoke({ data: { clinicId, patientId } }),
     onSuccess: () => toast.success("Acceso al portal revocado. Los links anteriores ya no sirven."),
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   function handleClick() {

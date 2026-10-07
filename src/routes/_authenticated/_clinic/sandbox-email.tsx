@@ -31,6 +31,7 @@ import {
   type DnsVerification,
 } from "@/lib/messaging/dns-email";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/sandbox-email")({
   beforeLoad: requirePermission("team:manage"),
@@ -148,7 +149,7 @@ function SandboxEmailPage() {
         prefixSubject: siguiente.prefixSubject,
         minEntregasProduccion: siguiente.minEntregasProduccion,
       },
-    }).catch((e: Error) => toast.error(e.message));
+    }).catch((e: Error) => toast.error(mensajeDeError(e)));
   }
 
   function actualizar(parcial: Partial<EmailSandboxConfig>) {

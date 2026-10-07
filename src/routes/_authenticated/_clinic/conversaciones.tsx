@@ -34,6 +34,7 @@ import {
   replyToConversation,
 } from "@/lib/messaging/conversations.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/conversaciones")({
   beforeLoad: requirePermission("agenda:manage"),
@@ -294,7 +295,7 @@ function Hilo({
       void queryClient.invalidateQueries({ queryKey: ["conversations", clinicId] });
       void queryClient.invalidateQueries({ queryKey: ["conversations-pendientes", clinicId] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   if (isLoading || !hilo) {

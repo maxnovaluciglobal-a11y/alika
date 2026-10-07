@@ -39,6 +39,7 @@ import {
   setOrthoCaseStatus,
 } from "@/lib/clinical/ortho.functions";
 import { listPatients } from "@/lib/patients/patients.functions";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/ortodoncia")({
   beforeLoad: requirePermission("clinical:write"),
@@ -91,7 +92,7 @@ function NuevoCasoDialog({ clinicId }: { clinicId: string }) {
       setPatientId("");
       setMonthlyFee(null);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -179,7 +180,7 @@ function ControlesDialog({ clinicId, caso }: { clinicId: string; caso: OrthoCase
       queryClient.invalidateQueries({ queryKey: ["ortho-cases", clinicId] });
       toast.success("Control registrado.");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -265,7 +266,7 @@ function OrtodonciaPage() {
       queryClient.invalidateQueries({ queryKey: ["ortho-cases", clinicId] });
       toast.success("Estado actualizado.");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   if (!clinicId) return null;

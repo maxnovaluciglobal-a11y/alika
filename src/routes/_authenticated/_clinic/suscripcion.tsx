@@ -14,6 +14,7 @@ import {
 import { SUBSCRIPTION_STATUS_LABELS, trialDaysLeft } from "@/lib/billing";
 import { approxLocalPricesLabel } from "@/lib/pricing-display";
 import { consumePlanIntent } from "@/lib/marketing/plan-intent";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/suscripcion")({
   head: () => ({
@@ -101,7 +102,7 @@ function BillingPage() {
       });
       window.location.href = url;
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const openPortal = useMutation({
@@ -115,7 +116,7 @@ function BillingPage() {
       });
       window.location.href = url;
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const [plan, setPlan] = useState<PlanKey>("clinica");

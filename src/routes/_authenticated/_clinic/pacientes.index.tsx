@@ -41,6 +41,7 @@ import {
   parseCsvRaw,
   type CsvFieldSpec,
 } from "@/lib/csv/column-mapping";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface PacientesSearch {
   q: string;
@@ -112,7 +113,7 @@ function NuevoPacienteDialog({ clinicId }: { clinicId: string }) {
       setTelefono("");
       setEmail("");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -314,7 +315,7 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
   const cargarPreview = useMutation({
     mutationFn: () => previewFn({ data: { clinicId, rows: filas } }),
     onSuccess: (res) => setPreview(res),
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const importar = useMutation({
@@ -323,7 +324,7 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
       setResultado(res);
       queryClient.invalidateQueries({ queryKey: ["patients", clinicId] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const aCrear = (preview ?? []).filter((p) => p.action === "create").length;

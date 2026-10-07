@@ -23,6 +23,7 @@ import {
   mergePatients,
 } from "@/lib/clinic-operations/clinic-operations.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/fusionar-fichas")({
   beforeLoad: requirePermission("patients:manage"),
@@ -74,7 +75,7 @@ function FusionarFichasPage() {
       toast.success("Fichas fusionadas");
       setConfirmar(null);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
