@@ -51,7 +51,7 @@ export type PatientDocument = {
 
 export const listPatientDocuments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<PatientDocument[]> => {
@@ -88,7 +88,7 @@ export const listPatientDocuments = createServerFn({ method: "GET" })
 
 export const uploadPatientDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -134,7 +134,7 @@ export const uploadPatientDocument = createServerFn({ method: "POST" })
 
 export const archivePatientDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), documentId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -160,7 +160,7 @@ export type ConsentTemplate = {
 
 export const listConsentTemplates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<ConsentTemplate[]> => {
     const { data: rows, error } = await context.supabase
       .from("consent_templates")
@@ -174,7 +174,7 @@ export const listConsentTemplates = createServerFn({ method: "GET" })
 
 export const createConsentTemplate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -196,7 +196,7 @@ export const createConsentTemplate = createServerFn({ method: "POST" })
 
 export const setConsentTemplateActive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({ clinicId: z.string().uuid(), templateId: z.string().uuid(), active: z.boolean() })
       .parse(input),
@@ -223,7 +223,7 @@ export type PatientConsent = {
 
 export const listPatientConsents = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<PatientConsent[]> => {
@@ -258,7 +258,7 @@ export const listPatientConsents = createServerFn({ method: "GET" })
 
 export const signPatientConsent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -318,7 +318,7 @@ export const signPatientConsent = createServerFn({ method: "POST" })
 
 export const revokePatientConsent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), consentId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }) => {

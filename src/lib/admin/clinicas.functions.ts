@@ -124,7 +124,7 @@ export const listClinicsForStaff = createServerFn({ method: "GET" })
  */
 export const marcarLlamadaHecha = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await requireAlikaStaffEmail(supabaseAdmin, context.userId);

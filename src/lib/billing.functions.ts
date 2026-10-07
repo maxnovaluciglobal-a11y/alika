@@ -42,7 +42,7 @@ function mapSubscription(row: SubscriptionRow): Subscription {
 /** Suscripción de la clínica activa. `null` si aún no se creó ninguna. */
 export const getMySubscription = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<Subscription | null> => {
     const { data: row, error } = await context.supabase
       .from("subscriptions")
@@ -99,7 +99,7 @@ export async function throwIfRequiresLlamadaOSuscripcion(
  */
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -175,7 +175,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
  */
 export const createBillingPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

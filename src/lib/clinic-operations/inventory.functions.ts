@@ -112,7 +112,7 @@ function mapInventoryItemRow(row: InventoryItemRow): InventoryItem {
  * en vez de romper la página. */
 export const listInventoryItems = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -170,7 +170,7 @@ export const listInventoryItems = createServerFn({ method: "GET" })
  * de la columna, se carga con un movimiento de 'entrada' posterior). */
 export const createInventoryItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -223,7 +223,7 @@ export const createInventoryItem = createServerFn({ method: "POST" })
  * el `.eq()` es cinturón de defensa en profundidad. */
 export const updateInventoryItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -280,7 +280,7 @@ export const updateInventoryItem = createServerFn({ method: "POST" })
  * handler propaga su mensaje. */
 export const registerInventoryMovement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -351,7 +351,7 @@ const INVENTORY_MOVEMENTS_ROW_LIMIT = 2_000;
  * set que inventory_items (SELECT). */
 export const listInventoryMovements = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), itemId: z.string().uuid() }).parse(input),
   )
   .handler(
@@ -391,7 +391,7 @@ export const listInventoryMovements = createServerFn({ method: "GET" })
  * migración) — es un aviso de "esto vence pronto", no un FEFO exacto. */
 export const listExpiringLots = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

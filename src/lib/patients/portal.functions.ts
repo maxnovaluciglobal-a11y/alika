@@ -26,7 +26,7 @@ const SIN_PERMISOS_PORTAL =
 /** Genera link firmado del portal para un paciente. Solo staff de la clínica. */
 export const generatePortalLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -155,7 +155,7 @@ export const generatePortalLink = createServerFn({ method: "POST" })
  */
 export const revokePortalAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -245,9 +245,7 @@ async function logPortalAccess(
  * genérico de siempre.
  */
 export const getExpiredPortalContact = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z.object({ token: z.string().min(1).optional() }).parse(input),
-  )
+  .validator((input: unknown) => z.object({ token: z.string().min(1).optional() }).parse(input))
   .handler(async ({ data }): Promise<{ clinicName: string; waUrl: string | null } | null> => {
     const token = data.token ?? readPortalCookie();
     if (!token) return null;
@@ -277,7 +275,7 @@ export const getExpiredPortalContact = createServerFn({ method: "POST" })
 
 /** Consume el token de la URL, valida, setea cookie. Se llama una vez al abrir /portal/[token]. */
 export const openPortalSession = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => z.object({ token: z.string().min(20) }).parse(input))
+  .validator((input: unknown) => z.object({ token: z.string().min(20) }).parse(input))
   .handler(async ({ data }) => {
     const payload = await verifyPortalToken(data.token);
     if (await isPortalTokenRevoked(payload)) {
@@ -356,7 +354,7 @@ export const getMyPortalOverview = createServerFn({ method: "GET" }).handler(asy
  * status 'pending'). La clínica confirma manualmente asignando cita real.
  */
 export const requestPortalAppointment = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         preferredDate: z.string().min(1),
@@ -419,7 +417,7 @@ export interface PendingAppointmentRequest {
 /** Solicitudes pendientes del portal para la bandeja de agenda. RLS: solo staff de la clínica. */
 export const listPendingAppointmentRequests = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<PendingAppointmentRequest[]> => {
     const { data: requests, error } = await context.supabase
       .from("appointment_requests")
@@ -453,7 +451,7 @@ export const listPendingAppointmentRequests = createServerFn({ method: "GET" })
 /** Marca una solicitud como rechazada. Requiere rol con permiso de agenda. */
 export const declineAppointmentRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), requestId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -482,7 +480,7 @@ export interface PortalAccessLogEntry {
 /** Auditoría de accesos al portal. Solo staff de la clínica (RLS). */
 export const listPortalAccessLog = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -515,7 +513,7 @@ export const listPortalAccessLog = createServerFn({ method: "GET" })
 /** Vincula una solicitud a la cita real recién creada y la cierra. */
 export const markAppointmentRequestScheduled = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

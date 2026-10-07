@@ -55,7 +55,7 @@ function nombrePaciente(p: FilaPaciente): string {
  */
 export const listConversations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<ConversationsPage> => {
     const { data: rows, error } = await context.supabase
       .from("messages")
@@ -109,7 +109,7 @@ export const listConversations = createServerFn({ method: "GET" })
  */
 export const countConversacionesSinResponder = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<number> => {
     const { data: rows, error } = await context.supabase
       .from("messages")
@@ -145,7 +145,7 @@ export interface ConversationThread {
 /** El hilo completo con un paciente, de más viejo a más nuevo (orden de lectura). */
 export const listConversationThread = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<ConversationThread> => {
@@ -229,7 +229,7 @@ export interface ReplyResult {
  */
 export const replyToConversation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

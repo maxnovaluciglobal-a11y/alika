@@ -70,7 +70,7 @@ const SIN_PERMISOS_LLAMADA =
 /** Estado de conexión de WhatsApp de la clínica. Null = nunca conectó. */
 export const getWhatsAppAccountStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<WhatsAppAccount | null> => {
     const { data: row, error } = await context.supabase
       .from("whatsapp_accounts")
@@ -96,7 +96,7 @@ export const getWhatsAppAccountStatus = createServerFn({ method: "GET" })
  */
 export const completeWhatsAppEmbeddedSignup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -175,7 +175,7 @@ export const completeWhatsAppEmbeddedSignup = createServerFn({ method: "POST" })
 /** Desconecta el número (soft: status='disabled', no borra la fila — mantiene auditoría). */
 export const disconnectWhatsAppAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<void> => {
     const { error } = await context.supabase
       .from("whatsapp_accounts")
@@ -380,7 +380,7 @@ function mapLead(row: WhatsAppLeadRow, referredByName: string | null): WhatsAppL
 /** Leads nuevos (desconocidos que escribieron y todavía nadie los gestionó). */
 export const listWhatsAppLeads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<WhatsAppLead[]> => {
     const { data: rows, error } = await context.supabase
       .from("whatsapp_leads")
@@ -419,7 +419,7 @@ export const listWhatsAppLeads = createServerFn({ method: "GET" })
 /** Marca un lead como contactado/convertido/descartado — nunca se borra, queda como historial. */
 export const updateWhatsAppLeadStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

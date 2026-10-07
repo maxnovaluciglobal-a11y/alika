@@ -29,7 +29,7 @@ const timeRegex = /^\d{2}:\d{2}$/;
  * versión liviana usada por la agenda (solo activos). */
 export const listProfessionalsDetailed = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<ProfessionalDetail[]> => {
     const { supabase } = context;
 
@@ -96,7 +96,7 @@ const professionalInputSchema = z.object({
  * profesionales durante el wizard de primera configuración. */
 export const createProfessional = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), professional: professionalInputSchema }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -116,7 +116,7 @@ export const createProfessional = createServerFn({ method: "POST" })
 
 export const updateProfessional = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -149,7 +149,7 @@ export const updateProfessional = createServerFn({ method: "POST" })
  * restricción declarada (createAppointment no bloquea nada en ese caso). */
 export const getProfessionalSchedule = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), professionalId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<ScheduleBlock[]> => {
@@ -172,7 +172,7 @@ export const getProfessionalSchedule = createServerFn({ method: "GET" })
  * de 7 días que el usuario edita como un todo. */
 export const setProfessionalSchedule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

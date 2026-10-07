@@ -86,7 +86,7 @@ const CASH_REGISTER_COLUMNS =
 /** Caja abierta ahora mismo para la clínica/sucursal, o `null` si no hay ninguna. */
 export const getOpenCashRegister = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -108,7 +108,7 @@ export const getOpenCashRegister = createServerFn({ method: "GET" })
 
 export const listCashRegisters = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -132,7 +132,7 @@ export const listCashRegisters = createServerFn({ method: "GET" })
 
 export const openCashRegister = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -176,7 +176,7 @@ export const openCashRegister = createServerFn({ method: "POST" })
  */
 export const closeCashRegister = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -234,7 +234,7 @@ export const closeCashRegister = createServerFn({ method: "POST" })
 /** Desglose por medio de pago de lo cobrado durante una sesión de caja (abierta o cerrada). */
 export const getCashRegisterBreakdown = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ cashRegisterId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ cashRegisterId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<CashRegisterMethodBreakdown[]> => {
     const { data: rows, error } = await context.supabase
       .from("payments")

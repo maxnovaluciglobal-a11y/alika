@@ -26,7 +26,7 @@ const EMPTY_HISTORY: MedicalHistory = {
  * un negativo que nadie confirmó). */
 export const getMedicalHistory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<MedicalHistory> => {
@@ -63,7 +63,7 @@ export const getMedicalHistory = createServerFn({ method: "GET" })
  */
 export const listAllergyAlerts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<Record<string, string[]>> => {
     const { data: rows, error } = await context.supabase
       .from("patient_medical_history")
@@ -84,7 +84,7 @@ const listField = z.array(z.string().trim().min(1).max(80)).max(30);
  * eventos: no tiene sentido guardar "versión anterior" de una alergia. */
 export const setMedicalHistory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

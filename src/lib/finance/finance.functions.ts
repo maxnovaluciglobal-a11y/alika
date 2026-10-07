@@ -88,7 +88,7 @@ function mapProcedure(row: ProcedureRow): Procedure {
 
 export const listProcedures = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -159,7 +159,7 @@ function procedureRow(d: {
 
 export const createProcedure = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), ...ProcedureFields }).parse(input),
   )
   .handler(async ({ data, context }): Promise<{ id: string }> => {
@@ -181,7 +181,7 @@ export const createProcedure = createServerFn({ method: "POST" })
 
 export const updateProcedure = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -214,7 +214,7 @@ export const updateProcedure = createServerFn({ method: "POST" })
  */
 export const setProcedureActive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -251,7 +251,7 @@ export const setProcedureActive = createServerFn({ method: "POST" })
  */
 export const importProcedures = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -408,7 +408,7 @@ function mapQuote(row: QuoteRow, items: QuoteItem[]): Quote {
 /** Presupuestos del paciente, con sus ítems anidados. */
 export const listQuotes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<Quote[]> => {
@@ -691,7 +691,7 @@ async function cargarCoberturaDelPaciente(
 
 export const createQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -786,7 +786,7 @@ export const createQuote = createServerFn({ method: "POST" })
  */
 export const updateQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         quoteId: z.string().uuid(),
@@ -864,7 +864,7 @@ export const updateQuote = createServerFn({ method: "POST" })
  */
 export const setQuoteStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         quoteId: z.string().uuid(),
@@ -1035,7 +1035,7 @@ function mapPlan(row: PlanRow, items: TreatmentItem[]): TreatmentPlan {
 /** Planes de tratamiento del paciente con sus ítems. */
 export const listTreatmentPlans = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<TreatmentPlan[]> => {
@@ -1091,7 +1091,7 @@ export const listTreatmentPlans = createServerFn({ method: "GET" })
  */
 export const listClinicTreatmentPlans = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(
     async ({
       data,
@@ -1182,7 +1182,7 @@ export const listClinicTreatmentPlans = createServerFn({ method: "GET" })
 
 export const setTreatmentItemStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         itemId: z.string().uuid(),
@@ -1241,7 +1241,7 @@ export const setTreatmentItemStatus = createServerFn({ method: "POST" })
 
 export const setTreatmentPlanStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ planId: z.string().uuid(), status: z.enum(TREATMENT_PLAN_STATUSES) }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -1299,7 +1299,7 @@ function mapPayment(row: PaymentRow): Payment {
 /** Pagos del paciente ordenados del más reciente al más viejo. */
 export const listPayments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<Payment[]> => {
@@ -1316,7 +1316,7 @@ export const listPayments = createServerFn({ method: "GET" })
 
 export const registerPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         // Igual que en `createAppointment`: lo genera el equipo al capturar
@@ -1441,7 +1441,7 @@ export const registerPayment = createServerFn({ method: "POST" })
  */
 export const reversePayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         id: z.string().uuid(),

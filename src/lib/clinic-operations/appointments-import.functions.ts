@@ -256,7 +256,7 @@ const importAppointmentsInput = z.object({
  *  (mismo criterio no-bloqueante que `createAppointment` manual). */
 export const previewImportAppointments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => importAppointmentsInput.parse(input))
+  .validator((input: unknown) => importAppointmentsInput.parse(input))
   .handler(async ({ data, context }): Promise<ImportAppointmentPreviewRow[]> => {
     const ctx = await cargarContexto(context.supabase, data.clinicId);
 
@@ -332,7 +332,7 @@ export const previewImportAppointments = createServerFn({ method: "POST" })
  *  que es exactamente para lo que existe el aviso soft de solapamiento. */
 export const importAppointments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => importAppointmentsInput.parse(input))
+  .validator((input: unknown) => importAppointmentsInput.parse(input))
   .handler(async ({ data, context }): Promise<ImportAppointmentsResult> => {
     const ctx = await cargarContexto(context.supabase, data.clinicId);
 

@@ -29,7 +29,7 @@ const MIN_COUNTS_FOR_SUGGESTION = 3;
  */
 export const listRecipeRecalibrationSuggestions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), procedureId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<{ suggestions: RecipeRecalibrationSuggestion[] }> => {

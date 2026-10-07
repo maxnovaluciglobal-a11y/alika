@@ -31,7 +31,7 @@ type OrthoCaseRow = {
 
 export const listOrthoCases = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -98,7 +98,7 @@ export const listOrthoCases = createServerFn({ method: "GET" })
 
 export const createOrthoCase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -144,7 +144,7 @@ export const createOrthoCase = createServerFn({ method: "POST" })
 
 export const setOrthoCaseStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -165,7 +165,7 @@ export const setOrthoCaseStatus = createServerFn({ method: "POST" })
 
 export const listOrthoControls = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), orthoCaseId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<OrthoControl[]> => {
@@ -194,7 +194,7 @@ export const listOrthoControls = createServerFn({ method: "GET" })
  */
 export const addOrthoControl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

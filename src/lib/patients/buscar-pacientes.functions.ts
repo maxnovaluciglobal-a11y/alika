@@ -32,7 +32,7 @@ export function limpiarTerminoDeBusqueda(q: string): string {
 
 export const buscarPacientes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), q: z.string().max(80) }).parse(input),
   )
   .handler(async ({ data, context }): Promise<PacienteEncontrado[]> => {

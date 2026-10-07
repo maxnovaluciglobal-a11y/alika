@@ -25,7 +25,7 @@ function tiempoDeEspera(waitSince: string): string {
 /** Lista de espera activa de la clínica. */
 export const listWaitlist = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<EntradaEspera[]> => {
     const { data: rows, error } = await context.supabase
       .from("waitlist_entries")
@@ -71,7 +71,7 @@ export const listWaitlist = createServerFn({ method: "GET" })
  */
 export const createWaitlistEntry = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -126,7 +126,7 @@ export const createWaitlistEntry = createServerFn({ method: "POST" })
 /** Saca de la lista de espera (soft: status='cancelled', no borra la fila). */
 export const removeWaitlistEntry = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), id: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<void> => {
