@@ -3,8 +3,9 @@ name: CI
 on:
   push:
     branches: [main]
+  # Sin filtro de rama base: los PRs apilados (fase-2 sobre fase-1, etc.)
+  # también tienen que pasar typecheck, lint y tests antes de llegar a main.
   pull_request:
-    branches: [main]
 
 jobs:
   typecheck:
@@ -31,6 +32,12 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    # Una sola corrida de tests a la vez en todo el repo: todas pegan contra
+    # la MISMA base real, y dos en paralelo se pisaban los datos de prueba
+    # (falso rojo en #17, 07-oct-2026). Se encolan; no se cancelan.
+    concurrency:
+      group: tests-contra-base-real
+      cancel-in-progress: false
     # tests/*.test.ts corren contra el Supabase real (transacción con
     # ROLLBACK por test, no dejan datos — ver tests/helpers/db.ts). Necesita
     # los 5 secrets de conexión directa (PGHOST/PGPORT/PGUSER/PGDATABASE/
