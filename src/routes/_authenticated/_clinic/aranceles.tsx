@@ -6,6 +6,7 @@ import { Boxes, Download, Loader2, Pencil, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -724,7 +725,12 @@ function ArancelesPage() {
   const setActiveFn = useServerFn(setProcedureActive);
   const fetchInventoryItems = useServerFn(listInventoryItems);
 
-  const { data: procedures = [], isLoading } = useQuery({
+  const {
+    data: procedures = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["procedures", clinicId, "todas"],
     enabled: Boolean(clinicId),
     queryFn: () => fetchProcedures({ data: { clinicId: clinicId!, incluirInactivas: true } }),
@@ -843,7 +849,9 @@ function ArancelesPage() {
 
         {isLoading && <p className="text-sm text-muted-foreground">Cargando arancel…</p>}
 
-        {!isLoading && procedures.length === 0 && (
+        {isError && <ErrorDeCarga onReintentar={refetch} mensaje="No pudimos cargar el arancel." />}
+
+        {!isLoading && !isError && procedures.length === 0 && (
           <div className="card-clinical p-8 text-center">
             <p className="mb-1 font-display text-lg font-semibold">Tu arancel está vacío</p>
             <p className="mx-auto mb-4 max-w-md text-sm text-muted-foreground">

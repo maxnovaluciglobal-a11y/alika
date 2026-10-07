@@ -6,6 +6,7 @@ import { Loader2, Lock, Percent } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { DateField, FilterBar } from "@/components/filters";
 import { TrialDesbloqueo } from "@/components/trial-desbloqueo";
 import { Badge } from "@/components/ui/badge";
@@ -122,7 +123,12 @@ function ComisionesPage() {
     soloMiProfessionalId ?? null,
   ];
 
-  const { data: lineas, isLoading } = useQuery({
+  const {
+    data: lineas,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey,
     enabled: Boolean(clinicId) && !bloqueado && (veTodo || Boolean(soloMiProfessionalId)),
     queryFn: () =>
@@ -212,6 +218,10 @@ function ComisionesPage() {
 
           {isLoading && (
             <p className="px-1 py-10 text-center text-sm text-muted-foreground">Cargando…</p>
+          )}
+
+          {isError && (
+            <ErrorDeCarga onReintentar={refetch} mensaje="No pudimos cargar las comisiones." />
           )}
 
           {!isLoading && !veTodo && !soloMiProfessionalId && (

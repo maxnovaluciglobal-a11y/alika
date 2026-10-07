@@ -6,6 +6,7 @@ import { FileSignature, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -156,8 +157,9 @@ function ConsentimientosPage() {
             Plantillas de {access.clinic?.name}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {templates.length} plantilla{templates.length === 1 ? "" : "s"}. Se firman desde la
-            ficha de cada paciente.
+            {templatesQuery.isError
+              ? "Se firman desde la ficha de cada paciente."
+              : `${templates.length} plantilla${templates.length === 1 ? "" : "s"}. Se firman desde la ficha de cada paciente.`}
           </p>
         </div>
         <NuevaPlantillaDialog clinicId={clinicId} />
@@ -165,6 +167,11 @@ function ConsentimientosPage() {
 
       {templatesQuery.isLoading ? (
         <p className="text-sm text-muted-foreground">Cargando…</p>
+      ) : templatesQuery.isError ? (
+        <ErrorDeCarga
+          onReintentar={templatesQuery.refetch}
+          mensaje="No pudimos cargar las plantillas."
+        />
       ) : templates.length === 0 ? (
         <div className="card-clinical p-8 text-center text-sm text-muted-foreground">
           <FileSignature className="mx-auto mb-3 size-6" />

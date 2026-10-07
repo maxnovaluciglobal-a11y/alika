@@ -6,6 +6,7 @@ import { Loader2, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -198,7 +199,12 @@ function EstadosDeCitaPage() {
   const fetchStatuses = useServerFn(listAppointmentStatuses);
   const setActiveFn = useServerFn(setAppointmentStatusActive);
 
-  const { data: estados = [], isLoading } = useQuery({
+  const {
+    data: estados = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["appointment-statuses", clinicId, "todos"],
     enabled: Boolean(clinicId),
     queryFn: () => fetchStatuses({ data: { clinicId: clinicId!, incluirInactivos: true } }),
@@ -228,7 +234,11 @@ function EstadosDeCitaPage() {
 
         {isLoading && <p className="text-sm text-muted-foreground">Cargando estados…</p>}
 
-        {!isLoading && (
+        {isError && (
+          <ErrorDeCarga onReintentar={refetch} mensaje="No pudimos cargar los estados de cita." />
+        )}
+
+        {!isLoading && !isError && (
           <section className="card-clinical overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[36rem] text-sm">

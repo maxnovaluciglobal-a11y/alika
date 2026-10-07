@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import { EmailButton } from "@/components/email-button";
 import { requirePermission } from "@/lib/access/route-guards";
@@ -107,7 +108,12 @@ function RecordatoriosPage() {
   const queryClient = useQueryClient();
 
   const fetchReminders = useServerFn(listPendingReminders);
-  const { data: recordatorios = [], isLoading } = useQuery({
+  const {
+    data: recordatorios = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["pending-reminders", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchReminders({ data: { clinicId: clinicId! } }),
@@ -117,7 +123,12 @@ function RecordatoriosPage() {
   });
 
   const fetchOutreach = useServerFn(listPendingOutreach);
-  const { data: outreach = [], isLoading: isLoadingOutreach } = useQuery({
+  const {
+    data: outreach = [],
+    isLoading: isLoadingOutreach,
+    isError: outreachConError,
+    refetch: reintentarOutreach,
+  } = useQuery({
     queryKey: ["pending-outreach", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchOutreach({ data: { clinicId: clinicId! } }),
@@ -151,8 +162,15 @@ function RecordatoriosPage() {
     queryClient.invalidateQueries({ queryKey: ["pending-outreach", clinicId] });
   };
 
+  // Un error no es "nada pendiente": antes la lista vacía decía que no había
+  // a quién escribirle cuando en realidad no se pudo consultar.
   const nadaPendiente =
-    !isLoading && !isLoadingOutreach && recordatorios.length === 0 && outreach.length === 0;
+    !isLoading &&
+    !isLoadingOutreach &&
+    !isError &&
+    !outreachConError &&
+    recordatorios.length === 0 &&
+    outreach.length === 0;
 
   return (
     <AppShell title="Recordatorios" access={access}>
@@ -165,6 +183,20 @@ function RecordatoriosPage() {
 
         {(isLoading || isLoadingOutreach) && (
           <p className="px-1 py-10 text-center text-sm text-muted-foreground">Cargando…</p>
+        )}
+
+        {isError && (
+          <ErrorDeCarga
+            onReintentar={refetch}
+            mensaje="No pudimos cargar los recordatorios de citas."
+          />
+        )}
+
+        {outreachConError && (
+          <ErrorDeCarga
+            onReintentar={reintentarOutreach}
+            mensaje="No pudimos cargar los pacientes candidatos a recall, reseña o saldo."
+          />
         )}
 
         {nadaPendiente && (

@@ -6,6 +6,7 @@ import { Check, CreditCard, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import {
   createBillingPortalSession,
   createCheckoutSession,
@@ -79,7 +80,12 @@ function BillingPage() {
   const checkout = useServerFn(createCheckoutSession);
   const portal = useServerFn(createBillingPortalSession);
 
-  const { data: sub, isLoading } = useQuery({
+  const {
+    data: sub,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["my-subscription", clinicId],
     queryFn: () => cargar({ data: { clinicId } }),
   });
@@ -184,6 +190,14 @@ function BillingPage() {
             <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" /> Cargando…
             </div>
+          ) : isError ? (
+            // Un error no es "no tienes suscripción": invitar a empezar la
+            // prueba a quien ya paga es peor que no decir nada.
+            <ErrorDeCarga
+              onReintentar={refetch}
+              mensaje="No pudimos cargar el estado de tu suscripción."
+              className="mt-6"
+            />
           ) : sub ? (
             <dl className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>

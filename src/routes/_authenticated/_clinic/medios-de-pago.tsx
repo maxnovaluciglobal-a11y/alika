@@ -6,6 +6,7 @@ import { Loader2, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { TrialDesbloqueo } from "@/components/trial-desbloqueo";
 import { Button } from "@/components/ui/button";
 import {
@@ -200,7 +201,12 @@ function MediosDePagoPage() {
   const fetchMethods = useServerFn(listPaymentMethods);
   const setActiveFn = useServerFn(setPaymentMethodActive);
 
-  const { data: medios = [], isLoading } = useQuery({
+  const {
+    data: medios = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["payment-methods", clinicId, "todos"],
     enabled: Boolean(clinicId) && !bloqueado,
     queryFn: () =>
@@ -227,16 +233,22 @@ function MediosDePagoPage() {
         <div className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="max-w-xl text-sm text-muted-foreground">
-              {conRetencion === 0
-                ? "Ninguno tiene retención cargada, así que Finanzas muestra lo facturado. Carga la comisión de tus tarjetas para ver lo que realmente entra al banco."
-                : `${conRetencion} de ${medios.length} tienen retención cargada.`}
+              {isError
+                ? "Carga la comisión de tus tarjetas para que Finanzas muestre lo que realmente entra al banco."
+                : conRetencion === 0
+                  ? "Ninguno tiene retención cargada, así que Finanzas muestra lo facturado. Carga la comisión de tus tarjetas para ver lo que realmente entra al banco."
+                  : `${conRetencion} de ${medios.length} tienen retención cargada.`}
             </p>
             <MedioDialog clinicId={clinicId!} currency={currency} />
           </div>
 
           {isLoading && <p className="text-sm text-muted-foreground">Cargando medios de pago…</p>}
 
-          {!isLoading && (
+          {isError && (
+            <ErrorDeCarga onReintentar={refetch} mensaje="No pudimos cargar los medios de pago." />
+          )}
+
+          {!isLoading && !isError && (
             <section className="card-clinical overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[40rem] text-sm">

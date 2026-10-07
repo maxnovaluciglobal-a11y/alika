@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { TrialDesbloqueo } from "@/components/trial-desbloqueo";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -57,7 +58,12 @@ function MorosidadPage() {
   const bloqueado = trialInformesBloqueados(sub ?? null);
 
   const fetchAging = useServerFn(getAccountsReceivableAging);
-  const { data: filas, isLoading } = useQuery({
+  const {
+    data: filas,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["accounts-receivable-aging", clinicId],
     queryFn: () => fetchAging({ data: { clinicId: clinicId! } }),
     enabled: Boolean(clinicId) && !bloqueado,
@@ -86,6 +92,12 @@ function MorosidadPage() {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Calculando cartera pendiente…
             </div>
+          ) : isError ? (
+            // Antes un error se leía como "todos están al día".
+            <ErrorDeCarga
+              onReintentar={refetch}
+              mensaje="No pudimos calcular la cartera pendiente."
+            />
           ) : (filas ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Sin cartera pendiente — todos los pacientes con tratamiento están al día.

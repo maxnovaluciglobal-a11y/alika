@@ -27,6 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { LlamadaDesbloqueo } from "@/components/llamada-desbloqueo";
 import { requirePermission } from "@/lib/access/route-guards";
 import { getMySubscription } from "@/lib/billing.functions";
@@ -167,7 +168,12 @@ function WhatsAppPage() {
   const queryClient = useQueryClient();
 
   const fetchStatus = useServerFn(getWhatsAppAccountStatus);
-  const { data: account, isLoading } = useQuery({
+  const {
+    data: account,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["whatsapp-account", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchStatus({ data: { clinicId: clinicId! } }),
@@ -285,6 +291,15 @@ function WhatsAppPage() {
 
         {isLoading && <p className="text-sm text-muted-foreground">Cargando…</p>}
 
+        {/* Un error no es "sin número conectado": antes se ofrecía conectar
+            un número a una clínica que quizás ya lo tenía. */}
+        {isError && platformConfigured && (
+          <ErrorDeCarga
+            onReintentar={refetch}
+            mensaje="No pudimos consultar el estado de tu WhatsApp."
+          />
+        )}
+
         {!isLoading && !platformConfigured && (
           <div className="card-clinical p-6">
             <p className="text-sm font-medium">WhatsApp todavía no está habilitado.</p>
@@ -367,16 +382,21 @@ function WhatsAppPage() {
           <LeadsSection clinicId={clinicId} />
         )}
 
-        {!isLoading && platformConfigured && account?.status !== "connected" && requiereLlamada && (
-          <LlamadaDesbloqueo
-            feature="WhatsApp automático"
-            descripcion="Conecta el WhatsApp real de tu clínica para mandar recordatorios, recall y avisos de saldo automáticamente por la API de Meta — en vez de wa.me manual."
-            clinicName={access.clinic?.name}
-            clinicEmail={access.email}
-          />
-        )}
+        {!isLoading &&
+          !isError &&
+          platformConfigured &&
+          account?.status !== "connected" &&
+          requiereLlamada && (
+            <LlamadaDesbloqueo
+              feature="WhatsApp automático"
+              descripcion="Conecta el WhatsApp real de tu clínica para mandar recordatorios, recall y avisos de saldo automáticamente por la API de Meta — en vez de wa.me manual."
+              clinicName={access.clinic?.name}
+              clinicEmail={access.email}
+            />
+          )}
 
         {!isLoading &&
+          !isError &&
           platformConfigured &&
           account?.status !== "connected" &&
           !requiereLlamada && (
@@ -479,7 +499,12 @@ function LeadsSection({ clinicId }: { clinicId: string }) {
   const fetchLeads = useServerFn(listWhatsAppLeads);
   const updateStatus = useServerFn(updateWhatsAppLeadStatus);
 
-  const { data: leads = [], isLoading } = useQuery({
+  const {
+    data: leads = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["whatsapp-leads", clinicId],
     queryFn: () => fetchLeads({ data: { clinicId } }),
   });
@@ -493,6 +518,13 @@ function LeadsSection({ clinicId }: { clinicId: string }) {
     onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
+  if (isError)
+    return (
+      <ErrorDeCarga
+        onReintentar={refetch}
+        mensaje="No pudimos cargar los contactos nuevos de WhatsApp."
+      />
+    );
   if (isLoading || leads.length === 0) return null;
 
   return (

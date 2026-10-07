@@ -6,6 +6,7 @@ import { Download, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { TrialDesbloqueo } from "@/components/trial-desbloqueo";
 import { Button } from "@/components/ui/button";
 import {
@@ -353,7 +354,12 @@ function GastosPage() {
   const fetchExpenses = useServerFn(listExpenses);
   const deleteFn = useServerFn(deleteExpense);
 
-  const { data: gastos = [], isLoading } = useQuery({
+  const {
+    data: gastos = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["expenses", clinicId, search.desde, search.hasta],
     enabled: Boolean(clinicId) && !bloqueado,
     queryFn: () =>
@@ -397,12 +403,15 @@ function GastosPage() {
         <div className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
+              {/* Con error no hay total: mostrar $0 sería fabricar un dato. */}
               <p className="font-display text-2xl font-semibold tabular-nums">
-                {formatMoney(total, currency)}
+                {isError ? "Sin datos" : formatMoney(total, currency)}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {filtrados.length} {filtrados.length === 1 ? "gasto" : "gastos"} en el período
-              </p>
+              {!isError && (
+                <p className="text-xs text-muted-foreground">
+                  {filtrados.length} {filtrados.length === 1 ? "gasto" : "gastos"} en el período
+                </p>
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
               {filtrados.length > 0 && (
@@ -462,7 +471,11 @@ function GastosPage() {
 
           {isLoading && <p className="text-sm text-muted-foreground">Cargando gastos…</p>}
 
-          {!isLoading && gastos.length === 0 && (
+          {isError && (
+            <ErrorDeCarga onReintentar={refetch} mensaje="No pudimos cargar los gastos." />
+          )}
+
+          {!isLoading && !isError && gastos.length === 0 && (
             <div className="card-clinical p-8 text-center">
               <p className="mb-1 font-display text-lg font-semibold">Sin gastos en este período</p>
               <p className="mx-auto max-w-md text-sm text-muted-foreground">
