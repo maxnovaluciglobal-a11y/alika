@@ -1,9 +1,10 @@
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 
+import { AlikaLogo } from "@/components/alika-logo";
 import { getSupabase } from "@/integrations/supabase/lazy";
 import { peekPlanIntent } from "@/lib/marketing/plan-intent";
 
@@ -178,11 +179,16 @@ function AuthPage() {
       className="flex min-h-screen items-center justify-center bg-surface px-4 py-12"
     >
       <div className="w-full max-w-md">
-        <div className="mb-8 flex items-center justify-center gap-2">
-          <span className="grid size-8 place-items-center rounded-lg bg-brand">
-            <span className="size-4 rounded-full border-2 border-brand-foreground" />
-          </span>
-          <span className="font-display text-2xl font-bold tracking-tight text-brand-700">
+        <Link
+          to="/"
+          className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          <span aria-hidden>←</span> Volver al inicio
+        </Link>
+
+        <div className="mb-8 flex items-center justify-center gap-2.5">
+          <AlikaLogo size={32} />
+          <span className="font-display text-2xl font-semibold leading-none text-foreground">
             Alika
           </span>
         </div>
