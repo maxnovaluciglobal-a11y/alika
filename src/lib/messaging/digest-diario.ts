@@ -16,6 +16,17 @@
 export const HORA_DEL_RESUMEN = 8;
 
 /**
+ * Horas de margen después de `HORA_DEL_RESUMEN` en las que todavía sale si
+ * no salió antes. GitHub Actions no garantiza el disparo horario: el 06-oct
+ * corrieron 2 de 14 programados, ninguno en la hora 8 de Santiago, y ese día
+ * no hubo resumen. Con la ventana 8:00-11:59 alcanza con que caiga UNA
+ * corrida en esas 4 horas; el freno de `VENTANA_DEDUPE_MS` evita repetirlo.
+ * Peor caso entre días: sale a las 11:59 y al día siguiente a las 8:00 =
+ * 20 h 01 min, todavía por encima del freno de 20 h (no se salta un día).
+ */
+export const MARGEN_HORAS_RESUMEN = 3;
+
+/**
  * Ventana para no repetir el resumen del día.
  *
  * A propósito NO es "desde la medianoche local": calcular medianoche en un
@@ -52,13 +63,15 @@ export function horaLocal(momento: Date, timezone: string): number {
   }
 }
 
-/** ¿Es la hora del resumen en ese huso? */
+/** ¿Cae dentro de la ventana del resumen (8:00-11:59 por defecto) en ese huso? */
 export function esHoraDelResumen(
   momento: Date,
   timezone: string,
   horaObjetivo: number = HORA_DEL_RESUMEN,
+  margenHoras: number = MARGEN_HORAS_RESUMEN,
 ): boolean {
-  return horaLocal(momento, timezone) === horaObjetivo;
+  const hora = horaLocal(momento, timezone);
+  return hora >= horaObjetivo && hora <= horaObjetivo + margenHoras;
 }
 
 /** Instante desde el cual buscar un resumen ya enviado (freno anti-repetición). */

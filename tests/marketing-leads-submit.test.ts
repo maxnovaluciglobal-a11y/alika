@@ -60,7 +60,13 @@ const admin: SupabaseClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 
 // Prefijo reconocible para poder limpiar por patrón como red de seguridad,
 // además del borrado por id que hace cada test.
-const PREFIJO_EMAIL_PRUEBA = "test-regresion-leads";
+// Un sufijo por corrida: el CI corre contra la base real, y si dos PRs
+// testean a la vez, un prefijo compartido hacía que el chequeo de "cero
+// residuo" contara los leads que la OTRA corrida todavía estaba usando
+// (falso rojo en PR #17, 07-oct-2026). Así cada corrida limpia y verifica
+// solo lo suyo.
+const PREFIJO_BASE = "test-regresion-leads";
+const PREFIJO_EMAIL_PRUEBA = `${PREFIJO_BASE}-${randomUUID().slice(0, 8)}`;
 
 function emailDePrueba(tag: string): string {
   return `${PREFIJO_EMAIL_PRUEBA}-${tag}-${randomUUID()}@example.com`;
@@ -122,6 +128,13 @@ afterAll(async () => {
   // llegar al `idsCreados.add(...)`) se limpia igual por el patrón de email
   // reconocible.
   await admin.from("marketing_leads").delete().ilike("email", `${PREFIJO_EMAIL_PRUEBA}%`);
+  // Restos de corridas anteriores que murieron a mitad: solo los de más de
+  // una hora, para no pisar a una corrida paralela que sigue en curso.
+  await admin
+    .from("marketing_leads")
+    .delete()
+    .ilike("email", `${PREFIJO_BASE}-%`)
+    .lt("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
 
   for (const hash of ipHashesUsados) {
     await admin.from("marketing_events").delete().eq("props->>ip_hash", hash);

@@ -42,16 +42,31 @@ describe("horaLocal", () => {
 });
 
 describe("esHoraDelResumen", () => {
-  it("es verdadero solo en la hora objetivo de ese huso", () => {
+  it("es verdadero en la hora objetivo de ese huso", () => {
     // 11:00 UTC = 08:00 en Santiago (UTC-3).
     const momento = new Date("2026-09-07T11:00:00Z");
     expect(esHoraDelResumen(momento, "America/Santiago")).toBe(true);
-    expect(esHoraDelResumen(momento, "UTC")).toBe(false);
+    expect(esHoraDelResumen(momento, "Asia/Tokyo")).toBe(false); // 20:00 en Tokio
   });
 
-  it("dos clínicas en husos distintos reciben su resumen en corridas distintas", () => {
-    const santiago = new Date("2026-09-07T11:00:00Z"); // 08:00 en Santiago
-    const mexico = new Date("2026-09-07T14:00:00Z"); // 08:00 en Ciudad de México
+  it("sigue abierta hasta las 11:59 por si GitHub no disparó a las 8", () => {
+    // 06-oct-2026: corrieron 2 de 14 programados y ninguno a las 8 de Santiago.
+    expect(esHoraDelResumen(new Date("2026-10-06T13:05:00Z"), "America/Santiago")).toBe(true); // 10:05
+    expect(esHoraDelResumen(new Date("2026-10-06T14:59:00Z"), "America/Santiago")).toBe(true); // 11:59
+    expect(esHoraDelResumen(new Date("2026-10-06T15:00:00Z"), "America/Santiago")).toBe(false); // 12:00
+    expect(esHoraDelResumen(new Date("2026-10-06T10:59:00Z"), "America/Santiago")).toBe(false); // 07:59
+  });
+
+  it("el peor caso entre días no choca con el freno anti-repetición", () => {
+    // Sale 11:59 un día y 08:00 el siguiente: tiene que quedar por encima del freno.
+    const ultimo = Date.UTC(2026, 9, 6, 14, 59);
+    const siguiente = Date.UTC(2026, 9, 7, 11, 0);
+    expect(siguiente - ultimo).toBeGreaterThan(VENTANA_DEDUPE_MS);
+  });
+
+  it("dos clínicas en husos distintos tienen su propia ventana", () => {
+    const santiago = new Date("2026-09-07T11:00:00Z"); // 08:00 Santiago · 05:00 México
+    const mexico = new Date("2026-09-07T15:00:00Z"); // 09:00 México · 12:00 Santiago
 
     expect(esHoraDelResumen(santiago, "America/Santiago")).toBe(true);
     expect(esHoraDelResumen(santiago, "America/Mexico_City")).toBe(false);
@@ -60,9 +75,10 @@ describe("esHoraDelResumen", () => {
     expect(esHoraDelResumen(mexico, "America/Santiago")).toBe(false);
   });
 
-  it("la hora objetivo es configurable", () => {
+  it("la hora objetivo y el margen son configurables", () => {
     const momento = new Date("2026-09-07T12:00:00Z");
-    expect(esHoraDelResumen(momento, "UTC", 12)).toBe(true);
+    expect(esHoraDelResumen(momento, "UTC", 12, 0)).toBe(true);
+    expect(esHoraDelResumen(momento, "UTC", 11, 0)).toBe(false);
     expect(HORA_DEL_RESUMEN).toBe(8);
   });
 });
