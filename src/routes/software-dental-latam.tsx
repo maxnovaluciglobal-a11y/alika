@@ -80,7 +80,7 @@ function SoftwareDentalLatam() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <main className="mx-auto max-w-3xl px-6 py-16">
+      <main id="main-content" className="mx-auto max-w-3xl px-6 py-16">
         <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           Software dental para clínicas de Latinoamérica
         </h1>
