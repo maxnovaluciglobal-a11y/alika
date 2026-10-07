@@ -274,7 +274,7 @@
 
   html,
   body {
-    overflow-x: hidden;
+    overflow-x: clip;
     /* Instalada como PWA en un celular real, sin esto el scroll rebota
        (Android) o hace elastic bounce (iOS) — el "tell" más obvio de que
        esto es una web y no una app nativa. */

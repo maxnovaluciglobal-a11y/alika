@@ -261,7 +261,7 @@ function CalculadoraFugas() {
                   setMoneda(m);
                   setTicket(MONEDAS_CALCULO.find((x) => x.code === m)?.ticket ?? ticket);
                 }}
-                className="h-9 rounded-l-md border border-r-0 border-input bg-transparent px-1.5 text-xs"
+                className="h-9 rounded-l-md border border-r-0 border-input bg-transparent px-1.5 text-xs pointer-coarse:text-base"
               >
                 {MONEDAS_CALCULO.map((m) => (
                   <option key={m.code} value={m.code}>
