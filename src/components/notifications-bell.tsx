@@ -68,12 +68,15 @@ export function NotificationsBell({ userId }: { userId?: string | null }) {
     <div className="relative">
       <button
         onClick={() => setAbierto((v) => !v)}
-        aria-label="Notificaciones"
+        aria-label={sinLeer > 0 ? `Notificaciones, ${sinLeer} sin leer` : "Notificaciones"}
         className="relative inline-flex size-9 items-center justify-center rounded-lg border border-hairline hover:bg-secondary/60"
       >
-        <Bell className="size-4" />
+        <Bell aria-hidden className="size-4" />
         {sinLeer > 0 && (
-          <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-brand px-1 text-[11px] font-semibold leading-4 text-brand-foreground">
+          <span
+            aria-hidden
+            className="absolute -right-1 -top-1 min-w-4 rounded-full bg-brand px-1 text-[11px] font-semibold leading-4 text-brand-foreground"
+          >
             {sinLeer > 9 ? "9+" : sinLeer}
           </span>
         )}

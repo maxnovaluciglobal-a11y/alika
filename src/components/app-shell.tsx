@@ -80,9 +80,15 @@ function BarraInferior({
             <span className="relative">
               <Icon className={cn("size-5", activo && "text-brand-700")} aria-hidden />
               {badge > 0 && (
-                <span className="absolute -top-1.5 -right-3 min-w-4 rounded-sm bg-brand-700 px-0.5 text-center text-[11px] leading-4 tabular-nums text-white">
-                  {badge > 9 ? "9+" : badge}
-                </span>
+                <>
+                  <span
+                    aria-hidden
+                    className="absolute -top-1.5 -right-3 min-w-4 rounded-sm bg-brand-700 px-0.5 text-center text-[11px] leading-4 tabular-nums text-white"
+                  >
+                    {badge > 9 ? "9+" : badge}
+                  </span>
+                  <span className="sr-only">{` (${badge} pendientes)`}</span>
+                </>
               )}
             </span>
             {label}
@@ -329,9 +335,15 @@ export function AppShell({
                     />
                     <span>{label}</span>
                     {badge > 0 && (
-                      <span className="ml-auto min-w-5 rounded-sm bg-brand-700 px-1 text-center text-[11px] leading-5 tabular-nums text-white">
-                        {badge > 9 ? "9+" : badge}
-                      </span>
+                      <>
+                        <span
+                          aria-hidden
+                          className="ml-auto min-w-5 rounded-sm bg-brand-700 px-1 text-center text-[11px] leading-5 tabular-nums text-white"
+                        >
+                          {badge > 9 ? "9+" : badge}
+                        </span>
+                        <span className="sr-only">{` (${badge} pendientes)`}</span>
+                      </>
                     )}
                   </Link>
                 </li>
@@ -444,9 +456,15 @@ export function AppShell({
             >
               {d.label}
               {d.badge > 0 && (
-                <span className="min-w-5 rounded-sm bg-brand-700 px-1 text-center text-[11px] leading-5 tabular-nums text-white">
-                  {d.badge > 9 ? "9+" : d.badge}
-                </span>
+                <>
+                  <span
+                    aria-hidden
+                    className="min-w-5 rounded-sm bg-brand-700 px-1 text-center text-[11px] leading-5 tabular-nums text-white"
+                  >
+                    {d.badge > 9 ? "9+" : d.badge}
+                  </span>
+                  <span className="sr-only">{` (${d.badge} pendientes)`}</span>
+                </>
               )}
             </Link>
           ))}
@@ -481,9 +499,15 @@ export function AppShell({
                 >
                   {p.label}
                   {badge > 0 && (
-                    <span className="min-w-5 rounded-sm bg-brand-700 px-1 text-center text-[11px] leading-5 tabular-nums text-white">
-                      {badge > 9 ? "9+" : badge}
-                    </span>
+                    <>
+                      <span
+                        aria-hidden
+                        className="min-w-5 rounded-sm bg-brand-700 px-1 text-center text-[11px] leading-5 tabular-nums text-white"
+                      >
+                        {badge > 9 ? "9+" : badge}
+                      </span>
+                      <span className="sr-only">{` (${badge} pendientes)`}</span>
+                    </>
                   )}
                 </Link>
               );
