@@ -649,23 +649,34 @@ function Landing() {
         </div>
 
         {/* Cierre */}
-        <section className="border-t border-border">
+        {/* Cierre en banda de tinta (nivel "entre medio y audaz" que eligió
+            Walter, 07-oct-2026): el único bloque oscuro de la página, para
+            que el último CTA no se pierda en el papel. Sobre tinta el ocre
+            va relleno con texto tinta (4,9:1) y el contorno en papel. */}
+        <section className="bg-foreground text-background">
           <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 px-6 py-20 md:flex-row md:items-end">
             <h2 className="max-w-xl font-display text-4xl font-normal leading-tight sm:text-5xl">
-              Mira tu agenda de mañana en Alika antes de que termine el día.
+              Mira tu agenda de mañana en Alika{" "}
+              <em className="text-brand">antes de que termine el día.</em>
             </h2>
             <div className="flex flex-wrap gap-3">
               <a
                 href="/demo"
                 onClick={() => marcarDemo("cierre")}
-                className={buttonVariants({ size: "lg" })}
+                className={cn(
+                  buttonVariants({ size: "lg" }),
+                  "border-brand bg-brand text-brand-foreground hover:bg-brand/88",
+                )}
               >
                 Entrar a la demo
               </a>
               <a
                 href={whatsapp.href}
                 onClick={() => registrarEvento("cta_click", { cta: "whatsapp", lugar: "cierre" })}
-                className={buttonVariants({ variant: "outline", size: "lg" })}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "lg" }),
+                  "border-background/60 text-background hover:bg-background/10",
+                )}
                 {...(whatsapp.esWhatsApp ? { target: "_blank", rel: "noopener noreferrer" } : {})}
               >
                 <MessageCircle aria-hidden />
