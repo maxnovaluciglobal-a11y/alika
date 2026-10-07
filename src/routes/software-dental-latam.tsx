@@ -10,9 +10,10 @@ import { COUNTRIES } from "@/lib/onboarding-types";
  * datos por país (moneda, huso, si la moneda lleva decimales) salen de
  * `COUNTRIES` y de `ZERO_DECIMAL_CURRENCIES` en `finance.ts`, no de una lista
  * escrita a mano que se desincroniza. Y hay una sección explícita de lo que
- * Alika NO hace: no existe facturación electrónica por país (ni DTE, ni CFDI,
- * ni equivalentes), y una página de captación que lo insinúe quema la
- * confianza en la primera llamada de ventas.
+ * Alika NO hace todavía: no existe facturación electrónica por país (ni DTE,
+ * ni CFDI, ni equivalentes). Está en el roadmap, sin fecha: decirlo así y no
+ * insinuar que ya existe, porque eso quema la confianza en la primera llamada
+ * de ventas. Si algún día se compromete una fecha, recién ahí se publica.
  */
 
 /** Monedas que no usan decimales — mismo criterio que finance.ts. */
@@ -37,7 +38,7 @@ const PREGUNTAS = [
   },
   {
     q: "¿Alika emite factura electrónica en mi país?",
-    a: "No. Alika registra cobros, saldos, medios de pago con su retención y comisiones de profesionales, pero no emite documentos tributarios electrónicos en ningún país. Si necesitas emitirlos, tienes que seguir usando tu sistema de facturación.",
+    a: "Todavía no. Alika registra cobros, saldos, medios de pago con su retención y comisiones de profesionales, pero hoy no emite documentos tributarios electrónicos en ningún país. La facturación electrónica está en el roadmap, sin fecha comprometida. Mientras tanto, si necesitas emitirlos, sigues usando tu sistema de facturación.",
   },
   {
     q: "¿Los montos se manejan bien en monedas sin decimales?",
@@ -149,12 +150,13 @@ function SoftwareDentalLatam() {
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
             Alika{" "}
             <strong className="text-foreground">
-              no emite documentos tributarios electrónicos
+              todavía no emite documentos tributarios electrónicos
             </strong>{" "}
             en ningún país: ni boleta ni factura electrónica en Chile, ni CFDI en México, ni sus
             equivalentes. Registra cobros, saldos, medios de pago con su retención y comisiones de
-            profesionales, pero la emisión fiscal sigue en el sistema que ya uses. Preferimos
-            decirlo acá y no en la primera llamada.
+            profesionales, pero la emisión fiscal sigue en el sistema que ya uses. La facturación
+            electrónica está en el roadmap, sin fecha comprometida. Preferimos decirlo aquí y no en
+            la primera llamada.
           </p>
         </section>
 
