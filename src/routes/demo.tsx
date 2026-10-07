@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
@@ -8,6 +8,8 @@ import { ensureDemoClinicFresh } from "@/lib/demo.functions";
 import { LeadForm } from "@/components/marketing/lead-form";
 import { AlikaLogo } from "@/components/alika-logo";
 import { PublicPageShell } from "@/components/site-chrome";
+import { detectarPaisVisitante, PAIS_POR_DEFECTO } from "@/lib/marketing/pais-visitante";
+import type { PaisCaptacion } from "@/lib/marketing/leads";
 
 // Credenciales de la clínica demo pública, de solo lectura (bloqueo por
 // trigger, ver migración 20260815180000). No son un secreto: cualquiera
@@ -49,6 +51,10 @@ function DemoPage() {
   const [entrando, setEntrando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ensureFresh = useServerFn(ensureDemoClinicFresh);
+  // Antes iba "CL" fijo y todos los leads de la demo parecían chilenos. Se
+  // deduce en cliente (zona horaria) para no desalinear SSR e hidratación.
+  const [pais, setPais] = useState<PaisCaptacion>(PAIS_POR_DEFECTO);
+  useEffect(() => setPais(detectarPaisVisitante()), []);
 
   async function entrar() {
     setEntrando(true);
@@ -96,12 +102,13 @@ function DemoPage() {
         <AlikaLogo size={36} className="mx-auto mb-4" />
         <h1 className="font-display text-2xl font-semibold">Antes de entrar a la demo</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          No pedimos tarjeta ni contraseña — solo para saber a quién le mostramos el panel.
+          Solo te pedimos nombre y email, sin tarjeta ni contraseña. Así sabemos a quién le
+          mostramos el panel.
         </p>
       </div>
       <LeadForm
         source="demo"
-        pais="CL"
+        pais={pais}
         tituloExito="¡Listo!"
         textoBoton="Entrar a la demo"
         onSuccess={() => void entrar()}

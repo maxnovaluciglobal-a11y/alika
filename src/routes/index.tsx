@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { calcularFugas } from "@/lib/marketing/calculadora";
 import { enlaceWhatsAppVentas } from "@/lib/marketing/contacto";
 import { registrarEvento } from "@/lib/marketing/eventos";
+import { detectarPaisVisitante, monedaPorPais } from "@/lib/marketing/pais-visitante";
 import { setPlanIntent, type PlanIntent } from "@/lib/marketing/plan-intent";
 import { MONEDAS_PRECIO, precioEnMoneda, type MonedaPrecio } from "@/lib/pricing-display";
 import { canonicalHead } from "@/lib/seo";
@@ -145,6 +146,7 @@ const MONEDAS_CALCULO = [
   { code: "PEN", label: "PEN", ticket: 180 },
   { code: "MXN", label: "MXN", ticket: 900 },
   { code: "COP", label: "COP", ticket: 180000 },
+  { code: "USD", label: "USD", ticket: 50 },
 ] as const;
 
 type MonedaCalculo = (typeof MONEDAS_CALCULO)[number]["code"];
@@ -163,6 +165,16 @@ function CalculadoraFugas() {
   const [ausencias, setAusencias] = useState(18);
   const [ticket, setTicket] = useState<number>(45000);
   const usada = useRef(false);
+
+  // Arranca en la misma moneda que el selector de precios (zona horaria del
+  // visitante). En un efecto, para que el SSR y la hidratación coincidan.
+  useEffect(() => {
+    const m = monedaPorPais(detectarPaisVisitante());
+    const def = MONEDAS_CALCULO.find((x) => x.code === m);
+    if (!def || usada.current) return;
+    setMoneda(def.code);
+    setTicket(def.ticket);
+  }, []);
 
   const perdida = useMemo(() => {
     // calcularFugas trabaja en cents; acá basta con la unidad visible.
@@ -366,12 +378,11 @@ function Precios() {
   const [moneda, setMoneda] = useState<MonedaPrecio>("USD");
   const whatsapp = enlaceWhatsAppVentas();
 
-  // La moneda por defecto sigue al idioma del navegador (es-CL → CLP…), en
-  // cliente, para no romper la hidratación con un valor distinto del SSR.
+  // La moneda por defecto sigue al país probable del visitante (zona
+  // horaria), la misma regla que la calculadora. En cliente, para no romper
+  // la hidratación con un valor distinto del SSR.
   useEffect(() => {
-    const region = navigator.language.split("-")[1];
-    const porRegion: Record<string, MonedaPrecio> = { CL: "CLP", PE: "PEN", MX: "MXN" };
-    if (region && porRegion[region]) setMoneda(porRegion[region]);
+    setMoneda(monedaPorPais(detectarPaisVisitante()));
   }, []);
 
   return (

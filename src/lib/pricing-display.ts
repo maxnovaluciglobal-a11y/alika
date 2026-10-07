@@ -44,9 +44,11 @@ export function approxLocalPricesLabel(usd: number): string {
   return `≈ $${formatLocal(clp)} CLP · $${formatLocal(mxn)} MXN · $${formatLocal(cop)} COP`;
 }
 
-/** Monedas del selector de precios de la landing. */
-export type MonedaPrecio = "CLP" | "PEN" | "MXN" | "USD";
-export const MONEDAS_PRECIO: readonly MonedaPrecio[] = ["CLP", "PEN", "MXN", "USD"];
+/** Monedas del selector de precios de la landing. COP se sumó el 07-oct-2026
+ *  (Colombia estaba en la lista de países pero no en el selector). ARS no:
+ *  Argentina ve USD, ver `monedaPorPais` en marketing/pais-visitante.ts. */
+export type MonedaPrecio = "CLP" | "PEN" | "MXN" | "COP" | "USD";
+export const MONEDAS_PRECIO: readonly MonedaPrecio[] = ["CLP", "PEN", "MXN", "COP", "USD"];
 
 /** PEN se sumó el 06-oct-2026 para el selector de la landing (aprox. 3,7). */
 const USD_TO_PEN_APPROX = 3.7;

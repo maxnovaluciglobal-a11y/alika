@@ -43,7 +43,7 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
     items: [
       {
         q: "¿Cómo empiezo?",
-        a: 'Puedes probar la demo sin registrarte desde el botón "Ver demo", o crear tu clínica gratis en unos minutos con "Empieza gratis".',
+        a: 'Puedes entrar a la demo desde el botón "Ver demo": solo te pedimos nombre y email, sin tarjeta ni contraseña. O crea tu clínica gratis en unos minutos con "Empieza gratis".',
       },
       {
         q: "¿Puedo importar los pacientes que ya tengo?",
