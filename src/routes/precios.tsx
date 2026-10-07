@@ -127,34 +127,36 @@ function PaginaPrecios() {
           <PreciosPlanes encabezado="h1" lugar="pagina-precios" />
         </section>
 
-        <section className="mx-auto max-w-3xl px-6 pb-20">
-          <h2 className="font-display text-3xl font-normal leading-tight sm:text-4xl">
-            Preguntas sobre el precio
-          </h2>
-          <Accordion type="single" collapsible className="mt-6">
-            {preguntas.map((p, i) => (
-              <AccordionItem key={p.q} value={`p-${i}`}>
-                <AccordionTrigger className="text-left text-base">{p.q}</AccordionTrigger>
-                <AccordionContent className="leading-relaxed text-muted-foreground">
-                  {p.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-          <p className="mt-8 text-sm text-muted-foreground">
-            ¿Otra duda?{" "}
-            <Link to="/faq" className="text-brand-700 underline-offset-4 hover:underline">
-              Revisa las preguntas frecuentes
-            </Link>{" "}
-            o entra a la demo y mira la clínica por dentro.
-          </p>
-          <a
-            href="/demo"
-            onClick={() => registrarEvento("cta_click", { cta: "demo", lugar: "pagina-precios" })}
-            className={cn(buttonVariants({ size: "lg" }), "mt-6")}
-          >
-            Entrar a la demo
-          </a>
+        <section className="mx-auto max-w-6xl px-6 pb-20">
+          <div className="max-w-3xl">
+            <h2 className="font-display text-3xl font-normal leading-tight sm:text-4xl">
+              Preguntas sobre el precio
+            </h2>
+            <Accordion type="single" collapsible className="mt-6">
+              {preguntas.map((p, i) => (
+                <AccordionItem key={p.q} value={`p-${i}`}>
+                  <AccordionTrigger className="text-left text-base">{p.q}</AccordionTrigger>
+                  <AccordionContent className="leading-relaxed text-muted-foreground">
+                    {p.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+            <p className="mt-8 text-sm text-muted-foreground">
+              ¿Otra duda?{" "}
+              <Link to="/faq" className="text-brand-700 underline-offset-4 hover:underline">
+                Revisa las preguntas frecuentes
+              </Link>{" "}
+              o entra a la demo y mira la clínica por dentro.
+            </p>
+            <a
+              href="/demo"
+              onClick={() => registrarEvento("cta_click", { cta: "demo", lugar: "pagina-precios" })}
+              className={cn(buttonVariants({ size: "lg" }), "mt-6")}
+            >
+              Entrar a la demo
+            </a>
+          </div>
         </section>
       </main>
 
