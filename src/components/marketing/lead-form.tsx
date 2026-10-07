@@ -75,7 +75,7 @@ export function LeadForm({
       // Mismo mensaje que el .refine() del server (EsquemaLead en
       // leads.functions.ts) — cubrimos acá el caso más común para evitar el
       // round-trip, pero el server sigue siendo la red de seguridad real.
-      setError("Dejanos un email o un WhatsApp para poder enviarte el material.");
+      setError("Déjanos un email o un WhatsApp para poder enviarte el material.");
       return;
     }
 
@@ -118,13 +118,13 @@ export function LeadForm({
     const downloadToken =
       resultado && "downloadToken" in resultado ? resultado.downloadToken : null;
     return (
-      <div className="rounded-2xl border border-mint/25 bg-mint-soft p-6">
+      <div className="rounded-2xl border border-success/25 bg-success-soft p-6">
         <p className="font-semibold">{tituloExito}</p>
         <p className="mt-2 text-sm text-muted-foreground">
           Guardamos tus datos. Nos vamos a poner en contacto para acompañarte con esto.
         </p>
         {downloadToken && slugRecurso && (
-          <Button asChild className="mt-4 bg-ink text-ink-foreground hover:bg-ink/90">
+          <Button asChild className="mt-4 bg-foreground text-background hover:bg-foreground/90">
             <a href={`/api/recurso/${slugRecurso}?token=${downloadToken}`}>Descargar PDF</a>
           </Button>
         )}
@@ -185,7 +185,7 @@ export function LeadForm({
           />
           <span>
             {TEXTO_CONSENTIMIENTO}{" "}
-            <a href="/privacidad" className="underline underline-offset-2 hover:text-ink">
+            <a href="/privacidad" className="underline underline-offset-2 hover:text-foreground">
               Cómo tratamos tus datos
             </a>
             .
@@ -214,7 +214,7 @@ export function LeadForm({
         type="submit"
         disabled={estado === "enviando"}
         aria-describedby={error ? "lead-error" : undefined}
-        className="w-full bg-ink text-ink-foreground hover:bg-ink/90 sm:w-auto"
+        className="w-full bg-foreground text-background hover:bg-foreground/90 sm:w-auto"
         size="lg"
       >
         {estado === "enviando" ? "Guardando…" : (textoBoton ?? "Quiero recibirlo")}

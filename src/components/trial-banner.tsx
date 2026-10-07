@@ -29,14 +29,14 @@ export function TrialBanner({ clinicId }: { clinicId: string }) {
     return (
       <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-5 py-2 text-sm sm:px-8">
         <div className="flex items-center gap-2">
-          <Sparkles className="size-4 text-mint-strong" />
+          <Sparkles className="size-4 text-success" />
           <span>
             Tienes acceso completo. Activa tu plan cuando quieras — primeros 14 días sin cargo.
           </span>
         </div>
         <Link
           to="/suscripcion"
-          className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
+          className="rounded-md border border-brand bg-transparent px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand/12"
         >
           Ver plan · desde US$29/mes
         </Link>
@@ -57,12 +57,12 @@ export function TrialBanner({ clinicId }: { clinicId: string }) {
       <div
         className={
           urgente
-            ? "flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-5 py-2 text-sm dark:border-amber-800/50 dark:bg-amber-950/30 sm:px-8"
+            ? "flex items-center justify-between gap-3 border-b border-brand/40 bg-brand-100 px-5 py-2 text-sm sm:px-8"
             : "flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-5 py-2 text-sm sm:px-8"
         }
       >
         <div className="flex items-center gap-2">
-          <Clock className={urgente ? "size-4 text-amber-600" : "size-4 text-muted-foreground"} />
+          <Clock className={urgente ? "size-4 text-brand-700" : "size-4 text-muted-foreground"} />
           <span>
             {daysLeft === 0
               ? "Tu trial vence hoy."
@@ -71,7 +71,7 @@ export function TrialBanner({ clinicId }: { clinicId: string }) {
         </div>
         <Link
           to="/suscripcion"
-          className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
+          className="rounded-md border border-brand bg-transparent px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand/12"
         >
           Activar suscripción
         </Link>
@@ -92,7 +92,7 @@ export function TrialBanner({ clinicId }: { clinicId: string }) {
       </div>
       <Link
         to="/suscripcion"
-        className="rounded-md bg-destructive px-3 py-1 text-xs font-medium text-destructive-foreground hover:opacity-90"
+        className="rounded-md border border-destructive px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
       >
         Reactivar
       </Link>

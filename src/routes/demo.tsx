@@ -94,7 +94,7 @@ function DemoPage() {
     >
       <div className="text-center">
         <AlikaLogo size={36} className="mx-auto mb-4" />
-        <h1 className="font-precise text-2xl font-semibold">Antes de entrar a la demo</h1>
+        <h1 className="font-display text-2xl font-semibold">Antes de entrar a la demo</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           No pedimos tarjeta ni contraseña — solo para saber a quién le mostramos el panel.
         </p>

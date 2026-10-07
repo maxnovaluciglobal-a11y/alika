@@ -615,7 +615,7 @@ export function NotasClinicas({
               <button
                 onClick={() => guardar(aiUsada ? "draft" : null)}
                 disabled={ocupado || bloqueada || !contenido.trim()}
-                className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-brand-foreground disabled:opacity-50"
+                className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-brand bg-transparent px-3 py-1.5 text-xs font-medium text-brand-700 disabled:opacity-50"
               >
                 {guardarOffline.enCurso ? (
                   <Loader2 className="size-3 animate-spin" />
@@ -738,7 +738,7 @@ export function NotasClinicas({
                       <button
                         onClick={() => resolverRevision.mutate("approved")}
                         disabled={resolverRevision.isPending}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-brand-foreground disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-brand bg-transparent px-3 py-1.5 text-xs font-medium text-brand-700 disabled:opacity-50"
                       >
                         <ShieldCheck className="size-3" /> Aprobar
                       </button>

@@ -608,7 +608,7 @@ export function Odontogram({
                   onPresupuestarPieza({ tooth: selection.tooth, surface: selection.surface });
                   setSelection(null);
                 }}
-                className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-md bg-brand px-2 py-1.5 text-[11px] font-medium text-brand-foreground transition-colors hover:bg-brand/90"
+                className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-md border border-brand bg-transparent px-2 py-1.5 text-[11px] font-medium text-brand-700 transition-colors hover:bg-brand/12"
               >
                 <Receipt className="size-3.5" /> Presupuestar esta pieza
               </button>

@@ -389,7 +389,7 @@ function WhatsAppPage() {
                 type="button"
                 onClick={launchSignup}
                 disabled={!sdkReady || isOpeningPopup || completeMutation.isPending}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-50"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-brand bg-transparent px-3 py-1.5 text-xs font-medium text-brand-700 transition-colors hover:bg-brand/12 disabled:opacity-50"
               >
                 {isOpeningPopup || completeMutation.isPending ? (
                   <Loader2 className="size-3.5 animate-spin" />

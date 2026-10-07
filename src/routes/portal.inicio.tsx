@@ -273,7 +273,7 @@ function PortalInicio() {
               type="button"
               disabled={!reason.trim() || requestMut.isPending}
               onClick={() => requestMut.mutate()}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-medium text-brand-foreground disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand bg-transparent px-4 py-3 text-sm font-medium text-brand-700 disabled:opacity-50"
             >
               {requestMut.isPending ? (
                 <Loader2 className="size-4 animate-spin" />

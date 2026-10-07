@@ -141,7 +141,7 @@ function MiAgendaPage() {
                         type="button"
                         onClick={() => aceptar.mutate(c.id)}
                         disabled={aceptar.isPending}
-                        className="shrink-0 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+                        className="shrink-0 rounded-lg border border-brand bg-transparent px-4 py-2 text-sm font-semibold text-brand-700 transition-opacity hover:bg-brand/12 disabled:opacity-50"
                       >
                         {aceptar.isPending ? (
                           <Loader2 className="size-4 animate-spin" />

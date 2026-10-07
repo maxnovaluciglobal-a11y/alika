@@ -258,7 +258,7 @@ function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand py-2.5 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-brand bg-transparent py-2.5 text-sm font-medium text-brand-700 transition-opacity hover:bg-brand/12 disabled:opacity-60"
             >
               {loading && <Loader2 className="size-4 animate-spin" />}
               {mode === "signin" ? "Ingresar" : "Crear cuenta"}

@@ -16,10 +16,8 @@ export const Route = createFileRoute("/docs/whatsapp")({
 function DocsWhatsapp() {
   return (
     <article>
-      <p className="text-xs font-semibold uppercase tracking-wider text-clay-strong">
-        Documentación
-      </p>
-      <h1 className="font-precise mt-2 text-3xl font-bold tracking-tight">Conectar WhatsApp</h1>
+      <p className="text-xs font-semibold uppercase tracking-wider text-brand-700">Documentación</p>
+      <h1 className="font-display mt-2 text-3xl font-bold tracking-tight">Conectar WhatsApp</h1>
 
       <LegalNotice>
         En ningún modo Alika manda un mensaje sin que alguien de tu clínica lo dispare. La cola de

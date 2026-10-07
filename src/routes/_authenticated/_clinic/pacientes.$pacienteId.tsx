@@ -6,16 +6,19 @@ import {
   AlertTriangle,
   ArrowLeft,
   CalendarClock,
-  Mail,
+  CalendarPlus,
   Pencil,
-  Phone,
   ShieldAlert,
   Tag,
+  Wallet,
 } from "lucide-react";
 
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -26,7 +29,7 @@ import {
 import { requirePermission } from "@/lib/access/route-guards";
 import { PacienteTimeline } from "@/components/paciente-timeline";
 import { NotasClinicas } from "@/components/notas-clinicas";
-import { AllergyAlertBanner, MedicalHistoryCard } from "@/components/medical-history-card";
+import { MedicalHistoryCard } from "@/components/medical-history-card";
 import { getMedicalHistory } from "@/lib/clinical/medical-history.functions";
 import { listAgreements, setPatientAgreement } from "@/lib/finance/clinic-finance.functions";
 import { PatientDocumentsCard } from "@/components/patient-documents-card";
@@ -44,6 +47,7 @@ import { requiereLlamadaOSuscripcion } from "@/lib/billing";
 import type { Paciente } from "@/lib/clinic-operations/clinic-data";
 import { formatMoney } from "@/lib/finance/finance";
 import { getPatient } from "@/lib/patients/patients.functions";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/pacientes/$pacienteId")({
   // Datos demográficos (nombre, teléfono, próximo control) son de agenda/recepción,
@@ -233,8 +237,10 @@ function ConvenioDelPaciente({
 
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Convenio</p>
-      <p className="font-display text-xl font-semibold">{actual?.name ?? "Particular"}</p>
+      <p className="kicker">Convenio</p>
+      <p className="mt-1 truncate font-display text-xl font-semibold leading-tight">
+        {actual?.name ?? "Particular"}
+      </p>
       {afiliado && <p className="text-[11px] text-muted-foreground">Afiliado {afiliado}</p>}
       {puedeEditar && (
         <button
@@ -252,17 +258,48 @@ function ConvenioDelPaciente({
   );
 }
 
+type PestanaFicha = "resumen" | "odontograma" | "notas" | "finanzas" | "documentos" | "mensajes";
+
+function Dato({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <dt className="kicker">{label}</dt>
+      <dd className="mt-1 truncate font-display text-xl font-semibold leading-tight">{children}</dd>
+    </div>
+  );
+}
+
+function iniciales(nombre: string) {
+  return nombre
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 function PacienteDetalle() {
   const { access } = Route.useRouteContext();
   const { paciente } = Route.useLoaderData() as { paciente: Paciente };
   const currency = access.clinic?.currency ?? "CLP";
   const puedeVerClinico = hasPermission(access.role, "clinical:view");
+  const puedeEscribirClinico = hasPermission(access.role, "clinical:write");
   const clinicId = access.clinic?.id;
   const puedeFacturar = hasPermission(access.role, "patients:manage");
+  const [pestana, setPestana] = useState<PestanaFicha>("resumen");
 
-  // Puente odontograma → presupuesto (G-1). El `nonce` hace que clickear dos
-  // veces la misma pieza vuelva a abrir el diálogo en vez de no hacer nada.
+  // Puente odontograma → presupuesto (G-1). Ahora viven en pestañas
+  // distintas: presupuestar una pieza lleva a "Presupuestos y pagos", donde
+  // FinanceSection monta y consume la semilla. El `nonce` hace que clickear
+  // dos veces la misma pieza vuelva a abrir el diálogo.
   const [piezaSeed, setPiezaSeed] = useState<PiezaSeed | null>(null);
+  const presupuestarPieza = puedeFacturar
+    ? (pieza: Omit<PiezaSeed, "nonce">) => {
+        setPiezaSeed({ ...pieza, nonce: Date.now() });
+        setPestana("finanzas");
+      }
+    : undefined;
 
   const fetchMedicalHistory = useServerFn(getMedicalHistory);
   const medicalHistoryQuery = useQuery({
@@ -270,6 +307,7 @@ function PacienteDetalle() {
     queryFn: () => fetchMedicalHistory({ data: { clinicId: clinicId!, patientId: paciente.id } }),
     enabled: Boolean(clinicId) && puedeVerClinico,
   });
+  const alergias = medicalHistoryQuery.data?.allergies ?? [];
 
   // Gate del portal del paciente (día 1 del trial, no día 15 como los
   // informes) — ver requiereLlamadaOSuscripcion en billing.ts.
@@ -285,218 +323,260 @@ function PacienteDetalle() {
     access.clinic?.onboardingCallAt ?? null,
   );
 
+  const lineaDatos = [
+    paciente.edad ? `${paciente.edad} años` : null,
+    paciente.telefono || "Sin teléfono",
+    paciente.convenioNombre ?? null,
+    paciente.documento ? `Doc. ${paciente.documento}` : null,
+  ].filter(Boolean);
+
+  const alertaMedica = !puedeVerClinico
+    ? "Sin acceso"
+    : medicalHistoryQuery.isLoading
+      ? "…"
+      : alergias.length > 0
+        ? `Alergia: ${alergias.join(", ")}`
+        : "Sin alergias registradas";
+
   return (
     <AppShell title="Ficha del paciente" access={access}>
-      <div className="space-y-6">
-        <Link
-          to="/pacientes"
-          search={{
-            q: "",
-            sucursal: "",
-            profesional: "",
-            estado: "",
-            desde: "",
-            hasta: "",
-            page: 1,
-          }}
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" /> Pacientes
-        </Link>
-
-        <div className="grid gap-8 xl:grid-cols-12">
-          <div className="space-y-6 xl:col-span-8">
-            <div className="card-clinical p-6">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="flex gap-4">
-                  {paciente.foto ? (
-                    <img
-                      src={paciente.foto}
-                      alt={paciente.nombre}
-                      width={512}
-                      height={512}
-                      className="size-16 rounded-2xl object-cover"
-                    />
-                  ) : (
-                    <span className="grid size-16 place-items-center rounded-2xl bg-secondary font-display text-lg font-semibold text-muted-foreground">
-                      {paciente.nombre
-                        .split(" ")
-                        .map((n) => n[0])
-                        .slice(0, 2)
-                        .join("")}
-                    </span>
-                  )}
-                  <div>
-                    <h2 className="font-display text-2xl font-semibold">{paciente.nombre}</h2>
-                    <p className="text-xs text-muted-foreground">
-                      ID: {paciente.documento || "Sin documento"} • {paciente.edad} años
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {paciente.etiquetas.map((t) => (
-                        <span
-                          key={t}
-                          className="rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground"
-                        >
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-1 text-xs text-muted-foreground">
-                  <p
-                    className={
-                      paciente.telefono && paciente.telefonoValido === false
-                        ? "flex items-center gap-2 text-warning"
-                        : "flex items-center gap-2"
-                    }
-                  >
-                    <Phone className="size-3.5" /> {paciente.telefono || "Sin teléfono"}
-                    {paciente.telefono && paciente.telefonoValido === false && (
-                      <span
-                        className="inline-flex items-center gap-1"
-                        aria-label="Formato de teléfono no confirmado"
-                      >
-                        <AlertTriangle className="size-3.5 shrink-0" /> formato dudoso
-                      </span>
-                    )}
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <Mail className="size-3.5" /> {paciente.email || "Sin email"}
-                  </p>
-                </div>
-              </div>
-
-              {medicalHistoryQuery.isLoading ? (
-                <div
-                  className="mt-4 h-9 w-56 animate-pulse rounded bg-secondary"
-                  aria-label="Comprobando alergias"
+      <div className="mx-auto max-w-6xl">
+        {/* Cabecera fija: identidad, acciones y los 4 datos que se consultan
+            en cada atención. Se queda visible al bajar por cualquier pestaña (desde lg: en el
+            celular ocuparía media pantalla). */}
+        <header className="-mx-5 lg:sticky lg:top-16 lg:z-[5] border-b border-border bg-background/95 px-5 pt-2 pb-5 backdrop-blur-sm sm:-mx-8 sm:px-8">
+          <Link
+            to="/pacientes"
+            search={{
+              q: "",
+              sucursal: "",
+              profesional: "",
+              estado: "",
+              desde: "",
+              hasta: "",
+              page: 1,
+            }}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-3.5" aria-hidden /> Pacientes
+          </Link>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-4">
+              {paciente.foto ? (
+                <img
+                  src={paciente.foto}
+                  alt=""
+                  width={512}
+                  height={512}
+                  className="size-14 shrink-0 rounded-full object-cover outline outline-1 outline-border"
                 />
               ) : (
-                medicalHistoryQuery.data &&
-                medicalHistoryQuery.data.allergies.length > 0 && (
-                  <div className="mt-4">
-                    <AllergyAlertBanner allergies={medicalHistoryQuery.data.allergies} />
-                  </div>
-                )
+                <span
+                  aria-hidden
+                  className="grid size-14 shrink-0 place-items-center rounded-full border border-brand/50 font-display text-xl font-semibold text-brand-700"
+                >
+                  {iniciales(paciente.nombre)}
+                </span>
               )}
-
-              <div className="mt-6 grid gap-4 border-t border-hairline pt-5 sm:grid-cols-2 lg:grid-cols-4">
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Saldo
-                  </p>
-                  <p className="font-display text-xl font-semibold">
-                    {paciente.saldo == null
-                      ? "Sin datos"
-                      : paciente.saldo > 0
-                        ? formatMoney(paciente.saldo, currency)
-                        : paciente.saldo < 0
-                          ? `${formatMoney(-paciente.saldo, currency)} a favor`
-                          : "Al día"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Próximo control
-                  </p>
-                  <p className="font-display text-xl font-semibold">
-                    {paciente.proximoControl ?? "Sin agendar"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Riesgo de ausencia
-                  </p>
-                  <p className="font-display text-xl font-semibold">
-                    {paciente.riesgoAusencia == null
-                      ? "Sin calcular"
-                      : `${paciente.riesgoAusencia}%`}
-                  </p>
-                </div>
-                {access.clinic?.id && (
-                  <ConvenioDelPaciente
-                    clinicId={access.clinic.id}
-                    patientId={paciente.id}
-                    convenioId={paciente.convenioId ?? null}
-                    afiliado={paciente.convenioAfiliado ?? null}
-                    puedeEditar={puedeFacturar}
-                  />
-                )}
+              <div className="min-w-0">
+                <h2 className="truncate font-display text-3xl font-semibold leading-tight sm:text-[40px]">
+                  {paciente.nombre}
+                </h2>
+                <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+                  {lineaDatos.join(" · ")}
+                  {paciente.telefono && paciente.telefonoValido === false && (
+                    <span className="inline-flex items-center gap-1 text-warning">
+                      <AlertTriangle className="size-3.5 shrink-0" aria-hidden /> formato dudoso
+                    </span>
+                  )}
+                </p>
               </div>
             </div>
+            <div className="flex flex-wrap gap-2">
+              {puedeFacturar && (
+                <button
+                  type="button"
+                  onClick={() => setPestana("finanzas")}
+                  className={buttonVariants({ variant: "outline" })}
+                >
+                  <Wallet aria-hidden /> Cobrar
+                </button>
+              )}
+              {hasPermission(access.role, "agenda:manage") && (
+                <Link
+                  to="/agenda"
+                  search={{
+                    q: paciente.nombre,
+                    fecha: "",
+                    vista: "dia",
+                    sucursal: "",
+                    profesional: "",
+                    estado: "",
+                    page: 1,
+                  }}
+                  className={buttonVariants()}
+                >
+                  <CalendarPlus aria-hidden /> Agendar
+                </Link>
+              )}
+            </div>
+          </div>
 
-            {puedeVerClinico ? (
-              <>
-                {clinicId && (
-                  <MedicalHistoryCard
-                    clinicId={clinicId}
-                    patientId={paciente.id}
-                    puedeEditar={hasPermission(access.role, "clinical:write")}
-                    userId={access.userId}
-                  />
-                )}
-
-                <NotasClinicas
-                  paciente={paciente}
-                  clinicId={access.clinic?.id ?? null}
-                  clinicaNombre={access.clinic?.name ?? "Alika"}
-                  puedeEditar={hasPermission(access.role, "clinical:write")}
-                  userId={access.userId}
-                  rol={access.role}
+          <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 lg:grid-cols-4">
+            <Dato label="Próxima cita">{paciente.proximoControl ?? "Sin agendar"}</Dato>
+            <Dato label="Saldo">
+              {paciente.saldo == null
+                ? "Sin datos"
+                : paciente.saldo > 0
+                  ? `${formatMoney(paciente.saldo, currency)} por cobrar`
+                  : paciente.saldo < 0
+                    ? `${formatMoney(-paciente.saldo, currency)} a favor`
+                    : "Al día"}
+            </Dato>
+            <div className="min-w-0">
+              {clinicId ? (
+                <ConvenioDelPaciente
+                  clinicId={clinicId}
+                  patientId={paciente.id}
+                  convenioId={paciente.convenioId ?? null}
+                  afiliado={paciente.convenioAfiliado ?? null}
+                  puedeEditar={puedeFacturar}
                 />
-
-                {access.clinic?.id && (
-                  <Odontogram
-                    clinicId={access.clinic.id}
-                    patientId={paciente.id}
-                    puedeEditar={hasPermission(access.role, "clinical:write")}
-                    userId={access.userId}
-                    onPresupuestarPieza={
-                      puedeFacturar
-                        ? (pieza) => setPiezaSeed({ ...pieza, nonce: Date.now() })
-                        : undefined
-                    }
-                  />
+              ) : null}
+            </div>
+            <div className="min-w-0">
+              <dt className="kicker">Alerta médica</dt>
+              <dd
+                className={cn(
+                  "mt-1 flex items-start gap-1.5 font-display text-xl font-semibold leading-tight",
+                  alergias.length > 0 && "text-destructive",
                 )}
-
-                {access.clinic?.id && (
-                  <PeriodontalChart
-                    clinicId={access.clinic.id}
-                    patientId={paciente.id}
-                    puedeEditar={hasPermission(access.role, "clinical:write")}
-                    userId={access.userId}
-                  />
+              >
+                {alergias.length > 0 && (
+                  <AlertTriangle className="mt-1 size-4 shrink-0" aria-hidden />
                 )}
+                <span className="line-clamp-2">{alertaMedica}</span>
+              </dd>
+            </div>
+          </dl>
+        </header>
 
-                {access.clinic?.id && (
-                  <PatientDocumentsCard
-                    clinicId={access.clinic.id}
-                    patientId={paciente.id}
-                    puedeEditar={hasPermission(access.role, "clinical:write")}
-                  />
-                )}
+        <Tabs value={pestana} onValueChange={(v) => setPestana(v as PestanaFicha)} className="mt-4">
+          <TabsList className="w-full justify-start">
+            <TabsTrigger value="resumen">Resumen</TabsTrigger>
+            {puedeVerClinico && <TabsTrigger value="odontograma">Odontograma</TabsTrigger>}
+            {puedeVerClinico && <TabsTrigger value="notas">Notas clínicas</TabsTrigger>}
+            <TabsTrigger value="finanzas">Presupuestos y pagos</TabsTrigger>
+            {puedeVerClinico && <TabsTrigger value="documentos">Documentos</TabsTrigger>}
+            <TabsTrigger value="mensajes">Mensajes</TabsTrigger>
+          </TabsList>
 
-                {access.clinic?.id && (
-                  <PatientConsentsCard
-                    clinicId={access.clinic.id}
-                    patientId={paciente.id}
-                    patientName={paciente.nombre}
-                    puedeEditar={hasPermission(access.role, "clinical:write")}
-                    puedeGestionar={hasPermission(access.role, "patients:manage")}
-                  />
+          <TabsContent value="resumen">
+            <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
+              <div className="min-w-0 space-y-6">
+                {puedeVerClinico && clinicId ? (
+                  <>
+                    <Odontogram
+                      clinicId={clinicId}
+                      patientId={paciente.id}
+                      puedeEditar={puedeEscribirClinico}
+                      userId={access.userId}
+                      onPresupuestarPieza={presupuestarPieza}
+                    />
+                    <MedicalHistoryCard
+                      clinicId={clinicId}
+                      patientId={paciente.id}
+                      puedeEditar={puedeEscribirClinico}
+                      userId={access.userId}
+                    />
+                  </>
+                ) : (
+                  <p className="flex items-center gap-3 rounded-lg border border-border p-6 text-sm text-muted-foreground">
+                    <ShieldAlert className="size-4 shrink-0" aria-hidden />
+                    Tu rol no tiene acceso a la historia clínica de este paciente.
+                  </p>
                 )}
-              </>
-            ) : (
-              <div className="card-clinical flex items-center gap-3 p-6 text-sm text-muted-foreground">
-                <ShieldAlert className="size-4 shrink-0" />
-                Tu rol no tiene acceso a la historia clínica de este paciente.
               </div>
-            )}
+              <aside className="min-w-0 space-y-6">
+                <section aria-labelledby="timeline" className="rounded-lg border border-border p-5">
+                  <h3 id="timeline" className="mb-4 font-display text-xl font-semibold">
+                    Línea de tiempo
+                  </h3>
+                  <PacienteTimeline paciente={paciente} conEncabezado={false} />
+                </section>
+                <section className="space-y-3 rounded-lg border border-border p-5 text-sm">
+                  <p className="flex items-start gap-2">
+                    <CalendarClock
+                      className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                      aria-hidden
+                    />
+                    <span>
+                      <span className="block text-muted-foreground">Última visita</span>
+                      {paciente.ultimaVisita || "Sin visitas registradas"}
+                    </span>
+                  </p>
+                  {paciente.etiquetas.length > 0 && (
+                    <p className="flex items-start gap-2">
+                      <Tag className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+                      <span className="flex flex-wrap gap-1">
+                        {paciente.etiquetas.map((t) => (
+                          <Badge key={t} variant="secondary">
+                            {t}
+                          </Badge>
+                        ))}
+                      </span>
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Riesgo de ausencia:{" "}
+                    {paciente.riesgoAusencia == null
+                      ? "sin calcular"
+                      : `${paciente.riesgoAusencia}%`}
+                    {" · "}
+                    {paciente.waOptIn
+                      ? "acepta mensajes de seguimiento por WhatsApp."
+                      : "solo recibe recordatorios de cita."}
+                  </p>
+                </section>
+              </aside>
+            </div>
+          </TabsContent>
 
-            {access.clinic?.id && (
+          {puedeVerClinico && clinicId && (
+            <TabsContent value="odontograma" className="space-y-6">
+              <Odontogram
+                clinicId={clinicId}
+                patientId={paciente.id}
+                puedeEditar={puedeEscribirClinico}
+                userId={access.userId}
+                onPresupuestarPieza={presupuestarPieza}
+              />
+              <PeriodontalChart
+                clinicId={clinicId}
+                patientId={paciente.id}
+                puedeEditar={puedeEscribirClinico}
+                userId={access.userId}
+              />
+            </TabsContent>
+          )}
+
+          {puedeVerClinico && (
+            <TabsContent value="notas">
+              <NotasClinicas
+                paciente={paciente}
+                clinicId={clinicId ?? null}
+                clinicaNombre={access.clinic?.name ?? "Alika"}
+                puedeEditar={puedeEscribirClinico}
+                userId={access.userId}
+                rol={access.role}
+              />
+            </TabsContent>
+          )}
+
+          <TabsContent value="finanzas">
+            {clinicId && access.clinic && (
               <FinanceSection
-                clinicId={access.clinic.id}
+                clinicId={clinicId}
                 clinicaNombre={access.clinic.name}
                 currency={currency}
                 patientId={paciente.id}
@@ -507,113 +587,85 @@ function PacienteDetalle() {
                 onPiezaSeedConsumido={() => setPiezaSeed(null)}
               />
             )}
+          </TabsContent>
 
-            {access.clinic?.id && (
-              <div className="space-y-2">
-                <WhatsAppOptInToggle
-                  clinicId={access.clinic.id}
-                  patientId={paciente.id}
-                  initialOptIn={paciente.waOptIn}
-                />
-                <MessagesHistory clinicId={access.clinic.id} patientId={paciente.id} />
-              </div>
-            )}
+          {puedeVerClinico && clinicId && (
+            <TabsContent value="documentos" className="space-y-6">
+              <PatientDocumentsCard
+                clinicId={clinicId}
+                patientId={paciente.id}
+                puedeEditar={puedeEscribirClinico}
+              />
+              <PatientConsentsCard
+                clinicId={clinicId}
+                patientId={paciente.id}
+                patientName={paciente.nombre}
+                puedeEditar={puedeEscribirClinico}
+                puedeGestionar={hasPermission(access.role, "patients:manage")}
+              />
+            </TabsContent>
+          )}
 
-            {access.clinic?.id && hasPermission(access.role, "patients:manage") && (
-              <div className="card-clinical p-6">
-                <div className="mb-3">
-                  <h3 className="font-display text-lg font-semibold">Portal del paciente</h3>
-                  <p className="text-xs text-muted-foreground">
-                    Generá un link firmado (7 días) y compartilo por WhatsApp. Sin login, sin
-                    Twilio.
-                  </p>
-                </div>
-                <div
-                  className={
-                    portalBloqueado
-                      ? "flex flex-col items-stretch gap-2"
-                      : "flex flex-wrap items-start gap-2"
-                  }
-                >
-                  <PortalLinkButton
-                    clinicId={access.clinic.id}
+          <TabsContent value="mensajes" className="space-y-6">
+            {clinicId && access.clinic && (
+              <>
+                <div className="space-y-2">
+                  <WhatsAppOptInToggle
+                    clinicId={clinicId}
                     patientId={paciente.id}
-                    bloqueado={
-                      portalBloqueado
-                        ? {
-                            feature: "El portal del paciente",
-                            descripcion:
-                              "Tus pacientes pueden ver sus próximas citas y pedir hora sin login, por un link que vos generás. Se activa con tu puesta en marcha o al suscribirte.",
-                            clinicName: access.clinic.name,
-                            clinicEmail: access.email,
-                          }
-                        : undefined
-                    }
+                    initialOptIn={paciente.waOptIn}
                   />
-                  {/* Revocar acceso NUNCA se gatea — cortar un link filtrado
-                      tiene que funcionar aunque la clínica no haya agendado
-                      su llamada ni se haya suscrito todavía. */}
-                  <RevokePortalAccessButton clinicId={access.clinic.id} patientId={paciente.id} />
+                  <MessagesHistory clinicId={clinicId} patientId={paciente.id} />
                 </div>
-                <div className="mt-3">
-                  <ReferralCodeCard
-                    clinicId={access.clinic.id}
-                    patientName={paciente.nombre}
-                    referralCode={paciente.referralCode}
-                  />
-                </div>
-              </div>
+
+                {hasPermission(access.role, "patients:manage") && (
+                  <section className="rounded-lg border border-border p-6">
+                    <div className="mb-3">
+                      <h3 className="font-display text-xl font-semibold">Portal del paciente</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Genera un link firmado (7 días) y compártelo por WhatsApp. Sin login.
+                      </p>
+                    </div>
+                    <div
+                      className={
+                        portalBloqueado
+                          ? "flex flex-col items-stretch gap-2"
+                          : "flex flex-wrap items-start gap-2"
+                      }
+                    >
+                      <PortalLinkButton
+                        clinicId={clinicId}
+                        patientId={paciente.id}
+                        bloqueado={
+                          portalBloqueado
+                            ? {
+                                feature: "El portal del paciente",
+                                descripcion:
+                                  "Tus pacientes pueden ver sus próximas citas y pedir hora sin login, por un link que tú generas. Se activa con tu puesta en marcha o al suscribirte.",
+                                clinicName: access.clinic.name,
+                                clinicEmail: access.email,
+                              }
+                            : undefined
+                        }
+                      />
+                      {/* Revocar acceso NUNCA se gatea — cortar un link filtrado
+                          tiene que funcionar aunque la clínica no haya agendado
+                          su llamada ni se haya suscrito todavía. */}
+                      <RevokePortalAccessButton clinicId={clinicId} patientId={paciente.id} />
+                    </div>
+                    <div className="mt-3">
+                      <ReferralCodeCard
+                        clinicId={clinicId}
+                        patientName={paciente.nombre}
+                        referralCode={paciente.referralCode}
+                      />
+                    </div>
+                  </section>
+                )}
+              </>
             )}
-
-            <div className="card-clinical p-6">
-              <h3 className="mb-5 font-display text-lg font-semibold">Timeline clínica</h3>
-              <PacienteTimeline paciente={paciente} conEncabezado={false} />
-            </div>
-          </div>
-
-          <aside className="space-y-4 xl:col-span-4">
-            {/* Antes era "Resumen IA" — una tarjeta con `ai_summary` siempre
-                null (auditoría de UI, 30-ago), en la posición más prominente
-                de la ficha. `ai_summary` sigue sin generarse (no hay pipeline
-                de IA todavía); mientras tanto esta tarjeta muestra un
-                resumen real con datos que ya existen, en vez de una promesa
-                vacía. */}
-            <div className="card-clinical space-y-3 p-5">
-              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Resumen
-              </h3>
-              <div className="flex items-start gap-2 text-xs">
-                <CalendarClock className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                <div>
-                  <p className="text-muted-foreground">Última visita</p>
-                  <p className="font-medium">
-                    {paciente.ultimaVisita || "Sin visitas registradas"}
-                  </p>
-                </div>
-              </div>
-              {paciente.etiquetas.length > 0 && (
-                <div className="flex items-start gap-2 text-xs">
-                  <Tag className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                  <div className="flex flex-wrap gap-1">
-                    {paciente.etiquetas.map((t) => (
-                      <span
-                        key={t}
-                        className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <p className="text-[10px] text-muted-foreground">
-                {paciente.waOptIn
-                  ? "Acepta mensajes de seguimiento por WhatsApp (recordatorios, reseñas)."
-                  : "No acepta mensajes de seguimiento por WhatsApp — solo recordatorios de cita."}
-              </p>
-            </div>
-          </aside>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </AppShell>
   );

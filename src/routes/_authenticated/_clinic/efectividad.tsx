@@ -40,14 +40,14 @@ function Cifra({ p, sufijo }: { p: Proporcion; sufijo?: string }) {
   if (p.porcentaje === null) {
     return (
       <span>
-        <span className="font-precise text-2xl font-bold text-ink">{p.numerador}</span>
+        <span className="font-display text-2xl font-bold text-foreground">{p.numerador}</span>
         <span className="text-muted-foreground"> de {p.denominador}</span>
       </span>
     );
   }
   return (
     <span>
-      <span className="font-precise text-2xl font-bold text-ink">{p.porcentaje}%</span>
+      <span className="font-display text-2xl font-bold text-foreground">{p.porcentaje}%</span>
       <span className="text-muted-foreground">
         {" "}
         ({p.numerador} de {p.denominador}
@@ -77,7 +77,7 @@ function Comparativa({
         <Cifra p={c.sin} />
       </div>
       {c.diferencia !== null && (
-        <p className="pt-1 text-sm text-ink">
+        <p className="pt-1 text-sm text-foreground">
           {c.diferencia > 0
             ? `Faltan ${c.diferencia} puntos menos.`
             : c.diferencia < 0
@@ -100,7 +100,7 @@ function Tarjeta({
 }) {
   return (
     <section className="rounded-xl border border-hairline bg-card p-5">
-      <h2 className="flex items-center gap-2 font-precise text-sm font-bold uppercase tracking-wider text-ink/60">
+      <h2 className="flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">
         {icono}
         {titulo}
       </h2>
@@ -144,7 +144,9 @@ function EfectividadPage() {
           />
         ) : (
           <>
-            <h1 className="font-precise text-2xl font-bold tracking-tight text-ink">Efectividad</h1>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+              Efectividad
+            </h1>
             <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
               Si lo que Alika automatiza está sirviendo, medido sobre los últimos 90 días de tu
               propia clínica. Cuando la muestra es chica se muestra el conteo en vez del porcentaje:
@@ -185,9 +187,9 @@ function EfectividadPage() {
                   <p className="mt-3 flex gap-2 rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
                     <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-none" />
                     <span>
-                      Esto <strong className="text-ink">no es un experimento</strong>. Tu equipo
-                      elige a quién le manda recordatorio, y esa elección puede coincidir con quién
-                      iba a faltar igual. Tómalo como una señal, no como una prueba de que el
+                      Esto <strong className="text-foreground">no es un experimento</strong>. Tu
+                      equipo elige a quién le manda recordatorio, y esa elección puede coincidir con
+                      quién iba a faltar igual. Tómalo como una señal, no como una prueba de que el
                       recordatorio causó la diferencia.
                     </span>
                   </p>
@@ -219,17 +221,17 @@ function EfectividadPage() {
                       {data.cobertura.porTipo.agenda} sobre la agenda ·{" "}
                       {data.cobertura.porTipo.aviso} avisando que venían ·{" "}
                       {data.cobertura.porTipo.baja} pidiendo la baja ·{" "}
-                      <strong className="text-ink">{data.cobertura.paraLeer}</strong> los leyó
-                      alguien del equipo.
+                      <strong className="text-foreground">{data.cobertura.paraLeer}</strong> los
+                      leyó alguien del equipo.
                     </p>
                   )}
                   <p className="mt-3 flex gap-2 rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
                     <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-none" />
                     <span>
                       Los que leyó una persona{" "}
-                      <strong className="text-ink">no son todos automatizables</strong>: ahí entran
-                      un “gracias”, una consulta de precio o una foto. Es el techo de lo que podría
-                      ganarse, no lo que se está perdiendo.
+                      <strong className="text-foreground">no son todos automatizables</strong>: ahí
+                      entran un “gracias”, una consulta de precio o una foto. Es el techo de lo que
+                      podría ganarse, no lo que se está perdiendo.
                     </span>
                   </p>
                 </Tarjeta>
@@ -239,7 +241,7 @@ function EfectividadPage() {
                     <span className="text-sm text-muted-foreground">
                       Mediana entre el mensaje del paciente y tu respuesta
                     </span>
-                    <span className="font-precise text-2xl font-bold text-ink">
+                    <span className="font-display text-2xl font-bold text-foreground">
                       {data.medianaRespuestaMin === null
                         ? "—"
                         : formatearEspera(data.medianaRespuestaMin)}
@@ -250,7 +252,7 @@ function EfectividadPage() {
                       <Link
                         to="/conversaciones"
                         search={{ paciente: undefined }}
-                        className="text-mint-strong underline underline-offset-2"
+                        className="text-success underline underline-offset-2"
                       >
                         {data.sinResponder}{" "}
                         {data.sinResponder === 1

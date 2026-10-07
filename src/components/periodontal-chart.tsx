@@ -237,7 +237,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
         <DialogHeader>
           <DialogTitle>Nuevo sondaje periodontal</DialogTitle>
           <DialogDescription>
-            Elegí las piezas medidas en esta sesión. El sondaje queda registrado como evento
+            Elige las piezas medidas en esta sesión. El sondaje queda registrado como evento
             inmutable — para corregir un dato hay que cargar un sondaje nuevo.
           </DialogDescription>
         </DialogHeader>

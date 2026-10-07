@@ -440,9 +440,11 @@ function planTieneFases(contenedor: { items: { phaseLabel: string | null }[] }):
 }
 
 /**
- * Semáforo de cobro de una línea (G-5). Es un punto de color con el detalle
- * en el `title`, no un badge de texto: la fila del plan ya tiene nombre,
- * pieza, precio y estado clínico, y una etiqueta más la vuelve ilegible.
+ * Semáforo de cobro de una línea (G-5). Punto de color + la etiqueta corta
+ * visible (rediseño fase 5): la auditoría de accesibilidad del 04-sep marcó
+ * que el punto solo distinguía por matiz — parcial y pagado eran dos puntos
+ * casi iguales para quien no ve bien el color. El detalle con montos sigue
+ * en el `title`.
  */
 function PagoDot({
   estado,
@@ -455,6 +457,11 @@ function PagoDot({
   total: number;
   currency: string;
 }) {
+  const CORTO: Record<ItemPaymentState, string> = {
+    unpaid: "Sin pagar",
+    partial: "Parcial",
+    paid: "Pagado",
+  };
   const tono: Record<ItemPaymentState, string> = {
     unpaid: "bg-muted-foreground/30",
     partial: "bg-warning",
@@ -466,11 +473,13 @@ function PagoDot({
       : `${ITEM_PAYMENT_LABELS[estado]} · ${formatMoney(pagado, currency)} de ${formatMoney(total, currency)}`;
   return (
     <span
-      role="img"
-      aria-label={detalle}
       title={detalle}
-      className={cn("size-2 shrink-0 rounded-full", tono[estado])}
-    />
+      aria-label={detalle}
+      className="inline-flex shrink-0 items-center gap-1 text-[11px] whitespace-nowrap text-muted-foreground"
+    >
+      <span aria-hidden className={cn("size-2 rounded-full", tono[estado])} />
+      <span aria-hidden>{CORTO[estado]}</span>
+    </span>
   );
 }
 

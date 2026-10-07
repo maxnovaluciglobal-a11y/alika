@@ -199,7 +199,7 @@ function DominioEmailPage() {
               type="button"
               onClick={ejecutar}
               disabled={cargando}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-brand bg-transparent px-4 py-2 text-sm font-medium text-brand-700 transition-opacity hover:bg-brand/12 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               <RefreshCw className={cn("size-4", cargando && "animate-spin")} aria-hidden />
               {cargando ? "Verificando…" : "Verificar DNS"}

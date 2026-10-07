@@ -109,9 +109,9 @@ const FUGAS: Fuga[] = [
     numero: 4,
     titulo: "La comisión de la tarjeta que se descuenta sola",
     descripcion:
-      "Débito y crédito retienen un porcentaje de cada cobro antes de que ese dinero te llegue. Si tus precios se fijaron sin contar esa retención, la estás pagando vos, no el paciente.",
+      "Débito y crédito retienen un porcentaje de cada cobro antes de que ese dinero te llegue. Si tus precios se fijaron sin contar esa retención, la estás pagando tú, no el paciente.",
     pregunta:
-      "¿El precio de tus tratamientos ya contempla la retención del medio de pago, o la descubrís recién cuando llega la liquidación?",
+      "¿El precio de tus tratamientos ya contempla la retención del medio de pago, o la descubres recién cuando llega la liquidación?",
   },
   {
     numero: 5,
@@ -119,7 +119,7 @@ const FUGAS: Fuga[] = [
     descripcion:
       "Cada aseguradora o convenio corporativo suele pagar un porcentaje distinto sobre el mismo procedimiento. Liquidar de memoria, sin dejar registrado qué porcentaje le tocaba a cada paciente, es la forma más fácil de cobrar de más o de menos sin darte cuenta.",
     pregunta:
-      "Si tuvieras que liquidar hoy un convenio de hace dos meses, ¿tenés el dato de qué porcentaje correspondía a cada paciente, o hay que reconstruirlo?",
+      "Si tuvieras que liquidar hoy un convenio de hace dos meses, ¿tienes el dato de qué porcentaje correspondía a cada paciente, o hay que reconstruirlo?",
   },
   {
     numero: 6,
@@ -127,7 +127,7 @@ const FUGAS: Fuga[] = [
     descripcion:
       "Sin una fecha de envío y un costo por orden registrados en algún lado, no hay forma de saber si un trabajo se está demorando más de lo normal ni cuánto te está costando de verdad ese procedimiento.",
     pregunta:
-      "¿Podés decir hoy cuánto gastaste en laboratorio el mes pasado sin sumar facturas a mano?",
+      "¿Puedes decir hoy cuánto gastaste en laboratorio el mes pasado sin sumar facturas a mano?",
   },
   {
     numero: 7,
@@ -175,7 +175,7 @@ const FUGAS: Fuga[] = [
     descripcion:
       "Un paciente que terminó su tratamiento y no vuelve al control de rutina a los 6 o 12 meses no manda ninguna señal: no cancela nada, simplemente deja de aparecer. Sin una lista de a quién le toca volver, se pierde de vista.",
     pregunta:
-      "¿Tenés una lista de pacientes a los que ya les toca su control, y hace cuánto no la revisás?",
+      "¿Tienes una lista de pacientes a los que ya les toca su control, y hace cuánto no la revisas?",
   },
   {
     numero: 13,
@@ -191,7 +191,7 @@ const FUGAS: Fuga[] = [
     descripcion:
       "Facturar mucho no es lo mismo que ganar mucho: un tratamiento de ticket alto que consume mucho tiempo de sillón, insumos caros y laboratorio puede dejarte menos margen real que uno más chico y simple. Sin comparar ingreso contra costo por profesional o por tipo de procedimiento, esa diferencia queda invisible.",
     pregunta:
-      "¿Podés decir hoy qué profesional o qué tipo de tratamiento te deja más margen real, o sólo sabés cuál factura más?",
+      "¿Puedes decir hoy qué profesional o qué tipo de tratamiento te deja más margen real, o solo sabes cuál factura más?",
   },
   {
     numero: 15,
@@ -224,18 +224,18 @@ function FilaFuga({ fuga }: { fuga: Fuga }) {
   return (
     <li className="border-b border-hairline py-7 first:pt-0 last:border-b-0">
       <div className="flex items-start gap-4">
-        <span className="font-precise flex size-8 shrink-0 items-center justify-center rounded-full bg-clay-soft text-sm font-bold text-clay-strong">
+        <span className="font-display flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">
           {fuga.numero}
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="font-precise text-lg font-bold text-ink">{fuga.titulo}</h3>
-          <p className="mt-2 text-[15px] leading-relaxed text-ink/80">{fuga.descripcion}</p>
+          <h3 className="font-display text-lg font-bold text-foreground">{fuga.titulo}</h3>
+          <p className="mt-2 text-[15px] leading-relaxed text-foreground/80">{fuga.descripcion}</p>
           <div className="mt-4 flex items-start gap-2.5">
             <CasillaDecorativa />
             <span className="text-sm text-muted-foreground">Se aplica a mi clínica</span>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-ink/70">
-            <span className="font-semibold text-clay-strong">Detectala:</span> {fuga.pregunta}
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            <span className="font-semibold text-brand-700">Detectala:</span> {fuga.pregunta}
           </p>
         </div>
       </div>
@@ -263,8 +263,8 @@ function SelectorPais({
             className={cn(
               "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
               activo
-                ? "border-ink bg-ink text-ink-foreground"
-                : "border-hairline bg-card text-muted-foreground hover:border-ink/40 hover:text-ink",
+                ? "border-foreground bg-foreground text-background"
+                : "border-hairline bg-card text-muted-foreground hover:border-foreground/40 hover:text-foreground",
             )}
           >
             {c.label}
@@ -331,7 +331,7 @@ function FugasClinicaDental() {
       <LegalH2>¿Marcaste varias?</LegalH2>
       <LegalP>
         Es lo normal — casi ninguna clínica llega a diez minutos de auditoría sin encontrarse en
-        varias de estas quince. Dejanos tu contacto y nos ponemos en contacto para ayudarte a mirar,
+        varias de estas quince. Déjanos tu contacto y nos ponemos en contacto para ayudarte a mirar,
         de todas las que marcaste, cuál conviene resolver primero.
       </LegalP>
 
@@ -341,7 +341,7 @@ function FugasClinicaDental() {
           formulario, no tiene sentido que el PDF que se lleva lo incluya
           otra vez. */}
       <div className="mt-8 rounded-3xl border border-hairline bg-card p-6 sm:p-8 print:hidden">
-        <p className="font-precise text-xs font-bold uppercase tracking-wider text-ink/60">
+        <p className="font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">
           País de tu clínica
         </p>
         <SelectorPais value={paisCode} onChange={setPaisCode} />

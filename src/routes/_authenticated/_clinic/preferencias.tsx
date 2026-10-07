@@ -129,7 +129,7 @@ function BranchReviewLinkRow({
           type="button"
           disabled={mutation.isPending || !dirty}
           onClick={() => mutation.mutate()}
-          className="shrink-0 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-50"
+          className="shrink-0 rounded-lg border border-brand bg-transparent px-3 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand/12 disabled:opacity-50"
         >
           Guardar
         </button>

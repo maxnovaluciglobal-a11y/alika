@@ -1,8 +1,6 @@
 import { cn } from "@/lib/utils";
 
 type AlikaLogoProps = {
-  /** "brand" = teal de la app; "ink" = navy de la landing pública (paleta Nácar). */
-  tone?: "brand" | "ink";
   /** Tamaño del tile cuadrado en px. */
   size?: number;
   className?: string;
@@ -13,22 +11,22 @@ type AlikaLogoProps = {
  * grosor uniforme, con las esquinas redondeadas — también el término
  * anatómico de la punta de una muela. Ver ronda de logo en memoria del proyecto.
  */
-export function AlikaLogo({ tone = "brand", size = 32, className }: AlikaLogoProps) {
+export function AlikaLogo({ size = 32, className }: AlikaLogoProps) {
   return (
     <span
       className={cn(
-        "grid shrink-0 place-items-center rounded-lg",
-        tone === "ink" ? "bg-ink" : "bg-brand",
+        // Una sola marca para la landing y la app: filete ocre, sin relleno.
+        "grid shrink-0 place-items-center rounded-md border border-brand text-brand",
         className,
       )}
       style={{ width: size, height: size }}
     >
       <svg
         viewBox="0 0 100 100"
-        className={cn("h-[60%] w-[60%]", tone === "ink" ? "text-mint" : "text-brand-foreground")}
+        className="h-[60%] w-[60%]"
         fill="none"
         stroke="currentColor"
-        strokeWidth="14"
+        strokeWidth="10"
         strokeLinejoin="round"
         strokeLinecap="round"
         aria-hidden="true"

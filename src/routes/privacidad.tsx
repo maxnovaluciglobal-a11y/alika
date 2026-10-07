@@ -49,7 +49,7 @@ function Privacidad() {
         cualquier consulta de privacidad, escríbenos a{" "}
         <a
           href="mailto:maxnovaluciglobal@gmail.com"
-          className="text-clay-strong underline underline-offset-2"
+          className="text-brand-700 underline underline-offset-2"
         >
           maxnovaluciglobal@gmail.com
         </a>
@@ -195,8 +195,8 @@ function Privacidad() {
         enviaste o el último mensaje que nos escribiste) si no llegaste a ser cliente: pasado ese
         plazo, borramos el contacto completo — email, teléfono, nombre y los rangos.{" "}
         <strong>Hoy ese borrado no es automático</strong> — no hay un proceso que lo ejecute solo
-        cuando se cumple el plazo, lo hacemos a mano. Si querés asegurarte de que se cumplió, o
-        pedirlo antes de los 24 meses, escribinos (ver &quot;Cómo te das de baja&quot; abajo) en vez
+        cuando se cumple el plazo, lo hacemos a mano. Si quieres asegurarte de que se cumplió, o
+        pedirlo antes de los 24 meses, escríbenos (ver &quot;Cómo te das de baja&quot; abajo) en vez
         de asumir que ya pasó.
       </LegalP>
       <LegalP>
@@ -204,7 +204,7 @@ function Privacidad() {
         intentemos convencerte de lo contrario. Hoy el camino es escribirnos a{" "}
         <a
           href="mailto:maxnovaluciglobal@gmail.com"
-          className="text-clay-strong underline underline-offset-2"
+          className="text-brand-700 underline underline-offset-2"
         >
           maxnovaluciglobal@gmail.com
         </a>{" "}
@@ -430,7 +430,7 @@ function Privacidad() {
         Para consultas sobre privacidad:{" "}
         <a
           href="mailto:maxnovaluciglobal@gmail.com"
-          className="text-clay-strong underline underline-offset-2"
+          className="text-brand-700 underline underline-offset-2"
         >
           maxnovaluciglobal@gmail.com
         </a>

@@ -2,215 +2,141 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  Handshake,
-  LayoutDashboard,
-  CalendarDays,
-  CalendarCheck,
-  TrendingUp,
-  Users,
-  Stethoscope,
-  Receipt,
-  Sparkles,
-  TrendingDown,
-  Wallet,
-  Settings,
-  UsersRound,
-  CreditCard,
-  FileSearch,
-  ShieldCheck,
-  BellRing,
-  FlaskConical,
-  MailCheck,
-  LogOut,
-  Moon,
-  Sun,
-  LifeBuoy,
-  MessageCircleMore,
-  MessagesSquare,
-  Merge,
-  MessageCircle,
-  Landmark,
-  Percent,
-  Boxes,
-  Building2,
-  FileSignature,
-  Tags,
-  UserRound,
-  ChevronDown,
-  Wrench,
-} from "lucide-react";
+import { LifeBuoy, LogOut, Menu, Moon, Settings, Sun } from "lucide-react";
 
 import { AlikaLogo } from "@/components/alika-logo";
 import { ClinicSwitcher } from "@/components/clinic-switcher";
 import { GlobalSearch } from "@/components/global-search";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { RoleSimulationBar } from "@/components/role-simulation-bar";
-import { TrialBanner } from "@/components/trial-banner";
-import { DemoBanner } from "@/components/demo-banner";
-import { OfflineBanner } from "@/components/offline-banner";
-import { PendingSyncBanner } from "@/components/pending-sync-banner";
+import { StatusStrip } from "@/components/status-strip";
 import { getSupabase } from "@/integrations/supabase/lazy";
 import { resetOfflineCache } from "@/lib/offline/offline-cache";
 import { useSincronizacionAutomatica } from "@/hooks/use-offline-mutation";
 import { leerCola, pendientes } from "@/lib/offline/offline-queue";
-import {
-  hasPermission,
-  ROLE_LABELS,
-  type ClinicAccess,
-  type Permission,
-} from "@/lib/access/access";
+import { hasPermission, ROLE_LABELS, type ClinicAccess } from "@/lib/access/access";
 import { listPendingOutreach, listPendingReminders } from "@/lib/messaging/messaging.functions";
 import { countConversacionesSinResponder } from "@/lib/messaging/conversations.functions";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  type Destino,
+  destinoDeRuta,
+  destinosVisibles,
+  esRutaDeAjustes,
+  pestanaActiva,
+} from "@/lib/access/navegacion";
 import { cn } from "@/lib/utils";
-
-type NavItem = { to: string; label: string; icon: typeof Users; permission: Permission };
-
-/**
- * Agrupado por sección (antes era una lista plana de 20 ítems sin
- * jerarquía — auditoría de UI, 30-ago). Los grupos son de presentación
- * only: el filtro real de qué se ve sigue siendo `hasPermission` por ítem,
- * esto solo decide bajo qué título cae cada uno.
- */
-const navGroups: { section: string; items: readonly NavItem[] }[] = [
-  {
-    section: "Clínica",
-    items: [
-      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard:view" },
-      { to: "/agenda", label: "Agenda", icon: CalendarDays, permission: "agenda:view" },
-      {
-        to: "/mi-agenda",
-        label: "Mi agenda",
-        icon: CalendarCheck,
-        permission: "agenda:view",
-      },
-      {
-        to: "/conversaciones",
-        label: "Conversaciones",
-        icon: MessagesSquare,
-        permission: "agenda:manage",
-      },
-      {
-        to: "/recordatorios",
-        label: "Recordatorios",
-        icon: MessageCircleMore,
-        permission: "agenda:manage",
-      },
-      {
-        to: "/efectividad",
-        label: "Efectividad",
-        icon: TrendingUp,
-        permission: "dashboard:view",
-      },
-      { to: "/pacientes", label: "Pacientes", icon: Users, permission: "patients:view" },
-      {
-        to: "/fusionar-fichas",
-        label: "Fichas duplicadas",
-        icon: Merge,
-        permission: "patients:manage",
-      },
-      {
-        to: "/tratamientos",
-        label: "Tratamientos",
-        icon: Stethoscope,
-        permission: "treatments:view",
-      },
-      {
-        to: "/ortodoncia",
-        label: "Ortodoncia",
-        icon: Sparkles,
-        permission: "clinical:write",
-      },
-    ],
-  },
-  {
-    section: "Finanzas",
-    items: [
-      { to: "/finanzas", label: "Finanzas", icon: Landmark, permission: "finance:view" },
-      { to: "/cajas", label: "Cajas", icon: Wallet, permission: "cash:manage" },
-      { to: "/morosidad", label: "Morosidad", icon: TrendingDown, permission: "finance:view" },
-      { to: "/gastos", label: "Gastos", icon: Receipt, permission: "finance:view" },
-      { to: "/comisiones", label: "Comisiones", icon: Percent, permission: "finance:view" },
-      { to: "/inventario", label: "Inventario", icon: Boxes, permission: "inventory:view" },
-      {
-        to: "/laboratorios",
-        label: "Laboratorios",
-        icon: FlaskConical,
-        permission: "treatments:view",
-      },
-    ],
-  },
-  {
-    section: "Equipo",
-    items: [
-      { to: "/equipo", label: "Equipo", icon: UsersRound, permission: "team:view" },
-      { to: "/whatsapp", label: "WhatsApp", icon: MessageCircle, permission: "team:manage" },
-      { to: "/permisos", label: "Permisos", icon: ShieldCheck, permission: "team:manage" },
-      { to: "/compliance", label: "Compliance", icon: FileSearch, permission: "team:manage" },
-    ],
-  },
-  {
-    section: "Configuración",
-    items: [
-      { to: "/aranceles", label: "Arancel de precios", icon: Tags, permission: "settings:manage" },
-      { to: "/convenios", label: "Convenios", icon: Handshake, permission: "settings:manage" },
-      {
-        to: "/estados-de-cita",
-        label: "Estados de cita",
-        icon: CalendarCheck,
-        permission: "settings:manage",
-      },
-      {
-        to: "/medios-de-pago",
-        label: "Medios de pago",
-        icon: CreditCard,
-        permission: "settings:manage",
-      },
-      { to: "/sucursales", label: "Sucursales", icon: Building2, permission: "settings:manage" },
-      {
-        to: "/profesionales",
-        label: "Profesionales",
-        icon: UserRound,
-        permission: "settings:manage",
-      },
-      {
-        to: "/consentimientos",
-        label: "Consentimientos",
-        icon: FileSignature,
-        permission: "settings:manage",
-      },
-      { to: "/preferencias", label: "Preferencias", icon: BellRing, permission: "dashboard:view" },
-      { to: "/onboarding", label: "Configuración", icon: Settings, permission: "settings:manage" },
-    ],
-  },
-];
-
-/**
- * Herramientas internas de diagnóstico de email — no son algo que el staff
- * de una clínica (ni siquiera un admin) necesite ver nunca; antes vivían
- * mezcladas en el nav plano y quedaban expuestas a cualquier rol con
- * `team:manage` (auditoría de UI, 30-ago). Colapsadas y solo para `owner`.
- */
-const advancedNav: readonly NavItem[] = [
-  { to: "/sandbox-email", label: "Sandbox email", icon: FlaskConical, permission: "team:manage" },
-  { to: "/dominio-email", label: "Dominio de email", icon: ShieldCheck, permission: "team:manage" },
-  { to: "/pruebas-email", label: "Pruebas de email", icon: MailCheck, permission: "team:manage" },
-];
 
 // Mismo destino de contacto que usan las páginas públicas (nosotros/privacidad/
 // términos/faq): no hay número de WhatsApp de soporte, solo este mailto.
 const SUPPORT_EMAIL = "maxnovaluciglobal@gmail.com";
 
-function SupportLink() {
+/**
+ * Barra inferior del celular (<768px, rediseño fase 5): los cinco destinos
+ * del mostrador — Hoy, Agenda, Pacientes, Mensajes, Caja — con objetivos de
+ * 44px+. Reportes, Ajustes y Ayuda van en "Más", para que la barra no pase
+ * de seis toques posibles.
+ */
+const DESTINOS_BARRA = ["hoy", "agenda", "pacientes", "mensajes", "caja"] as const;
+
+function BarraInferior({
+  destinos,
+  destinoActualId,
+  enAjustes,
+  badgePorDestino,
+  onSignOut,
+  signingOut,
+}: {
+  destinos: Destino[];
+  destinoActualId: string | null;
+  enAjustes: boolean;
+  badgePorDestino: Record<string, number>;
+  onSignOut: () => void;
+  signingOut: boolean;
+}) {
+  const [masAbierto, setMasAbierto] = useState(false);
+  const enBarra = destinos.filter((d) => (DESTINOS_BARRA as readonly string[]).includes(d.id));
+  const resto = destinos.filter((d) => !(DESTINOS_BARRA as readonly string[]).includes(d.id));
+  const masActivo = enAjustes || resto.some((d) => d.id === destinoActualId);
+
+  const item =
+    "flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] transition-colors";
+
   return (
-    <a
-      href={`mailto:${SUPPORT_EMAIL}`}
-      title="Reportar un problema"
-      aria-label="Reportar un problema o pedir soporte"
-      className="grid size-9 place-items-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+    <nav
+      aria-label="Principal"
+      className="fixed inset-x-0 bottom-0 z-20 flex border-t border-border bg-background/95 backdrop-blur-sm md:hidden"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <LifeBuoy className="size-4" />
-    </a>
+      {enBarra.map(({ id, label, icon: Icon, pestanas }) => {
+        const activo = destinoActualId === id;
+        const badge = badgePorDestino[id] ?? 0;
+        return (
+          <Link
+            key={id}
+            to={pestanas[0].to}
+            aria-current={activo ? "page" : undefined}
+            className={cn(item, activo ? "text-brand-800" : "text-muted-foreground")}
+          >
+            <span className="relative">
+              <Icon className={cn("size-5", activo && "text-brand")} aria-hidden />
+              {badge > 0 && (
+                <span className="absolute -top-1.5 -right-3 min-w-4 rounded-sm bg-brand-700 px-0.5 text-center text-[10px] leading-4 tabular-nums text-white">
+                  {badge > 9 ? "9+" : badge}
+                </span>
+              )}
+            </span>
+            {label}
+          </Link>
+        );
+      })}
+      <Sheet open={masAbierto} onOpenChange={setMasAbierto}>
+        <SheetTrigger className={cn(item, masActivo ? "text-brand-800" : "text-muted-foreground")}>
+          <Menu className={cn("size-5", masActivo && "text-brand")} aria-hidden />
+          Más
+        </SheetTrigger>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-lg pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+        >
+          <SheetTitle className="font-display text-xl">Más</SheetTitle>
+          <ul className="mt-4 divide-y divide-hairline border-y border-border">
+            {[
+              ...resto.map((d) => ({ to: d.pestanas[0].to, label: d.label })),
+              { to: "/ajustes", label: "Ajustes" },
+            ].map((l) => (
+              <li key={l.to}>
+                <Link
+                  to={l.to}
+                  onClick={() => setMasAbierto(false)}
+                  className="flex min-h-12 items-center text-base"
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+            <li>
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="flex min-h-12 items-center text-base">
+                Ayuda
+              </a>
+            </li>
+            <li className="flex min-h-12 items-center justify-between">
+              <span className="text-base">Tema</span>
+              <ThemeToggle />
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={onSignOut}
+                disabled={signingOut}
+                className="flex min-h-12 w-full items-center gap-2 text-base text-destructive disabled:opacity-60"
+              >
+                <LogOut className="size-4" aria-hidden /> Cerrar sesión
+              </button>
+            </li>
+          </ul>
+        </SheetContent>
+      </Sheet>
+    </nav>
   );
 }
 
@@ -275,22 +201,16 @@ export function AppShell({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [signingOut, setSigningOut] = useState(false);
-  const [avanzadoAbierto, setAvanzadoAbierto] = useState(false);
 
   // Una sola vez para toda la app: si cada pantalla lo montara, varias
   // sincronizaciones competirían por la misma cola.
   useSincronizacionAutomatica(access.userId);
 
-  const visibleGroups = navGroups
-    .map((g) => ({
-      ...g,
-      items: g.items.filter((item) => hasPermission(access.role, item.permission)),
-    }))
-    .filter((g) => g.items.length > 0);
-  // `team:manage` ya lo tienen owner y admin por igual — estas 3 son
-  // exclusivamente del dueño de la cuenta, ni siquiera un admin de clínica
-  // las necesita (ver comentario en `advancedNav`).
-  const visibleAdvanced = access.role === "owner" ? advancedNav : [];
+  // Seis destinos + Ajustes (rediseño, fase 3). Las rutas de siempre
+  // aparecen como pestañas dentro de su destino; ver `navegacion.ts`.
+  const destinos = destinosVisibles(access.role);
+  const destinoActual = destinoDeRuta(pathname, destinos);
+  const enAjustes = !destinoActual && esRutaDeAjustes(pathname);
 
   // Badge de "Recordatorios": sin recepción, un dentista solo puede olvidarse
   // de entrar a despachar la cola a mano. Solo se calcula si el rol puede
@@ -342,6 +262,9 @@ export function AppShell({
     "/recordatorios": recordatoriosBadge,
     "/conversaciones": conversacionesBadge,
   };
+  const badgePorDestino: Record<string, number> = {
+    mensajes: recordatoriosBadge + conversacionesBadge,
+  };
 
   async function handleSignOut() {
     // La cola NO se borra al salir (son cobros ya hechos), pero quien se va
@@ -373,102 +296,90 @@ export function AppShell({
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-surface text-foreground">
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-card lg:flex">
-        <div className="p-6">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <AlikaLogo tone="brand" size={32} />
-            <span className="font-display text-xl font-bold tracking-tight text-brand">Alika</span>
+    <div className="flex min-h-screen w-full bg-background text-foreground">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-sidebar lg:flex">
+        <div className="space-y-4 px-5 pt-6 pb-4">
+          <Link to="/dashboard" className="flex items-center gap-2.5">
+            <AlikaLogo size={28} />
+            <span className="font-display text-2xl font-semibold leading-none">Alika</span>
           </Link>
           <ClinicSwitcher access={access} />
+          <GlobalSearch access={access} />
         </div>
 
-        <nav className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
-          {visibleGroups.map((group) => (
-            <div key={group.section}>
-              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                {group.section}
-              </p>
-              <div className="space-y-1">
-                {group.items.map(({ to, label, icon: Icon }) => {
-                  const active = pathname.startsWith(to);
-                  return (
-                    <Link
-                      key={to}
-                      to={to}
-                      className={cn(
-                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                        active
-                          ? "bg-accent font-medium text-accent-foreground"
-                          : "text-muted-foreground hover:bg-secondary",
-                      )}
-                    >
-                      <Icon className="size-4" />
-                      <span>{label}</span>
-                      {(badgePorRuta[to] ?? 0) > 0 && (
-                        <span className="ml-auto min-w-4 rounded-full bg-brand px-1 text-[10px] font-semibold leading-4 text-brand-foreground">
-                          {badgePorRuta[to] > 9 ? "9+" : badgePorRuta[to]}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-
-          {visibleAdvanced.length > 0 && (
-            <div>
-              <button
-                type="button"
-                onClick={() => setAvanzadoAbierto((v) => !v)}
-                className="flex w-full items-center gap-1.5 px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 transition-colors hover:text-muted-foreground"
-                aria-expanded={avanzadoAbierto}
-              >
-                <Wrench className="size-3" />
-                Avanzado
-                <ChevronDown
-                  className={cn("size-3 transition-transform", avanzadoAbierto && "rotate-180")}
-                />
-              </button>
-              {avanzadoAbierto && (
-                <div className="space-y-1">
-                  {visibleAdvanced.map(({ to, label, icon: Icon }) => {
-                    const active = pathname.startsWith(to);
-                    return (
-                      <Link
-                        key={to}
-                        to={to}
-                        className={cn(
-                          "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                          active
-                            ? "bg-accent font-medium text-accent-foreground"
-                            : "text-muted-foreground hover:bg-secondary",
-                        )}
-                      >
-                        <Icon className="size-4" />
-                        <span>{label}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+        <nav aria-label="Principal" className="flex-1 overflow-y-auto px-3">
+          <ul className="space-y-0.5">
+            {destinos.map(({ id, label, icon: Icon, pestanas }) => {
+              const activo = destinoActual?.id === id;
+              const badge = badgePorDestino[id] ?? 0;
+              return (
+                <li key={id}>
+                  <Link
+                    to={pestanas[0].to}
+                    aria-current={activo ? "page" : undefined}
+                    className={cn(
+                      "flex items-center gap-3 rounded-md border px-3 py-2 text-[15px] transition-colors",
+                      activo
+                        ? "border-brand/50 text-brand-800"
+                        : "border-transparent text-foreground/80 hover:bg-sidebar-accent hover:text-foreground",
+                    )}
+                  >
+                    <Icon
+                      className={cn("size-4", activo ? "text-brand" : "text-muted-foreground")}
+                    />
+                    <span>{label}</span>
+                    {badge > 0 && (
+                      <span className="ml-auto min-w-5 rounded-sm bg-brand-700 px-1 text-center text-[11px] leading-5 tabular-nums text-white">
+                        {badge > 9 ? "9+" : badge}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </nav>
+
+        <div className="space-y-0.5 border-t border-border px-3 py-3">
+          <Link
+            to="/ajustes"
+            aria-current={enAjustes ? "page" : undefined}
+            className={cn(
+              "flex items-center gap-3 rounded-md border px-3 py-2 text-[15px] transition-colors",
+              enAjustes
+                ? "border-brand/50 text-brand-800"
+                : "border-transparent text-foreground/80 hover:bg-sidebar-accent hover:text-foreground",
+            )}
+          >
+            <Settings
+              className={cn("size-4", enAjustes ? "text-brand" : "text-muted-foreground")}
+            />
+            Ajustes
+          </Link>
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="flex items-center gap-3 rounded-md border border-transparent px-3 py-2 text-[15px] text-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-foreground"
+          >
+            <LifeBuoy className="size-4 text-muted-foreground" />
+            Ayuda
+          </a>
+        </div>
       </aside>
 
       <main id="main-content" className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-5 sm:px-8"
+          className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-background/95 px-5 backdrop-blur-sm sm:px-8"
           style={{ paddingTop: "env(safe-area-inset-top)" }}
         >
-          <h1 className="font-display text-lg font-semibold">{title}</h1>
+          <h1 className="truncate font-display text-xl font-semibold">{title}</h1>
           <div className="flex items-center gap-3">
-            <GlobalSearch />
+            <div className="sm:w-56 lg:hidden">
+              <GlobalSearch access={access} />
+            </div>
             <NotificationsBell userId={access.userId} />
-            <SupportLink />
-            <ThemeToggle />
+            <div className="hidden md:block">
+              <ThemeToggle />
+            </div>
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium">
                 {access.fullName ?? access.email ?? "Mi cuenta"}
@@ -497,46 +408,99 @@ export function AppShell({
               onClick={handleSignOut}
               disabled={signingOut}
               aria-label="Cerrar sesión"
-              className="grid size-9 place-items-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-60"
+              className="hidden size-9 place-items-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-60 md:grid"
             >
               <LogOut className="size-4" />
             </button>
           </div>
         </header>
 
-        <RoleSimulationBar access={access} />
-        <OfflineBanner />
-        <PendingSyncBanner userId={access.userId} />
-        {access.clinic?.isDemo ? (
-          <DemoBanner />
-        ) : (
-          access.clinic && <TrialBanner clinicId={access.clinic.id} />
-        )}
+        <StatusStrip access={access} />
 
-        <nav className="flex gap-1 overflow-x-auto border-b border-border bg-card px-5 py-2 lg:hidden">
-          {[...visibleGroups.flatMap((g) => g.items), ...visibleAdvanced].map(({ to, label }) => {
-            const active = pathname.startsWith(to);
-            return (
-              <Link
-                key={to}
-                to={to}
-                className={cn(
-                  "flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                  active ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground",
-                )}
-              >
-                {label}
-                {(badgePorRuta[to] ?? 0) > 0 && (
-                  <span className="min-w-4 rounded-full bg-brand px-1 text-[10px] font-semibold leading-4 text-brand-foreground">
-                    {badgePorRuta[to] > 9 ? "9+" : badgePorRuta[to]}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+        <nav
+          aria-label="Principal"
+          className="hidden gap-1 overflow-x-auto border-b border-border px-4 py-2 md:flex lg:hidden"
+        >
+          {[
+            ...destinos.map((d) => ({
+              key: d.id,
+              to: d.pestanas[0].to,
+              label: d.label,
+              activo: destinoActual?.id === d.id,
+              badge: badgePorDestino[d.id] ?? 0,
+            })),
+            { key: "ajustes", to: "/ajustes", label: "Ajustes", activo: enAjustes, badge: 0 },
+          ].map((d) => (
+            <Link
+              key={d.key}
+              to={d.to}
+              aria-current={d.activo ? "page" : undefined}
+              className={cn(
+                "flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-md border px-3 text-sm",
+                d.activo
+                  ? "border-brand/50 text-brand-800"
+                  : "border-transparent text-muted-foreground",
+              )}
+            >
+              {d.label}
+              {d.badge > 0 && (
+                <span className="min-w-5 rounded-sm bg-brand-700 px-1 text-center text-[11px] leading-5 tabular-nums text-white">
+                  {d.badge > 9 ? "9+" : d.badge}
+                </span>
+              )}
+            </Link>
+          ))}
+          {/* Entre md y lg no hay sidebar ni barra inferior: Ayuda va acá. */}
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="flex min-h-9 items-center whitespace-nowrap rounded-md border border-transparent px-3 text-sm text-muted-foreground"
+          >
+            Ayuda
+          </a>
         </nav>
 
-        <div className="flex-1 p-5 sm:p-8">{children}</div>
+        {destinoActual && destinoActual.pestanas.length > 1 && (
+          <nav
+            aria-label={`Secciones de ${destinoActual.label}`}
+            className="flex gap-6 overflow-x-auto border-b border-border px-5 sm:px-8"
+          >
+            {destinoActual.pestanas.map((p) => {
+              const activa = pestanaActiva(pathname, p);
+              const badge = badgePorRuta[p.to] ?? 0;
+              return (
+                <Link
+                  key={p.to}
+                  to={p.to}
+                  aria-current={activa ? "page" : undefined}
+                  className={cn(
+                    "-mb-px flex min-h-11 items-center gap-1.5 whitespace-nowrap border-b-2 text-sm transition-colors",
+                    activa
+                      ? "border-brand text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {p.label}
+                  {badge > 0 && (
+                    <span className="min-w-5 rounded-sm bg-brand-700 px-1 text-center text-[11px] leading-5 tabular-nums text-white">
+                      {badge > 9 ? "9+" : badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
+
+        <div className="flex-1 p-5 pb-28 sm:p-8 md:pb-8">{children}</div>
+
+        <BarraInferior
+          destinos={destinos}
+          destinoActualId={destinoActual?.id ?? null}
+          enAjustes={enAjustes}
+          badgePorDestino={badgePorDestino}
+          onSignOut={handleSignOut}
+          signingOut={signingOut}
+        />
       </main>
     </div>
   );

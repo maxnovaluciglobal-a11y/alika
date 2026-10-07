@@ -75,7 +75,7 @@ export function ReferralCodeCard({ clinicId, patientName, referralCode }: Props)
           <button
             type="button"
             onClick={share}
-            className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand px-2 py-1.5 text-[11px] font-medium text-brand-foreground hover:bg-brand/90"
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-brand bg-transparent px-2 py-1.5 text-[11px] font-medium text-brand-700 hover:bg-brand/12"
           >
             <Share2 className="size-3.5" /> Compartir
           </button>

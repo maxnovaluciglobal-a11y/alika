@@ -55,7 +55,7 @@ export function LlamadaDesbloqueo({
             href={calendlyUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-brand-foreground transition-opacity hover:opacity-90"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-brand bg-transparent px-3 py-1.5 text-xs font-medium text-brand-700 transition-opacity hover:bg-brand/12"
           >
             <Calendar className="size-3.5" /> Agendar 15 min
           </a>
@@ -88,7 +88,7 @@ export function LlamadaDesbloqueo({
           href={calendlyUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90"
+          className="inline-flex items-center gap-2 rounded-lg border border-brand bg-transparent px-5 py-2.5 text-sm font-medium text-brand-700 transition-opacity hover:bg-brand/12"
         >
           <Calendar className="size-4" /> Agendar 15 minutos
         </a>

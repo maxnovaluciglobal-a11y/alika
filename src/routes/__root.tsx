@@ -36,7 +36,7 @@ function NotFoundComponent() {
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-md border border-brand bg-transparent px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand/12"
           >
             Go home
           </Link>
@@ -75,7 +75,7 @@ function ErrorComponent({ error: errorDesconocido, reset }: ErrorComponentProps)
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-md border border-brand bg-transparent px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand/12"
           >
             Try again
           </button>
@@ -137,7 +137,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: SOCIAL_IMAGE_URL },
       // Pinta la barra del navegador con el teal de marca cuando la app corre
       // instalada (display: standalone).
-      { name: "theme-color", content: "#0d9488" },
+      { name: "theme-color", content: "#f3f2f2" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "Alika" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
@@ -148,12 +148,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: appCss,
-      },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600&family=Outfit:wght@500;600;700&family=Newsreader:wght@500;600;700&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
