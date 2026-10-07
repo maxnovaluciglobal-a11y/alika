@@ -81,7 +81,8 @@ type FooterLink =
         | "/terminos"
         | "/privacidad"
         | "/calculadora-rentabilidad-dental"
-        | "/recursos/fugas-clinica-dental";
+        | "/recursos/fugas-clinica-dental"
+        | "/software-dental-latam";
     }
   | { label: string; kind: "external"; href: string };
 
