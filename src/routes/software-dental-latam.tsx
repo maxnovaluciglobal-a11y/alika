@@ -173,7 +173,7 @@ function SoftwareDentalLatam() {
         </section>
 
         <p className="mt-12 text-sm text-muted-foreground">
-          Podés{" "}
+          Puedes{" "}
           <Link to="/demo" className="text-brand-700 underline underline-offset-2">
             probar la demo sin registrarte
           </Link>{" "}

@@ -330,7 +330,7 @@ export const registerInventoryMovement = createServerFn({ method: "POST" })
         throw new Error(
           mensajeDb(
             error,
-            "Esa salida deja el stock en negativo — revisá la cantidad o registrá antes un ajuste con el conteo real.",
+            "Esa salida deja el stock en negativo — revisá la cantidad o registra antes un ajuste con el conteo real.",
           ),
         );
       }

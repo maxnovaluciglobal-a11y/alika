@@ -81,7 +81,7 @@ export function ReferralCodeCard({ clinicId, patientName, referralCode }: Props)
           </button>
         ) : (
           <span className="shrink-0 text-[10px] text-muted-foreground">
-            Conectá WhatsApp para compartir por link
+            Conecta WhatsApp para compartir por link
           </span>
         )}
       </div>

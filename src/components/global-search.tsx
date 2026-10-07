@@ -23,13 +23,23 @@ import { buscarPacientes } from "@/lib/patients/buscar-pacientes.functions";
  * dos reales — las páginas que el rol puede abrir y los pacientes de la
  * clínica activa (`buscarPacientes`, con su propio chequeo de permiso).
  */
-export function GlobalSearch({ access }: { access: ClinicAccess }) {
+export function GlobalSearch({
+  access,
+  atajo = false,
+}: {
+  access: ClinicAccess;
+  /** Solo UNA instancia escucha ⌘K: el shell monta el buscador dos veces
+   *  (sidebar y header de tablet/celular) y, si las dos escuchaban, se abrían
+   *  dos diálogos superpuestos. */
+  atajo?: boolean;
+}) {
   const [abierto, setAbierto] = useState(false);
   const [q, setQ] = useState("");
   const [qDiferida, setQDiferida] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!atajo) return;
     function onKey(e: KeyboardEvent) {
       if (e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
@@ -38,7 +48,7 @@ export function GlobalSearch({ access }: { access: ClinicAccess }) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [atajo]);
 
   useEffect(() => {
     const t = window.setTimeout(() => setQDiferida(q.trim()), 200);

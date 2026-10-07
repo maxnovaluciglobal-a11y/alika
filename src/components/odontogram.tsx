@@ -562,7 +562,7 @@ export function Odontogram({
             {denticion === "permanente"
               ? "Arriba: piezas 18→11 · 21→28. Abajo: 48→41 · 31→38."
               : "Arriba: piezas 55→51 · 61→65. Abajo: 85→81 · 71→75 (cuadrantes 5-8, notación FDI)."}{" "}
-            Pasá el mouse sobre el número, o abrí una pieza, para ver su nombre común.
+            Pasa el mouse sobre el número, o abre una pieza, para ver su nombre común.
           </p>
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1 text-[10px] text-muted-foreground">

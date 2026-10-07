@@ -296,7 +296,7 @@ function OrtodonciaPage() {
           <div className="card-clinical p-8 text-center">
             <p className="mb-1 font-display text-lg font-semibold">Sin casos de ortodoncia</p>
             <p className="mx-auto max-w-md text-sm text-muted-foreground">
-              Registrá acá los tratamientos largos — brackets o alineadores — con su control y su
+              Registra acá los tratamientos largos — brackets o alineadores — con su control y su
               cuota mensual, para que no se pierdan entre las citas del día a día.
             </p>
           </div>

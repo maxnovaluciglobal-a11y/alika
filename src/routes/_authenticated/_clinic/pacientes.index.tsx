@@ -558,7 +558,7 @@ function PacientesPage() {
 
         {patientsRes?.truncated && (
           <p className="rounded-lg border border-warning/30 bg-warning-soft px-4 py-2.5 text-xs text-warning">
-            Mostrando los primeros {pacientes.length.toLocaleString("es")} pacientes. Usá la
+            Mostrando los primeros {pacientes.length.toLocaleString("es")} pacientes. Usa la
             búsqueda para encontrar a alguien que no aparezca en la lista.
           </p>
         )}

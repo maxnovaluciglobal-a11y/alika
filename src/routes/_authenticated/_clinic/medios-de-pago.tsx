@@ -227,7 +227,7 @@ function MediosDePagoPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="max-w-xl text-sm text-muted-foreground">
               {conRetencion === 0
-                ? "Ninguno tiene retención cargada, así que Finanzas muestra lo facturado. Cargá la comisión de tus tarjetas para ver lo que realmente entra al banco."
+                ? "Ninguno tiene retención cargada, así que Finanzas muestra lo facturado. Carga la comisión de tus tarjetas para ver lo que realmente entra al banco."
                 : `${conRetencion} de ${medios.length} tienen retención cargada.`}
             </p>
             <MedioDialog clinicId={clinicId!} currency={currency} />

@@ -50,7 +50,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/whatsapp")({
       {
         name: "description",
         content:
-          "Conectá el WhatsApp de tu clínica para mandar recordatorios y avisos automáticos.",
+          "Conecta el WhatsApp de tu clínica para mandar recordatorios y avisos automáticos.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -241,7 +241,7 @@ function WhatsAppPage() {
       setIsOpeningPopup(false);
       setPendingCode(null);
       toast.error(
-        "No llegó respuesta de Meta. Si cerraste la ventana o no la viste, revisá que el navegador no bloquee popups e intentá de nuevo.",
+        "No llegó respuesta de Meta. Si cerraste la ventana o no la viste, revisa que el navegador no bloquee popups e intenta de nuevo.",
       );
     }, 120_000);
     return () => window.clearTimeout(timeout);
@@ -249,7 +249,7 @@ function WhatsAppPage() {
 
   function launchSignup() {
     if (!window.FB || !WHATSAPP_CONFIG_ID) {
-      toast.error("No se pudo abrir la ventana de Meta. Recargá la página e intentá de nuevo.");
+      toast.error("No se pudo abrir la ventana de Meta. Recarga la página e intenta de nuevo.");
       return;
     }
     setIsOpeningPopup(true);
@@ -278,8 +278,8 @@ function WhatsAppPage() {
       <div className="max-w-2xl space-y-6">
         <p className="text-sm text-muted-foreground">
           {requiereLlamada && (!platformConfigured || account?.status !== "connected")
-            ? "Conectá el WhatsApp de tu clínica para mandar recordatorios, recall y avisos de saldo por acá — cada clínica usa su propio número, nunca compartimos uno entre clínicas."
-            : "Conectá el WhatsApp de tu clínica para mandar recordatorios, recall y avisos de saldo automáticamente. Cada clínica usa su propio número — nunca compartimos uno entre clínicas."}
+            ? "Conecta el WhatsApp de tu clínica para mandar recordatorios, recall y avisos de saldo por acá — cada clínica usa su propio número, nunca compartimos uno entre clínicas."
+            : "Conecta el WhatsApp de tu clínica para mandar recordatorios, recall y avisos de saldo automáticamente. Cada clínica usa su propio número — nunca compartimos uno entre clínicas."}
         </p>
 
         {isLoading && <p className="text-sm text-muted-foreground">Cargando…</p>}
@@ -350,7 +350,7 @@ function WhatsAppPage() {
               <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
                 <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
                 <p>
-                  Meta marcó tu número con calidad baja — puede que tus mensajes no lleguen. Revisá
+                  Meta marcó tu número con calidad baja — puede que tus mensajes no lleguen. Revisa
                   tu cuenta de WhatsApp Business para entender por qué.
                 </p>
               </div>
@@ -369,7 +369,7 @@ function WhatsAppPage() {
         {!isLoading && platformConfigured && account?.status !== "connected" && requiereLlamada && (
           <LlamadaDesbloqueo
             feature="WhatsApp automático"
-            descripcion="Conectá el WhatsApp real de tu clínica para mandar recordatorios, recall y avisos de saldo automáticamente por la API de Meta — en vez de wa.me manual."
+            descripcion="Conecta el WhatsApp real de tu clínica para mandar recordatorios, recall y avisos de saldo automáticamente por la API de Meta — en vez de wa.me manual."
             clinicName={access.clinic?.name}
             clinicEmail={access.email}
           />

@@ -122,7 +122,7 @@ function MiAgendaPage() {
               </h2>
               {porAceptar.length === 0 ? (
                 <p className="rounded-2xl border border-hairline p-4 text-sm text-muted-foreground">
-                  No tenés citas esperando aceptación.
+                  No tienes citas esperando aceptación.
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -163,7 +163,7 @@ function MiAgendaPage() {
                 <p className="text-sm text-muted-foreground">Cargando…</p>
               ) : hoyOrdenadas.length === 0 ? (
                 <p className="rounded-2xl border border-hairline p-4 text-sm text-muted-foreground">
-                  No tenés citas hoy.
+                  No tienes citas hoy.
                 </p>
               ) : (
                 <div className="divide-y divide-hairline rounded-2xl border border-hairline">

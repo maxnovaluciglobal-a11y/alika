@@ -246,7 +246,7 @@ function ComisionesPage() {
               {veTodo && sinRegla > 0 && (
                 <p className="rounded-lg border border-warning/30 bg-warning/5 px-4 py-2.5 text-xs text-warning">
                   {sinRegla} profesional{sinRegla === 1 ? "" : "es"} sin regla de comisión
-                  configurada — no se les calcula nada. Configurá la regla en Profesionales.
+                  configurada — no se les calcula nada. Configura la regla en Profesionales.
                 </p>
               )}
 

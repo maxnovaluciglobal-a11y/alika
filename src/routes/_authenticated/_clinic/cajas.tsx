@@ -176,7 +176,7 @@ function CajasPage() {
                   <DialogHeader>
                     <DialogTitle>Cerrar caja</DialogTitle>
                     <DialogDescription>
-                      Contá lo que hay en caja y anotá el total. El sistema calcula solo la
+                      Cuenta lo que hay en caja y anota el total. El sistema calcula solo la
                       diferencia contra lo esperado (apertura + cobros del turno).
                     </DialogDescription>
                   </DialogHeader>
@@ -226,7 +226,7 @@ function CajasPage() {
                   <DialogHeader>
                     <DialogTitle>Abrir caja</DialogTitle>
                     <DialogDescription>
-                      Registrá con cuánto empieza el turno. Los cobros de hoy se van sumando solos.
+                      Registra con cuánto empieza el turno. Los cobros de hoy se van sumando solos.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">

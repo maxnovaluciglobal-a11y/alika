@@ -95,7 +95,7 @@ const FUGAS: Fuga[] = [
     descripcion:
       'Aceptar un presupuesto no es lo mismo que sacar el turno para hacerlo. Si nadie se ocupa de convertir ese "sí" en una fecha concreta, el ingreso queda flotando en un papel firmado.',
     pregunta:
-      "¿Podés nombrar ahora mismo un presupuesto aceptado este mes que todavía no tiene fecha de tratamiento?",
+      "¿Puedes nombrar ahora mismo un presupuesto aceptado este mes que todavía no tiene fecha de tratamiento?",
   },
   {
     numero: 3,
@@ -317,7 +317,7 @@ function FugasClinicaDental() {
         sumar el mes.
       </LegalP>
       <LegalP>
-        Recorré la lista, marcá las que te suenan y anotá cuántas te aplican. Al pie te contamos qué
+        Recorre la lista, marca las que te suenan y anota cuántas te aplican. Al pie te contamos qué
         hacer con eso.
       </LegalP>
 

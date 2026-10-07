@@ -203,7 +203,7 @@ export function PatientConsentsCard({
                     onChange={(e) => setBody(e.target.value)}
                     rows={5}
                     className={inputClass()}
-                    placeholder="Explicá el procedimiento, riesgos y alternativas…"
+                    placeholder="Explica el procedimiento, riesgos y alternativas…"
                   />
                 </div>
                 <div className="space-y-1.5">

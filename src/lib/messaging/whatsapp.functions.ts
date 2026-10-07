@@ -58,14 +58,14 @@ function requireMetaAppConfig() {
   const systemUserToken = process.env.WHATSAPP_SYSTEM_USER_TOKEN;
   if (!appId || !appSecret || !systemUserToken) {
     throw new Error(
-      "WhatsApp no está configurado a nivel de plataforma todavía (falta enrolarse como Tech Provider en Meta). Contactá al equipo de Alika.",
+      "WhatsApp no está configurado a nivel de plataforma todavía (falta enrolarse como Tech Provider en Meta). Contacta al equipo de Alika.",
     );
   }
   return { appId, appSecret, systemUserToken };
 }
 
 const SIN_PERMISOS_LLAMADA =
-  "Para conectar WhatsApp automático primero tenés que agendar la llamada de puesta en marcha o suscribirte.";
+  "Para conectar WhatsApp automático primero tienes que agendar la llamada de puesta en marcha o suscribirte.";
 
 /** Estado de conexión de WhatsApp de la clínica. Null = nunca conectó. */
 export const getWhatsAppAccountStatus = createServerFn({ method: "GET" })

@@ -286,7 +286,7 @@ function fraseAusentismo(pct: number, banda: Banda): string {
   if (banda === "alto")
     return `tu ausentismo está alto (${t}) — activa recordatorios automáticos 48 h y 3 h antes, empezando por los pacientes que ya faltaron alguna vez`;
   if (banda === "atencion")
-    return `tu ausentismo está en zona de atención (${t}) — reforzá el recordatorio de 48 h con los turnos de esta semana`;
+    return `tu ausentismo está en zona de atención (${t}) — refuerza el recordatorio de 48 h con los turnos de esta semana`;
   if (banda === "bajo")
     return `tu ausentismo es inusualmente bajo (${t}) — vale la pena confirmar que estés registrando todas las inasistencias`;
   return `tu ausentismo (${t}) está dentro del rango esperado`;
@@ -310,7 +310,7 @@ function fraseMargen(pct: number, banda: Banda): string {
   if (banda === "atencion")
     return `tu margen está ajustado (${t}) — antes de bajar precios, mira el rubro con overhead más alto`;
   if (banda === "bajo")
-    return `tu margen es inusualmente alto (${t}) — antes de festejar, verificá que no te falte cargar algún costo`;
+    return `tu margen es inusualmente alto (${t}) — antes de festejar, verifica que no te falte cargar algún costo`;
   return `tu margen (${t}) está dentro del rango esperado`;
 }
 
@@ -867,7 +867,7 @@ function CalculadoraRentabilidadDental() {
                 <p className="mt-2 text-sm leading-relaxed text-foreground">{diagnostico}</p>
               ) : (
                 <p className="mt-2 text-sm italic leading-relaxed text-muted-foreground">
-                  Completá al menos tus ingresos y costos del mes para ver tu diagnóstico acá.
+                  Completa al menos tus ingresos y costos del mes para ver tu diagnóstico acá.
                 </p>
               )}
             </div>
@@ -990,7 +990,7 @@ function CalculadoraRentabilidadDental() {
 
           <div className="mt-6 rounded-3xl border border-hairline bg-card p-6">
             <h2 className="font-display text-lg font-bold text-foreground">
-              Guardá este diagnóstico
+              Guarda este diagnóstico
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Déjanos tu email o WhatsApp y te ayudamos a mirar en detalle dónde tienes más para

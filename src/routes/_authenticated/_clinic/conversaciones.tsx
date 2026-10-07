@@ -128,7 +128,7 @@ function ConversacionesPage() {
               <div className="card-clinical flex h-full min-h-[24rem] flex-col items-center justify-center gap-2 p-8 text-center">
                 <Inbox className="size-8 text-muted-foreground/50" />
                 <p className="text-sm text-muted-foreground">
-                  Elegí una conversación de la lista para leerla y responder.
+                  Elige una conversación de la lista para leerla y responder.
                 </p>
               </div>
             )}
@@ -346,8 +346,8 @@ function Hilo({
           <BellOff className="mt-px size-3.5 shrink-0" />
           <span>
             Todavía no dio consentimiento para recibir mensajes automáticos — no es lo mismo que
-            haber pedido la baja. Podés contestarle lo que él mismo escribió; para incluirlo en
-            recordatorios, primero activá el opt-in desde su ficha.
+            haber pedido la baja. Puedes contestarle lo que él mismo escribió; para incluirlo en
+            recordatorios, primero activa el opt-in desde su ficha.
           </span>
         </p>
       )}
@@ -406,7 +406,7 @@ function Hilo({
             }}
             rows={2}
             maxLength={4096}
-            placeholder="Escribí tu respuesta…"
+            placeholder="Escribe tu respuesta…"
             aria-label="Respuesta al paciente"
             className="min-h-[2.75rem] flex-1 resize-y rounded-lg border border-hairline bg-background p-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-brand"
           />

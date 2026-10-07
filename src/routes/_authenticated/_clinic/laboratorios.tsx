@@ -512,7 +512,7 @@ function LaboratoriosPage() {
             <div className="card-clinical p-8 text-center">
               <p className="mb-1 font-display text-lg font-semibold">Sin órdenes de laboratorio</p>
               <p className="mx-auto max-w-md text-sm text-muted-foreground">
-                Registrá acá lo que mandás al taller: qué, para quién y cuándo lo prometieron. Es lo
+                Registra acá lo que mandas al taller: qué, para quién y cuándo lo prometieron. Es lo
                 que hoy vive en un cuaderno aparte.
               </p>
             </div>

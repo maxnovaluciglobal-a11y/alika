@@ -233,7 +233,7 @@ function PrestacionDialog({
           <DialogTitle>{procedure ? "Editar prestación" : "Nueva prestación"}</DialogTitle>
           <DialogDescription>
             El precio final es lo que se le cobra al paciente. El valor referencial es lo que
-            declarás ante un convenio, si corresponde.
+            declaras ante un convenio, si corresponde.
           </DialogDescription>
         </DialogHeader>
 
@@ -846,9 +846,9 @@ function ArancelesPage() {
           <div className="card-clinical p-8 text-center">
             <p className="mb-1 font-display text-lg font-semibold">Tu arancel está vacío</p>
             <p className="mx-auto mb-4 max-w-md text-sm text-muted-foreground">
-              Cargá tu lista de precios una vez y después presupuestás eligiendo de acá, sin
-              escribir el nombre y el monto en cada presupuesto. Si ya la tenés en una planilla,
-              importala.
+              Carga tu lista de precios una vez y después presupuestas eligiendo de acá, sin
+              escribir el nombre y el monto en cada presupuesto. Si ya la tienes en una planilla,
+              impórtala.
             </p>
             <div className="flex justify-center gap-2">
               <ImportarCsvDialog clinicId={clinicId!} currency={currency} />
