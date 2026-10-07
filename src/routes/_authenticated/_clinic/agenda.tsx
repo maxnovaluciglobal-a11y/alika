@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -22,6 +22,7 @@ import { AppShell } from "@/components/app-shell";
 import { PatientConfirmedToggle } from "@/components/patient-confirmed-toggle";
 import { DateField, FilterBar, Paginacion, SearchField, SelectField } from "@/components/filters";
 import { AgendaGrid } from "@/components/agenda-grid";
+import type { SemillaCita } from "@/components/agenda-hueco";
 import { AgendaMonth, AgendaWeek } from "@/components/agenda-views";
 import { AllergyAlertBanner, AllergyAlertIcon } from "@/components/medical-history-card";
 import { PatientCombobox } from "@/components/patient-combobox";
@@ -251,13 +252,9 @@ function claseEstadoBadge(estado: EstadoCita) {
  * finalizar, ausente, cancelar) y hasta esta pantalla no había ningún camino
  * de UI hasta `setAppointmentStatus`, solo el flujo offline lo llamaba.
  *
- * Vive dentro de un `<Link>` que navega a la ficha del paciente (mismo
- * patrón resuelto para `WhatsAppButton` más abajo): el wrapper con
- * `onClick={preventDefault}` + `onMouseDown={stopPropagation}` intercepta el
- * click antes de que llegue al `<a>` del Link, incluyendo los clicks que
- * originan en el contenido del dropdown (portal de Radix) — React hace
- * bubbling de eventos de portales por el árbol de componentes, no por el
- * DOM físico, así que el wrapper los agarra igual.
+ * Va como hermano del `<Link>` a la ficha en la fila del listado, no adentro
+ * (auditoría 07-oct-2026: interactivo dentro de interactivo es HTML inválido
+ * y el clic al borde del control navegaba por accidente).
  */
 /**
  * Situación financiera del paciente en la fila de la agenda (G-3).
@@ -330,40 +327,38 @@ function CambiarEstadoMenu({
   });
 
   return (
-    <span onClick={(e) => e.preventDefault()} onMouseDown={(e) => e.stopPropagation()}>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            disabled={cambiar.enCurso}
-            className={cn(
-              "inline-flex items-center gap-0.5 transition-opacity hover:opacity-80 disabled:opacity-50",
-              claseEstadoBadge(estadoActual),
-            )}
-          >
-            {cambiar.enCurso ? (
-              <Loader2 className="size-2.5 animate-spin" />
-            ) : (
-              etiquetaEstado[estadoActual]
-            )}
-            <ChevronDown className="size-2.5" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {opcionesEstadoCita
-            .filter((o) => o.value !== estadoActual)
-            .filter((o) => o.value !== "confirmada" || puedeConfirmar)
-            .map((o) => (
-              <DropdownMenuItem
-                key={o.value}
-                onSelect={() => cambiar.mutar({ appointmentId, estado: o.value })}
-              >
-                {o.label}
-              </DropdownMenuItem>
-            ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </span>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          disabled={cambiar.enCurso}
+          className={cn(
+            "inline-flex items-center gap-0.5 transition-opacity hover:opacity-80 disabled:opacity-50",
+            claseEstadoBadge(estadoActual),
+          )}
+        >
+          {cambiar.enCurso ? (
+            <Loader2 className="size-2.5 animate-spin" />
+          ) : (
+            etiquetaEstado[estadoActual]
+          )}
+          <ChevronDown className="size-2.5" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {opcionesEstadoCita
+          .filter((o) => o.value !== estadoActual)
+          .filter((o) => o.value !== "confirmada" || puedeConfirmar)
+          .map((o) => (
+            <DropdownMenuItem
+              key={o.value}
+              onSelect={() => cambiar.mutar({ appointmentId, estado: o.value })}
+            >
+              {o.label}
+            </DropdownMenuItem>
+          ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -377,6 +372,8 @@ function NuevaCitaDialog({
   allergyAlerts,
   pacienteInicial,
   onPacienteInicialConsumido,
+  semilla,
+  onSemillaConsumida,
 }: {
   clinicId: string;
   userId: string;
@@ -386,6 +383,12 @@ function NuevaCitaDialog({
   pacientes: { id: string; nombre: string }[];
   pacienteInicial?: string;
   onPacienteInicialConsumido?: () => void;
+  /** Clic en un hueco de la grilla de día: profesional, su sucursal y la
+   * hora (wall-clock de la sucursal, ver agenda-hueco.ts) ya puestos. Mismo
+   * patrón que `pacienteInicial`: se aplica una vez y se avisa que se usó.
+   * `origen` es el hueco clicado, para devolverle el foco al cerrar. */
+  semilla?: (SemillaCita & { origen?: HTMLElement | null }) | null;
+  onSemillaConsumida?: () => void;
   /** patientId -> alergias, ver listAllergyAlerts. Ausente/vacío = sin
    * aviso (RLS restringe a owner/admin/dentist/assistant, o el rol no
    * tiene clinical:view — ver agenda.tsx). */
@@ -415,6 +418,26 @@ function NuevaCitaDialog({
     // completarUnicos lee props estables de esta render; solo importa el seed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pacienteInicial]);
+
+  // Al cerrar, Radix devuelve el foco al botón "Nueva cita" de arriba: si se
+  // abrió desde un hueco de la grilla, eso salta el scroll al tope de la
+  // página. Se devuelve al hueco (o, si ya no existe porque la cita lo ocupó,
+  // al botón pero sin mover el scroll).
+  const origenFoco = useRef<HTMLElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!semilla) return;
+    if (semilla.sucursalId) setSucursalId(semilla.sucursalId);
+    setProfesionalId(semilla.profesionalId);
+    setStartsAt(semilla.startsAt);
+    origenFoco.current = semilla.origen ?? null;
+    completarUnicos();
+    setOpen(true);
+    onSemillaConsumida?.();
+    // Igual que arriba: solo importa la semilla nueva.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [semilla]);
 
   const createFn = useServerFn(createAppointment);
   const fetchProcedures = useServerFn(listProcedures);
@@ -486,11 +509,20 @@ function NuevaCitaDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button ref={triggerRef} size="sm">
           <Plus className="size-4" /> Nueva cita
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent
+        onCloseAutoFocus={(e) => {
+          const origen = origenFoco.current;
+          origenFoco.current = null;
+          if (!origen) return;
+          e.preventDefault();
+          const destino = origen.isConnected ? origen : triggerRef.current;
+          destino?.focus({ preventScroll: true });
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Nueva cita</DialogTitle>
           <DialogDescription>
@@ -1324,6 +1356,10 @@ function AgendaPage() {
   const clinicId = access.clinic?.id;
   const hoy = hoyISO(access.clinic?.timezone);
   const fecha = fechaDeAgenda(search.fecha, access.clinic?.timezone);
+  const puedeGestionarAgenda = Boolean(clinicId) && hasPermission(access.role, "agenda:manage");
+  const [semillaHueco, setSemillaHueco] = useState<
+    (SemillaCita & { origen?: HTMLElement | null }) | null
+  >(null);
 
   const fetchAppointments = useServerFn(listAppointments);
   const fetchBranches = useServerFn(listBranches);
@@ -1515,6 +1551,8 @@ function AgendaPage() {
               onPacienteInicialConsumido={() =>
                 navigate({ search: (prev) => ({ ...prev, nueva: undefined }), replace: true })
               }
+              semilla={semillaHueco}
+              onSemillaConsumida={() => setSemillaHueco(null)}
             />
           )}
         </div>
@@ -1636,6 +1674,14 @@ function AgendaPage() {
                 citas={filtradas}
                 profesionales={columnas}
                 allergyAlerts={allergyAlerts}
+                fecha={fecha}
+                esHoy={fecha === hoy}
+                zonaHoraria={access.clinic?.timezone}
+                onAgendarHueco={
+                  puedeGestionarAgenda
+                    ? (semilla, origen) => setSemillaHueco({ ...semilla, origen })
+                    : undefined
+                }
               />
             )}
             {search.vista === "semana" && (
@@ -1652,7 +1698,7 @@ function AgendaPage() {
             )}
 
             <div className="card-clinical overflow-hidden">
-              <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="border-b border-hairline bg-secondary/40 px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Listado de citas filtradas
               </div>
               <div className="divide-y divide-hairline">
@@ -1661,35 +1707,43 @@ function AgendaPage() {
                     profesionales.find((p) => p.id === c.profesionalId)?.nombre ?? "—";
                   const sucursalNombre =
                     sucursales.find((s) => s.id === c.sucursalId)?.nombre ?? "—";
+                  // La fila es un contenedor, no un link: antes era un <Link>
+                  // con botones, menú y WhatsApp adentro (interactivo dentro de
+                  // interactivo, HTML inválido). Ahora el bloque de la cita es
+                  // el link a la ficha y las acciones son sus hermanas.
                   return (
-                    <Link
+                    <div
                       key={c.id}
-                      to="/pacientes/$pacienteId"
-                      params={{ pacienteId: c.pacienteId }}
-                      className="grid gap-2 px-5 py-3 transition-colors hover:bg-secondary/50 sm:grid-cols-[auto_2fr_1.5fr_1fr_auto_auto] sm:items-center sm:gap-4"
+                      className="grid gap-2 px-5 py-3 transition-colors hover:bg-secondary/50 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-4"
                     >
-                      <span className="tabular-nums text-xs text-muted-foreground">
-                        {horaDeCita(c.inicio)}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="flex items-center gap-1 truncate text-sm font-medium">
-                          <span className="truncate">{c.paciente}</span>
-                          <AllergyAlertIcon allergies={allergyAlerts[c.pacienteId]} />
-                        </p>
-                        <p className="truncate text-xs text-muted-foreground">{c.tratamiento}</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {profesionalNombre} · {sucursalNombre}
-                      </span>
-                      <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        {c.duracion} min
-                        {puedeVerSaldos && (
-                          <SaldoBadge
-                            saldoCents={saldos[c.pacienteId]}
-                            currency={access.clinic?.currency ?? "CLP"}
-                          />
-                        )}
-                      </span>
+                      <Link
+                        to="/pacientes/$pacienteId"
+                        params={{ pacienteId: c.pacienteId }}
+                        className="grid gap-2 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:grid-cols-[auto_2fr_1.5fr_1fr] sm:items-center sm:gap-4"
+                      >
+                        <span className="tabular-nums text-xs text-muted-foreground">
+                          {horaDeCita(c.inicio)}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="flex items-center gap-1 truncate text-sm font-medium">
+                            <span className="truncate">{c.paciente}</span>
+                            <AllergyAlertIcon allergies={allergyAlerts[c.pacienteId]} />
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">{c.tratamiento}</p>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {profesionalNombre} · {sucursalNombre}
+                        </span>
+                        <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          {c.duracion} min
+                          {puedeVerSaldos && (
+                            <SaldoBadge
+                              saldoCents={saldos[c.pacienteId]}
+                              currency={access.clinic?.currency ?? "CLP"}
+                            />
+                          )}
+                        </span>
+                      </Link>
                       {clinicId && hasPermission(access.role, "agenda:manage") ? (
                         <span className="flex items-center gap-1">
                           <PatientConfirmedToggle
@@ -1704,20 +1758,15 @@ function AgendaPage() {
                             estadoActual={c.estado}
                             puedeConfirmar={puedeConfirmarCita(access, c.profesionalId)}
                           />
-                          <span
-                            onClick={(e) => e.preventDefault()}
-                            onMouseDown={(e) => e.stopPropagation()}
-                          >
-                            <EditarCitaDialog
-                              clinicId={clinicId}
-                              userId={access.userId}
-                              country={access.clinic?.country}
-                              cita={c}
-                              sucursales={sucursales}
-                              profesionales={profesionales}
-                              pacientes={pacientes}
-                            />
-                          </span>
+                          <EditarCitaDialog
+                            clinicId={clinicId}
+                            userId={access.userId}
+                            country={access.clinic?.country}
+                            cita={c}
+                            sucursales={sucursales}
+                            profesionales={profesionales}
+                            pacientes={pacientes}
+                          />
                         </span>
                       ) : (
                         <span className={claseEstadoBadge(c.estado)}>
@@ -1725,26 +1774,21 @@ function AgendaPage() {
                         </span>
                       )}
                       {clinicId && access.clinic?.name && (
-                        <span
-                          onClick={(e) => e.preventDefault()}
-                          onMouseDown={(e) => e.stopPropagation()}
-                        >
-                          <WhatsAppButton
-                            clinicId={clinicId}
-                            patientId={c.pacienteId}
-                            appointmentId={c.id}
-                            templateKind="appointment_reminder"
-                            variables={{
-                              tratamiento: c.tratamiento,
-                              fecha_larga: formatoFechaLarga(c.fecha),
-                              hora: horaDeCita(c.inicio),
-                              profesional: profesionalNombre,
-                              clinica: access.clinic.name,
-                            }}
-                          />
-                        </span>
+                        <WhatsAppButton
+                          clinicId={clinicId}
+                          patientId={c.pacienteId}
+                          appointmentId={c.id}
+                          templateKind="appointment_reminder"
+                          variables={{
+                            tratamiento: c.tratamiento,
+                            fecha_larga: formatoFechaLarga(c.fecha),
+                            hora: horaDeCita(c.inicio),
+                            profesional: profesionalNombre,
+                            clinica: access.clinic.name,
+                          }}
+                        />
                       )}
-                    </Link>
+                    </div>
                   );
                 })}
                 {!isLoading && pagina.items.length === 0 && (
@@ -1777,7 +1821,7 @@ function AgendaPage() {
                         <p className="text-sm font-medium">{s.patientName}</p>
                         <span
                           className={cn(
-                            "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium",
+                            "shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium",
                             s.priority === "alta"
                               ? "bg-destructive/10 text-destructive"
                               : s.priority === "media"
@@ -1840,12 +1884,12 @@ function AgendaPage() {
                       <p className="text-sm font-medium">{e.nombre}</p>
                       <p className="text-xs text-muted-foreground">{e.motivo}</p>
                       {e.espera !== "—" && (
-                        <p className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
                           <Clock className="size-3" /> {e.espera} de espera
                         </p>
                       )}
                       {!e.patientPhone && (
-                        <p className="mt-1 text-[10px] text-muted-foreground">
+                        <p className="mt-1 text-[11px] text-muted-foreground">
                           Sin paciente vinculado — no se le puede avisar por WhatsApp.
                         </p>
                       )}
@@ -1903,7 +1947,7 @@ function AgendaPage() {
                             type="button"
                             onClick={() => aceptarCita.mutate(c.id)}
                             disabled={aceptarCita.isPending}
-                            className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold text-brand-700 transition-colors hover:bg-brand-soft disabled:opacity-50"
+                            className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold text-brand-700 transition-colors hover:bg-brand-soft disabled:opacity-50"
                           >
                             Aceptar
                           </button>
