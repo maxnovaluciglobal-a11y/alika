@@ -294,6 +294,7 @@ function PacienteDetalle() {
   // FinanceSection monta y consume la semilla. El `nonce` hace que clickear
   // dos veces la misma pieza vuelva a abrir el diálogo.
   const [piezaSeed, setPiezaSeed] = useState<PiezaSeed | null>(null);
+  const [abrirPago, setAbrirPago] = useState(false);
   const presupuestarPieza = puedeFacturar
     ? (pieza: Omit<PiezaSeed, "nonce">) => {
         setPiezaSeed({ ...pieza, nonce: Date.now() });
@@ -396,7 +397,10 @@ function PacienteDetalle() {
               {puedeFacturar && (
                 <button
                   type="button"
-                  onClick={() => setPestana("finanzas")}
+                  onClick={() => {
+                    setPestana("finanzas");
+                    setAbrirPago(true);
+                  }}
                   className={buttonVariants({ variant: "outline" })}
                 >
                   <Wallet aria-hidden /> Cobrar
@@ -585,6 +589,8 @@ function PacienteDetalle() {
                 userId={access.userId}
                 piezaSeed={piezaSeed}
                 onPiezaSeedConsumido={() => setPiezaSeed(null)}
+                abrirPago={abrirPago}
+                onPagoAbierto={() => setAbrirPago(false)}
               />
             )}
           </TabsContent>

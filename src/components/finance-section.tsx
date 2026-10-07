@@ -108,6 +108,13 @@ interface Props {
   piezaSeed?: PiezaSeed | null;
   /** Se llama al cerrar el diálogo, para que el padre limpie el seed. */
   onPiezaSeedConsumido?: () => void;
+  /**
+   * "Cobrar" de la cabecera de la ficha: abre el diálogo de pago con el
+   * saldo ya cargado (antes solo cambiaba de pestaña y había que buscar
+   * "Registrar pago"; auditoría 07-oct-2026).
+   */
+  abrirPago?: boolean;
+  onPagoAbierto?: () => void;
 }
 
 interface DraftItem {
@@ -975,6 +982,8 @@ function NuevoPagoDialog({
   plans,
   suggestedAmountCents,
   currency,
+  abrirAhora,
+  onAbierto,
 }: {
   clinicId: string;
   patientId: string;
@@ -982,9 +991,17 @@ function NuevoPagoDialog({
   plans: TreatmentPlan[];
   suggestedAmountCents: number;
   currency: string;
+  abrirAhora?: boolean;
+  onAbierto?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState<number | null>(suggestedAmountCents);
+  useEffect(() => {
+    if (!abrirAhora) return;
+    setAmount(suggestedAmountCents);
+    setOpen(true);
+    onAbierto?.();
+  }, [abrirAhora, suggestedAmountCents, onAbierto]);
   const [method, setMethod] = useState<PaymentMethod>("cash");
   // G-6: el medio configurado de la clínica. El enum `method` se sigue
   // guardando para el histórico y para los pagos capturados sin conexión.
@@ -1334,6 +1351,8 @@ export function FinanceSection({
   userId,
   piezaSeed,
   onPiezaSeedConsumido,
+  abrirPago,
+  onPagoAbierto,
 }: Props) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -1547,6 +1566,8 @@ export function FinanceSection({
               plans={plans}
               suggestedAmountCents={Math.max(0, balance)}
               currency={currency}
+              abrirAhora={Boolean(abrirPago) && !isLoading}
+              onAbierto={onPagoAbierto}
             />
             <NuevoPresupuestoDialog
               clinicId={clinicId}
