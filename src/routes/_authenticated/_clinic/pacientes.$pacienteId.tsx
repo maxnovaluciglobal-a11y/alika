@@ -410,13 +410,14 @@ function PacienteDetalle() {
                 <Link
                   to="/agenda"
                   search={{
-                    q: paciente.nombre,
+                    q: "",
                     fecha: "",
                     vista: "dia",
                     sucursal: "",
                     profesional: "",
                     estado: "",
                     page: 1,
+                    nueva: paciente.id,
                   }}
                   className={buttonVariants()}
                 >

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -141,6 +141,9 @@ interface AgendaSearch {
   profesional: string;
   estado: string;
   page: number;
+  /** Id de paciente: abre "Nueva cita" con ese paciente ya elegido (botón
+   * "Agendar" de la ficha). Se limpia de la URL al abrir el diálogo. */
+  nueva?: string;
 }
 
 function parseVista(v: unknown): VistaAgenda {
@@ -161,6 +164,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/agenda")({
     profesional: str(search.profesional),
     estado: str(search.estado),
     page: num(search.page, 1),
+    nueva: str(search.nueva) || undefined,
   }),
   beforeLoad: requirePermission("agenda:view"),
   head: () => ({
@@ -370,6 +374,8 @@ function NuevaCitaDialog({
   profesionales,
   pacientes,
   allergyAlerts,
+  pacienteInicial,
+  onPacienteInicialConsumido,
 }: {
   clinicId: string;
   userId: string;
@@ -377,6 +383,8 @@ function NuevaCitaDialog({
   sucursales: { id: string; nombre: string }[];
   profesionales: { id: string; nombre: string; sucursalId: string | null }[];
   pacientes: { id: string; nombre: string }[];
+  pacienteInicial?: string;
+  onPacienteInicialConsumido?: () => void;
   /** patientId -> alergias, ver listAllergyAlerts. Ausente/vacío = sin
    * aviso (RLS restringe a owner/admin/dentist/assistant, o el rol no
    * tiene clinical:view — ver agenda.tsx). */
@@ -389,6 +397,23 @@ function NuevaCitaDialog({
   const [tratamiento, setTratamiento] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [duracion, setDuracion] = useState(30);
+
+  // Con una sola sucursal o un solo profesional no hay nada que elegir:
+  // se completan solos (antes eran dos selects obligatorios igual).
+  function completarUnicos() {
+    if (sucursales.length === 1) setSucursalId((v) => v || sucursales[0].id);
+    if (profesionales.length === 1) setProfesionalId((v) => v || profesionales[0].id);
+  }
+
+  useEffect(() => {
+    if (!pacienteInicial) return;
+    setPacienteId(pacienteInicial);
+    completarUnicos();
+    setOpen(true);
+    onPacienteInicialConsumido?.();
+    // completarUnicos lee props estables de esta render; solo importa el seed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pacienteInicial]);
 
   const createFn = useServerFn(createAppointment);
   const fetchProcedures = useServerFn(listProcedures);
@@ -452,7 +477,13 @@ function NuevaCitaDialog({
   const puedeCrear = pacienteId && sucursalId && profesionalId && tratamiento.trim() && startsAt;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (o) completarUnicos();
+      }}
+    >
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="size-4" /> Nueva cita
@@ -1479,6 +1510,10 @@ function AgendaPage() {
               profesionales={profesionales}
               pacientes={pacientes}
               allergyAlerts={allergyAlerts}
+              pacienteInicial={search.nueva}
+              onPacienteInicialConsumido={() =>
+                navigate({ search: (prev) => ({ ...prev, nueva: undefined }), replace: true })
+              }
             />
           )}
         </div>
