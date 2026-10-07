@@ -21,7 +21,7 @@ import { ROLES_BANDEJA, notifyClinicStaff } from "@/lib/messaging/notifications.
  * alguien lo edite distraído.
  *
  * Los frenos, en orden:
- *  1. Hora local — corre cada hora y solo actúa donde son las 8 de la mañana.
+ *  1. Hora local — corre cada hora y solo actúa donde son entre las 8:00 y las 11:59 (ventana: GitHub no garantiza el disparo horario).
  *  2. Una por día — no repite si ya hubo un resumen en las últimas 20 h.
  *  3. Silencio — si no hay nada pendiente, nadie recibe nada.
  *  4. La demo queda afuera — se resetea sola todos los días.
