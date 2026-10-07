@@ -132,7 +132,7 @@ function FusionarFichasPage() {
                     <span className="min-w-0 flex-1 truncate">
                       {p.nombre}
                       {p.documento && (
-                        <span className="ml-2 font-mono text-xs text-muted-foreground">
+                        <span className="ml-2 tabular-nums text-xs text-muted-foreground">
                           {p.documento}
                         </span>
                       )}

@@ -67,3 +67,10 @@ describe("toCents", () => {
     expect(toCents(pesosClp, "CLP") / 1).toBe(pesosClp);
   });
 });
+
+describe("formatMoney con montos negativos", () => {
+  it("pone el signo antes del símbolo también en CLP", () => {
+    expect(formatMoney(-2_391_000, "CLP")).toBe("-$2.391.000");
+    expect(formatMoney(-150_00, "MXN")).toBe("-$150.00");
+  });
+});

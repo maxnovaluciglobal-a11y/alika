@@ -283,7 +283,7 @@ function FilaCobertura({
   return (
     <tr className="border-b border-hairline last:border-0">
       <td className="px-4 py-2">{procedure.name}</td>
-      <td className="px-3 py-2 text-right font-mono text-xs tabular-nums text-muted-foreground">
+      <td className="px-3 py-2 text-right text-xs tabular-nums text-muted-foreground">
         {formatMoney(procedure.defaultPriceCents, currency)}
       </td>
       <td className="px-3 py-2">
@@ -315,7 +315,7 @@ function FilaCobertura({
           </button>
         </div>
       </td>
-      <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">
+      <td className="px-3 py-2 text-right text-xs tabular-nums">
         {previsualizacion.patientCents === null ? (
           <span className="text-muted-foreground">—</span>
         ) : (

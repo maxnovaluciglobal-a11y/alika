@@ -610,11 +610,14 @@ const LOCALE_POR_MONEDA: Record<string, string> = {
 export function formatMoney(cents: number, currency: string): string {
   const iso = currency.toUpperCase();
   const isZeroDec = ZERO_DECIMAL_CURRENCIES.has(iso);
-  return new Intl.NumberFormat(LOCALE_POR_MONEDA[iso] ?? "es-CL", {
+  const texto = new Intl.NumberFormat(LOCALE_POR_MONEDA[iso] ?? "es-CL", {
     style: "currency",
     currency,
     maximumFractionDigits: isZeroDec ? 0 : 2,
-  }).format(cents / centsFactor(currency));
+  }).format(Math.abs(cents) / centsFactor(currency));
+  // CLDR de es-CL pone el signo después del símbolo ("$-2.391.000"), que en
+  // un resultado negativo se lee como error de tipeo: el signo va adelante.
+  return cents < 0 ? `-${texto}` : texto;
 }
 
 /**

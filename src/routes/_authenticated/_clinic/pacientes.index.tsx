@@ -695,7 +695,7 @@ function PacientesPage() {
                       )}
                     >
                       {p.saldo == null
-                        ? "Sin datos"
+                        ? "Sin movimientos"
                         : p.saldo > 0
                           ? formatMoney(p.saldo, currency)
                           : "Al día"}

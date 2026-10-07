@@ -1565,7 +1565,7 @@ function AgendaPage() {
                 >
                   <ChevronRight className="size-4" />
                 </button>
-                <h2 className="ml-1 font-display text-lg font-semibold capitalize">
+                <h2 className="ml-1 font-display text-lg font-semibold first-letter:uppercase">
                   {labelPeriodo(search.vista, fecha)}
                 </h2>
               </div>
@@ -1632,7 +1632,7 @@ function AgendaPage() {
                       params={{ pacienteId: c.pacienteId }}
                       className="grid gap-2 px-5 py-3 transition-colors hover:bg-secondary/50 sm:grid-cols-[auto_2fr_1.5fr_1fr_auto_auto] sm:items-center sm:gap-4"
                     >
-                      <span className="font-mono text-xs text-muted-foreground">
+                      <span className="tabular-nums text-xs text-muted-foreground">
                         {horaDeCita(c.inicio)}
                       </span>
                       <div className="min-w-0">

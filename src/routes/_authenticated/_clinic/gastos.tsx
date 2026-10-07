@@ -501,7 +501,7 @@ function GastosPage() {
                         style={{ width: `${total ? (monto / total) * 100 : 0}%` }}
                       />
                     </div>
-                    <span className="w-28 shrink-0 text-right font-mono text-xs tabular-nums">
+                    <span className="w-28 shrink-0 text-right text-xs tabular-nums">
                       {formatMoney(monto, currency)}
                     </span>
                   </div>
@@ -528,7 +528,7 @@ function GastosPage() {
                   <tbody>
                     {filtrados.map((g) => (
                       <tr key={g.id} className="border-b border-hairline last:border-0">
-                        <td className="whitespace-nowrap px-4 py-2 font-mono text-xs text-muted-foreground">
+                        <td className="whitespace-nowrap px-4 py-2 tabular-nums text-xs text-muted-foreground">
                           {formatoFecha(g.incurredOn)}
                         </td>
                         <td className="px-3 py-2">{g.category}</td>
@@ -537,7 +537,7 @@ function GastosPage() {
                         <td className="px-3 py-2 text-xs text-muted-foreground">
                           {g.methodNameSnapshot ?? "—"}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono tabular-nums">
+                        <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">
                           {formatMoney(g.amountCents, g.currency)}
                         </td>
                         <td className="px-3 py-2">

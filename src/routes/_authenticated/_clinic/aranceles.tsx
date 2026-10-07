@@ -511,7 +511,7 @@ function RecetaDialog({
                     >
                       <span>{item?.name ?? "Insumo eliminado"}</span>
                       <span className="flex items-center gap-2">
-                        <span className="font-mono tabular-nums text-muted-foreground">
+                        <span className=" tabular-nums text-muted-foreground">
                           {l.quantity} {item?.unit}
                         </span>
                         <Button
@@ -686,7 +686,7 @@ function ImportarCsvDialog({ clinicId, currency }: { clinicId: string; currency:
                       {f.category ? `${f.category} · ` : ""}
                       {f.name}
                     </span>
-                    <span className="shrink-0 font-mono">
+                    <span className="shrink-0 tabular-nums">
                       {formatMoney(toCents(f.price, currency), currency)}
                     </span>
                   </li>
@@ -896,18 +896,18 @@ function ArancelesPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-3 py-2 font-mono text-xs text-muted-foreground">
+                        <td className="px-3 py-2 tabular-nums text-xs text-muted-foreground">
                           {p.code ?? "—"}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono tabular-nums">
+                        <td className="px-3 py-2 text-right tabular-nums">
                           {formatMoney(p.defaultPriceCents, p.currency)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                        <td className="px-3 py-2 text-right text-xs tabular-nums text-muted-foreground">
                           {p.referencePriceCents === null
                             ? "—"
                             : formatMoney(p.referencePriceCents, p.currency)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                        <td className="px-3 py-2 text-right text-xs tabular-nums text-muted-foreground">
                           {p.labCostCents === null ? "—" : formatMoney(p.labCostCents, p.currency)}
                         </td>
                         <td className="px-3 py-2 text-center text-xs text-muted-foreground">

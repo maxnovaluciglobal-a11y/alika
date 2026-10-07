@@ -426,7 +426,7 @@ function PacienteDetalle() {
             <Dato label="Próxima cita">{paciente.proximoControl ?? "Sin agendar"}</Dato>
             <Dato label="Saldo">
               {paciente.saldo == null
-                ? "Sin datos"
+                ? "Sin movimientos"
                 : paciente.saldo > 0
                   ? `${formatMoney(paciente.saldo, currency)} por cobrar`
                   : paciente.saldo < 0

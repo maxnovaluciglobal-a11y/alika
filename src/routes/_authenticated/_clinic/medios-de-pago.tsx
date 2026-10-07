@@ -267,10 +267,10 @@ function MediosDePagoPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono tabular-nums">
+                        <td className="px-3 py-2 text-right tabular-nums">
                           {m.retentionPct > 0 ? `${m.retentionPct}%` : "—"}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                        <td className="px-3 py-2 text-right text-xs tabular-nums text-muted-foreground">
                           {formatMoney(netAfterRetention(EJEMPLO_CENTS, m.retentionPct), currency)}
                         </td>
                         <td className="px-3 py-2 text-center text-xs text-muted-foreground">
