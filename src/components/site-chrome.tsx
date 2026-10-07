@@ -61,10 +61,11 @@ export function SiteHeader() {
   );
 }
 
-/** Anclas a la home: desde otras páginas públicas también llevan a la sección. */
+/** Anclas a la home (desde otras páginas públicas también llevan a la
+ *  sección), salvo Precios, que tiene página propia. */
 const navLinks = [
   { label: "Producto", href: "/#producto" },
-  { label: "Precios", href: "/#precios" },
+  { label: "Precios", href: "/precios" },
   { label: "Calculadora", href: "/#calculadora" },
   { label: "Recursos", href: "/recursos/fugas-clinica-dental" },
 ] as const;
@@ -75,6 +76,7 @@ type FooterLink =
       kind: "route";
       to:
         | "/auth"
+        | "/precios"
         | "/faq"
         | "/docs"
         | "/nosotros"
@@ -91,6 +93,7 @@ const footerColumns: { t: string; links: FooterLink[] }[] = [
     t: "Producto",
     links: [
       { label: "Ver demo", kind: "external", href: "/demo" },
+      { label: "Precios", kind: "route", to: "/precios" },
       { label: "Empieza gratis", kind: "route", to: "/auth" },
     ],
   },
