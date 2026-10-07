@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -34,7 +34,7 @@ import { getMedicalHistory } from "@/lib/clinical/medical-history.functions";
 import { listAgreements, setPatientAgreement } from "@/lib/finance/clinic-finance.functions";
 import { PatientDocumentsCard } from "@/components/patient-documents-card";
 import { PatientConsentsCard } from "@/components/patient-consents-card";
-import { Odontogram } from "@/components/odontogram";
+import { Odontogram, OdontogramResumen } from "@/components/odontogram";
 import { PeriodontalChart } from "@/components/periodontal-chart";
 import { FinanceSection, type PiezaSeed } from "@/components/finance-section";
 import { MessagesHistory } from "@/components/messages-history";
@@ -49,8 +49,16 @@ import { formatMoney } from "@/lib/finance/finance";
 import { getPatient } from "@/lib/patients/patients.functions";
 import { cn } from "@/lib/utils";
 import { mensajeDeError } from "@/lib/mensaje-error";
+import {
+  busquedaConPestana,
+  parsePestana,
+  pestanaVisible,
+  validarBusquedaFicha,
+  type PestanaFicha,
+} from "@/components/ficha-busqueda";
 
 export const Route = createFileRoute("/_authenticated/_clinic/pacientes/$pacienteId")({
+  validateSearch: validarBusquedaFicha,
   // Datos demográficos (nombre, teléfono, próximo control) son de agenda/recepción,
   // no solo del equipo clínico — separado de "clinical:view" que gatea las notas.
   beforeLoad: requirePermission("patients:view"),
@@ -259,8 +267,6 @@ function ConvenioDelPaciente({
   );
 }
 
-type PestanaFicha = "resumen" | "odontograma" | "notas" | "finanzas" | "documentos" | "mensajes";
-
 function Dato({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="min-w-0">
@@ -288,7 +294,18 @@ function PacienteDetalle() {
   const puedeEscribirClinico = hasPermission(access.role, "clinical:write");
   const clinicId = access.clinic?.id;
   const puedeFacturar = hasPermission(access.role, "patients:manage");
-  const [pestana, setPestana] = useState<PestanaFicha>("resumen");
+  // La pestaña activa vive en la URL (`?pestana=`): recargar, volver atrás o
+  // compartir el link abre la misma pestaña. `replace` para no llenar el
+  // historial con un paso por pestaña, y sin resetear el scroll.
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const pestana = pestanaVisible(parsePestana(search.pestana), puedeVerClinico);
+  const setPestana = (p: PestanaFicha) =>
+    void navigate({
+      search: (prev) => busquedaConPestana(prev, p),
+      replace: true,
+      resetScroll: false,
+    });
 
   // Puente odontograma → presupuesto (G-1). Ahora viven en pestañas
   // distintas: presupuestar una pieza lleva a "Presupuestos y pagos", donde
@@ -296,6 +313,23 @@ function PacienteDetalle() {
   // dos veces la misma pieza vuelva a abrir el diálogo.
   const [piezaSeed, setPiezaSeed] = useState<PiezaSeed | null>(null);
   const [abrirPago, setAbrirPago] = useState(false);
+  // `?cobrar=1` (botón "Cobrar" del popover de la agenda): abre el pago una
+  // sola vez y se limpia de la URL, así recargar no lo vuelve a abrir. Sin
+  // permiso de facturar solo se limpia: el botón de la agenda ya no se ofrece
+  // a ese rol, pero el link se puede escribir a mano.
+  useEffect(() => {
+    if (!search.cobrar) return;
+    if (puedeFacturar) setAbrirPago(true);
+    // Una sola navegación: limpia `cobrar` y, si corresponde, pasa a la
+    // pestaña de pagos (busquedaConPestana descarta `cobrar` siempre).
+    void navigate({
+      search: (prev) =>
+        busquedaConPestana(prev, puedeFacturar ? "finanzas" : parsePestana(prev.pestana)),
+      replace: true,
+      resetScroll: false,
+    });
+  }, [search.cobrar, puedeFacturar, navigate]);
+
   const presupuestarPieza = puedeFacturar
     ? (pieza: Omit<PiezaSeed, "nonce">) => {
         setPiezaSeed({ ...pieza, nonce: Date.now() });
@@ -482,12 +516,10 @@ function PacienteDetalle() {
               <div className="min-w-0 space-y-6">
                 {puedeVerClinico && clinicId ? (
                   <>
-                    <Odontogram
+                    <OdontogramResumen
                       clinicId={clinicId}
                       patientId={paciente.id}
-                      puedeEditar={puedeEscribirClinico}
-                      userId={access.userId}
-                      onPresupuestarPieza={presupuestarPieza}
+                      onVerOdontograma={() => setPestana("odontograma")}
                     />
                     <MedicalHistoryCard
                       clinicId={clinicId}

@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   AlertTriangle,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CircleAlert,
@@ -14,6 +13,7 @@ import {
   Loader2,
   Pencil,
   Plus,
+  Wallet,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -22,12 +22,14 @@ import { AppShell } from "@/components/app-shell";
 import { PatientConfirmedToggle } from "@/components/patient-confirmed-toggle";
 import { DateField, FilterBar, Paginacion, SearchField, SelectField } from "@/components/filters";
 import { AgendaGrid } from "@/components/agenda-grid";
+import { CambiarEstadoMenu } from "@/components/cambiar-estado-cita-menu";
+import { claseEstadoBadge, puedeConfirmarCita } from "@/components/cita-acciones";
 import type { SemillaCita } from "@/components/agenda-hueco";
 import { AgendaMonth, AgendaWeek } from "@/components/agenda-views";
 import { AllergyAlertBanner, AllergyAlertIcon } from "@/components/medical-history-card";
 import { PatientCombobox } from "@/components/patient-combobox";
 import { addDaysISO, addMonthsISO, rangoDeVista } from "@/lib/clinic-operations/agenda-fechas";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { HolidayNotice } from "@/components/holiday-notice";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import { usePublicHolidays } from "@/hooks/use-public-holidays";
@@ -41,15 +43,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { requirePermission } from "@/lib/access/route-guards";
-import { hasPermission, type ClinicAccess } from "@/lib/access/access";
+import { hasPermission } from "@/lib/access/access";
 import {
   etiquetaEstado,
   formatoFechaLarga,
@@ -99,7 +95,6 @@ import {
   type PendingAppointmentRequest,
 } from "@/lib/patients/portal.functions";
 import { coincide, num, paginar, str } from "@/lib/search";
-import { clasePastilla, tonoDeEstadoCita } from "@/lib/clinic-operations/estado-cita-tono";
 import { cn } from "@/lib/utils";
 import { mensajeDeError } from "@/lib/mensaje-error";
 
@@ -216,47 +211,6 @@ function avisarSiSolapa(resultado: unknown) {
 }
 
 /**
- * Mismos 6 valores que el enum de `setAppointmentStatus`
- * (appointments.functions.ts). "cancelada" no está en `EstadoCita`
- * (clinic-data.ts) porque `listAppointments` excluye las citas canceladas de
- * la agenda — pero sigue siendo un destino válido desde este menú, así que
- * se agrega acá nomás.
- */
-const opcionesEstadoCita: { value: EstadoCita | "cancelada"; label: string }[] = [
-  ...estados,
-  { value: "cancelada", label: "Cancelada" },
-];
-
-/**
- * Confirmar una cita es acción exclusiva del profesional asignado a ella,
- * o de owner/admin en su nombre (decisión de Walter: se permite para no
- * trabar la agenda si el dentista no usa el sistema). El resto de roles de
- * agenda (reception, assistant) puede ver y mover otros estados, pero no
- * este — ver migración 20260901130000_appointment_dentist_confirmation.
- */
-function puedeConfirmarCita(access: ClinicAccess, professionalId: string): boolean {
-  if (access.role === "owner" || access.role === "admin") return true;
-  return Boolean(access.myProfessionalId) && access.myProfessionalId === professionalId;
-}
-
-function claseEstadoBadge(estado: EstadoCita) {
-  return cn(
-    "w-fit rounded border px-1.5 py-0.5 text-[11px] font-medium",
-    clasePastilla[tonoDeEstadoCita[estado]],
-  );
-}
-
-/**
- * Cambia el estado de una cita sin salir de la agenda — hoy es la acción más
- * repetida del día de una recepcionista (confirmar, marcar en sala,
- * finalizar, ausente, cancelar) y hasta esta pantalla no había ningún camino
- * de UI hasta `setAppointmentStatus`, solo el flujo offline lo llamaba.
- *
- * Va como hermano del `<Link>` a la ficha en la fila del listado, no adentro
- * (auditoría 07-oct-2026: interactivo dentro de interactivo es HTML inválido
- * y el clic al borde del control navegaba por accidente).
- */
-/**
  * Situación financiera del paciente en la fila de la agenda (G-3).
  *
  * Tres estados y no dos: "sin datos" (el paciente no tiene ningún plan
@@ -292,73 +246,6 @@ function SaldoBadge({
     <span className="inline-flex items-center gap-1 rounded bg-success-soft px-1.5 py-0.5 text-[11px] font-medium text-success">
       Al día
     </span>
-  );
-}
-
-function CambiarEstadoMenu({
-  clinicId,
-  userId,
-  appointmentId,
-  estadoActual,
-  puedeConfirmar,
-}: {
-  clinicId: string;
-  userId: string;
-  appointmentId: string;
-  estadoActual: EstadoCita;
-  /** Confirmar una cita está reservado al profesional asignado a ella (o
-   * admin/owner en su nombre) — ver migración
-   * 20260901130000_appointment_dentist_confirmation. El resto de estados
-   * (en-sala, ausente, finalizada, cancelada) sigue abierto a cualquier rol
-   * de agenda, esa restricción no cambia. */
-  puedeConfirmar: boolean;
-}) {
-  const setEstadoFn = useServerFn(setAppointmentStatus);
-
-  const cambiar = useOfflineMutation({
-    kind: "cambiar-estado-cita",
-    userId,
-    ejecutar: (payload) => setEstadoFn({ data: payload }),
-    invalidar: [["appointments", clinicId]],
-    resumen: (p) => `Cita → ${String(p.estado)}`,
-    // Coalesce: si cambian el estado de la misma cita varias veces sin
-    // conexión, solo importa el último valor, no acumular una entrada por click.
-    identidad: (p) => String(p.appointmentId),
-  });
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          disabled={cambiar.enCurso}
-          className={cn(
-            "inline-flex items-center gap-0.5 transition-opacity hover:opacity-80 disabled:opacity-50",
-            claseEstadoBadge(estadoActual),
-          )}
-        >
-          {cambiar.enCurso ? (
-            <Loader2 className="size-2.5 animate-spin" />
-          ) : (
-            etiquetaEstado[estadoActual]
-          )}
-          <ChevronDown className="size-2.5" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {opcionesEstadoCita
-          .filter((o) => o.value !== estadoActual)
-          .filter((o) => o.value !== "confirmada" || puedeConfirmar)
-          .map((o) => (
-            <DropdownMenuItem
-              key={o.value}
-              onSelect={() => cambiar.mutar({ appointmentId, estado: o.value })}
-            >
-              {o.label}
-            </DropdownMenuItem>
-          ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }
 
@@ -1357,6 +1244,8 @@ function AgendaPage() {
   const hoy = hoyISO(access.clinic?.timezone);
   const fecha = fechaDeAgenda(search.fecha, access.clinic?.timezone);
   const puedeGestionarAgenda = Boolean(clinicId) && hasPermission(access.role, "agenda:manage");
+  // Mismo criterio que `puedeFacturar` en la ficha del paciente.
+  const puedeCobrar = hasPermission(access.role, "patients:manage");
   const [semillaHueco, setSemillaHueco] = useState<
     (SemillaCita & { origen?: HTMLElement | null }) | null
   >(null);
@@ -1682,6 +1571,55 @@ function AgendaPage() {
                     ? (semilla, origen) => setSemillaHueco({ ...semilla, origen })
                     : undefined
                 }
+                renderAcciones={(c, p) => (
+                  <>
+                    {/* Mismos gates que el listado de abajo y que la ficha:
+                        cambiar estado con agenda:manage, cobrar con
+                        patients:manage (`puedeFacturar` de la ficha). El
+                        servidor repite ambos chequeos. */}
+                    {clinicId && puedeGestionarAgenda && (
+                      <CambiarEstadoMenu
+                        clinicId={clinicId}
+                        userId={access.userId}
+                        appointmentId={c.id}
+                        estadoActual={c.estado}
+                        puedeConfirmar={puedeConfirmarCita(access, c.profesionalId)}
+                        variante="boton"
+                      />
+                    )}
+                    {puedeCobrar && (
+                      <Link
+                        to="/pacientes/$pacienteId"
+                        params={{ pacienteId: c.pacienteId }}
+                        search={{ cobrar: 1 }}
+                        className={cn(
+                          buttonVariants({ variant: "outline", size: "sm" }),
+                          "justify-start",
+                        )}
+                      >
+                        <Wallet aria-hidden /> Cobrar
+                      </Link>
+                    )}
+                    {clinicId && access.clinic?.name && (
+                      <WhatsAppButton
+                        variant="full"
+                        label="Recordatorio por WhatsApp"
+                        className="h-8 justify-start text-sm"
+                        clinicId={clinicId}
+                        patientId={c.pacienteId}
+                        appointmentId={c.id}
+                        templateKind="appointment_reminder"
+                        variables={{
+                          tratamiento: c.tratamiento,
+                          fecha_larga: formatoFechaLarga(c.fecha),
+                          hora: horaDeCita(c.inicio),
+                          profesional: p.nombre,
+                          clinica: access.clinic.name,
+                        }}
+                      />
+                    )}
+                  </>
+                )}
               />
             )}
             {search.vista === "semana" && (
