@@ -211,7 +211,7 @@ export function PatientDocumentsCard({
           <AlertDialogHeader>
             <AlertDialogTitle>Archivar documento</AlertDialogTitle>
             <AlertDialogDescription>
-              El documento deja de verse en esta ficha. No se elimina, pero dejá de tenerlo a la
+              El documento deja de verse en esta ficha. No se elimina, pero deja de tenerlo a la
               vista para el trabajo diario. ¿Confirmás archivarlo?
             </AlertDialogDescription>
           </AlertDialogHeader>

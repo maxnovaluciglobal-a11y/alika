@@ -21,7 +21,7 @@ import { tryMetaTemplateSend } from "@/lib/messaging/whatsapp.functions";
 // ────────────────────────────────────────────────────────────
 
 const SIN_PERMISOS_PORTAL =
-  "El portal del paciente se activa con tu puesta en marcha o al suscribirte. Agendá tu llamada o suscribite desde /suscripcion.";
+  "El portal del paciente se activa con tu puesta en marcha o al suscribirte. Agenda tu llamada o suscríbete desde /suscripcion.";
 
 /** Genera link firmado del portal para un paciente. Solo staff de la clínica. */
 export const generatePortalLink = createServerFn({ method: "POST" })

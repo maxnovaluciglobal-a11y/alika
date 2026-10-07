@@ -784,7 +784,7 @@ function NuevoPresupuestoDialog({
         <DialogHeader>
           <DialogTitle>Nuevo presupuesto</DialogTitle>
           <DialogDescription>
-            Agrupá las prestaciones en fases si el tratamiento va por etapas. Cada ítem se convierte
+            Agrupa las prestaciones en fases si el tratamiento va por etapas. Cada ítem se convierte
             en un tratamiento del plan cuando aceptes el presupuesto.
           </DialogDescription>
         </DialogHeader>
@@ -1435,7 +1435,7 @@ export function FinanceSection({
           extra: { quoteId: variables.quoteId },
         });
         toast.error(
-          "Presupuesto aceptado, pero no pudimos guardar la firma del paciente. Volvé a intentarlo.",
+          "Presupuesto aceptado, pero no pudimos guardar la firma del paciente. Vuelve a intentarlo.",
         );
       } else {
         toast.success("Presupuesto aceptado y convertido en plan de tratamiento");
@@ -1596,8 +1596,8 @@ export function FinanceSection({
           <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
           <p>
             No pudimos cargar los presupuestos y planes de este paciente, así que lo que ves abajo
-            está incompleto — no asumas que no tiene nada cargado. Recargá la página; si sigue
-            igual, avisá al equipo antes de cobrarle.
+            está incompleto — no asumas que no tiene nada cargado. Recarga la página; si sigue
+            igual, avisa al equipo antes de cobrarle.
           </p>
         </div>
       )}
@@ -1774,7 +1774,7 @@ export function FinanceSection({
                       <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
                       <p>
                         El paciente firmó, pero no pudimos guardar la imagen de la firma. El
-                        presupuesto quedó aceptado igual; volvé a intentar guardar la firma o
+                        presupuesto quedó aceptado igual; vuelve a intentar guardar la firma o
                         registrala aparte.
                       </p>
                       <button
@@ -2041,7 +2041,7 @@ export function FinanceSection({
             <AlertDialogTitle>Rechazar presupuesto</AlertDialogTitle>
             <AlertDialogDescription>
               El presupuesto queda marcado como rechazado — para retomarlo hay que corregirlo y
-              volver a enviarlo. ¿Confirmás que lo rechazás?
+              volver a enviarlo. ¿Confirmas que lo rechazas?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

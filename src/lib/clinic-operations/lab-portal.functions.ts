@@ -68,7 +68,7 @@ async function requireLabPortalSession(): Promise<LabTokenClaims> {
   try {
     return await verifyLabToken(token);
   } catch {
-    throw new Error("Sesión del portal vencida. Pedí un enlace nuevo a la clínica.");
+    throw new Error("Sesión del portal vencida. Pide un enlace nuevo a la clínica.");
   }
 }
 

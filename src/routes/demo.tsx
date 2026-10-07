@@ -21,12 +21,12 @@ export const Route = createFileRoute("/demo")({
       { title: "Demo · Alika" },
       {
         name: "description",
-        content: "Entrá a la demo pública de Alika con datos reales de una clínica de prueba.",
+        content: "Entra a la demo pública de Alika con datos reales de una clínica de prueba.",
       },
       { property: "og:title", content: "Demo · Alika" },
       {
         property: "og:description",
-        content: "Entrá a la demo pública de Alika con datos reales de una clínica de prueba.",
+        content: "Entra a la demo pública de Alika con datos reales de una clínica de prueba.",
       },
       { name: "robots", content: "noindex" },
     ],

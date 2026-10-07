@@ -31,7 +31,7 @@ const KINDS_DE_RECORDATORIO = ["appointment_reminder", "appointment_checkin"];
 const OPT_OUT = new Set(["BAJA", "STOP", "CANCELAR", "UNSUBSCRIBE"]);
 
 const SIN_PERMISOS_EFECTIVIDAD =
-  "Para ver Efectividad primero tenés que agendar la llamada de puesta en marcha o suscribirte.";
+  "Para ver Efectividad primero tienes que agendar la llamada de puesta en marcha o suscribirte.";
 
 export interface Efectividad {
   desde: string;

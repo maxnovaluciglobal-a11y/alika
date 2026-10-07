@@ -82,7 +82,7 @@ function FusionarFichasPage() {
       <div className="space-y-5">
         <p className="max-w-2xl text-sm text-muted-foreground">
           Toda clínica que migra de otro sistema llega con el mismo paciente cargado más de una vez.
-          Elegí cuál ficha sobrevive y el resto se fusiona en ella: citas, pagos, presupuestos,
+          Elige cuál ficha sobrevive y el resto se fusiona en ella: citas, pagos, presupuestos,
           notas, odontograma y documentos se reasignan.
         </p>
 

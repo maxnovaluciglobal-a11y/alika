@@ -218,7 +218,7 @@ function EstadosDeCitaPage() {
       <div className="space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Podés tener «Confirmada por WhatsApp» y «Confirmada por email» como dos estados
+            Puedes tener «Confirmada por WhatsApp» y «Confirmada por email» como dos estados
             distintos en la agenda: para el sistema los dos son «confirmada», así que los filtros y
             los recordatorios siguen funcionando igual.
           </p>

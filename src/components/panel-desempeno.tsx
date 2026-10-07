@@ -200,7 +200,7 @@ export function PanelDesempeno({
         valor: data.ocupacionPct === null ? "Sin datos" : `${data.ocupacionPct}%`,
         nota:
           data.ocupacionPct === null
-            ? "Cargá horarios de los profesionales"
+            ? "Carga horarios de los profesionales"
             : "Horas agendadas sobre disponibles",
       },
       {
@@ -225,7 +225,7 @@ export function PanelDesempeno({
   if (error) {
     return (
       <p className="text-sm text-destructive">
-        No pudimos cargar el panel de desempeño. Recargá la página; si sigue igual, avisá al equipo.
+        No pudimos cargar el panel de desempeño. Recarga la página; si sigue igual, avisa al equipo.
       </p>
     );
   }

@@ -138,7 +138,7 @@ function EfectividadPage() {
         {bloqueado ? (
           <LlamadaDesbloqueo
             feature="Efectividad"
-            descripcion="Medí si los recordatorios de WhatsApp reducen las ausencias, cuántos mensajes resuelve sola la automatización y cuánto tarda tu equipo en responder — sobre los últimos 90 días de tu propia clínica."
+            descripcion="Mide si los recordatorios de WhatsApp reducen las ausencias, cuántos mensajes resuelve sola la automatización y cuánto tarda tu equipo en responder — sobre los últimos 90 días de tu propia clínica."
             clinicName={access.clinic?.name}
             clinicEmail={access.email}
           />

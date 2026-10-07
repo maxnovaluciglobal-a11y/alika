@@ -129,7 +129,7 @@ function ConvenioDialog({ clinicId, convenio }: { clinicId: string; convenio?: A
         <DialogHeader>
           <DialogTitle>{convenio ? "Editar convenio" : "Nuevo convenio"}</DialogTitle>
           <DialogDescription>
-            Después de crearlo, definí qué cubre de cada prestación. Los pacientes que tengan este
+            Después de crearlo, define qué cubre de cada prestación. Los pacientes que tengan este
             convenio verán el presupuesto ya repartido.
           </DialogDescription>
         </DialogHeader>
@@ -354,7 +354,7 @@ function CoberturaDelConvenio({
   if (procedures.length === 0)
     return (
       <p className="px-4 py-3 text-xs text-muted-foreground">
-        Cargá tu arancel primero: la cobertura se define prestación por prestación.
+        Carga tu arancel primero: la cobertura se define prestación por prestación.
       </p>
     );
 
@@ -449,7 +449,7 @@ function ConveniosPage() {
             <div className="card-clinical p-8 text-center">
               <p className="mb-1 font-display text-lg font-semibold">Todavía no hay convenios</p>
               <p className="mx-auto mb-4 max-w-md text-sm text-muted-foreground">
-                Si atendés Fonasa, Isapre o convenios de empresa, cargalos acá una vez y definí qué
+                Si atiendes Fonasa, Isapre o convenios de empresa, cárgalos acá una vez y define qué
                 cubre cada uno. Sin esto, cada presupuesto con convenio se calcula a mano.
               </p>
               <div className="flex justify-center">

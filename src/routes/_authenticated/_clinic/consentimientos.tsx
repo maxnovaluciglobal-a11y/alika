@@ -95,7 +95,7 @@ function NuevaPlantillaDialog({ clinicId }: { clinicId: string }) {
               onChange={(e) => setBody(e.target.value)}
               rows={8}
               className={inputClass()}
-              placeholder="Explicá el procedimiento, riesgos, alternativas y beneficios…"
+              placeholder="Explica el procedimiento, riesgos, alternativas y beneficios…"
             />
           </div>
         </div>
@@ -164,7 +164,7 @@ function ConsentimientosPage() {
       ) : templates.length === 0 ? (
         <div className="card-clinical p-8 text-center text-sm text-muted-foreground">
           <FileSignature className="mx-auto mb-3 size-6" />
-          Todavía no hay plantillas. Podés firmar consentimientos redactando el texto en el momento
+          Todavía no hay plantillas. Puedes firmar consentimientos redactando el texto en el momento
           desde la ficha del paciente, o crear una plantilla acá para reusar.
         </div>
       ) : (

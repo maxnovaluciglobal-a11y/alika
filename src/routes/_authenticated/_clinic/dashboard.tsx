@@ -510,7 +510,9 @@ function Dashboard() {
     },
   ];
 
-  const primerNombre = (access.fullName ?? "").trim().split(/\s+/)[0];
+  // El nombre puede venir guardado en minúsculas ("walter la madriz").
+  const nombre = (access.fullName ?? "").trim().split(/\s+/)[0] ?? "";
+  const primerNombre = nombre ? nombre[0].toLocaleUpperCase("es") + nombre.slice(1) : "";
   const primerDiaDelMes = `${hoy.slice(0, 7)}-01`;
 
   return (

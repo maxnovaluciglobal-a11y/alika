@@ -304,7 +304,7 @@ export function AppShell({
             <span className="font-display text-2xl font-semibold leading-none">Alika</span>
           </Link>
           <ClinicSwitcher access={access} />
-          <GlobalSearch access={access} />
+          <GlobalSearch access={access} atajo />
         </div>
 
         <nav aria-label="Principal" className="flex-1 overflow-y-auto px-3">

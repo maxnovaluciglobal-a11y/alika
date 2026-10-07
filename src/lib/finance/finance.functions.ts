@@ -1446,7 +1446,7 @@ export const reversePayment = createServerFn({ method: "POST" })
       .object({
         id: z.string().uuid(),
         clinicId: z.string().uuid(),
-        reason: z.string().trim().min(3, "Contá por qué se reversa este pago.").max(500),
+        reason: z.string().trim().min(3, "Cuenta por qué se reversa este pago.").max(500),
       })
       .parse(input),
   )

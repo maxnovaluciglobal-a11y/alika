@@ -571,8 +571,8 @@ function RegistrarMovimientoDialog({
               <p className="text-xs text-muted-foreground">
                 El ajuste fija el stock al valor contado (recuento físico), no lo suma ni lo resta.
                 {multiBodega
-                  ? " Fija el stock de la bodega elegida; las demás quedan como están y el total pasa a ser la suma. Para conciliar la clínica entera, usá “Conteo físico”."
-                  : ' Para un conteo de una bodega puntual, usá "Conteo físico" en vez de esto.'}
+                  ? " Fija el stock de la bodega elegida; las demás quedan como están y el total pasa a ser la suma. Para conciliar la clínica entera, usa “Conteo físico”."
+                  : ' Para un conteo de una bodega puntual, usa "Conteo físico" en vez de esto.'}
               </p>
             )}
           </div>
@@ -734,7 +734,7 @@ function ConteoFisicoDialog({
           <DialogTitle>Conteo físico — {item.name}</DialogTitle>
           <DialogDescription>
             El sistema cree que hay {item.currentStock} {item.unit}
-            {multiBodega ? " en total, sumando todas las bodegas" : ""}. Contá lo que hay realmente
+            {multiBodega ? " en total, sumando todas las bodegas" : ""}. Cuenta lo que hay realmente
             y el sistema ajusta la diferencia solo.
           </DialogDescription>
         </DialogHeader>
