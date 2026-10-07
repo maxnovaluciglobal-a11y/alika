@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode, useMemo } from "react";
 
+import { buttonVariants } from "@/components/ui/button";
 import appCss from "../styles.css?url";
 // Las dos caras que pinta el primer pantallazo (cuerpo y titular). Sin
 // precarga, el navegador las pedía recién al aplicar el CSS y el cambio de
@@ -31,7 +32,10 @@ registerServiceWorker();
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <main
+      id="main-content"
+      className="flex min-h-screen items-center justify-center bg-background px-4"
+    >
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">No encontramos esta página</h2>
@@ -39,15 +43,12 @@ function NotFoundComponent() {
           Puede que el enlace esté mal escrito o que la página se haya movido.
         </p>
         <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md border border-brand bg-transparent px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand/12"
-          >
+          <Link to="/" className={buttonVariants()}>
             Volver al inicio
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 
