@@ -18,6 +18,8 @@ interface Props {
   label?: string;
   variant?: "compact" | "full";
   onSent?: () => void;
+  /** Clases extra para la variante "full" (ej. objetivos táctiles de 44px). */
+  className?: string;
 }
 
 /**
@@ -36,6 +38,7 @@ export function WhatsAppButton({
   label,
   variant = "compact",
   onSent,
+  className,
 }: Props) {
   const [pending, setPending] = useState(false);
   const queryClient = useQueryClient();
@@ -109,7 +112,10 @@ export function WhatsAppButton({
       type="button"
       onClick={handleClick}
       disabled={pending || send.isPending}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium transition-colors hover:border-brand hover:text-brand disabled:opacity-50"
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium transition-colors hover:border-brand hover:text-brand disabled:opacity-50",
+        className,
+      )}
     >
       {send.isPending ? (
         <Loader2 className="size-3.5 animate-spin" />

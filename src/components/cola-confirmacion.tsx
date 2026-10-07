@@ -2,13 +2,13 @@ import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, MessageCircle, Phone } from "lucide-react";
+import { Check, Phone } from "lucide-react";
 import { toast } from "sonner";
 
 import { buttonVariants } from "@/components/ui/button";
+import { WhatsAppButton } from "@/components/whatsapp-button";
 import { setPatientConfirmation } from "@/lib/clinic-operations/appointments.functions";
 import { formatoFechaLarga, type Cita } from "@/lib/clinic-operations/clinic-data";
-import { buildWaMeUrl } from "@/lib/messaging/messaging";
 import { listPatients } from "@/lib/patients/patients.functions";
 import { cn } from "@/lib/utils";
 
@@ -86,13 +86,6 @@ export function ColaConfirmacion({
       <ul className="space-y-3">
         {pendientes.map((c) => {
           const tel = telefonos?.get(c.pacienteId) || null;
-          const dia = c.fecha === hoy ? "hoy" : formatoFechaLarga(c.fecha);
-          const wa = tel
-            ? buildWaMeUrl(
-                tel,
-                `Hola ${c.paciente.split(" ")[0]}, te escribimos de ${clinicaNombre} para confirmar tu cita de ${dia} a las ${hora(c.inicio)}. ¿Nos confirmas?`,
-              )
-            : null;
           const enviando = confirmar.isPending && confirmar.variables === c.id;
           return (
             <li key={c.id} className="rounded-lg border border-border p-4">
@@ -128,19 +121,25 @@ export function ColaConfirmacion({
                 >
                   <Phone aria-hidden /> Llamar
                 </a>
-                <a
-                  href={wa ?? undefined}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-disabled={!wa}
-                  className={cn(
-                    buttonVariants({ variant: "outline" }),
-                    "h-11",
-                    !wa && "pointer-events-none opacity-45",
-                  )}
-                >
-                  <MessageCircle aria-hidden /> WhatsApp
-                </a>
+                {/* Mismo envío que /recordatorios: queda en `messages` con
+                    appointment_id y template_kind, así la cola de
+                    recordatorios lo da por enviado y no se manda dos veces. */}
+                <WhatsAppButton
+                  clinicId={clinicId}
+                  patientId={c.pacienteId}
+                  appointmentId={c.id}
+                  templateKind="appointment_reminder"
+                  variant="full"
+                  label="WhatsApp"
+                  className="h-11 justify-center text-sm"
+                  variables={{
+                    tratamiento: c.tratamiento,
+                    fecha_larga: c.fecha === hoy ? "hoy" : formatoFechaLarga(c.fecha),
+                    hora: hora(c.inicio),
+                    profesional: nombreProfesional.get(c.profesionalId) ?? "",
+                    clinica: clinicaNombre,
+                  }}
+                />
                 <button
                   type="button"
                   disabled={enviando}

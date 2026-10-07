@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   CalendarClock,
   CalendarPlus,
-  MessageCircle,
   Pencil,
   ShieldAlert,
   Tag,
@@ -47,7 +46,6 @@ import { getMySubscription } from "@/lib/billing.functions";
 import { requiereLlamadaOSuscripcion } from "@/lib/billing";
 import type { Paciente } from "@/lib/clinic-operations/clinic-data";
 import { formatMoney } from "@/lib/finance/finance";
-import { buildWaMeUrl } from "@/lib/messaging/messaging";
 import { getPatient } from "@/lib/patients/patients.functions";
 import { cn } from "@/lib/utils";
 
@@ -325,9 +323,6 @@ function PacienteDetalle() {
     access.clinic?.onboardingCallAt ?? null,
   );
 
-  const waUrl = paciente.telefono
-    ? buildWaMeUrl(paciente.telefono, `Hola ${paciente.nombre.split(" ")[0]}, `)
-    : null;
   const lineaDatos = [
     paciente.edad ? `${paciente.edad} años` : null,
     paciente.telefono || "Sin teléfono",
@@ -398,16 +393,6 @@ function PacienteDetalle() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {waUrl && (
-                <a
-                  href={waUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={buttonVariants({ variant: "outline" })}
-                >
-                  <MessageCircle aria-hidden /> WhatsApp
-                </a>
-              )}
               {puedeFacturar && (
                 <button
                   type="button"

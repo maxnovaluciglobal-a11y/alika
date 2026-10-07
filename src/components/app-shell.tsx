@@ -450,6 +450,13 @@ export function AppShell({
               )}
             </Link>
           ))}
+          {/* Entre md y lg no hay sidebar ni barra inferior: Ayuda va acá. */}
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="flex min-h-9 items-center whitespace-nowrap rounded-md border border-transparent px-3 text-sm text-muted-foreground"
+          >
+            Ayuda
+          </a>
         </nav>
 
         {destinoActual && destinoActual.pestanas.length > 1 && (

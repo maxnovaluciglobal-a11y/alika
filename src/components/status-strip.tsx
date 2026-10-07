@@ -15,7 +15,11 @@ import { getMySubscription } from "@/lib/billing.functions";
 /**
  * Una sola franja de estado (rediseño, fase 4). Antes podían apilarse hasta
  * cinco banners; ahora se muestra el más importante, en este orden:
- * demo > sin conexión > sincronización pendiente > trial > simulación de rol.
+ * demo > sin conexión > sincronización pendiente > simulación de rol > trial.
+ *
+ * La simulación va antes que el trial (el handoff decía al revés): casi
+ * todas las clínicas están en trial, y con ese orden quien simulaba un rol
+ * no veía ningún aviso ni el botón para volver a su rol real.
  *
  * No reescribe ningún banner: decide cuál montar y reutiliza el componente
  * de siempre, así que sus textos cuidados (qué se puede hacer offline, cómo
@@ -41,6 +45,7 @@ export function StatusStrip({ access }: { access: ClinicAccess }) {
   if (pendientes.length + fallidos.length + conflictos.length > 0) {
     return <PendingSyncBanner userId={access.userId} />;
   }
+  if (access.simulatedRole) return <RoleSimulationBar access={access} soloSiSimula />;
   if (clinicId && trialBannerVisible(sub)) return <TrialBanner clinicId={clinicId} />;
-  return <RoleSimulationBar access={access} soloSiSimula />;
+  return null;
 }

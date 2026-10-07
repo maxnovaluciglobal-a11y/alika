@@ -324,14 +324,20 @@ function Dashboard() {
     () => [...new Set(citasHoy.map((c) => c.pacienteId))].sort(),
     [citasHoy],
   );
-  const { data: saldos = {} } = useQuery({
+  const {
+    data: saldos = {},
+    isPending: saldosPendientes,
+    isError: saldosConError,
+  } = useQuery({
     queryKey: ["appointment-balances", clinicId, pacientesHoy],
     enabled: Boolean(clinicId) && veFinanzas && pacientesHoy.length > 0,
     queryFn: () => fetchBalances({ data: { clinicId: clinicId!, patientIds: pacientesHoy } }),
   });
   const { data: cajaHoy } = useQuery({
     queryKey: ["finance-summary", clinicId, hoy, hoy],
-    enabled: Boolean(clinicId) && veFinanzas && !informesBloqueados,
+    // Esperar a conocer la suscripción: con el trial vencido el servidor
+    // rechaza este informe, y mientras `sub` carga `informesBloqueados` es false.
+    enabled: Boolean(clinicId) && veFinanzas && sub !== undefined && !informesBloqueados,
     queryFn: () => fetchFinance({ data: { clinicId: clinicId!, desde: hoy, hasta: hoy } }),
   });
 
@@ -394,11 +400,19 @@ function Dashboard() {
     valor: String(confirmadas),
     nota: `${sinRespuestaHoy} sin respuesta`,
   };
-  const kpiPorCobrar: Kpi = {
-    label: "Por cobrar hoy",
-    valor: formatMoney(porCobrarHoy, currency),
-    nota: `${conDeuda.length} paciente${conDeuda.length === 1 ? "" : "s"}`,
-  };
+  // Regla 11: mientras los saldos cargan (o si fallan) no se fabrica un $0.
+  const saldosSinDatos = pacientesHoy.length > 0 && (saldosPendientes || saldosConError);
+  const kpiPorCobrar: Kpi = saldosSinDatos
+    ? {
+        label: "Por cobrar hoy",
+        valor: "—",
+        nota: saldosConError ? "Sin datos" : "Cargando…",
+      }
+    : {
+        label: "Por cobrar hoy",
+        valor: formatMoney(porCobrarHoy, currency),
+        nota: `${conDeuda.length} paciente${conDeuda.length === 1 ? "" : "s"}`,
+      };
   // Dueño y contabilidad (finance:view): plata primero. Recepción y el
   // equipo clínico: el movimiento del día. "Por cobrar" exige finance:view
   // también en el servidor, así que no se le ofrece a quien no lo tiene.
@@ -409,7 +423,9 @@ function Dashboard() {
           valor: informesBloqueados || !cajaHoy ? "—" : formatMoney(cajaHoy.totalCents, currency),
           nota: informesBloqueados
             ? "Se activa al suscribirte"
-            : `${cajaHoy?.paymentsCount ?? 0} pago${cajaHoy?.paymentsCount === 1 ? "" : "s"}`,
+            : !cajaHoy
+              ? "Cargando…"
+              : `${cajaHoy.paymentsCount} pago${cajaHoy.paymentsCount === 1 ? "" : "s"}`,
         },
         kpiPorCobrar,
         kpiCitas,
