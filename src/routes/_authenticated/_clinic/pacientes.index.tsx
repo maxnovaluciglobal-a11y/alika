@@ -6,6 +6,7 @@ import { AlertTriangle, FileUp, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { DateField, FilterBar, Paginacion, SearchField, SelectField } from "@/components/filters";
 import { Button } from "@/components/ui/button";
 import {
@@ -500,7 +501,12 @@ function PacientesPage() {
   const fetchBranches = useServerFn(listBranches);
   const fetchProfessionals = useServerFn(listProfessionals);
 
-  const { data: patientsRes, isLoading } = useQuery({
+  const {
+    data: patientsRes,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["patients", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchPatients({ data: { clinicId: clinicId! } }),
@@ -719,7 +725,13 @@ function PacientesPage() {
                 );
               })}
 
-            {!isLoading && pagina.items.length === 0 && (
+            {isError && (
+              <div className="p-4">
+                <ErrorDeCarga onReintentar={refetch} mensaje="No pudimos cargar los pacientes." />
+              </div>
+            )}
+
+            {!isLoading && !isError && pagina.items.length === 0 && (
               <p className="px-5 py-10 text-center text-sm text-muted-foreground">
                 {pacientes.length === 0
                   ? "Todavía no hay pacientes registrados en esta clínica."

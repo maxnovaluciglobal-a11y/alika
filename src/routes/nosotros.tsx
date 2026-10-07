@@ -44,7 +44,7 @@ function Nosotros() {
       <LegalP>
         Alika nació de ver de cerca cómo se administra una clínica dental chica o mediana en
         Latinoamérica: agenda en WhatsApp o en papel, fichas clínicas en Excel o en carpetas,
-        recordatorios de turno que dependen de que alguien se acuerde de mandarlos a mano. El
+        recordatorios de cita que dependen de que alguien se acuerde de mandarlos a mano. El
         software que existe para esto suele estar hecho para otro mercado, en otro idioma, con otro
         precio.
       </LegalP>

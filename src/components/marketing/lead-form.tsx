@@ -216,13 +216,15 @@ export function LeadForm({
         </div>
       </div>
 
-      <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
+      {/* Área táctil de 44px como mínimo: el padding va en el label (todo él
+          marca la casilla) y la casilla crece a 20px en pantallas táctiles. */}
+      <div className="space-y-1 rounded-xl border border-border bg-secondary/30 p-2">
         {/* No premarcado y obligatorio. */}
-        <label className="flex items-start gap-2.5 text-sm">
+        <label className="flex min-h-11 cursor-pointer items-start gap-2.5 rounded-lg p-2 text-sm">
           <input
             type="checkbox"
             name="consent"
-            className="mt-0.5 size-4 shrink-0 rounded-sm border-input"
+            className="mt-0.5 size-4 shrink-0 rounded-sm border-input pointer-coarse:size-5"
           />
           <span>
             {TEXTO_CONSENTIMIENTO}{" "}
@@ -235,11 +237,11 @@ export function LeadForm({
 
         {/* Separado: el número dado "para recibir el material" no habilita
             prospección comercial — es otra finalidad. */}
-        <label className="flex items-start gap-2.5 text-sm">
+        <label className="flex min-h-11 cursor-pointer items-start gap-2.5 rounded-lg p-2 text-sm">
           <input
             type="checkbox"
             name="consentWhatsapp"
-            className="mt-0.5 size-4 shrink-0 rounded-sm border-input"
+            className="mt-0.5 size-4 shrink-0 rounded-sm border-input pointer-coarse:size-5"
           />
           <span>Quiero recibir novedades comerciales por WhatsApp.</span>
         </label>

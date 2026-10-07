@@ -6,6 +6,7 @@ import { CalendarCheck, CircleCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { PatientConfirmedBadge } from "@/components/patient-confirmed-badge";
 import { requirePermission } from "@/lib/access/route-guards";
 import { etiquetaEstado, formatoFechaLarga, hoyISO } from "@/lib/clinic-operations/clinic-data";
@@ -42,7 +43,12 @@ function MiAgendaPage() {
   const queryClient = useQueryClient();
 
   const fetchAppointments = useServerFn(listAppointments);
-  const { data: appointmentsRes, isLoading } = useQuery({
+  const {
+    data: appointmentsRes,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["appointments", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchAppointments({ data: { clinicId: clinicId! } }),
@@ -111,6 +117,10 @@ function MiAgendaPage() {
             </Link>
             .
           </p>
+        ) : isError ? (
+          // Un error no es "no tienes citas": las dos secciones salen de la
+          // misma consulta y antes se veían vacías.
+          <ErrorDeCarga onReintentar={refetch} mensaje="No pudimos cargar tu agenda." />
         ) : (
           <>
             <section className="space-y-3">

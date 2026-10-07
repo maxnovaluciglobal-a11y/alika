@@ -541,7 +541,7 @@ function HorarioDialog({
           <DialogTitle>Horario — {professional.fullName}</DialogTitle>
           <DialogDescription>
             Sin ningún día marcado, no hay restricción: se puede agendar cualquier día/hora dentro
-            del horario de la sucursal, como hasta ahora. Un día sin tildar acá significa que no
+            del horario de la sucursal, como hasta ahora. Un día sin marcar aquí significa que no
             atiende ese día.
           </DialogDescription>
         </DialogHeader>

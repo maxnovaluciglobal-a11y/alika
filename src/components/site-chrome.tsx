@@ -209,7 +209,7 @@ export function PublicPageShell({
   outerClassName?: string;
 }) {
   return (
-    <div className={cn("min-h-screen bg-background", outerClassName)}>
+    <div className={cn("min-h-dvh bg-background", outerClassName)}>
       <SiteHeader />
       <main
         id="main-content"

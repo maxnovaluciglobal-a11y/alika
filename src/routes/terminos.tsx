@@ -30,7 +30,7 @@ function Terminos() {
     >
       <LegalNotice>
         Alika está en etapa de piloto: desde US$29/mes (Solo, 1 profesional) o US$69/mes (Clínica,
-        hasta 3), precio fundador bloqueado para las primeras clínicas. Trial de 14 días sin
+        hasta 3), precio fundador bloqueado para las primeras clínicas. Prueba gratis de 14 días sin
         tarjeta. Estos términos van a evolucionar cuando el producto salga de piloto — te vamos a
         avisar antes de cualquier cambio importante.
       </LegalNotice>

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { DateField, FilterBar, Paginacion, SearchField, SelectField } from "@/components/filters";
 import { requirePermission } from "@/lib/access/route-guards";
 import { formatoFecha } from "@/lib/clinic-operations/clinic-data";
@@ -74,7 +75,12 @@ function TratamientosPage() {
   const clinicId = access.clinic?.id;
 
   const fetchPlans = useServerFn(listClinicTreatmentPlans);
-  const { data: plans = [], isLoading } = useQuery({
+  const {
+    data: plans = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["clinic-treatment-plans", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchPlans({ data: { clinicId: clinicId! } }),
@@ -195,7 +201,16 @@ function TratamientosPage() {
                 );
               })}
 
-            {!isLoading && pagina.items.length === 0 && (
+            {isError && (
+              <div className="p-4">
+                <ErrorDeCarga
+                  onReintentar={refetch}
+                  mensaje="No pudimos cargar los planes de tratamiento."
+                />
+              </div>
+            )}
+
+            {!isLoading && !isError && pagina.items.length === 0 && (
               <p className="px-5 py-10 text-center text-sm text-muted-foreground">
                 No hay planes de tratamiento que coincidan con los filtros.
               </p>

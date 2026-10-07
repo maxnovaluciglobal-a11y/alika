@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { BellRing, Mail, MailX, Star } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { toast } from "sonner";
 import {
   getMyNotificationPreferences,
@@ -143,7 +144,12 @@ function BranchReviewLinksSection({ clinicId }: { clinicId: string }) {
   const queryClient = useQueryClient();
   const cargarBranches = useServerFn(listBranchesForReviewLinks);
 
-  const { data: branches = [], isLoading } = useQuery({
+  const {
+    data: branches = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["branches-review-links", clinicId],
     queryFn: () => cargarBranches({ data: { clinicId } }),
   });
@@ -166,6 +172,10 @@ function BranchReviewLinksSection({ clinicId }: { clinicId: string }) {
       </header>
       {isLoading ? (
         <p className="p-5 text-sm text-muted-foreground">Cargando sucursales…</p>
+      ) : isError ? (
+        <div className="p-5">
+          <ErrorDeCarga onReintentar={refetch} mensaje="No pudimos cargar las sucursales." />
+        </div>
       ) : branches.length === 0 ? (
         <p className="p-5 text-sm text-muted-foreground">No hay sucursales activas.</p>
       ) : (
@@ -185,7 +195,7 @@ function PreferenciasPage() {
   const cargar = useServerFn(getMyNotificationPreferences);
   const guardar = useServerFn(updateMyNotificationPreferences);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["notification-preferences"],
     queryFn: () => cargar({}),
   });
@@ -208,7 +218,9 @@ function PreferenciasPage() {
     onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
-  const bloqueado = isLoading || mutation.isPending;
+  // Con error, los interruptores muestran los valores por defecto y no los
+  // reales: se bloquean para no guardar encima algo que nadie eligió.
+  const bloqueado = isLoading || isError || mutation.isPending;
   const emailsActivos = prefs.emailEnabled && !desuscrito;
 
   const puedeGestionarConfig = hasPermission(access.role, "settings:manage");
@@ -218,6 +230,10 @@ function PreferenciasPage() {
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
         {puedeGestionarConfig && access.clinic && (
           <BranchReviewLinksSection clinicId={access.clinic.id} />
+        )}
+
+        {isError && (
+          <ErrorDeCarga onReintentar={refetch} mensaje="No pudimos cargar tus preferencias." />
         )}
 
         <section className="rounded-xl border border-border bg-card p-5">

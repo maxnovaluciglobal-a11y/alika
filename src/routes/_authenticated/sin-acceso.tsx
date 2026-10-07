@@ -37,7 +37,7 @@ function SalirSimulacion({ realRole }: { realRole: ClinicAccess["role"] }) {
 
 function SinAccesoLayout({ mensaje, children }: { mensaje: string; children?: React.ReactNode }) {
   return (
-    <div className="grid min-h-screen place-items-center bg-surface px-6 text-foreground">
+    <div className="grid min-h-dvh place-items-center bg-surface px-6 text-foreground">
       <div className="card-clinical max-w-md p-8 text-center">
         <ShieldAlert className="mx-auto mb-4 size-8 text-warning" />
         <h1 className="mb-2 font-display text-xl font-semibold">Acceso restringido</h1>

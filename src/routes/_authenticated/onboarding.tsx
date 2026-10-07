@@ -124,7 +124,7 @@ function OnboardingPage() {
   const existing = clinicsQuery.data ?? [];
 
   return (
-    <div className="min-h-screen bg-surface px-4 py-10 sm:py-16">
+    <div className="min-h-dvh bg-surface px-4 py-10 sm:py-16">
       <div className="mx-auto w-full max-w-3xl">
         <header className="mb-8">
           <div className="mb-6 flex items-center gap-2">

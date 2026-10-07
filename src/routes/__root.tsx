@@ -34,7 +34,7 @@ function NotFoundComponent() {
   return (
     <main
       id="main-content"
-      className="flex min-h-screen items-center justify-center bg-background px-4"
+      className="flex min-h-dvh items-center justify-center bg-background px-4"
     >
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
@@ -67,7 +67,7 @@ function ErrorComponent({ error: errorDesconocido, reset }: ErrorComponentProps)
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           No pudimos cargar esta página
@@ -275,7 +275,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
-      <Toaster richColors closeButton />
+      <Toaster closeButton />
     </QueryClientProvider>
   );
 }

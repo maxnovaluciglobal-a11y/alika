@@ -18,7 +18,7 @@ export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number];
 export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, string> = {
   incomplete: "Incompleto",
   incomplete_expired: "Expirado",
-  trialing: "Trial",
+  trialing: "Prueba gratis",
   active: "Activo",
   past_due: "Pago vencido",
   canceled: "Cancelado",
