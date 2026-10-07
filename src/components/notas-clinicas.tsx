@@ -515,6 +515,7 @@ export function NotasClinicas({
                   Plantilla
                 </span>
                 <select
+                  aria-label="Especialidad de la plantilla"
                   value={especialidad}
                   onChange={(e) => setEspecialidad(e.target.value)}
                   className="rounded-lg border border-input bg-transparent px-2 py-1 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
@@ -558,6 +559,7 @@ export function NotasClinicas({
           )}
 
           <input
+            aria-label="Título de la nota"
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             disabled={!puedeEditar || bloqueada}
@@ -565,6 +567,7 @@ export function NotasClinicas({
             className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base disabled:opacity-60"
           />
           <textarea
+            aria-label="Contenido de la nota"
             value={contenido}
             onChange={(e) => setContenido(e.target.value)}
             disabled={!puedeEditar || bloqueada}
@@ -675,6 +678,7 @@ export function NotasClinicas({
               {puedeSolicitarRevision && !revisionPendiente && (
                 <div className="flex flex-wrap items-center gap-2">
                   <select
+                    aria-label="Revisor"
                     value={revisorId}
                     onChange={(e) => setRevisorId(e.target.value)}
                     className="rounded-lg border border-input bg-transparent px-2 py-1.5 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
@@ -720,6 +724,7 @@ export function NotasClinicas({
 
               {(puedeResolver || esSolicitante || puedeEditar) && (
                 <textarea
+                  aria-label={revisionPendiente ? "Comentario del revisor" : "Nota para el revisor"}
                   value={comentarioRevision}
                   onChange={(e) => setComentarioRevision(e.target.value)}
                   rows={2}

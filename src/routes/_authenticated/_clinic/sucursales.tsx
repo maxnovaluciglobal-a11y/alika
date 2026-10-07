@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -135,13 +135,15 @@ function OperatoriesEditor({
   operatories: string[];
   onChange: (next: string[]) => void;
 }) {
+  const fid = useId();
   return (
-    <div className="space-y-1.5">
-      <Label>Boxes / operatorios</Label>
+    <div role="group" aria-labelledby={`${fid}-boxes`} className="space-y-1.5">
+      <Label id={`${fid}-boxes`}>Boxes / operatorios</Label>
       <div className="space-y-2">
         {operatories.map((op, i) => (
           <div key={i} className="flex items-center gap-2">
             <input
+              aria-label={`Box ${i + 1}`}
               value={op}
               onChange={(e) => {
                 const next = [...operatories];
@@ -155,9 +157,10 @@ function OperatoriesEditor({
               <button
                 type="button"
                 onClick={() => onChange(operatories.filter((_, idx) => idx !== i))}
+                aria-label={`Quitar box ${i + 1}`}
                 className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-destructive"
               >
-                <X className="size-4" />
+                <X aria-hidden className="size-4" />
               </button>
             )}
           </div>
@@ -302,6 +305,7 @@ function NuevaSucursalDialog({ clinicId }: { clinicId: string }) {
 }
 
 function EditarSucursalDialog({ clinicId, branch }: { clinicId: string; branch: BranchDetail }) {
+  const fid = useId();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(branch.name);
   const [address, setAddress] = useState(branch.address ?? "");
@@ -433,8 +437,12 @@ function EditarSucursalDialog({ clinicId, branch }: { clinicId: string; branch: 
             Sucursal activa (desmarcar = dar de baja, no borra el historial)
           </label>
 
-          <div className="space-y-1.5 border-t border-hairline pt-3">
-            <Label>Boxes actuales</Label>
+          <div
+            role="group"
+            aria-labelledby={`${fid}-boxes-actuales`}
+            className="space-y-1.5 border-t border-hairline pt-3"
+          >
+            <Label id={`${fid}-boxes-actuales`}>Boxes actuales</Label>
             <div className="flex flex-wrap gap-1.5">
               {branch.operatories.length === 0 && (
                 <p className="text-xs text-muted-foreground">Sin boxes cargados.</p>

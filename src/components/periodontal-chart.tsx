@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Activity, History, Loader2, Plus } from "lucide-react";
@@ -62,7 +62,12 @@ function PocketCell({ mm, bleeding }: { mm: number | null; bleeding: boolean | n
       >
         {mm ?? "—"}
       </span>
-      {bleeding && <span className="size-1.5 rounded-full bg-destructive" title="Sangrado" />}
+      {bleeding && (
+        <>
+          <span aria-hidden className="size-1.5 rounded-full bg-destructive" title="Sangrado" />
+          <span className="sr-only">Sangrado</span>
+        </>
+      )}
     </div>
   );
 }
@@ -150,6 +155,7 @@ function emptyTooth(): DraftTooth {
 }
 
 function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patientId: string }) {
+  const idBase = useId();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [drafts, setDrafts] = useState<Record<number, DraftTooth>>({});
@@ -278,6 +284,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                       <button
                         type="button"
                         onClick={() => toggleTooth(tooth)}
+                        aria-label={`Quitar pieza ${tooth}`}
                         className="text-xs text-muted-foreground hover:text-destructive"
                       >
                         Quitar
@@ -304,6 +311,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                                   type="number"
                                   min={0}
                                   max={15}
+                                  aria-label={`Pieza ${tooth}, sitio ${point.toUpperCase()}, profundidad en mm`}
                                   value={draft.points[point].pocketDepthMm}
                                   onChange={(e) =>
                                     updatePoint(tooth, point, { pocketDepthMm: e.target.value })
@@ -314,6 +322,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                               <td className="px-1.5 py-1 text-center">
                                 <input
                                   type="checkbox"
+                                  aria-label={`Pieza ${tooth}, sitio ${point.toUpperCase()}, sangrado`}
                                   checked={draft.points[point].bleeding}
                                   onChange={(e) =>
                                     updatePoint(tooth, point, { bleeding: e.target.checked })
@@ -326,6 +335,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                                   type="number"
                                   min={-10}
                                   max={15}
+                                  aria-label={`Pieza ${tooth}, sitio ${point.toUpperCase()}, recesión en mm`}
                                   value={draft.points[point].recessionMm}
                                   onChange={(e) =>
                                     updatePoint(tooth, point, { recessionMm: e.target.value })
@@ -340,8 +350,11 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                     </div>
                     <div className="mt-2 flex flex-wrap gap-4">
                       <div className="flex items-center gap-2">
-                        <Label className="text-xs">Movilidad (Miller)</Label>
+                        <Label htmlFor={`${idBase}-${tooth}-movilidad`} className="text-xs">
+                          Movilidad (Miller)
+                        </Label>
                         <select
+                          id={`${idBase}-${tooth}-movilidad`}
                           value={draft.mobility}
                           onChange={(e) => updateTooth(tooth, { mobility: e.target.value })}
                           className="rounded-md border border-input bg-transparent px-2 py-1 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
@@ -356,8 +369,11 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                       </div>
                       {molar && (
                         <div className="flex items-center gap-2">
-                          <Label className="text-xs">Furca</Label>
+                          <Label htmlFor={`${idBase}-${tooth}-furca`} className="text-xs">
+                            Furca
+                          </Label>
                           <select
+                            id={`${idBase}-${tooth}-furca`}
                             value={draft.furcation}
                             onChange={(e) => updateTooth(tooth, { furcation: e.target.value })}
                             className="rounded-md border border-input bg-transparent px-2 py-1 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -156,6 +156,7 @@ function NuevaOrdenDialog({
   currency: string;
   timezone?: string;
 }) {
+  const fid = useId();
   const [open, setOpen] = useState(false);
   const [patientId, setPatientId] = useState("");
   const [labId, setLabId] = useState("");
@@ -232,8 +233,9 @@ function NuevaOrdenDialog({
 
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label>Paciente</Label>
+            <Label htmlFor={`${fid}-paciente`}>Paciente</Label>
             <PatientCombobox
+              id={`${fid}-paciente`}
               value={patientId}
               onChange={setPatientId}
               pacientes={(pacientesRes?.items ?? []).map((p) => ({

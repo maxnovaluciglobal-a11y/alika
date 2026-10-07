@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -328,6 +328,7 @@ function ComisionDialog({
   professional: ProfessionalDetail;
   currency: string;
 }) {
+  const fid = useId();
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<CommissionKind>("percent");
   const [percent, setPercent] = useState(""); // en %, ej "40"
@@ -406,8 +407,9 @@ function ComisionDialog({
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label>Tipo de comisión</Label>
+            <Label htmlFor={`${fid}-tipo`}>Tipo de comisión</Label>
             <select
+              id={`${fid}-tipo`}
               value={kind}
               onChange={(e) => setKind(e.target.value as CommissionKind)}
               className={inputClass()}
@@ -418,8 +420,9 @@ function ComisionDialog({
           </div>
           {kind === "percent" ? (
             <div className="space-y-1.5">
-              <Label>Porcentaje (%)</Label>
+              <Label htmlFor={`${fid}-porcentaje`}>Porcentaje (%)</Label>
               <input
+                id={`${fid}-porcentaje`}
                 type="number"
                 min={0}
                 max={100}
@@ -436,8 +439,9 @@ function ComisionDialog({
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Label>Monto por procedimiento ({currency})</Label>
+              <Label htmlFor={`${fid}-monto`}>Monto por procedimiento ({currency})</Label>
               <input
+                id={`${fid}-monto`}
                 type="number"
                 min={0}
                 step="0.01"

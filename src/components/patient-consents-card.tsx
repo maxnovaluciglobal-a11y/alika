@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { FileSignature, Loader2, ShieldCheck, ShieldX } from "lucide-react";
@@ -60,6 +60,7 @@ export function PatientConsentsCard({
   puedeEditar: boolean;
   puedeGestionar: boolean;
 }) {
+  const fid = useId();
   const queryClient = useQueryClient();
   const fetchTemplates = useServerFn(listConsentTemplates);
   const fetchConsents = useServerFn(listPatientConsents);
@@ -170,8 +171,9 @@ export function PatientConsentsCard({
               <div className="space-y-3">
                 {templatesQuery.data && templatesQuery.data.length > 0 && (
                   <div className="space-y-1.5">
-                    <Label>Plantilla (opcional)</Label>
+                    <Label htmlFor={`${fid}-plantilla`}>Plantilla (opcional)</Label>
                     <select
+                      id={`${fid}-plantilla`}
                       value={templateId}
                       onChange={(e) => aplicarTemplate(e.target.value)}
                       className={inputClass()}
@@ -188,8 +190,9 @@ export function PatientConsentsCard({
                   </div>
                 )}
                 <div className="space-y-1.5">
-                  <Label>Título</Label>
+                  <Label htmlFor={`${fid}-titulo`}>Título</Label>
                   <input
+                    id={`${fid}-titulo`}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className={inputClass()}
@@ -197,8 +200,9 @@ export function PatientConsentsCard({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Texto del consentimiento</Label>
+                  <Label htmlFor={`${fid}-texto`}>Texto del consentimiento</Label>
                   <textarea
+                    id={`${fid}-texto`}
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
                     rows={5}
@@ -207,8 +211,9 @@ export function PatientConsentsCard({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Firma a nombre de</Label>
+                  <Label htmlFor={`${fid}-firmante`}>Firma a nombre de</Label>
                   <input
+                    id={`${fid}-firmante`}
                     value={signedByName}
                     onChange={(e) => setSignedByName(e.target.value)}
                     className={inputClass()}
