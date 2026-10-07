@@ -368,7 +368,7 @@ export function AppShell({
 
       <main id="main-content" className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-background/95 px-5 backdrop-blur-sm sm:px-8"
+          className="sticky top-0 z-10 flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-background/95 px-5 backdrop-blur-sm sm:px-8"
           style={{ paddingTop: "env(safe-area-inset-top)" }}
         >
           <h1 className="truncate font-display text-xl font-semibold">{title}</h1>

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CajaRouteImport } from './routes/caja'
 import { Route as CalculadoraRentabilidadDentalRouteImport } from './routes/calculadora-rentabilidad-dental'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DocsRouteImport } from './routes/docs'
@@ -19,6 +20,7 @@ import { Route as FaqRouteImport } from './routes/faq'
 import { Route as NosotrosRouteImport } from './routes/nosotros'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as PortalLaboratorioRouteImport } from './routes/portal-laboratorio'
+import { Route as PreciosRouteImport } from './routes/precios'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SoftwareDentalLatamRouteImport } from './routes/software-dental-latam'
@@ -41,6 +43,7 @@ import { Route as PortalLaboratorioInicioRouteImport } from './routes/portal-lab
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
 import { Route as PortalTokenRouteImport } from './routes/portal.$token'
 import { Route as PortalInicioRouteImport } from './routes/portal.inicio'
+import { Route as RecursosIndexRouteImport } from './routes/recursos.index'
 import { Route as RecursosFugasClinicaDentalRouteImport } from './routes/recursos.fugas-clinica-dental'
 import { Route as AuthenticatedClinicAgendaRouteImport } from './routes/_authenticated/_clinic/agenda'
 import { Route as AuthenticatedClinicAjustesRouteImport } from './routes/_authenticated/_clinic/ajustes'
@@ -98,6 +101,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CajaRoute = CajaRouteImport.update({
+  id: '/caja',
+  path: '/caja',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CalculadoraRentabilidadDentalRoute =
   CalculadoraRentabilidadDentalRouteImport.update({
     id: '/calculadora-rentabilidad-dental',
@@ -132,6 +140,11 @@ const PortalRoute = PortalRouteImport.update({
 const PortalLaboratorioRoute = PortalLaboratorioRouteImport.update({
   id: '/portal-laboratorio',
   path: '/portal-laboratorio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PreciosRoute = PreciosRouteImport.update({
+  id: '/precios',
+  path: '/precios',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacidadRoute = PrivacidadRouteImport.update({
@@ -243,6 +256,11 @@ const PortalInicioRoute = PortalInicioRouteImport.update({
   id: '/inicio',
   path: '/inicio',
   getParentRoute: () => PortalRoute,
+} as any)
+const RecursosIndexRoute = RecursosIndexRouteImport.update({
+  id: '/recursos/',
+  path: '/recursos/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const RecursosFugasClinicaDentalRoute =
   RecursosFugasClinicaDentalRouteImport.update({
@@ -497,6 +515,7 @@ const AuthenticatedClinicPacientesPacienteIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/caja': typeof CajaRoute
   '/calculadora-rentabilidad-dental': typeof CalculadoraRentabilidadDentalRoute
   '/demo': typeof DemoRoute
   '/docs': typeof DocsRouteWithChildren
@@ -504,6 +523,7 @@ export interface FileRoutesByFullPath {
   '/nosotros': typeof NosotrosRoute
   '/portal': typeof PortalRouteWithChildren
   '/portal-laboratorio': typeof PortalLaboratorioRouteWithChildren
+  '/precios': typeof PreciosRoute
   '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/software-dental-latam': typeof SoftwareDentalLatamRoute
@@ -526,6 +546,7 @@ export interface FileRoutesByFullPath {
   '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
   '/docs/': typeof DocsIndexRoute
   '/portal/': typeof PortalIndexRoute
+  '/recursos/': typeof RecursosIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
   '/ajustes': typeof AuthenticatedClinicAjustesRoute
   '/aranceles': typeof AuthenticatedClinicArancelesRoute
@@ -571,11 +592,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/caja': typeof CajaRoute
   '/calculadora-rentabilidad-dental': typeof CalculadoraRentabilidadDentalRoute
   '/demo': typeof DemoRoute
   '/faq': typeof FaqRoute
   '/nosotros': typeof NosotrosRoute
   '/portal-laboratorio': typeof PortalLaboratorioRouteWithChildren
+  '/precios': typeof PreciosRoute
   '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/software-dental-latam': typeof SoftwareDentalLatamRoute
@@ -598,6 +621,7 @@ export interface FileRoutesByTo {
   '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
   '/docs': typeof DocsIndexRoute
   '/portal': typeof PortalIndexRoute
+  '/recursos': typeof RecursosIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
   '/ajustes': typeof AuthenticatedClinicAjustesRoute
   '/aranceles': typeof AuthenticatedClinicArancelesRoute
@@ -645,6 +669,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/caja': typeof CajaRoute
   '/calculadora-rentabilidad-dental': typeof CalculadoraRentabilidadDentalRoute
   '/demo': typeof DemoRoute
   '/docs': typeof DocsRouteWithChildren
@@ -652,6 +677,7 @@ export interface FileRoutesById {
   '/nosotros': typeof NosotrosRoute
   '/portal': typeof PortalRouteWithChildren
   '/portal-laboratorio': typeof PortalLaboratorioRouteWithChildren
+  '/precios': typeof PreciosRoute
   '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/software-dental-latam': typeof SoftwareDentalLatamRoute
@@ -675,6 +701,7 @@ export interface FileRoutesById {
   '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
   '/docs/': typeof DocsIndexRoute
   '/portal/': typeof PortalIndexRoute
+  '/recursos/': typeof RecursosIndexRoute
   '/_authenticated/_clinic/agenda': typeof AuthenticatedClinicAgendaRoute
   '/_authenticated/_clinic/ajustes': typeof AuthenticatedClinicAjustesRoute
   '/_authenticated/_clinic/aranceles': typeof AuthenticatedClinicArancelesRoute
@@ -722,6 +749,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/caja'
     | '/calculadora-rentabilidad-dental'
     | '/demo'
     | '/docs'
@@ -729,6 +757,7 @@ export interface FileRouteTypes {
     | '/nosotros'
     | '/portal'
     | '/portal-laboratorio'
+    | '/precios'
     | '/privacidad'
     | '/sitemap.xml'
     | '/software-dental-latam'
@@ -751,6 +780,7 @@ export interface FileRouteTypes {
     | '/recursos/fugas-clinica-dental'
     | '/docs/'
     | '/portal/'
+    | '/recursos/'
     | '/agenda'
     | '/ajustes'
     | '/aranceles'
@@ -796,11 +826,13 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/caja'
     | '/calculadora-rentabilidad-dental'
     | '/demo'
     | '/faq'
     | '/nosotros'
     | '/portal-laboratorio'
+    | '/precios'
     | '/privacidad'
     | '/sitemap.xml'
     | '/software-dental-latam'
@@ -823,6 +855,7 @@ export interface FileRouteTypes {
     | '/recursos/fugas-clinica-dental'
     | '/docs'
     | '/portal'
+    | '/recursos'
     | '/agenda'
     | '/ajustes'
     | '/aranceles'
@@ -869,6 +902,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/caja'
     | '/calculadora-rentabilidad-dental'
     | '/demo'
     | '/docs'
@@ -876,6 +910,7 @@ export interface FileRouteTypes {
     | '/nosotros'
     | '/portal'
     | '/portal-laboratorio'
+    | '/precios'
     | '/privacidad'
     | '/sitemap.xml'
     | '/software-dental-latam'
@@ -899,6 +934,7 @@ export interface FileRouteTypes {
     | '/recursos/fugas-clinica-dental'
     | '/docs/'
     | '/portal/'
+    | '/recursos/'
     | '/_authenticated/_clinic/agenda'
     | '/_authenticated/_clinic/ajustes'
     | '/_authenticated/_clinic/aranceles'
@@ -946,6 +982,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CajaRoute: typeof CajaRoute
   CalculadoraRentabilidadDentalRoute: typeof CalculadoraRentabilidadDentalRoute
   DemoRoute: typeof DemoRoute
   DocsRoute: typeof DocsRouteWithChildren
@@ -953,6 +990,7 @@ export interface RootRouteChildren {
   NosotrosRoute: typeof NosotrosRoute
   PortalRoute: typeof PortalRouteWithChildren
   PortalLaboratorioRoute: typeof PortalLaboratorioRouteWithChildren
+  PreciosRoute: typeof PreciosRoute
   PrivacidadRoute: typeof PrivacidadRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SoftwareDentalLatamRoute: typeof SoftwareDentalLatamRoute
@@ -963,6 +1001,7 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
   RecursosFugasClinicaDentalRoute: typeof RecursosFugasClinicaDentalRoute
+  RecursosIndexRoute: typeof RecursosIndexRoute
   ApiRecursoSlugRoute: typeof ApiRecursoSlugRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
@@ -988,6 +1027,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/caja': {
+      id: '/caja'
+      path: '/caja'
+      fullPath: '/caja'
+      preLoaderRoute: typeof CajaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calculadora-rentabilidad-dental': {
@@ -1037,6 +1083,13 @@ declare module '@tanstack/react-router' {
       path: '/portal-laboratorio'
       fullPath: '/portal-laboratorio'
       preLoaderRoute: typeof PortalLaboratorioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/precios': {
+      id: '/precios'
+      path: '/precios'
+      fullPath: '/precios'
+      preLoaderRoute: typeof PreciosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacidad': {
@@ -1192,6 +1245,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/inicio'
       preLoaderRoute: typeof PortalInicioRouteImport
       parentRoute: typeof PortalRoute
+    }
+    '/recursos/': {
+      id: '/recursos/'
+      path: '/recursos'
+      fullPath: '/recursos/'
+      preLoaderRoute: typeof RecursosIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/recursos/fugas-clinica-dental': {
       id: '/recursos/fugas-clinica-dental'
@@ -1653,6 +1713,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CajaRoute: CajaRoute,
   CalculadoraRentabilidadDentalRoute: CalculadoraRentabilidadDentalRoute,
   DemoRoute: DemoRoute,
   DocsRoute: DocsRouteWithChildren,
@@ -1660,6 +1721,7 @@ const rootRouteChildren: RootRouteChildren = {
   NosotrosRoute: NosotrosRoute,
   PortalRoute: PortalRouteWithChildren,
   PortalLaboratorioRoute: PortalLaboratorioRouteWithChildren,
+  PreciosRoute: PreciosRoute,
   PrivacidadRoute: PrivacidadRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SoftwareDentalLatamRoute: SoftwareDentalLatamRoute,
@@ -1670,6 +1732,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
   RecursosFugasClinicaDentalRoute: RecursosFugasClinicaDentalRoute,
+  RecursosIndexRoute: RecursosIndexRoute,
   ApiRecursoSlugRoute: ApiRecursoSlugRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }

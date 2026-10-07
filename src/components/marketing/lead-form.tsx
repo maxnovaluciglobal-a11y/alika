@@ -11,7 +11,7 @@ import { TEXTO_CONSENTIMIENTO, type MetaLead, type PaisCaptacion } from "@/lib/m
 import { registrarEvento } from "@/lib/marketing/eventos";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 const CLAVES_UTM = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
 
@@ -58,19 +58,34 @@ export function LeadForm({
   const [estado, setEstado] = useState<"idle" | "enviando" | "ok">("idle");
   const [error, setError] = useState<string | null>(null);
   const [resultado, setResultado] = useState<Awaited<ReturnType<typeof enviar>> | null>(null);
+  // /demo es un formulario corto: nombre + email obligatorios, WhatsApp
+  // opcional y sin "nombre de la clínica" (la columna es nullable). El copy
+  // de la landing promete exactamente eso: "solo te pedimos nombre y email".
+  const esDemo = source === "demo";
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     const f = new FormData(e.currentTarget);
 
-    if (f.get("consent") !== "on") {
-      setError("Necesitamos tu autorización para poder enviarte el material.");
+    const email = String(f.get("email") ?? "").trim();
+    const phone = String(f.get("phone") ?? "").trim();
+    const name = String(f.get("name") ?? "").trim();
+
+    if (esDemo && (!name || !email)) {
+      setError("Déjanos tu nombre y tu email para entrar a la demo.");
       return;
     }
 
-    const email = String(f.get("email") ?? "").trim();
-    const phone = String(f.get("phone") ?? "").trim();
+    if (f.get("consent") !== "on") {
+      setError(
+        esDemo
+          ? "Necesitamos tu autorización para guardar tus datos antes de abrir la demo."
+          : "Necesitamos tu autorización para poder enviarte el material.",
+      );
+      return;
+    }
+
     if (!email && !phone) {
       // Mismo mensaje que el .refine() del server (EsquemaLead en
       // leads.functions.ts) — cubrimos acá el caso más común para evitar el
@@ -85,8 +100,8 @@ export function LeadForm({
         data: {
           email: email || undefined,
           phone: phone || undefined,
-          name: String(f.get("name") ?? "").trim() || undefined,
-          clinicName: String(f.get("clinicName") ?? "").trim() || undefined,
+          name: name || undefined,
+          clinicName: esDemo ? undefined : String(f.get("clinicName") ?? "").trim() || undefined,
           countryCode: pais,
           source,
           consent: true,
@@ -124,9 +139,12 @@ export function LeadForm({
           Guardamos tus datos. Nos vamos a poner en contacto para acompañarte con esto.
         </p>
         {downloadToken && slugRecurso && (
-          <Button asChild className="mt-4 bg-foreground text-background hover:bg-foreground/90">
-            <a href={`/api/recurso/${slugRecurso}?token=${downloadToken}`}>Descargar PDF</a>
-          </Button>
+          <a
+            href={`/api/recurso/${slugRecurso}?token=${downloadToken}`}
+            className={buttonVariants({ className: "mt-4" })}
+          >
+            Descargar PDF
+          </a>
         )}
       </div>
     );
@@ -144,26 +162,49 @@ export function LeadForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="name">Tu nombre</Label>
-          <Input id="name" name="name" type="text" maxLength={120} autoComplete="name" />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="clinicName">Nombre de la clínica</Label>
           <Input
-            id="clinicName"
-            name="clinicName"
+            id="name"
+            name="name"
             type="text"
             maxLength={120}
-            autoComplete="organization"
+            autoComplete="name"
+            required={esDemo}
           />
         </div>
+
+        {esDemo ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              maxLength={254}
+              autoComplete="email"
+              required
+            />
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            <Label htmlFor="clinicName">Nombre de la clínica</Label>
+            <Input
+              id="clinicName"
+              name="clinicName"
+              type="text"
+              maxLength={120}
+              autoComplete="organization"
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" maxLength={254} autoComplete="email" />
-        </div>
+        {!esDemo && (
+          <div className="space-y-1.5">
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" name="email" type="email" maxLength={254} autoComplete="email" />
+          </div>
+        )}
 
         <div className="space-y-1.5">
           {/* Opcional por minimización (art. 14 quáter de la Ley 21.719): sólo
@@ -214,7 +255,7 @@ export function LeadForm({
         type="submit"
         disabled={estado === "enviando"}
         aria-describedby={error ? "lead-error" : undefined}
-        className="w-full bg-foreground text-background hover:bg-foreground/90 sm:w-auto"
+        className="w-full sm:w-auto"
         size="lg"
       >
         {estado === "enviando" ? "Guardando…" : (textoBoton ?? "Quiero recibirlo")}

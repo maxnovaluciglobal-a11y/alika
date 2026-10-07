@@ -220,7 +220,7 @@ function AuthPage() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none pointer-coarse:text-base focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
             )}
@@ -236,7 +236,7 @@ function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none pointer-coarse:text-base focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
 
@@ -252,7 +252,7 @@ function AuthPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none pointer-coarse:text-base focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
 
