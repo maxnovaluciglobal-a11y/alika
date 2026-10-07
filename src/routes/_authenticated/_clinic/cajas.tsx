@@ -29,6 +29,7 @@ import {
   listCashRegisters,
   openCashRegister,
 } from "@/lib/finance/cash-registers.functions";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/cajas")({
   beforeLoad: requirePermission("cash:manage"),
@@ -103,7 +104,7 @@ function CajasPage() {
       queryClient.invalidateQueries({ queryKey: openQueryKey });
       queryClient.invalidateQueries({ queryKey: historyQueryKey });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(mensajeDeError(error)),
   });
 
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
@@ -134,7 +135,7 @@ function CajasPage() {
       queryClient.invalidateQueries({ queryKey: openQueryKey });
       queryClient.invalidateQueries({ queryKey: historyQueryKey });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(mensajeDeError(error)),
   });
 
   if (!clinicId) return null;
@@ -158,7 +159,7 @@ function CajasPage() {
           ) : openRegister ? (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <LockOpen className="h-5 w-5 text-emerald-600" />
+                <LockOpen className="h-5 w-5 text-success" />
                 <span className="font-medium">Caja abierta</span>
                 <span className="text-sm text-muted-foreground">
                   desde {formatoFecha(openRegister.openedAt)}
@@ -304,7 +305,7 @@ function CajasPage() {
                         r.differenceCents === null
                           ? ""
                           : r.differenceCents === 0
-                            ? "text-emerald-600"
+                            ? "text-success"
                             : "text-destructive"
                       }`}
                     >

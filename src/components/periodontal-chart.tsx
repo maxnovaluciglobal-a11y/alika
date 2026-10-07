@@ -33,6 +33,7 @@ import {
   type PeriodontalChart as PeriodontalChartData,
   type PeriodontalPoint,
 } from "@/lib/clinical/periodontal";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 type Props = {
   clinicId: string;
@@ -221,7 +222,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
       setDrafts({});
       setNotes("");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const puedeCrear = toothList.length > 0 && !create.isPending;
@@ -255,7 +256,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                   onClick={() => toggleTooth(n)}
                   className={`rounded-md border px-2 py-1 text-xs transition-colors ${
                     selected.has(n)
-                      ? "border-brand/40 bg-brand-soft text-brand"
+                      ? "border-brand/40 bg-brand-soft text-brand-700"
                       : "border-hairline text-muted-foreground hover:bg-secondary/60"
                   }`}
                 >
@@ -307,7 +308,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                                   onChange={(e) =>
                                     updatePoint(tooth, point, { pocketDepthMm: e.target.value })
                                   }
-                                  className="w-14 rounded-md border border-hairline bg-transparent px-1.5 py-1 text-center text-xs outline-none focus:border-brand/50"
+                                  className="w-14 rounded-md border border-input bg-transparent px-1.5 py-1 text-center text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
                                 />
                               </td>
                               <td className="px-1.5 py-1 text-center">
@@ -329,7 +330,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                                   onChange={(e) =>
                                     updatePoint(tooth, point, { recessionMm: e.target.value })
                                   }
-                                  className="w-14 rounded-md border border-hairline bg-transparent px-1.5 py-1 text-center text-xs outline-none focus:border-brand/50"
+                                  className="w-14 rounded-md border border-input bg-transparent px-1.5 py-1 text-center text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
                                 />
                               </td>
                             </tr>
@@ -343,7 +344,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                         <select
                           value={draft.mobility}
                           onChange={(e) => updateTooth(tooth, { mobility: e.target.value })}
-                          className="rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
+                          className="rounded-md border border-input bg-transparent px-2 py-1 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
                         >
                           <option value="">Sin dato</option>
                           {[0, 1, 2, 3].map((v) => (
@@ -359,7 +360,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                           <select
                             value={draft.furcation}
                             onChange={(e) => updateTooth(tooth, { furcation: e.target.value })}
-                            className="rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
+                            className="rounded-md border border-input bg-transparent px-2 py-1 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
                           >
                             <option value="">Sin dato</option>
                             {[0, 1, 2, 3].map((v) => (
@@ -384,7 +385,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               placeholder="Observaciones generales de la sesión de sondaje"
             />
           </div>
@@ -462,7 +463,7 @@ export function PeriodontalChart({ clinicId, patientId, puedeEditar }: Props) {
               onClick={() => setViewChartId(h.id === viewChartId ? null : h.id)}
               className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs transition-colors ${
                 h.id === viewChartId || (!viewChartId && latest?.id === h.id)
-                  ? "border-brand/40 bg-brand-soft text-brand"
+                  ? "border-brand/40 bg-brand-soft text-brand-700"
                   : "border-hairline text-muted-foreground hover:bg-secondary/60"
               }`}
             >

@@ -11,8 +11,12 @@
 //   convierte en promesa (ver /efectividad y el CLAUDE.md del repo).
 // - Logos y testimonio requieren permiso de las clínicas piloto: las
 //   secciones existen, pero no se renderizan mientras sus datos estén vacíos.
-// - /demo pide nombre y email antes de entrar: se dice "sin crear cuenta",
-//   nunca "sin registro".
+// - /demo pide nombre y email antes de entrar: se dice eso mismo ("solo te
+//   pedimos nombre y email"), nunca "sin registro" ni "sin crear cuenta".
+// - El resumen diario solo cuenta recordatorios pendientes y mensajes sin
+//   responder: los montos se ven en la pantalla Hoy, no llegan "cada mañana".
+// - Ningún recordatorio sale solo: Alika arma la lista y alguien del equipo
+//   la despacha. No escribir "Alika confirma tus citas".
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, MessageCircle } from "lucide-react";
@@ -24,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { calcularFugas } from "@/lib/marketing/calculadora";
 import { enlaceWhatsAppVentas } from "@/lib/marketing/contacto";
 import { registrarEvento } from "@/lib/marketing/eventos";
+import { detectarPaisVisitante, monedaPorPais } from "@/lib/marketing/pais-visitante";
 import { setPlanIntent, type PlanIntent } from "@/lib/marketing/plan-intent";
 import { MONEDAS_PRECIO, precioEnMoneda, type MonedaPrecio } from "@/lib/pricing-display";
 import { canonicalHead } from "@/lib/seo";
@@ -38,13 +43,13 @@ export const Route = createFileRoute("/")({
         {
           name: "description",
           content:
-            "Cada silla vacía es plata que no vuelve. Alika confirma tus citas por WhatsApp, lleva la ficha y el odontograma, y te dice cuánto entró y cuánto te deben. Sin instalar nada.",
+            "Software para clínicas dentales de Chile, Perú, México, Colombia y Argentina: recordatorios por WhatsApp, ficha con odontograma, presupuestos y saldos. 14 días gratis, sin tarjeta.",
         },
         { property: "og:title", content: "Alika · Cada silla vacía es plata que no vuelve" },
         {
           property: "og:description",
           content:
-            "Agenda, ficha clínica, odontograma, presupuestos y cobranza con recordatorios por WhatsApp. Hecho para clínicas de Chile, Perú, México y Colombia.",
+            "Agenda, ficha clínica, odontograma, presupuestos y cobranza con recordatorios por WhatsApp. Hecho para clínicas de Chile, Perú, México, Colombia y Argentina.",
         },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary_large_image" },
@@ -75,9 +80,9 @@ const filasHoy = [
 ] as const;
 
 const tonoEstado = {
-  ok: "border-success/40 text-success",
-  sala: "border-brand/50 text-brand-700",
-  pendiente: "border-destructive/40 text-destructive",
+  ok: "border-success-border bg-success-soft text-success",
+  sala: "border-info-border bg-info-soft text-info",
+  pendiente: "border-dashed border-warning-border bg-warning-soft text-warning",
 } as const;
 
 function PantallaHoy() {
@@ -126,7 +131,7 @@ function PantallaHoy() {
       </ul>
       <figcaption className="flex items-start gap-2 border-t border-hairline px-6 py-3 text-xs text-muted-foreground">
         <MessageCircle className="mt-0.5 size-3.5 shrink-0 text-brand" aria-hidden />
-        WhatsApp enviado a R. Fernández · respondió “confirmo” hace 4 min
+        Recepción le envió el recordatorio a R. Fernández · respondió “confirmo” hace 4 min
       </figcaption>
     </figure>
   );
@@ -141,6 +146,7 @@ const MONEDAS_CALCULO = [
   { code: "PEN", label: "PEN", ticket: 180 },
   { code: "MXN", label: "MXN", ticket: 900 },
   { code: "COP", label: "COP", ticket: 180000 },
+  { code: "USD", label: "USD", ticket: 50 },
 ] as const;
 
 type MonedaCalculo = (typeof MONEDAS_CALCULO)[number]["code"];
@@ -159,6 +165,16 @@ function CalculadoraFugas() {
   const [ausencias, setAusencias] = useState(18);
   const [ticket, setTicket] = useState<number>(45000);
   const usada = useRef(false);
+
+  // Arranca en la misma moneda que el selector de precios (zona horaria del
+  // visitante). En un efecto, para que el SSR y la hidratación coincidan.
+  useEffect(() => {
+    const m = monedaPorPais(detectarPaisVisitante());
+    const def = MONEDAS_CALCULO.find((x) => x.code === m);
+    if (!def || usada.current) return;
+    setMoneda(def.code);
+    setTicket(def.ticket);
+  }, []);
 
   const perdida = useMemo(() => {
     // calcularFugas trabaja en cents; acá basta con la unidad visible.
@@ -201,7 +217,7 @@ function CalculadoraFugas() {
             to="/calculadora-rentabilidad-dental"
             className="text-brand-700 underline-offset-4 hover:underline"
           >
-            Calcular el P&amp;L completo →
+            Calcular cuánto gana tu clínica →
           </Link>
           <Link
             to="/recursos/fugas-clinica-dental"
@@ -245,7 +261,7 @@ function CalculadoraFugas() {
                   setMoneda(m);
                   setTicket(MONEDAS_CALCULO.find((x) => x.code === m)?.ticket ?? ticket);
                 }}
-                className="h-9 rounded-l-md border border-r-0 border-input bg-transparent px-1.5 text-xs"
+                className="h-9 rounded-l-md border border-r-0 border-input bg-transparent px-1.5 text-xs pointer-coarse:text-base"
               >
                 {MONEDAS_CALCULO.map((m) => (
                   <option key={m.code} value={m.code}>
@@ -265,13 +281,12 @@ function CalculadoraFugas() {
         </div>
 
         <div className="mt-8 border-t border-hairline pt-6" aria-live="polite">
-          <p className="text-sm text-muted-foreground">Pierdes aprox.</p>
+          <p className="text-sm text-muted-foreground">Con estos números, pierdes aprox.</p>
           <p className="mt-1 font-display text-5xl font-normal tabular-nums text-foreground sm:text-6xl">
             {perdida === null ? "—" : formatearMonto(perdida, moneda)}
             <span className="ml-2 font-body text-base text-muted-foreground">/mes</span>
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
-            Cada cita confirmada a tiempo es una silla que no se queda vacía.{" "}
             {perdida !== null && perdida > 0 && (
               <>
                 Si bajaras las ausencias a la mitad, recuperarías{" "}
@@ -292,21 +307,21 @@ function CalculadoraFugas() {
 
 const resultados = [
   {
-    cifra: "48 h · 3 h",
-    titulo: "Menos ausencias",
+    cifra: "2 avisos",
+    titulo: "Nadie se queda sin recordatorio",
     texto:
-      "Cada cita tiene su confirmación y su recordatorio por WhatsApp. Quien no responde aparece en tu cola, no en tu memoria.",
+      "48 h y 3 h antes de cada cita, Alika te deja listo el recordatorio por WhatsApp y alguien de tu equipo lo envía con un toque. Quien no responde aparece en tu cola, no en tu memoria.",
     cta: "Ver la cola de confirmaciones",
   },
   {
-    cifra: "8:00",
-    titulo: "Cobras lo que te deben",
+    cifra: "Saldo",
+    titulo: "Sabes quién te debe",
     texto:
-      "Presupuesto aceptado se vuelve plan de tratamiento y cada pago descuenta el saldo. Cada mañana, un resumen de lo pendiente.",
+      "El presupuesto aceptado se vuelve plan de tratamiento y cada pago descuenta el saldo. En Hoy ves qué pacientes del día tienen deuda, antes de que entren a consulta.",
     cta: "Ver la caja",
   },
   {
-    cifra: "1 ficha",
+    cifra: "Una ficha",
     titulo: "La historia, en un lugar",
     texto:
       "Odontograma FDI versionado, notas clínicas con revisión y resumen con IA, consentimientos firmados.",
@@ -319,7 +334,6 @@ type Plan = {
   alcance: string;
   nombre: string;
   usd: number | null;
-  listaUsd: number | null;
   incluye: readonly string[];
   recomendado?: boolean;
 };
@@ -330,12 +344,12 @@ const planes: readonly Plan[] = [
     alcance: "1 profesional",
     nombre: "Solo",
     usd: 29,
-    listaUsd: 49,
     incluye: [
       "Agenda y ficha clínica",
       "Recordatorios por WhatsApp",
       "Caja y presupuestos",
-      "Soporte directo",
+      "Importación de pacientes por planilla",
+      "Soporte directo con el equipo que lo construye",
     ],
   },
   {
@@ -343,21 +357,14 @@ const planes: readonly Plan[] = [
     alcance: "Hasta 3 profesionales",
     nombre: "Clínica",
     usd: 69,
-    listaUsd: 99,
     recomendado: true,
-    incluye: [
-      "Todo lo de Solo",
-      "Comisiones y roles",
-      "Portal de pacientes",
-      "Importación por planilla",
-    ],
+    incluye: ["Todo lo de Solo", "Comisiones y roles", "Portal de pacientes"],
   },
   {
     id: "red",
     alcance: "Varias sedes",
     nombre: "Red",
     usd: null,
-    listaUsd: null,
     incluye: [
       "Todo lo de Clínica",
       "Multisede e inventario",
@@ -371,12 +378,11 @@ function Precios() {
   const [moneda, setMoneda] = useState<MonedaPrecio>("USD");
   const whatsapp = enlaceWhatsAppVentas();
 
-  // La moneda por defecto sigue al idioma del navegador (es-CL → CLP…), en
-  // cliente, para no romper la hidratación con un valor distinto del SSR.
+  // La moneda por defecto sigue al país probable del visitante (zona
+  // horaria), la misma regla que la calculadora. En cliente, para no romper
+  // la hidratación con un valor distinto del SSR.
   useEffect(() => {
-    const region = navigator.language.split("-")[1];
-    const porRegion: Record<string, MonedaPrecio> = { CL: "CLP", PE: "PEN", MX: "MXN" };
-    if (region && porRegion[region]) setMoneda(porRegion[region]);
+    setMoneda(monedaPorPais(detectarPaisVisitante()));
   }, []);
 
   return (
@@ -442,7 +448,7 @@ function Precios() {
                   <span className="ml-1 font-body text-base text-muted-foreground">/mes</span>
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  US${p.usd} · antes <span className="line-through">US${p.listaUsd}</span>
+                  US${p.usd} al mes
                   {moneda !== "USD" && " · referencial, el cobro es en USD"}
                 </p>
               </>
@@ -463,7 +469,7 @@ function Precios() {
                 onClick={() => registrarEvento("cta_click", { cta: "red", lugar: "precios" })}
                 className={cn(buttonVariants({ variant: "outline" }), "mt-8 w-full")}
               >
-                Conversemos
+                {whatsapp.esWhatsApp ? "Cotizar por WhatsApp" : "Escríbenos"}
               </a>
             ) : (
               <ComprarPlanLink plan={p.id} recomendado={p.recomendado} />
@@ -513,15 +519,20 @@ function Landing() {
         {/* Hero */}
         <section className="mx-auto grid max-w-6xl items-center gap-14 px-6 pt-14 pb-20 sm:pt-20 lg:grid-cols-[1fr_1.05fr]">
           <div className="min-w-0">
-            <p className="kicker">Gestión dental · Chile, Perú, México, Colombia</p>
+            <p className="kicker">
+              <Link to="/software-dental-latam" className="hover:underline">
+                Software para clínicas dentales · Chile, Perú, México, Colombia, Argentina
+              </Link>
+            </p>
             <h1 className="mt-5 font-display text-[2.9rem] font-normal leading-[0.98] tracking-[-0.02em] sm:text-6xl lg:text-[68px]">
               Cada silla vacía
               <br />
               <em className="text-brand-700">es plata que no vuelve.</em>
             </h1>
             <p className="mt-7 max-w-lg text-lg leading-relaxed text-foreground/80">
-              Alika confirma tus citas por WhatsApp, lleva la ficha y el odontograma, y te dice cada
-              mañana cuánto entró y cuánto te deben. Sin instalar nada.
+              Alika te arma la lista de citas por confirmar y las mandas por WhatsApp con un toque.
+              La ficha y el odontograma quedan en el mismo lugar, y en la pantalla Hoy ves qué se
+              cobró y quién debe. Funciona en el navegador, sin instalar nada.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-3">
               <a
@@ -529,7 +540,7 @@ function Landing() {
                 onClick={() => marcarDemo("hero")}
                 className={buttonVariants({ size: "lg" })}
               >
-                Entrar a la demo, sin crear cuenta
+                Entrar a la demo
               </a>
               <Link
                 to="/auth"
@@ -539,6 +550,9 @@ function Landing() {
                 o crea tu clínica gratis →
               </Link>
             </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Para la demo solo te pedimos nombre y email, sin tarjeta ni contraseña.
+            </p>
             <ul className="mt-7 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
               <li>14 días gratis</li>
               <li aria-hidden>·</li>
@@ -572,7 +586,7 @@ function Landing() {
         {/* Tres resultados */}
         <section id="producto" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16">
           <h2 className="max-w-xl font-display text-4xl font-normal leading-tight sm:text-5xl">
-            Tres resultados, cada uno con su pantalla.
+            Lo que cambia desde la primera semana.
           </h2>
           <div className="mt-12 grid gap-12 md:grid-cols-3 md:gap-0">
             {resultados.map((r, i) => (
@@ -635,23 +649,34 @@ function Landing() {
         </div>
 
         {/* Cierre */}
-        <section className="border-t border-border">
+        {/* Cierre en banda de tinta (nivel "entre medio y audaz" que eligió
+            Walter, 07-oct-2026): el único bloque oscuro de la página, para
+            que el último CTA no se pierda en el papel. Sobre tinta el ocre
+            va relleno con texto tinta (4,9:1) y el contorno en papel. */}
+        <section className="bg-foreground text-background">
           <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 px-6 py-20 md:flex-row md:items-end">
             <h2 className="max-w-xl font-display text-4xl font-normal leading-tight sm:text-5xl">
-              Ordena tu clínica esta semana.
+              Mira tu agenda de mañana en Alika{" "}
+              <em className="text-brand">antes de que termine el día.</em>
             </h2>
             <div className="flex flex-wrap gap-3">
               <a
                 href="/demo"
                 onClick={() => marcarDemo("cierre")}
-                className={buttonVariants({ size: "lg" })}
+                className={cn(
+                  buttonVariants({ size: "lg" }),
+                  "border-brand bg-brand text-brand-foreground hover:bg-brand/88",
+                )}
               >
                 Entrar a la demo
               </a>
               <a
                 href={whatsapp.href}
                 onClick={() => registrarEvento("cta_click", { cta: "whatsapp", lugar: "cierre" })}
-                className={buttonVariants({ variant: "outline", size: "lg" })}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "lg" }),
+                  "border-background/60 text-background hover:bg-background/10",
+                )}
                 {...(whatsapp.esWhatsApp ? { target: "_blank", rel: "noopener noreferrer" } : {})}
               >
                 <MessageCircle aria-hidden />

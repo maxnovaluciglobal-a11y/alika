@@ -35,9 +35,10 @@ import {
 } from "@/lib/finance/commissions.functions";
 import { formatMoney, fromCents, toCents } from "@/lib/finance/finance";
 import { requirePermission } from "@/lib/access/route-guards";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 function inputClass() {
-  return "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
+  return "w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base";
 }
 
 /** Orden de despliegue lunes→domingo. El value es el day_of_week real
@@ -68,7 +69,7 @@ const EMPTY_FORM: ProfessionalFormState = {
   email: "",
   phone: "",
   licenseNumber: "",
-  color: "#0d9488",
+  color: "#a8772c",
   branchId: null,
   specialtyId: null,
 };
@@ -201,7 +202,7 @@ function NuevoProfesionalDialog({
       setOpen(false);
       setForm(EMPTY_FORM);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -275,7 +276,7 @@ function EditarProfesionalDialog({
       toast.success("Profesional actualizado.");
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -373,7 +374,7 @@ function ComisionDialog({
       toast.success("Comisión actualizada.");
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const quitar = useMutation({
@@ -383,7 +384,7 @@ function ComisionDialog({
       toast.success("Comisión quitada.");
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const tieneRegla = Boolean(rulesQuery.data?.some((r) => r.professionalId === professional.id));
@@ -516,7 +517,7 @@ function HorarioDialog({
       toast.success("Horario actualizado.");
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const invalido = DAYS.some((d) => {

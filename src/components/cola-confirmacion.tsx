@@ -11,6 +11,7 @@ import { setPatientConfirmation } from "@/lib/clinic-operations/appointments.fun
 import { formatoFechaLarga, type Cita } from "@/lib/clinic-operations/clinic-data";
 import { listPatients } from "@/lib/patients/patients.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 function hora(inicio: number) {
   const t = 8 * 60 + inicio;
@@ -70,7 +71,7 @@ export function ColaConfirmacion({
       void queryClient.invalidateQueries({ queryKey: ["appointments", clinicId] });
       toast.success("Anotado: el paciente avisó que viene.");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   if (pendientes.length === 0) return null;

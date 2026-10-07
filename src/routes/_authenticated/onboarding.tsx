@@ -72,7 +72,7 @@ function OnboardingPage() {
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>(["Odontología general"]);
 
   const [professionals, setProfessionals] = useState<ProfessionalDraft[]>([
-    { fullName: "", email: "", licenseNumber: "", specialtyName: "", color: "#0d9488" },
+    { fullName: "", email: "", licenseNumber: "", specialtyName: "", color: "#a8772c" },
   ]);
 
   const mutation = useMutation({
@@ -131,7 +131,9 @@ function OnboardingPage() {
             <span className="grid size-8 place-items-center rounded-lg bg-brand">
               <span className="size-4 rounded-full border-2 border-brand-foreground" />
             </span>
-            <span className="font-display text-xl font-bold tracking-tight text-brand">Alika</span>
+            <span className="font-display text-xl font-bold tracking-tight text-brand-700">
+              Alika
+            </span>
           </div>
           <h1 className="font-display text-2xl font-semibold sm:text-3xl">Configura tu clínica</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -158,7 +160,7 @@ function OnboardingPage() {
                 index === step
                   ? "border-brand bg-brand text-brand-foreground"
                   : index < step
-                    ? "border-brand/30 bg-brand-soft text-brand"
+                    ? "border-brand/30 bg-brand-soft text-brand-700"
                     : "border-border bg-card text-muted-foreground",
               )}
             >
@@ -310,7 +312,7 @@ function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => setOperatories((prev) => [...prev, `Box ${prev.length + 1}`])}
-                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-brand hover:underline"
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 hover:underline"
                 >
                   <Plus className="size-3.5" /> Agregar box
                 </button>
@@ -461,11 +463,11 @@ function OnboardingPage() {
                       email: "",
                       licenseNumber: "",
                       specialtyName: "",
-                      color: "#0d9488",
+                      color: "#a8772c",
                     },
                   ])
                 }
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-brand hover:underline"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 hover:underline"
               >
                 <Plus className="size-3.5" /> Agregar profesional
               </button>

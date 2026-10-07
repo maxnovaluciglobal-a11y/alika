@@ -29,6 +29,7 @@ import {
   updatePaymentMethod,
 } from "@/lib/finance/clinic-finance.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/medios-de-pago")({
   beforeLoad: requirePermission("settings:manage"),
@@ -91,7 +92,7 @@ function MedioDialog({
         setAllowsRefund(false);
       }
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -213,7 +214,7 @@ function MediosDePagoPage() {
       queryClient.invalidateQueries({ queryKey: ["payment-methods", clinicId] });
       toast.success(v.isActive ? "Medio de pago habilitado" : "Medio de pago deshabilitado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const conRetencion = medios.filter((m) => m.retentionPct > 0).length;
@@ -267,10 +268,10 @@ function MediosDePagoPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono tabular-nums">
+                        <td className="px-3 py-2 text-right tabular-nums">
                           {m.retentionPct > 0 ? `${m.retentionPct}%` : "—"}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                        <td className="px-3 py-2 text-right text-xs tabular-nums text-muted-foreground">
                           {formatMoney(netAfterRetention(EJEMPLO_CENTS, m.retentionPct), currency)}
                         </td>
                         <td className="px-3 py-2 text-center text-xs text-muted-foreground">

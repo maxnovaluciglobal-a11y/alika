@@ -134,7 +134,7 @@ function ToothCell({
   return (
     <div className="flex flex-col items-center gap-1">
       <span
-        className="font-mono text-[10px] text-muted-foreground"
+        className="tabular-nums text-[10px] text-muted-foreground"
         title={nombreComun ? `${tooth} · ${nombreComun}` : undefined}
       >
         {tooth}
@@ -295,7 +295,7 @@ function TablaOdontograma({
         <tbody className="divide-y divide-hairline">
           {filas.map(({ tooth, marcas, condiciones }) => (
             <tr key={tooth}>
-              <th scope="row" className="py-2 pr-3 font-mono font-medium">
+              <th scope="row" className="py-2 pr-3 tabular-nums font-medium">
                 {tooth}
               </th>
               <td className="py-2 pr-3 text-muted-foreground">{toothCommonName(tooth) ?? "—"}</td>
@@ -672,7 +672,7 @@ export function Odontogram({
                   className="size-3 rounded-sm border border-hairline"
                   style={{ backgroundColor: CONDITION_COLORS[h.condition] }}
                 />
-                <span className="font-mono">{h.toothNumber}</span>
+                <span className="tabular-nums">{h.toothNumber}</span>
                 {toothCommonName(h.toothNumber) && (
                   <span className="text-muted-foreground">{toothCommonName(h.toothNumber)}</span>
                 )}

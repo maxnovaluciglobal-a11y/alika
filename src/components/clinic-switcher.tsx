@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { ACCESS_QUERY_KEY, type ClinicAccess } from "@/lib/access/access";
 import { getMyAccess, setActiveClinic } from "@/lib/access/access.functions";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 /**
  * Selector de clínica activa (progresivo #7, plan Carlos 05-sep-2026). Solo
@@ -53,7 +54,7 @@ export function ClinicSwitcher({ access }: { access: ClinicAccess }) {
       });
       await router.invalidate();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   if (!access.clinic) return null;

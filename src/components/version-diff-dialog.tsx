@@ -67,7 +67,7 @@ export function VersionDiffDialog({ versiones, desde, hasta, onClose }: Props) {
             ))}
           </select>
           <span className="ml-auto text-[11px] text-muted-foreground">
-            <span className="text-brand">+{conteo.agregadas}</span> ·{" "}
+            <span className="text-brand-700">+{conteo.agregadas}</span> ·{" "}
             <span className="text-destructive">−{conteo.eliminadas}</span> líneas
           </span>
         </div>

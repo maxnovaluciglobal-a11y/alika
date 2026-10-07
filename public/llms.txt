@@ -1,0 +1,42 @@
+# Alika
+
+> Alika es un software de gestión para clínicas dentales chicas y medianas de Latinoamérica (Chile, Perú, México, Colombia y Argentina). Funciona en el navegador, sin instalar nada: agenda, ficha clínica con odontograma, presupuestos, planes de tratamiento, cobros y saldos, y recordatorios por WhatsApp que el equipo de la clínica envía con un toque.
+
+## Para quién
+
+- Consultorios de un profesional y clínicas de hasta 3 profesionales; redes con varias sedes, a medida.
+- Cada clínica elige su país al crearse: la moneda y la zona horaria quedan configuradas según ese país.
+
+## Qué hace
+
+- Agenda por sucursal en hora local, con lista diaria de citas por confirmar.
+- Recordatorios por WhatsApp 48 h y 3 h antes de cada cita. Ningún mensaje a pacientes sale solo: Alika arma la lista y alguien de la clínica los envía.
+- Ficha clínica, odontograma FDI versionado, notas clínicas con revisión y consentimientos.
+- Presupuestos que se convierten en plan de tratamiento; cada pago descuenta el saldo del paciente.
+- Importación de pacientes desde una planilla (CSV) en todos los planes.
+- Sigue funcionando sin internet y sincroniza cuando vuelve la conexión.
+
+## Qué no hace (todavía)
+
+- No emite factura electrónica ni documentos tributarios (DTE, CFDI, etc.) en ningún país. Está en el roadmap, sin fecha comprometida.
+
+## Precios
+
+- Solo (1 profesional): US$29 al mes.
+- Clínica (hasta 3 profesionales): US$69 al mes.
+- Red (varias sedes): a medida.
+- 14 días gratis, sin tarjeta. El cobro es en dólares.
+
+## Páginas clave
+
+- [Inicio y precios](https://alika-omega.vercel.app/#precios)
+- [Software dental para Latinoamérica](https://alika-omega.vercel.app/software-dental-latam): países, monedas y lo que Alika no hace.
+- [Preguntas frecuentes](https://alika-omega.vercel.app/faq)
+- [Documentación](https://alika-omega.vercel.app/docs)
+- [Calculadora de rentabilidad dental](https://alika-omega.vercel.app/calculadora-rentabilidad-dental)
+- [Checklist: 15 fugas de dinero en una clínica dental](https://alika-omega.vercel.app/recursos/fugas-clinica-dental)
+- [Demo](https://alika-omega.vercel.app/demo): pide nombre y email, sin tarjeta ni contraseña.
+
+## Contacto
+
+- Email: maxnovaluciglobal@gmail.com

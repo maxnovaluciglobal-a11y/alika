@@ -41,6 +41,7 @@ import {
   parseCsvRaw,
   type CsvFieldSpec,
 } from "@/lib/csv/column-mapping";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface PacientesSearch {
   q: string;
@@ -112,7 +113,7 @@ function NuevoPacienteDialog({ clinicId }: { clinicId: string }) {
       setTelefono("");
       setEmail("");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -136,7 +137,7 @@ function NuevoPacienteDialog({ clinicId }: { clinicId: string }) {
               id="np-nombre"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+              className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               placeholder="Nombre y apellido"
             />
           </div>
@@ -147,7 +148,7 @@ function NuevoPacienteDialog({ clinicId }: { clinicId: string }) {
                 id="np-doc"
                 value={documento}
                 onChange={(e) => setDocumento(e.target.value)}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               />
             </div>
             <div className="space-y-1.5">
@@ -157,7 +158,7 @@ function NuevoPacienteDialog({ clinicId }: { clinicId: string }) {
                 type="date"
                 value={fechaNacimiento}
                 onChange={(e) => setFechaNacimiento(e.target.value)}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               />
             </div>
           </div>
@@ -168,7 +169,7 @@ function NuevoPacienteDialog({ clinicId }: { clinicId: string }) {
                 id="np-tel"
                 value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               />
             </div>
             <div className="space-y-1.5">
@@ -178,7 +179,7 @@ function NuevoPacienteDialog({ clinicId }: { clinicId: string }) {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50"
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
               />
             </div>
           </div>
@@ -314,7 +315,7 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
   const cargarPreview = useMutation({
     mutationFn: () => previewFn({ data: { clinicId, rows: filas } }),
     onSuccess: (res) => setPreview(res),
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const importar = useMutation({
@@ -323,7 +324,7 @@ function ImportarPacientesDialog({ clinicId }: { clinicId: string }) {
       setResultado(res);
       queryClient.invalidateQueries({ queryKey: ["patients", clinicId] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const aCrear = (preview ?? []).filter((p) => p.action === "create").length;
@@ -695,7 +696,7 @@ function PacientesPage() {
                       )}
                     >
                       {p.saldo == null
-                        ? "Sin datos"
+                        ? "Sin movimientos"
                         : p.saldo > 0
                           ? formatMoney(p.saldo, currency)
                           : "Al día"}

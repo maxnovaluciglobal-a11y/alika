@@ -23,6 +23,7 @@ import {
   mergePatients,
 } from "@/lib/clinic-operations/clinic-operations.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/fusionar-fichas")({
   beforeLoad: requirePermission("patients:manage"),
@@ -74,7 +75,7 @@ function FusionarFichasPage() {
       toast.success("Fichas fusionadas");
       setConfirmar(null);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -132,7 +133,7 @@ function FusionarFichasPage() {
                     <span className="min-w-0 flex-1 truncate">
                       {p.nombre}
                       {p.documento && (
-                        <span className="ml-2 font-mono text-xs text-muted-foreground">
+                        <span className="ml-2 tabular-nums text-xs text-muted-foreground">
                           {p.documento}
                         </span>
                       )}
@@ -148,7 +149,7 @@ function FusionarFichasPage() {
                       to="/pacientes/$pacienteId"
                       params={{ pacienteId: p.id }}
                       onClick={(e) => e.stopPropagation()}
-                      className="shrink-0 text-[11px] font-medium text-brand hover:underline"
+                      className="shrink-0 text-[11px] font-medium text-brand-700 hover:underline"
                     >
                       Ver ficha
                     </Link>

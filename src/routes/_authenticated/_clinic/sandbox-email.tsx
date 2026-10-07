@@ -31,6 +31,7 @@ import {
   type DnsVerification,
 } from "@/lib/messaging/dns-email";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/sandbox-email")({
   beforeLoad: requirePermission("team:manage"),
@@ -148,7 +149,7 @@ function SandboxEmailPage() {
         prefixSubject: siguiente.prefixSubject,
         minEntregasProduccion: siguiente.minEntregasProduccion,
       },
-    }).catch((e: Error) => toast.error(e.message));
+    }).catch((e: Error) => toast.error(mensajeDeError(e)));
   }
 
   function actualizar(parcial: Partial<EmailSandboxConfig>) {
@@ -178,7 +179,7 @@ function SandboxEmailPage() {
 
   const tonoClases = {
     seguro: "border-primary/30 bg-primary/5 text-primary",
-    aviso: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    aviso: "border-warning-border bg-warning-soft text-warning",
     peligro: "border-destructive/40 bg-destructive/5 text-destructive",
   }[resumen.tono];
 
@@ -257,9 +258,7 @@ function SandboxEmailPage() {
               <p
                 className={cn(
                   "mt-3 text-sm",
-                  puertaDns.permitido
-                    ? "text-muted-foreground"
-                    : "text-amber-600 dark:text-amber-400",
+                  puertaDns.permitido ? "text-muted-foreground" : "text-warning",
                 )}
               >
                 {puertaDns.motivo}
@@ -292,7 +291,7 @@ function SandboxEmailPage() {
                   <div
                     className={cn(
                       "h-full rounded-full transition-all",
-                      puertaEntregas.permitido ? "bg-primary" : "bg-amber-500",
+                      puertaEntregas.permitido ? "bg-primary" : "bg-warning-border",
                     )}
                     style={{
                       width: `${
@@ -309,9 +308,7 @@ function SandboxEmailPage() {
                 <p
                   className={cn(
                     "mt-2 text-sm",
-                    puertaEntregas.permitido
-                      ? "text-muted-foreground"
-                      : "text-amber-600 dark:text-amber-400",
+                    puertaEntregas.permitido ? "text-muted-foreground" : "text-warning",
                   )}
                 >
                   {puertaEntregas.motivo}

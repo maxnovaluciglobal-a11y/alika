@@ -98,8 +98,8 @@ export function pocketSeverity(
 }
 
 export const SEVERITY_COLORS: Record<"normal" | "leve" | "moderada" | "severa", string> = {
-  normal: "#22c55e",
-  leve: "#f59e0b",
-  moderada: "#ea580c",
-  severa: "#dc2626",
+  normal: "#4f7a55",
+  leve: "#c08a2e",
+  moderada: "#c0622f",
+  severa: "#b8432f",
 };

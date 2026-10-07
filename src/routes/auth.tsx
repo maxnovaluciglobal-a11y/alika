@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
@@ -177,7 +179,9 @@ function AuthPage() {
           <span className="grid size-8 place-items-center rounded-lg bg-brand">
             <span className="size-4 rounded-full border-2 border-brand-foreground" />
           </span>
-          <span className="font-display text-2xl font-bold tracking-tight text-brand">Alika</span>
+          <span className="font-display text-2xl font-bold tracking-tight text-brand-700">
+            Alika
+          </span>
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
@@ -216,7 +220,7 @@ function AuthPage() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none pointer-coarse:text-base focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
             )}
@@ -232,7 +236,7 @@ function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none pointer-coarse:text-base focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
 
@@ -248,7 +252,7 @@ function AuthPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none pointer-coarse:text-base focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
 
@@ -258,7 +262,7 @@ function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-brand bg-transparent py-2.5 text-sm font-medium text-brand-700 transition-opacity hover:bg-brand/12 disabled:opacity-60"
+              className={cn(buttonVariants({ size: "lg" }), "w-full")}
             >
               {loading && <Loader2 className="size-4 animate-spin" />}
               {mode === "signin" ? "Ingresar" : "Crear cuenta"}
@@ -274,7 +278,7 @@ function AuthPage() {
                 setError(null);
                 setMessage(null);
               }}
-              className="font-medium text-brand hover:underline"
+              className="font-medium text-brand-700 hover:underline"
             >
               {mode === "signin" ? "Regístrate" : "Inicia sesión"}
             </button>

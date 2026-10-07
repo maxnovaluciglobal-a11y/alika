@@ -61,7 +61,7 @@ const estados: { value: TreatmentPlanStatus; label: string }[] = TREATMENT_PLAN_
 );
 
 const estadoClase: Record<TreatmentPlanStatus, string> = {
-  active: "bg-brand-soft text-brand",
+  active: "bg-brand-soft text-brand-700",
   on_hold: "bg-warning-soft text-warning",
   completed: "bg-success-soft text-success",
   cancelled: "bg-secondary text-muted-foreground",
@@ -155,7 +155,7 @@ function TratamientosPage() {
                       <Link
                         to="/pacientes/$pacienteId"
                         params={{ pacienteId: t.patientId }}
-                        className="truncate text-sm font-medium hover:text-brand"
+                        className="truncate text-sm font-medium hover:text-brand-700"
                       >
                         {t.patientName}
                       </Link>

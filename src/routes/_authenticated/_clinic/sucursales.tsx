@@ -36,6 +36,7 @@ import {
 } from "@/lib/clinic-operations/branches.functions";
 import { requirePermission } from "@/lib/access/route-guards";
 import { hoyISO } from "@/lib/clinic-operations/clinic-data";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 function primerDiaDelMes(timeZone?: string): string {
   return `${hoyISO(timeZone).slice(0, 7)}-01`;
@@ -104,7 +105,7 @@ function PanelDeRed({ clinicId, branchCount }: { clinicId: string; branchCount: 
 }
 
 function inputClass() {
-  return "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
+  return "w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base";
 }
 
 type BranchFormState = {
@@ -198,7 +199,7 @@ function NuevaSucursalDialog({ clinicId }: { clinicId: string }) {
       setOpen(false);
       setForm(EMPTY_FORM);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const puedeCrear =
@@ -338,7 +339,7 @@ function EditarSucursalDialog({ clinicId, branch }: { clinicId: string; branch: 
       toast.success("Sucursal actualizada.");
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const agregarBox = useMutation({
@@ -348,7 +349,7 @@ function EditarSucursalDialog({ clinicId, branch }: { clinicId: string; branch: 
       setNuevoBox("");
       toast.success("Box agregado.");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (

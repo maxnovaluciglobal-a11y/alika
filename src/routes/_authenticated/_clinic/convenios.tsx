@@ -40,6 +40,7 @@ import {
 } from "@/lib/finance/clinic-finance.functions";
 import { listProcedures } from "@/lib/finance/finance.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/convenios")({
   beforeLoad: requirePermission("settings:manage"),
@@ -109,7 +110,7 @@ function ConvenioDialog({ clinicId, convenio }: { clinicId: string; convenio?: A
       toast.success(convenio ? "Convenio actualizado" : "Convenio creado");
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -267,7 +268,7 @@ function FilaCobertura({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["agreement-coverage", clinicId, agreementId] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const previsualizacion = repartirCobertura(
@@ -283,7 +284,7 @@ function FilaCobertura({
   return (
     <tr className="border-b border-hairline last:border-0">
       <td className="px-4 py-2">{procedure.name}</td>
-      <td className="px-3 py-2 text-right font-mono text-xs tabular-nums text-muted-foreground">
+      <td className="px-3 py-2 text-right text-xs tabular-nums text-muted-foreground">
         {formatMoney(procedure.defaultPriceCents, currency)}
       </td>
       <td className="px-3 py-2">
@@ -315,7 +316,7 @@ function FilaCobertura({
           </button>
         </div>
       </td>
-      <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">
+      <td className="px-3 py-2 text-right text-xs tabular-nums">
         {previsualizacion.patientCents === null ? (
           <span className="text-muted-foreground">—</span>
         ) : (
@@ -425,7 +426,7 @@ function ConveniosPage() {
       queryClient.invalidateQueries({ queryKey: ["agreements", clinicId] });
       toast.success(v.isActive ? "Convenio reactivado" : "Convenio dado de baja");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (

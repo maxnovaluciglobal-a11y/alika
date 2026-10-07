@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { sendEmailFromTemplate } from "@/lib/messaging/messaging.functions";
 import type { MessageTemplateKind } from "@/lib/messaging/messaging";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface Props {
   clinicId: string;
@@ -53,7 +54,7 @@ export function EmailButton({
         toast.error(result.reason ?? "No se pudo enviar el email.");
       }
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const handleClick = () => {
@@ -70,7 +71,7 @@ export function EmailButton({
         title={label ?? "Enviar por email"}
         aria-label={label ?? "Enviar por email"}
         className={cn(
-          "inline-flex size-7 items-center justify-center rounded-md border border-hairline text-muted-foreground transition-colors hover:border-brand hover:text-brand disabled:opacity-50",
+          "inline-flex size-7 items-center justify-center rounded-md border border-hairline text-muted-foreground transition-colors hover:border-brand hover:text-brand-700 disabled:opacity-50",
         )}
       >
         {send.isPending ? (
@@ -87,7 +88,7 @@ export function EmailButton({
       type="button"
       onClick={handleClick}
       disabled={pending || send.isPending}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium transition-colors hover:border-brand hover:text-brand disabled:opacity-50"
+      className="inline-flex items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium transition-colors hover:border-brand hover:text-brand-700 disabled:opacity-50"
     >
       {send.isPending ? (
         <Loader2 className="size-3.5 animate-spin" />

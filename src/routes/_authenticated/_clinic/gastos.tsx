@@ -45,6 +45,7 @@ import {
 import { listBranches } from "@/lib/clinic-operations/clinic-catalog.functions";
 import { str } from "@/lib/search";
 import { exportarCsv } from "@/lib/csv-export";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface GastosSearch {
   desde: string;
@@ -161,7 +162,7 @@ function GastoDialog({
       setOpen(false);
       if (!expense) setD(inicial());
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const listo =
@@ -367,7 +368,7 @@ function GastosPage() {
       toast.success("Gasto borrado");
       setConfirmDeleteId(null);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const categorias = useMemo(() => [...new Set(gastos.map((g) => g.category))].sort(), [gastos]);
@@ -479,7 +480,7 @@ function GastosPage() {
               <button
                 type="button"
                 onClick={() => set({ categoria: "" })}
-                className="text-sm text-brand hover:underline"
+                className="text-sm text-brand-700 hover:underline"
               >
                 Ver todas las categorías
               </button>
@@ -501,7 +502,7 @@ function GastosPage() {
                         style={{ width: `${total ? (monto / total) * 100 : 0}%` }}
                       />
                     </div>
-                    <span className="w-28 shrink-0 text-right font-mono text-xs tabular-nums">
+                    <span className="w-28 shrink-0 text-right text-xs tabular-nums">
                       {formatMoney(monto, currency)}
                     </span>
                   </div>
@@ -528,7 +529,7 @@ function GastosPage() {
                   <tbody>
                     {filtrados.map((g) => (
                       <tr key={g.id} className="border-b border-hairline last:border-0">
-                        <td className="whitespace-nowrap px-4 py-2 font-mono text-xs text-muted-foreground">
+                        <td className="whitespace-nowrap px-4 py-2 tabular-nums text-xs text-muted-foreground">
                           {formatoFecha(g.incurredOn)}
                         </td>
                         <td className="px-3 py-2">{g.category}</td>
@@ -537,7 +538,7 @@ function GastosPage() {
                         <td className="px-3 py-2 text-xs text-muted-foreground">
                           {g.methodNameSnapshot ?? "—"}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono tabular-nums">
+                        <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">
                           {formatMoney(g.amountCents, g.currency)}
                         </td>
                         <td className="px-3 py-2">

@@ -1,8 +1,18 @@
+import { Children, useId, useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
+
+import { buttonVariants } from "@/components/ui/button";
 
 import { cn } from "@/lib/utils";
 import type { Pagina } from "@/lib/search";
 
+/**
+ * Barra de filtros. El primer filtro (casi siempre la búsqueda) queda a la
+ * vista y el resto se pliega detrás de "Filtros": antes el panel completo
+ * ocupaba la primera pantalla del celular y la agenda quedaba abajo del
+ * pliegue (revisión visual del 07-oct-2026). Arranca abierto si ya hay
+ * filtros activos, para que no queden escondidos.
+ */
 export function FilterBar({
   children,
   onReset,
@@ -12,34 +22,60 @@ export function FilterBar({
   onReset: () => void;
   activos: number;
 }) {
+  const [primero, ...resto] = Children.toArray(children);
+  const plegable = resto.length >= 2;
+  const [abierto, setAbierto] = useState(activos > 0);
+  const panelId = useId();
+  const mostrarResto = !plegable || abierto;
+
   return (
-    <div className="card-clinical p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          <SlidersHorizontal className="size-3.5" /> Filtros avanzados
-          {activos > 0 && (
-            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand">
-              {activos} activo{activos > 1 ? "s" : ""}
-            </span>
-          )}
-        </p>
+    <div className="card-clinical p-3 sm:p-4">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="min-w-0 flex-1 basis-56">{primero}</div>
+        {!plegable &&
+          resto.map((r, i) => (
+            <div key={i} className="min-w-0 flex-1 basis-40">
+              {r}
+            </div>
+          ))}
+        {plegable && (
+          <button
+            type="button"
+            onClick={() => setAbierto((v) => !v)}
+            aria-expanded={abierto}
+            aria-controls={panelId}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "h-[38px] shrink-0",
+              activos > 0 && "border-brand text-brand-700",
+            )}
+          >
+            <SlidersHorizontal aria-hidden />
+            Filtros
+            {activos > 0 && <span className="tabular-nums">({activos})</span>}
+          </button>
+        )}
         {activos > 0 && (
           <button
             type="button"
             onClick={onReset}
-            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className={cn(buttonVariants({ variant: "ghost" }), "h-[38px] shrink-0")}
           >
-            <X className="size-3" /> Limpiar
+            <X aria-hidden /> Limpiar
           </button>
         )}
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{children}</div>
+      {plegable && mostrarResto && (
+        <div id={panelId} className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {resto}
+        </div>
+      )}
     </div>
   );
 }
 
 const fieldClass =
-  "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+  "w-full rounded-lg border border-input bg-card px-3 py-2 text-sm pointer-coarse:text-base outline-none transition-colors placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 export function SearchField({
   value,

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { setPatientWhatsAppOptIn } from "@/lib/messaging/messaging.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface Props {
   clinicId: string;
@@ -32,7 +33,7 @@ export function WhatsAppOptInToggle({ clinicId, patientId, initialOptIn }: Props
         next ? "Outreach por WhatsApp activado." : "Outreach por WhatsApp desactivado.",
       );
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (

@@ -24,9 +24,10 @@ import {
   setConsentTemplateActive,
 } from "@/lib/clinical/clinical-documents.functions";
 import { requirePermission } from "@/lib/access/route-guards";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 function inputClass() {
-  return "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
+  return "w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base";
 }
 
 export const Route = createFileRoute("/_authenticated/_clinic/consentimientos")({
@@ -60,7 +61,7 @@ function NuevaPlantillaDialog({ clinicId }: { clinicId: string }) {
       setTitle("");
       setBody("");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -131,7 +132,7 @@ function ConsentimientosPage() {
       toggleActive({ data: { clinicId: clinicId!, ...params } }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["consent-templates-admin", clinicId] }),
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   if (!clinicId) {

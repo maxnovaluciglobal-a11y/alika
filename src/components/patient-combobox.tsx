@@ -47,7 +47,7 @@ export function PatientCombobox({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "flex w-full items-center justify-between rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50",
+            "flex w-full items-center justify-between rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base",
             !seleccionado && "text-muted-foreground",
           )}
         >

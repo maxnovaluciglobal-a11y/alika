@@ -14,6 +14,7 @@ import {
 import { SUBSCRIPTION_STATUS_LABELS, trialDaysLeft } from "@/lib/billing";
 import { approxLocalPricesLabel } from "@/lib/pricing-display";
 import { consumePlanIntent } from "@/lib/marketing/plan-intent";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/suscripcion")({
   head: () => ({
@@ -101,7 +102,7 @@ function BillingPage() {
       });
       window.location.href = url;
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const openPortal = useMutation({
@@ -115,7 +116,7 @@ function BillingPage() {
       });
       window.location.href = url;
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const [plan, setPlan] = useState<PlanKey>("clinica");
@@ -210,7 +211,7 @@ function BillingPage() {
               {sub.cancelAtPeriodEnd && (
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-muted-foreground">Aviso</dt>
-                  <dd className="mt-1 text-sm text-amber-700 dark:text-amber-400">
+                  <dd className="mt-1 text-sm text-warning">
                     Cancelada — vence el {formatDate(sub.currentPeriodEnd)}
                   </dd>
                 </div>
@@ -258,7 +259,7 @@ function BillingPage() {
                         {usd(info.regularCents)}
                       </span>
                     </p>
-                    <p className="text-[11px] font-medium text-brand">
+                    <p className="text-[11px] font-medium text-brand-700">
                       Precio de fundador — por tiempo limitado
                     </p>
                   </button>

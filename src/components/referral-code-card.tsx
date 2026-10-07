@@ -65,7 +65,7 @@ export function ReferralCodeCard({ clinicId, patientName, referralCode }: Props)
           onClick={copyCode}
           className={cn(
             "shrink-0 rounded-lg border border-hairline bg-background p-1.5 text-muted-foreground hover:text-foreground",
-            copiedAt && "text-brand",
+            copiedAt && "text-brand-700",
           )}
           aria-label="Copiar código"
         >

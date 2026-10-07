@@ -14,17 +14,14 @@ import {
   nroDiaISO,
   weekDaysISO,
 } from "@/lib/clinic-operations/agenda-fechas";
+import { claseBloque, tonoDeEstadoCita } from "@/lib/clinic-operations/estado-cita-tono";
 import { cn } from "@/lib/utils";
 
 // El borde izquierdo identifica al profesional (color guardado en
 // /profesionales); acá solo queda fondo + texto según el estado de la cita.
-const estadoClases: Record<Cita["estado"], string> = {
-  confirmada: "bg-brand/10 text-brand",
-  "en-sala": "bg-warning-soft text-warning",
-  ausente: "bg-secondary text-muted-foreground",
-  finalizada: "bg-secondary/60 text-muted-foreground",
-  tentativa: "bg-ai-soft text-ai",
-};
+const estadoClases = Object.fromEntries(
+  Object.entries(tonoDeEstadoCita).map(([estado, tono]) => [estado, claseBloque[tono]]),
+) as Record<Cita["estado"], string>;
 
 const DOW_CORTO = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
 
@@ -71,7 +68,7 @@ export function AgendaWeek({
               className={cn("border-l border-hairline p-2 text-center", d === hoy && "bg-brand/5")}
             >
               <p className="text-[11px] font-semibold capitalize">{DOW_CORTO[i]}</p>
-              <p className={cn("text-[10px] text-muted-foreground", d === hoy && "text-brand")}>
+              <p className={cn("text-[10px] text-muted-foreground", d === hoy && "text-brand-700")}>
                 {nroDiaISO(d)}
               </p>
             </div>

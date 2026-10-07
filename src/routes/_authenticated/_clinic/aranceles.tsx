@@ -42,6 +42,7 @@ import { coincide, str } from "@/lib/search";
 import { exportarCsv } from "@/lib/csv-export";
 import { hoyISO } from "@/lib/clinic-operations/clinic-data";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface ArancelesSearch {
   q: string;
@@ -212,7 +213,7 @@ function PrestacionDialog({
       setOpen(false);
       if (!procedure) setD(draftVacio());
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -411,7 +412,7 @@ function RecetaDialog({
       toast.success("Receta de insumos guardada");
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const agregarLinea = () => {
@@ -511,7 +512,7 @@ function RecetaDialog({
                     >
                       <span>{item?.name ?? "Insumo eliminado"}</span>
                       <span className="flex items-center gap-2">
-                        <span className="font-mono tabular-nums text-muted-foreground">
+                        <span className=" tabular-nums text-muted-foreground">
                           {l.quantity} {item?.unit}
                         </span>
                         <Button
@@ -625,7 +626,7 @@ function ImportarCsvDialog({ clinicId, currency }: { clinicId: string; currency:
       setPreview(null);
       if (fileRef.current) fileRef.current.value = "";
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -686,7 +687,7 @@ function ImportarCsvDialog({ clinicId, currency }: { clinicId: string; currency:
                       {f.category ? `${f.category} · ` : ""}
                       {f.name}
                     </span>
-                    <span className="shrink-0 font-mono">
+                    <span className="shrink-0 tabular-nums">
                       {formatMoney(toCents(f.price, currency), currency)}
                     </span>
                   </li>
@@ -745,7 +746,7 @@ function ArancelesPage() {
       queryClient.invalidateQueries({ queryKey: ["procedures", clinicId] });
       toast.success(v.isActive ? "Prestación reactivada" : "Prestación dada de baja");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const categorias = useMemo(
@@ -896,18 +897,18 @@ function ArancelesPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-3 py-2 font-mono text-xs text-muted-foreground">
+                        <td className="px-3 py-2 tabular-nums text-xs text-muted-foreground">
                           {p.code ?? "—"}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono tabular-nums">
+                        <td className="px-3 py-2 text-right tabular-nums">
                           {formatMoney(p.defaultPriceCents, p.currency)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                        <td className="px-3 py-2 text-right text-xs tabular-nums text-muted-foreground">
                           {p.referencePriceCents === null
                             ? "—"
                             : formatMoney(p.referencePriceCents, p.currency)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                        <td className="px-3 py-2 text-right text-xs tabular-nums text-muted-foreground">
                           {p.labCostCents === null ? "—" : formatMoney(p.labCostCents, p.currency)}
                         </td>
                         <td className="px-3 py-2 text-center text-xs text-muted-foreground">

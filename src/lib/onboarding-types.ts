@@ -58,12 +58,12 @@ export const COUNTRIES = [
 ] as const;
 
 export const SPECIALTY_PRESETS = [
-  { name: "Odontología general", color: "#0d9488", defaultDurationMin: 30 },
-  { name: "Endodoncia", color: "#0ea5e9", defaultDurationMin: 60 },
-  { name: "Ortodoncia", color: "#8b5cf6", defaultDurationMin: 30 },
-  { name: "Periodoncia", color: "#f59e0b", defaultDurationMin: 45 },
-  { name: "Rehabilitación oral", color: "#ec4899", defaultDurationMin: 60 },
-  { name: "Cirugía maxilofacial", color: "#ef4444", defaultDurationMin: 90 },
-  { name: "Odontopediatría", color: "#22c55e", defaultDurationMin: 30 },
-  { name: "Implantología", color: "#6366f1", defaultDurationMin: 90 },
+  { name: "Odontología general", color: "#a8772c", defaultDurationMin: 30 },
+  { name: "Endodoncia", color: "#2c6a78", defaultDurationMin: 60 },
+  { name: "Ortodoncia", color: "#7a4a6e", defaultDurationMin: 30 },
+  { name: "Periodoncia", color: "#b0553a", defaultDurationMin: 45 },
+  { name: "Rehabilitación oral", color: "#45558f", defaultDurationMin: 60 },
+  { name: "Cirugía maxilofacial", color: "#9c2c1c", defaultDurationMin: 90 },
+  { name: "Odontopediatría", color: "#4f7a55", defaultDurationMin: 30 },
+  { name: "Implantología", color: "#5d6670", defaultDurationMin: 90 },
 ] as const;

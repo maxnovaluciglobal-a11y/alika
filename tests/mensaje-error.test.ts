@@ -1,0 +1,35 @@
+import { describe, expect, it } from "vitest";
+
+import { MENSAJE_GENERICO, mensajeDeError } from "@/lib/mensaje-error";
+
+describe("mensajeDeError", () => {
+  it("traduce la falta de red", () => {
+    expect(mensajeDeError(new TypeError("Failed to fetch"))).toMatch(/Sin conexión/);
+    expect(mensajeDeError(new Error("Load failed"))).toMatch(/Sin conexión/);
+  });
+
+  it("no muestra errores técnicos de la base", () => {
+    expect(
+      mensajeDeError(new Error('new row violates row-level security policy for table "x"')),
+    ).toBe(MENSAJE_GENERICO);
+    expect(mensajeDeError(new Error("Could not find the 'x' column (PGRST204)"))).toBe(
+      MENSAJE_GENERICO,
+    );
+  });
+
+  it("deja pasar los mensajes ya escritos para la persona", () => {
+    expect(mensajeDeError(new Error("El paciente ya tiene una cita a esa hora."))).toBe(
+      "El paciente ya tiene una cita a esa hora.",
+    );
+  });
+
+  it("reescribe el bloqueo de la demo en tuteo", () => {
+    expect(
+      mensajeDeError(new Error("Esta es la clínica demo — de solo lectura. Creá tu clínica real")),
+    ).toMatch(/^Esta es la clínica demo, de solo lectura\. Crea tu clínica/);
+  });
+
+  it("usa el fallback cuando no hay mensaje", () => {
+    expect(mensajeDeError(undefined, "No se pudo guardar")).toBe("No se pudo guardar");
+  });
+});

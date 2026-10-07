@@ -40,6 +40,7 @@ import {
   markCommissionSettlementPaid,
 } from "@/lib/finance/commissions.functions";
 import { str } from "@/lib/search";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface ComisionesSearch {
   desde: string;
@@ -147,7 +148,7 @@ function ComisionesPage() {
       setConfirmarCierre(false);
       queryClient.invalidateQueries({ queryKey: ["commission-report"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const marcarPagado = useMutation({
@@ -156,7 +157,7 @@ function ComisionesPage() {
       toast.success("Liquidación marcada como pagada.");
       queryClient.invalidateQueries({ queryKey: ["commission-report"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const set = (patch: Partial<ComisionesSearch>) =>

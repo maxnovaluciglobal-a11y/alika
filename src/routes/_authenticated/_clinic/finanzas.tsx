@@ -247,7 +247,7 @@ function FinanzasPage() {
                             }}
                           />
                         </div>
-                        <span className="w-28 shrink-0 text-right font-mono text-xs tabular-nums">
+                        <span className="w-28 shrink-0 text-right text-xs tabular-nums">
                           {formatMoney(c.totalCents, currency)}
                         </span>
                       </div>
@@ -316,7 +316,7 @@ function FinanzasPage() {
                   <div className="space-y-2.5 p-5">
                     {serieCaja.map((d) => (
                       <div key={d.date} className="flex items-center gap-3">
-                        <span className="w-24 shrink-0 font-mono text-xs text-muted-foreground">
+                        <span className="w-24 shrink-0 tabular-nums text-xs text-muted-foreground">
                           {etiquetaBarra(d.date, agrupadoPorSemana)}
                         </span>
                         <div className="h-5 flex-1 overflow-hidden rounded bg-secondary/60">

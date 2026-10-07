@@ -25,6 +25,7 @@ import {
   type AppointmentStatusOption,
 } from "@/lib/clinic-operations/clinic-operations.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/estados-de-cita")({
   beforeLoad: requirePermission("settings:manage"),
@@ -73,7 +74,7 @@ function EstadoDialog({
   const [canonical, setCanonical] = useState<Canonico>(
     (estado?.canonical as Canonico) ?? "tentativa",
   );
-  const [color, setColor] = useState(estado?.color ?? "#94a3b8");
+  const [color, setColor] = useState(estado?.color ?? "#8e8984");
   const queryClient = useQueryClient();
   const upsertFn = useServerFn(upsertAppointmentStatus);
 
@@ -94,7 +95,7 @@ function EstadoDialog({
       toast.success(estado ? "Estado actualizado" : "Estado creado");
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -210,7 +211,7 @@ function EstadosDeCitaPage() {
       queryClient.invalidateQueries({ queryKey: ["appointment-statuses", clinicId] });
       toast.success("Estado actualizado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (

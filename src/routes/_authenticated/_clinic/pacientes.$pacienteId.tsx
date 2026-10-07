@@ -48,6 +48,7 @@ import type { Paciente } from "@/lib/clinic-operations/clinic-data";
 import { formatMoney } from "@/lib/finance/finance";
 import { getPatient } from "@/lib/patients/patients.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/pacientes/$pacienteId")({
   // Datos demográficos (nombre, teléfono, próximo control) son de agenda/recepción,
@@ -100,7 +101,7 @@ function PacienteNoEncontrado() {
             hasta: "",
             page: 1,
           }}
-          className="text-brand hover:underline"
+          className="text-brand-700 hover:underline"
         >
           Volver al listado
         </Link>
@@ -126,7 +127,7 @@ function PacienteError() {
             hasta: "",
             page: 1,
           }}
-          className="text-brand hover:underline"
+          className="text-brand-700 hover:underline"
         >
           Volver al listado
         </Link>
@@ -182,7 +183,7 @@ function ConvenioDelPaciente({
       setEditando(false);
       toast.success("Convenio actualizado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const actual = convenios.find((c) => c.id === convenioId);
@@ -213,14 +214,14 @@ function ConvenioDelPaciente({
             onChange={(e) => setNroAfiliado(e.target.value)}
             placeholder="Nº de afiliado"
             aria-label="Número de afiliado"
-            className="w-full rounded-md border border-hairline bg-transparent px-2 py-1 text-xs outline-none focus:border-brand/50"
+            className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base"
           />
         )}
         <div className="flex gap-1">
           <button
             onClick={() => guardar.mutate()}
             disabled={guardar.isPending}
-            className="min-h-9 rounded px-1.5 text-[11px] font-medium text-brand outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+            className="min-h-9 rounded px-1.5 text-[11px] font-medium text-brand-700 outline-none hover:underline focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
           >
             Guardar
           </button>
@@ -249,7 +250,7 @@ function ConvenioDelPaciente({
             setNroAfiliado(afiliado ?? "");
             setEditando(true);
           }}
-          className="inline-flex min-h-9 items-center gap-1 rounded border border-dashed border-brand/40 px-1.5 text-[11px] font-medium text-brand outline-none hover:bg-brand-soft focus-visible:ring-1 focus-visible:ring-ring"
+          className="inline-flex min-h-9 items-center gap-1 rounded border border-dashed border-brand/40 px-1.5 text-[11px] font-medium text-brand-700 outline-none hover:bg-brand-soft focus-visible:ring-1 focus-visible:ring-ring"
         >
           <Pencil className="size-3" /> Cambiar
         </button>
@@ -294,6 +295,7 @@ function PacienteDetalle() {
   // FinanceSection monta y consume la semilla. El `nonce` hace que clickear
   // dos veces la misma pieza vuelva a abrir el diálogo.
   const [piezaSeed, setPiezaSeed] = useState<PiezaSeed | null>(null);
+  const [abrirPago, setAbrirPago] = useState(false);
   const presupuestarPieza = puedeFacturar
     ? (pieza: Omit<PiezaSeed, "nonce">) => {
         setPiezaSeed({ ...pieza, nonce: Date.now() });
@@ -396,7 +398,10 @@ function PacienteDetalle() {
               {puedeFacturar && (
                 <button
                   type="button"
-                  onClick={() => setPestana("finanzas")}
+                  onClick={() => {
+                    setPestana("finanzas");
+                    setAbrirPago(true);
+                  }}
                   className={buttonVariants({ variant: "outline" })}
                 >
                   <Wallet aria-hidden /> Cobrar
@@ -406,13 +411,14 @@ function PacienteDetalle() {
                 <Link
                   to="/agenda"
                   search={{
-                    q: paciente.nombre,
+                    q: "",
                     fecha: "",
                     vista: "dia",
                     sucursal: "",
                     profesional: "",
                     estado: "",
                     page: 1,
+                    nueva: paciente.id,
                   }}
                   className={buttonVariants()}
                 >
@@ -426,7 +432,7 @@ function PacienteDetalle() {
             <Dato label="Próxima cita">{paciente.proximoControl ?? "Sin agendar"}</Dato>
             <Dato label="Saldo">
               {paciente.saldo == null
-                ? "Sin datos"
+                ? "Sin movimientos"
                 : paciente.saldo > 0
                   ? `${formatMoney(paciente.saldo, currency)} por cobrar`
                   : paciente.saldo < 0
@@ -585,6 +591,8 @@ function PacienteDetalle() {
                 userId={access.userId}
                 piezaSeed={piezaSeed}
                 onPiezaSeedConsumido={() => setPiezaSeed(null)}
+                abrirPago={abrirPago}
+                onPagoAbierto={() => setAbrirPago(false)}
               />
             )}
           </TabsContent>

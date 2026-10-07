@@ -81,7 +81,8 @@ type FooterLink =
         | "/terminos"
         | "/privacidad"
         | "/calculadora-rentabilidad-dental"
-        | "/recursos/fugas-clinica-dental";
+        | "/recursos/fugas-clinica-dental"
+        | "/software-dental-latam";
     }
   | { label: string; kind: "external"; href: string };
 
@@ -97,6 +98,11 @@ const footerColumns: { t: string; links: FooterLink[] }[] = [
     t: "Recursos",
     links: [
       { label: "Preguntas frecuentes", kind: "route", to: "/faq" },
+      {
+        label: "Software dental en Latinoamérica",
+        kind: "route",
+        to: "/software-dental-latam",
+      },
       { label: "Documentación", kind: "route", to: "/docs" },
       {
         label: "Calculadora de rentabilidad",

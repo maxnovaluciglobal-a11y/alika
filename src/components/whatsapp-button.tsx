@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { sendWhatsAppFromTemplate } from "@/lib/messaging/messaging.functions";
 import type { MessageTemplateKind } from "@/lib/messaging/messaging";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface Props {
   clinicId: string;
@@ -76,7 +77,7 @@ export function WhatsAppButton({
       toast.success("Mensaje registrado y abierto en WhatsApp.");
       onSent?.();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const handleClick = () => {
@@ -95,7 +96,7 @@ export function WhatsAppButton({
         title={label ?? "Enviar por WhatsApp"}
         aria-label={label ?? "Enviar por WhatsApp"}
         className={cn(
-          "inline-flex size-7 items-center justify-center rounded-md border border-hairline text-muted-foreground transition-colors hover:border-brand hover:text-brand disabled:opacity-50",
+          "inline-flex size-7 items-center justify-center rounded-md border border-hairline text-muted-foreground transition-colors hover:border-brand hover:text-brand-700 disabled:opacity-50",
         )}
       >
         {send.isPending ? (
@@ -113,7 +114,7 @@ export function WhatsAppButton({
       onClick={handleClick}
       disabled={pending || send.isPending}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium transition-colors hover:border-brand hover:text-brand disabled:opacity-50",
+        "inline-flex items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium transition-colors hover:border-brand hover:text-brand-700 disabled:opacity-50",
         className,
       )}
     >

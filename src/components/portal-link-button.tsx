@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { LlamadaDesbloqueo } from "@/components/llamada-desbloqueo";
 import { generatePortalLink, revokePortalAccess } from "@/lib/patients/portal.functions";
 import { cn } from "@/lib/utils";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface Props {
   clinicId: string;
@@ -41,7 +42,7 @@ export function PortalLinkButton({ clinicId, patientId, bloqueado }: Props) {
           ttlDays: 7,
         },
       }),
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   if (bloqueado) {
@@ -101,14 +102,14 @@ export function PortalLinkButton({ clinicId, patientId, bloqueado }: Props) {
           onClick={copy}
           className={cn(
             "flex size-8 shrink-0 items-center justify-center rounded-lg border border-hairline bg-background text-muted-foreground outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring",
-            copiedAt && "text-brand",
+            copiedAt && "text-brand-700",
           )}
           aria-label="Copiar link"
         >
           {copiedAt ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
         </button>
         {mut.data.viaApi && (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand-soft px-2 py-1.5 text-[11px] font-medium text-brand">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand-soft px-2 py-1.5 text-[11px] font-medium text-brand-700">
             <CheckCircle2 className="size-3.5" /> Enviado
           </span>
         )}
@@ -137,7 +138,7 @@ export function RevokePortalAccessButton({ clinicId, patientId }: Props) {
   const mut = useMutation({
     mutationFn: () => revoke({ data: { clinicId, patientId } }),
     onSuccess: () => toast.success("Acceso al portal revocado. Los links anteriores ya no sirven."),
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   function handleClick() {

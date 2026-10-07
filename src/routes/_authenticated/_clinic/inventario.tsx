@@ -62,6 +62,7 @@ import {
 } from "@/lib/clinic-operations/inventory-counts.functions";
 import type { ConsumptionType } from "@/lib/clinic-operations/procedure-supply-consumption";
 import { requirePermission } from "@/lib/access/route-guards";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 const MOVEMENT_LABELS: Record<InventoryMovementKind, string> = {
   entrada: "Entrada",
@@ -75,7 +76,7 @@ const MOVEMENT_LABELS: Record<InventoryMovementKind, string> = {
 const MOVEMENT_ROLES = new Set(["owner", "admin", "dentist", "assistant"]);
 
 function inputClass() {
-  return "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus:border-brand/50";
+  return "w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base";
 }
 
 const CONSUMPTION_TYPE_LABELS: Record<ConsumptionType, string> = {
@@ -187,7 +188,7 @@ function CrearItemDialog({
       setConsumptionType("fixed");
       setYieldPct("100");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -357,7 +358,7 @@ function EditarItemDialog({
       toast.success("Ítem actualizado.");
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -533,7 +534,7 @@ function RegistrarMovimientoDialog({
       setKind("entrada");
       setWarehouseId("");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -719,7 +720,7 @@ function ConteoFisicoDialog({
       setNotes("");
       setWarehouseId("");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (

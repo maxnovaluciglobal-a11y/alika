@@ -79,7 +79,7 @@ const FUENTE_LABEL: Record<string, string> = {
 
 const FUENTE_TONO: Record<string, string> = {
   calculadora: "bg-ai-soft text-ai",
-  checklist: "bg-brand-soft text-brand",
+  checklist: "bg-brand-soft text-brand-700",
   benchmark: "bg-warning-soft text-warning",
   demo: "bg-secondary text-foreground",
 };

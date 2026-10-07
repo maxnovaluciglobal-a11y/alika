@@ -30,6 +30,12 @@ import { formatMoney } from "@/lib/finance/finance";
 import { countConversacionesSinResponder } from "@/lib/messaging/conversations.functions";
 import { listPendingOutreach, listPendingReminders } from "@/lib/messaging/messaging.functions";
 import { listPatients } from "@/lib/patients/patients.functions";
+import {
+  clasePastilla,
+  claseTexto,
+  tonoDeCita,
+  type TonoEstado,
+} from "@/lib/clinic-operations/estado-cita-tono";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/dashboard")({
@@ -111,7 +117,9 @@ function ChecklistActivacion({ pasos }: { pasos: PasoActivacion[] }) {
   );
 }
 
-type Kpi = { label: string; valor: string; nota: string };
+/** `tono` colorea la cifra y `tonoNota` la nota solo cuando hay algo que
+ * mirar (auditoría 07-oct-2026: las cifras de Hoy eran todas tinta). */
+type Kpi = { label: string; valor: string; nota: string; tono?: TonoEstado; tonoNota?: TonoEstado };
 
 function FilaKpis({ kpis, cargando }: { kpis: Kpi[]; cargando: boolean }) {
   return (
@@ -128,7 +136,12 @@ function FilaKpis({ kpis, cargando }: { kpis: Kpi[]; cargando: boolean }) {
           )}
         >
           <dt className="kicker">{k.label}</dt>
-          <dd className="mt-2 font-display text-4xl font-normal leading-none tabular-nums">
+          <dd
+            className={cn(
+              "mt-2 font-display text-4xl font-normal leading-none tabular-nums",
+              k.tono && claseTexto[k.tono],
+            )}
+          >
             {cargando ? (
               <span
                 className="inline-block h-9 w-14 animate-pulse rounded-sm bg-muted"
@@ -138,20 +151,19 @@ function FilaKpis({ kpis, cargando }: { kpis: Kpi[]; cargando: boolean }) {
               k.valor
             )}
           </dd>
-          <dd className="mt-1.5 text-sm text-muted-foreground">{k.nota}</dd>
+          <dd
+            className={cn(
+              "mt-1.5 text-sm",
+              k.tonoNota ? claseTexto[k.tonoNota] : "text-muted-foreground",
+            )}
+          >
+            {k.nota}
+          </dd>
         </div>
       ))}
     </dl>
   );
 }
-
-const tonoEstado: Record<Cita["estado"], string> = {
-  confirmada: "border-success/40 text-success",
-  "en-sala": "border-brand/50 text-brand-700",
-  finalizada: "border-border text-muted-foreground",
-  ausente: "border-destructive/40 text-destructive",
-  tentativa: "border-destructive/40 text-destructive",
-};
 
 /** Siempre con texto: el tono acompaña, no informa solo (auditoría 04-sep). */
 function EstadoCita({ cita }: { cita: Cita }) {
@@ -165,9 +177,7 @@ function EstadoCita({ cita }: { cita: Cita }) {
     <span
       className={cn(
         "inline-flex whitespace-nowrap rounded-sm border px-2 py-0.5 text-xs",
-        cita.estado === "tentativa" && cita.pacienteConfirmo
-          ? "border-success/40 text-success"
-          : tonoEstado[cita.estado],
+        clasePastilla[tonoDeCita(cita)],
       )}
     >
       {texto}
@@ -299,7 +309,12 @@ function Dashboard() {
     d.setDate(d.getDate() + 2);
     return d.toISOString().slice(0, 10);
   }, [hoy]);
-  const { data: citas = [], isLoading } = useQuery({
+  const {
+    data: citas = [],
+    isLoading,
+    isError: citasConError,
+    refetch: reintentarCitas,
+  } = useQuery({
     queryKey: ["appointments", clinicId, hoy, hasta],
     enabled: Boolean(clinicId),
     queryFn: () => fetchAppointments({ data: { clinicId: clinicId!, desde: hoy, hasta } }),
@@ -399,6 +414,8 @@ function Dashboard() {
     label: "Confirmadas",
     valor: String(confirmadas),
     nota: `${sinRespuestaHoy} sin respuesta`,
+    tono: confirmadas > 0 ? "success" : undefined,
+    tonoNota: sinRespuestaHoy > 0 ? "warning" : undefined,
   };
   // Regla 11: mientras los saldos cargan (o si fallan) no se fabrica un $0.
   const saldosSinDatos = pacientesHoy.length > 0 && (saldosPendientes || saldosConError);
@@ -412,6 +429,7 @@ function Dashboard() {
         label: "Por cobrar hoy",
         valor: formatMoney(porCobrarHoy, currency),
         nota: `${conDeuda.length} paciente${conDeuda.length === 1 ? "" : "s"}`,
+        tono: porCobrarHoy > 0 ? "warning" : undefined,
       };
   // Dueño y contabilidad (finance:view): plata primero. Recepción y el
   // equipo clínico: el movimiento del día. "Por cobrar" exige finance:view
@@ -437,6 +455,7 @@ function Dashboard() {
         {
           label: "En sala",
           valor: String(enSala.length),
+          tono: enSala.length > 0 ? "info" : undefined,
           nota: enSala[0]
             ? `${enSala[0].paciente} · ${horaDeCita(enSala[0].inicio)}`
             : "Nadie esperando",
@@ -445,6 +464,7 @@ function Dashboard() {
           label: "Sin confirmar",
           valor: String(sinConfirmar48h),
           nota: "Próximas 48 h",
+          tono: sinConfirmar48h > 0 ? "warning" : undefined,
         },
       ];
 
@@ -602,81 +622,144 @@ function Dashboard() {
                 Abrir agenda →
               </Link>
             </div>
-            {citasHoy.length === 0 ? (
+            {citasConError ? (
+              // Un error no es "no hay citas": antes se mostraba igual y la
+              // recepción creía que el día estaba libre (auditoría 07-oct).
+              <div
+                role="alert"
+                className="flex flex-wrap items-center justify-between gap-3 border-y border-destructive-border bg-destructive-soft px-4 py-5 text-sm text-destructive"
+              >
+                No pudimos cargar la agenda de hoy. Revisa la conexión.
+                <button
+                  type="button"
+                  onClick={() => void reintentarCitas()}
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : citasHoy.length === 0 ? (
               <p className="border-y border-border py-8 text-sm text-muted-foreground">
                 {isLoading ? "Cargando la agenda…" : "No hay citas para hoy."}
               </p>
             ) : (
-              <div className="overflow-x-auto border-y border-border">
-                <table className="w-full min-w-[34rem] text-sm">
-                  <thead>
-                    <tr className="kicker text-left">
-                      <th scope="col" className="py-2.5 pr-3 font-normal">
-                        Hora
-                      </th>
-                      <th scope="col" className="py-2.5 pr-3 font-normal">
-                        Paciente
-                      </th>
-                      <th scope="col" className="py-2.5 pr-3 font-normal">
-                        Profesional
-                      </th>
-                      <th scope="col" className="py-2.5 pr-3 font-normal">
-                        Estado
-                      </th>
-                      {veFinanzas && (
-                        <th scope="col" className="py-2.5 text-right font-normal">
-                          Saldo
-                        </th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-hairline">
-                    {citasHoy.map((c) => {
-                      const saldo = saldos[c.pacienteId];
-                      return (
-                        <tr key={c.id} className="align-middle">
-                          <td className="py-3 pr-3 tabular-nums text-muted-foreground">
+              <>
+                {/* Celular: tarjetas. La tabla de 34rem obligaba a deslizar de
+                  costado a 390px. */}
+                <ul className="divide-y divide-hairline border-y border-border md:hidden">
+                  {citasHoy.map((c) => {
+                    const saldo = saldos[c.pacienteId];
+                    return (
+                      <li key={c.id}>
+                        <Link
+                          to="/pacientes/$pacienteId"
+                          params={{ pacienteId: c.pacienteId }}
+                          className="flex items-start gap-3 py-3"
+                        >
+                          <span className="w-12 shrink-0 pt-0.5 tabular-nums text-muted-foreground">
                             {horaDeCita(c.inicio)}
-                          </td>
-                          <td className="py-3 pr-3">
-                            <Link
-                              to="/pacientes/$pacienteId"
-                              params={{ pacienteId: c.pacienteId }}
-                              className="block hover:text-brand-700"
-                            >
-                              {c.paciente}
-                            </Link>
-                            <span className="block text-xs text-muted-foreground">
-                              {c.tratamiento}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">{c.paciente}</span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {c.tratamiento} · {nombreProfesional.get(c.profesionalId) ?? "—"}
                             </span>
-                          </td>
-                          <td className="py-3 pr-3 text-foreground/80">
-                            {nombreProfesional.get(c.profesionalId) ?? "—"}
-                          </td>
-                          <td className="py-3 pr-3">
-                            <EstadoCita cita={c} />
-                          </td>
-                          {veFinanzas && (
-                            <td className="py-3 text-right tabular-nums">
-                              {saldo === undefined
-                                ? "—"
-                                : saldo > 0
-                                  ? formatMoney(saldo, currency)
-                                  : saldo < 0
-                                    ? `A favor ${formatMoney(-saldo, currency)}`
-                                    : "Al día"}
+                            {veFinanzas && saldo !== undefined && saldo > 0 && (
+                              <span className="mt-0.5 block text-xs tabular-nums text-warning">
+                                Debe {formatMoney(saldo, currency)}
+                              </span>
+                            )}
+                          </span>
+                          <EstadoCita cita={c} />
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <div className="hidden overflow-x-auto border-y border-border md:block">
+                  <table className="w-full min-w-[34rem] text-sm">
+                    <thead>
+                      <tr className="kicker text-left">
+                        <th scope="col" className="py-2.5 pr-3 font-normal">
+                          Hora
+                        </th>
+                        <th scope="col" className="py-2.5 pr-3 font-normal">
+                          Paciente
+                        </th>
+                        <th scope="col" className="py-2.5 pr-3 font-normal">
+                          Profesional
+                        </th>
+                        <th scope="col" className="py-2.5 pr-3 font-normal">
+                          Estado
+                        </th>
+                        {veFinanzas && (
+                          <th scope="col" className="py-2.5 text-right font-normal">
+                            Saldo
+                          </th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-hairline">
+                      {citasHoy.map((c) => {
+                        const saldo = saldos[c.pacienteId];
+                        return (
+                          <tr key={c.id} className="align-middle">
+                            <td className="py-3 pr-3 tabular-nums text-muted-foreground">
+                              {horaDeCita(c.inicio)}
                             </td>
-                          )}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                            <td className="py-3 pr-3">
+                              <Link
+                                to="/pacientes/$pacienteId"
+                                params={{ pacienteId: c.pacienteId }}
+                                className="block hover:text-brand-700"
+                              >
+                                {c.paciente}
+                              </Link>
+                              <span className="block text-xs text-muted-foreground">
+                                {c.tratamiento}
+                              </span>
+                            </td>
+                            <td className="py-3 pr-3 text-foreground/80">
+                              {nombreProfesional.get(c.profesionalId) ?? "—"}
+                            </td>
+                            <td className="py-3 pr-3">
+                              <EstadoCita cita={c} />
+                            </td>
+                            {veFinanzas && (
+                              <td className="py-3 text-right tabular-nums">
+                                {saldo === undefined
+                                  ? "—"
+                                  : saldo > 0
+                                    ? formatMoney(saldo, currency)
+                                    : saldo < 0
+                                      ? `A favor ${formatMoney(-saldo, currency)}`
+                                      : "Al día"}
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </section>
 
           <div className="space-y-6">
+            {/* Escritorio: la misma cola de confirmación del celular, con
+                "Confirmó" a un clic (antes solo existía en md:hidden). */}
+            {clinicId && gestionaAgenda && (
+              <div className="hidden md:block">
+                <ColaConfirmacion
+                  clinicId={clinicId}
+                  clinicaNombre={access.clinic?.name ?? "la clínica"}
+                  citas={citas}
+                  hoy={hoy}
+                  nombreProfesional={nombreProfesional}
+                />
+              </div>
+            )}
             <ColaAccionable tareas={tareas} />
             {clinicId && esDueno && <ChecklistActivacion pasos={pasosActivacion} />}
           </div>

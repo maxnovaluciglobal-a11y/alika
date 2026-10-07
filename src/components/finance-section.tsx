@@ -89,6 +89,7 @@ import { cn } from "@/lib/utils";
 import { listPaymentMethods } from "@/lib/finance/clinic-finance.functions";
 import { useOfflineMutation } from "@/hooks/use-offline-mutation";
 import { listProcedureSupplies } from "@/lib/clinic-operations/procedure-supplies.functions";
+import { mensajeDeError } from "@/lib/mensaje-error";
 
 interface Props {
   clinicId: string;
@@ -108,6 +109,13 @@ interface Props {
   piezaSeed?: PiezaSeed | null;
   /** Se llama al cerrar el diálogo, para que el padre limpie el seed. */
   onPiezaSeedConsumido?: () => void;
+  /**
+   * "Cobrar" de la cabecera de la ficha: abre el diálogo de pago con el
+   * saldo ya cargado (antes solo cambiaba de pestaña y había que buscar
+   * "Registrar pago"; auditoría 07-oct-2026).
+   */
+  abrirPago?: boolean;
+  onPagoAbierto?: () => void;
 }
 
 interface DraftItem {
@@ -397,7 +405,7 @@ function QuoteItemsEditor({
               </button>
             </div>
 
-            <span className="ml-auto font-mono text-xs text-muted-foreground">
+            <span className="ml-auto tabular-nums text-xs text-muted-foreground">
               {formatMoney(draftLineTotal(it), currency)}
             </span>
           </div>
@@ -408,7 +416,7 @@ function QuoteItemsEditor({
         onClick={() =>
           setItems((arr) => [...arr, emptyItem({ phaseLabel: arr.at(-1)?.phaseLabel ?? "" })])
         }
-        className="inline-flex items-center gap-1 text-[11px] font-medium text-brand hover:underline"
+        className="inline-flex items-center gap-1 text-[11px] font-medium text-brand-700 hover:underline"
       >
         <Plus className="size-3" /> Agregar otro ítem
       </button>
@@ -492,7 +500,7 @@ function PiezaTag({ tooth, surface }: { tooth: number; surface: ToothSurface | n
       title={[comun ? `Diente ${tooth} (${comun})` : `Diente ${tooth}`, zona]
         .filter(Boolean)
         .join(" · ")}
-      className="shrink-0 rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground"
+      className="shrink-0 rounded bg-secondary px-1.5 py-0.5 tabular-nums text-[10px] text-muted-foreground"
     >
       {tooth}
       {zona && <span className="ml-1 font-sans">{zona.slice(0, 3)}</span>}
@@ -580,7 +588,7 @@ function NuevoProcedimientoInline({
       setPrice(null);
       toast.success("Procedimiento agregado al catálogo");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   return (
@@ -588,7 +596,7 @@ function NuevoProcedimientoInline({
       <DialogTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-1 text-[11px] font-medium text-brand hover:underline"
+          className="inline-flex items-center gap-1 text-[11px] font-medium text-brand-700 hover:underline"
         >
           <Plus className="size-3" /> Nuevo procedimiento
         </button>
@@ -670,7 +678,9 @@ function TotalesPresupuesto({
     <div className="space-y-1.5 border-t border-hairline pt-3 text-sm">
       <div className="flex items-center justify-end gap-3">
         <span className="text-muted-foreground">Subtotal</span>
-        <span className="w-32 text-right font-mono text-xs">{formatMoney(subtotal, currency)}</span>
+        <span className="w-32 text-right tabular-nums text-xs">
+          {formatMoney(subtotal, currency)}
+        </span>
       </div>
       <div className="flex items-center justify-end gap-3">
         <label htmlFor="desc-comercial" className="text-muted-foreground">
@@ -688,7 +698,7 @@ function TotalesPresupuesto({
           />
           <span className="text-xs text-muted-foreground">%</span>
         </div>
-        <span className="w-32 text-right font-mono text-xs text-muted-foreground">
+        <span className="w-32 text-right tabular-nums text-xs text-muted-foreground">
           {descuento > 0 ? `− ${formatMoney(descuento, currency)}` : "—"}
         </span>
       </div>
@@ -768,7 +778,7 @@ function NuevoPresupuestoDialog({
       setDescuentoPct(0);
       setItems([emptyItem()]);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const puedeCrear = items.some((it) => it.nameSnapshot.trim()) && !create.isPending;
@@ -907,7 +917,7 @@ function EditarPresupuestoDialog({
       toast.success(`Presupuesto ${quote.number} actualizado`);
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const puedeGuardar = items.some((it) => it.nameSnapshot.trim()) && !update.isPending;
@@ -973,6 +983,8 @@ function NuevoPagoDialog({
   plans,
   suggestedAmountCents,
   currency,
+  abrirAhora,
+  onAbierto,
 }: {
   clinicId: string;
   patientId: string;
@@ -980,9 +992,17 @@ function NuevoPagoDialog({
   plans: TreatmentPlan[];
   suggestedAmountCents: number;
   currency: string;
+  abrirAhora?: boolean;
+  onAbierto?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState<number | null>(suggestedAmountCents);
+  useEffect(() => {
+    if (!abrirAhora) return;
+    setAmount(suggestedAmountCents);
+    setOpen(true);
+    onAbierto?.();
+  }, [abrirAhora, suggestedAmountCents, onAbierto]);
   const [method, setMethod] = useState<PaymentMethod>("cash");
   // G-6: el medio configurado de la clínica. El enum `method` se sigue
   // guardando para el histórico y para los pagos capturados sin conexión.
@@ -1332,6 +1352,8 @@ export function FinanceSection({
   userId,
   piezaSeed,
   onPiezaSeedConsumido,
+  abrirPago,
+  onPagoAbierto,
 }: Props) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -1441,7 +1463,7 @@ export function FinanceSection({
         toast.success("Presupuesto aceptado y convertido en plan de tratamiento");
       }
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const reject = useMutation({
@@ -1450,7 +1472,7 @@ export function FinanceSection({
       queryClient.invalidateQueries({ queryKey: ["quotes", clinicId, patientId] });
       setConfirmRejectId(null);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const reversePaymentMutation = useMutation({
@@ -1462,7 +1484,7 @@ export function FinanceSection({
       setReversingPaymentId(null);
       setReversalReason("");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   const setItem = useMutation({
@@ -1484,7 +1506,7 @@ export function FinanceSection({
         );
       }
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
   // Tanda 2 — antes de completar un ítem con procedimiento, chequeamos en
@@ -1545,6 +1567,8 @@ export function FinanceSection({
               plans={plans}
               suggestedAmountCents={Math.max(0, balance)}
               currency={currency}
+              abrirAhora={Boolean(abrirPago) && !isLoading}
+              onAbierto={onPagoAbierto}
             />
             <NuevoPresupuestoDialog
               clinicId={clinicId}
@@ -1656,7 +1680,7 @@ export function FinanceSection({
                                 <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                                   {fase.label ?? SIN_FASE_LABEL}
                                 </span>
-                                <span className="font-mono text-[11px] text-muted-foreground">
+                                <span className="tabular-nums text-[11px] text-muted-foreground">
                                   {formatMoney(fase.subtotalCents, plan.currency)}
                                 </span>
                               </div>
@@ -1682,7 +1706,7 @@ export function FinanceSection({
                                   {it.toothNumber && (
                                     <PiezaTag tooth={it.toothNumber} surface={it.surface} />
                                   )}
-                                  <span className="font-mono text-muted-foreground">
+                                  <span className="tabular-nums text-muted-foreground">
                                     {it.patientCents !== null &&
                                     it.patientCents !== it.priceCents ? (
                                       <span
@@ -1796,7 +1820,7 @@ export function FinanceSection({
                                 <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                                   {fase.label ?? SIN_FASE_LABEL}
                                 </span>
-                                <span className="font-mono text-[11px] text-muted-foreground">
+                                <span className="tabular-nums text-[11px] text-muted-foreground">
                                   {formatMoney(fase.subtotalCents, quote.currency)}
                                 </span>
                               </div>
@@ -1816,14 +1840,14 @@ export function FinanceSection({
                                   <span className="text-muted-foreground">×{it.quantity}</span>
                                   {/* El descuento se muestra como se negoció:
                                       en % si así se cargó, en pesos si no. */}
-                                  <span className="font-mono text-muted-foreground">
+                                  <span className="tabular-nums text-muted-foreground">
                                     {it.discountPct !== null
                                       ? `−${it.discountPct}%`
                                       : it.discountCents > 0
                                         ? `−${formatMoney(it.discountCents, quote.currency)}`
                                         : formatMoney(it.unitPriceCents, quote.currency)}
                                   </span>
-                                  <span className="font-mono font-medium">
+                                  <span className="tabular-nums font-medium">
                                     {formatMoney(it.totalCents, quote.currency)}
                                   </span>
                                 </div>
@@ -1838,7 +1862,7 @@ export function FinanceSection({
                               {quote.commercialDiscountPct !== null &&
                                 ` (${quote.commercialDiscountPct}%)`}
                             </span>
-                            <span className="font-mono text-muted-foreground">
+                            <span className="tabular-nums text-muted-foreground">
                               − {formatMoney(quote.discountCents, quote.currency)}
                             </span>
                           </div>
@@ -1852,13 +1876,13 @@ export function FinanceSection({
                               <span className="text-muted-foreground">
                                 Cubre {quote.agreementNameSnapshot ?? "el convenio"}
                               </span>
-                              <span className="font-mono text-muted-foreground">
+                              <span className="tabular-nums text-muted-foreground">
                                 − {formatMoney(quote.coverageTotalCents, quote.currency)}
                               </span>
                             </div>
                             <div className="flex items-center justify-end gap-3">
                               <span className="font-medium">Paga el paciente</span>
-                              <span className="font-mono font-semibold">
+                              <span className="tabular-nums font-semibold">
                                 {formatMoney(
                                   Math.max(0, quote.totalCents - quote.coverageTotalCents),
                                   quote.currency,

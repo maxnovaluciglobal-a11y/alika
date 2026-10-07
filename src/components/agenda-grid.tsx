@@ -12,18 +12,15 @@ import {
   type Profesional,
 } from "@/lib/clinic-operations/clinic-data";
 import { PatientConfirmedBadge } from "@/components/patient-confirmed-badge";
+import { claseBloque, tonoDeEstadoCita } from "@/lib/clinic-operations/estado-cita-tono";
 import { cn } from "@/lib/utils";
 
 // El borde izquierdo identifica al profesional (color guardado en
 // /profesionales, ver AgendaGrid más abajo); acá solo queda fondo + texto
 // según el estado de la cita.
-const estadoClases: Record<Cita["estado"], string> = {
-  confirmada: "bg-brand/10 text-brand",
-  "en-sala": "bg-warning-soft text-warning",
-  ausente: "bg-secondary text-muted-foreground",
-  finalizada: "bg-secondary/60 text-muted-foreground",
-  tentativa: "bg-ai-soft text-ai",
-};
+const estadoClases = Object.fromEntries(
+  Object.entries(tonoDeEstadoCita).map(([estado, tono]) => [estado, claseBloque[tono]]),
+) as Record<Cita["estado"], string>;
 
 function horaLabel(i: number) {
   return `${String(HORA_INICIO + i).padStart(2, "0")}:00`;

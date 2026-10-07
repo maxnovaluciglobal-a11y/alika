@@ -10,20 +10,21 @@ import { COUNTRIES } from "@/lib/onboarding-types";
  * datos por país (moneda, huso, si la moneda lleva decimales) salen de
  * `COUNTRIES` y de `ZERO_DECIMAL_CURRENCIES` en `finance.ts`, no de una lista
  * escrita a mano que se desincroniza. Y hay una sección explícita de lo que
- * Alika NO hace: no existe facturación electrónica por país (ni DTE, ni CFDI,
- * ni equivalentes), y una página de captación que lo insinúe quema la
- * confianza en la primera llamada de ventas.
+ * Alika NO hace todavía: no existe facturación electrónica por país (ni DTE,
+ * ni CFDI, ni equivalentes). Está en el roadmap, sin fecha: decirlo así y no
+ * insinuar que ya existe, porque eso quema la confianza en la primera llamada
+ * de ventas. Si algún día se compromete una fecha, recién ahí se publica.
  */
 
 /** Monedas que no usan decimales — mismo criterio que finance.ts. */
 const SIN_DECIMALES = new Set(["CLP", "COP", "PYG"]);
 
 const NOTA_POR_PAIS: Record<string, string> = {
-  CL: "El peso chileno no usa decimales: $45.000 se escribe y se cobra como 45.000, sin centavos fantasma.",
+  CL: "El peso chileno no usa decimales: $45.000 se escribe y se cobra como 45.000.",
   MX: "El peso mexicano sí lleva centavos, y Alika los trata como centavos de verdad en toda la cadena de cobro.",
   CO: "El peso colombiano no usa decimales, igual que el chileno.",
-  PE: "El sol lleva céntimos. Los montos se guardan en la unidad mínima, no en un decimal flotante.",
-  AR: "El peso argentino lleva centavos. Los importes se guardan en enteros para que la inflación no arrastre errores de redondeo.",
+  PE: "El sol lleva céntimos: S/ 180,50 queda en S/ 180,50, sin redondeos que descuadren la caja.",
+  AR: "El peso argentino lleva centavos y Alika los respeta. Los montos grandes no se redondean ni se descuadran al sumar.",
 };
 
 const PREGUNTAS = [
@@ -37,11 +38,11 @@ const PREGUNTAS = [
   },
   {
     q: "¿Alika emite factura electrónica en mi país?",
-    a: "No. Alika registra cobros, saldos, medios de pago con su retención y comisiones de profesionales, pero no emite documentos tributarios electrónicos en ningún país. Si necesitas emitirlos, tienes que seguir usando tu sistema de facturación.",
+    a: "Todavía no. Alika registra cobros, saldos, medios de pago con su retención y comisiones de profesionales, pero hoy no emite documentos tributarios electrónicos en ningún país. La facturación electrónica está en el roadmap, sin fecha comprometida. Mientras tanto, si necesitas emitirlos, sigues usando tu sistema de facturación.",
   },
   {
     q: "¿Los montos se manejan bien en monedas sin decimales?",
-    a: "Sí, y es una diferencia que importa. En pesos chilenos o colombianos, tratar el monto como si tuviera centavos produce errores de 100 veces. Alika guarda cada importe en la unidad mínima de su moneda y la moneda es obligatoria en cada registro, para que un descuido no pase inadvertido.",
+    a: "Sí, y es una diferencia que importa. En pesos chilenos o colombianos, un sistema que trata el monto como si tuviera centavos puede equivocarse por 100 veces. Alika sabe qué monedas llevan decimales y cuáles no, y cada cobro queda registrado con su moneda, así que un descuido no pasa inadvertido.",
   },
   {
     q: "¿Puedo tener sucursales en más de una ciudad?",
@@ -123,21 +124,19 @@ function SoftwareDentalLatam() {
               citas corridas.
             </li>
             <li>
-              <strong className="text-foreground">WhatsApp sin obligación de conectar nada.</strong>{" "}
-              Alika arma la cola de recordatorios y tu equipo la despacha. Si conectas tu número, el
-              envío sale por la API; si no, por un link de wa.me. Ningún recordatorio ni mensaje de
-              seguimiento sale solo: los dispara siempre alguien de tu clínica. La única excepción
-              es un saludo automático la primera vez que escribe alguien que todavía no es paciente
-              tuyo — y sólo si conectaste tu número.
+              <strong className="text-foreground">WhatsApp sin configurar nada.</strong> Alika arma
+              la lista de recordatorios y tu equipo los envía con un toque, desde su propio WhatsApp
+              o desde el número de la clínica si lo conectas. Ningún mensaje a pacientes sale solo.
+              La única excepción: si conectas tu número, Alika saluda automáticamente a quien
+              escribe por primera vez.
             </li>
             <li>
               <strong className="text-foreground">Sigue funcionando sin internet.</strong> Agenda,
               fichas, cobros y odontograma quedan guardados en el equipo y se sincronizan solos.
             </li>
             <li>
-              <strong className="text-foreground">Los montos no se redondean mal.</strong> Cada
-              importe se guarda en la unidad mínima de su moneda y la moneda es obligatoria en cada
-              registro.
+              <strong className="text-foreground">Los montos no se redondean mal.</strong> Alika
+              sabe si tu moneda lleva decimales y cada cobro queda registrado con su moneda.
             </li>
           </ul>
         </section>
@@ -149,12 +148,13 @@ function SoftwareDentalLatam() {
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
             Alika{" "}
             <strong className="text-foreground">
-              no emite documentos tributarios electrónicos
+              todavía no emite documentos tributarios electrónicos
             </strong>{" "}
             en ningún país: ni boleta ni factura electrónica en Chile, ni CFDI en México, ni sus
             equivalentes. Registra cobros, saldos, medios de pago con su retención y comisiones de
-            profesionales, pero la emisión fiscal sigue en el sistema que ya uses. Preferimos
-            decirlo acá y no en la primera llamada.
+            profesionales, pero la emisión fiscal sigue en el sistema que ya uses. La facturación
+            electrónica está en el roadmap, sin fecha comprometida. Preferimos decirlo aquí y no en
+            la primera llamada.
           </p>
         </section>
 
@@ -175,9 +175,9 @@ function SoftwareDentalLatam() {
         <p className="mt-12 text-sm text-muted-foreground">
           Puedes{" "}
           <Link to="/demo" className="text-brand-700 underline underline-offset-2">
-            probar la demo sin registrarte
+            entrar a la demo
           </Link>{" "}
-          o mirar el{" "}
+          (solo te pedimos nombre y email, sin tarjeta ni contraseña) o mirar el{" "}
           <Link to="/faq" className="text-brand-700 underline underline-offset-2">
             resto de las preguntas frecuentes
           </Link>
