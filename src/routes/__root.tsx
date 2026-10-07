@@ -11,6 +11,11 @@ import {
 import { useEffect, type ReactNode, useMemo } from "react";
 
 import appCss from "../styles.css?url";
+// Las dos caras que pinta el primer pantallazo (cuerpo y titular). Sin
+// precarga, el navegador las pedía recién al aplicar el CSS y el cambio de
+// fuente movía el layout (todo el CLS medido venía de ahí).
+import loraRegular from "@fontsource/lora/files/lora-latin-400-normal.woff2?url";
+import cormorantRegular from "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff2?url";
 import { reportBoundaryError } from "../lib/error-reporting";
 import { siteJsonLdScripts } from "@/lib/seo";
 import { captureException, initSentry } from "@/lib/sentry";
@@ -105,6 +110,16 @@ const SITE_URL =
 // intacto para el hero de la landing (src/routes/index.tsx).
 const SOCIAL_IMAGE_URL = `${SITE_URL}/landing/dentist-og.jpg`;
 
+/**
+ * Aplica el modo oscuro antes del primer pintado. El tema lo pone AppShell
+ * en un useEffect, así que quien usa modo oscuro veía la pantalla clara un
+ * instante en cada carga (auditoría 07-oct-2026). Va en el <head> por
+ * `head().scripts`, que lleva el nonce de la CSP. Mismas reglas que
+ * AppShell (clave `alika:theme`, si no hay elección sigue al sistema) y
+ * solo en la app: las páginas públicas siguen siempre en claro.
+ */
+const SCRIPT_TEMA_SIN_DESTELLO = `(function(){try{var p=location.pathname.split("/")[1]||"";var pub=["","auth","demo","docs","faq","nosotros","portal","portal-laboratorio","precios","privacidad","recursos","software-dental-latam","terminos","calculadora-rentabilidad-dental"];if(pub.indexOf(p)>=0)return;var t=localStorage.getItem("alika:theme");if(t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}})();`;
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -135,14 +150,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Agenda, pacientes, historia clínica e IA para clínicas dentales de LatAm.",
       },
       { name: "twitter:image", content: SOCIAL_IMAGE_URL },
-      // Pinta la barra del navegador con el teal de marca cuando la app corre
-      // instalada (display: standalone).
-      { name: "theme-color", content: "#f3f2f2" },
+      // Pinta la barra del navegador con el papel (claro) o la tinta (oscuro)
+      // cuando la app corre instalada (display: standalone).
+      { name: "theme-color", content: "#f3f2f2", media: "(prefers-color-scheme: light)" },
+      { name: "theme-color", content: "#1d1c1b", media: "(prefers-color-scheme: dark)" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "Alika" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
     ],
     links: [
+      {
+        rel: "preload",
+        href: loraRegular,
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "preload",
+        href: cormorantRegular,
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
       {
@@ -154,7 +184,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     // Organization + WebSite + SoftwareApplication: no dependen de la ruta,
     // por eso van acá y no repetidos por página (mayor impacto GEO, ver
     // memoria alika_seo_geo_pendiente).
-    scripts: siteJsonLdScripts(),
+    scripts: [{ children: SCRIPT_TEMA_SIN_DESTELLO }, ...siteJsonLdScripts()],
   }),
 
   shellComponent: RootShell,

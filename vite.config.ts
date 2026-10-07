@@ -89,6 +89,11 @@ export default defineConfig(async ({ command, mode }) => {
           // sobrevive a los deploys en la caché del navegador, porque no
           // cambia cuando cambia el código de la app.
           manualChunks(id: string) {
+            // El helper de precarga de Vite va aparte: si no, Rolldown lo
+            // mete en el primer chunk manual (este de Supabase) y la landing,
+            // que necesita el helper, terminaba precargando supabase-js
+            // entero (~53 KB gzip) sin usarlo (auditoría 07-oct-2026).
+            if (id.includes("vite/preload-helper")) return "preload-helper";
             if (id.includes("node_modules/@supabase/")) return "supabase";
             return undefined;
           },
