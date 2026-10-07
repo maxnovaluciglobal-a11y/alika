@@ -268,7 +268,7 @@ export function AgendaGrid({
                     to="/pacientes/$pacienteId"
                     params={{ pacienteId: c.pacienteId }}
                     className={cn(
-                      "absolute left-1.5 right-1.5 overflow-hidden rounded-md border px-2 leading-[1.15] transition-shadow hover:shadow-md focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                      "@container absolute left-1.5 right-1.5 overflow-hidden rounded-md border px-2 leading-[1.15] transition-shadow hover:shadow-md focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                       corta ? "py-0" : "py-[3px]",
                       estadoClases[c.estado],
                       c.estado === "ausente" && "opacity-70",
@@ -278,7 +278,10 @@ export function AgendaGrid({
                       height: c.duracion * PIXELES_POR_MINUTO - 3,
                     }}
                   >
-                    <div className="flex items-start justify-between gap-1.5">
+                    {/* En columnas angostas (celular) el estado baja a su
+                        propia línea: en la misma fila le comía el nombre al
+                        paciente ("Isi d.."). */}
+                    <div className="flex flex-col gap-px @[11rem]:flex-row @[11rem]:items-start @[11rem]:justify-between @[11rem]:gap-1.5">
                       <p className="flex min-w-0 items-start gap-1.5 text-xs font-semibold">
                         <span
                           aria-hidden="true"
@@ -287,7 +290,11 @@ export function AgendaGrid({
                         />
                         {/* ≥30 min hay alto para dos líneas: el apellido no se
                           pierde en columnas angostas. */}
-                        <span className={corta ? "truncate" : "line-clamp-2 break-words"}>
+                        <span
+                          className={
+                            corta ? "truncate" : "line-clamp-1 break-words @[11rem]:line-clamp-2"
+                          }
+                        >
                           {c.paciente}
                         </span>
                         <AllergyAlertIcon allergies={allergyAlerts?.[c.pacienteId]} />
