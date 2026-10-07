@@ -37,6 +37,15 @@ export function GlobalSearch({
   const [q, setQ] = useState("");
   const [qDiferida, setQDiferida] = useState("");
   const navigate = useNavigate();
+  // El atajo se muestra según la plataforma. Arranca en "Ctrl K" (la mayoría
+  // de las clínicas usa Windows) y se corrige en el cliente: leerlo durante el
+  // render rompería la hidratación, porque en SSR no hay navigator.
+  const [esMac, setEsMac] = useState(false);
+  useEffect(() => {
+    const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
+    const plataforma = nav.userAgentData?.platform ?? nav.platform ?? nav.userAgent;
+    setEsMac(/mac|iphone|ipad|ipod/i.test(plataforma));
+  }, []);
 
   useEffect(() => {
     if (!atajo) return;
@@ -102,13 +111,19 @@ export function GlobalSearch({
       >
         <Search className="size-4 shrink-0" aria-hidden />
         <span className="hidden flex-1 truncate text-left sm:inline">Buscar paciente…</span>
-        <kbd className="hidden rounded-sm border border-border px-1.5 text-xs sm:inline">⌘K</kbd>
+        <kbd
+          aria-hidden
+          className="hidden rounded-sm border border-border px-1.5 text-xs sm:inline"
+        >
+          {esMac ? "⌘K" : "Ctrl K"}
+        </kbd>
       </button>
 
       <Dialog open={abierto} onOpenChange={setAbierto}>
         <DialogContent className="overflow-hidden p-0">
           <DialogTitle className="sr-only">Buscar en Alika</DialogTitle>
           <Command
+            label="Buscar en Alika"
             shouldFilter={false}
             className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]]:px-2 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-2.5"
           >
