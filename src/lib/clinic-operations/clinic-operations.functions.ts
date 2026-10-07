@@ -18,7 +18,7 @@ const LAB_COLUMNS = "id, name, contact_name, contact_phone, contact_email, notes
 
 export const listLabs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({ clinicId: z.string().uuid(), incluirInactivos: z.boolean().default(false) })
       .parse(input),
@@ -49,7 +49,7 @@ const LabFields = {
 
 export const createLab = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), ...LabFields }).parse(input),
   )
   .handler(async ({ data, context }): Promise<{ id: string }> => {
@@ -80,7 +80,7 @@ export const createLab = createServerFn({ method: "POST" })
 
 export const setLabActive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({ clinicId: z.string().uuid(), labId: z.string().uuid(), isActive: z.boolean() })
       .parse(input),
@@ -106,7 +106,7 @@ const LAB_ORDER_COLUMNS =
 
 export const listLabOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -186,7 +186,7 @@ export const listLabOrders = createServerFn({ method: "GET" })
 
 export const createLabOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -254,7 +254,7 @@ export const createLabOrder = createServerFn({ method: "POST" })
 
 export const setLabOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -293,7 +293,7 @@ export const setLabOrderStatus = createServerFn({ method: "POST" })
 
 export const listWarehouses = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<Warehouse[]> => {
     const { data: rows, error } = await context.supabase
       .from("warehouses")
@@ -314,7 +314,7 @@ export const listWarehouses = createServerFn({ method: "GET" })
 
 export const createWarehouse = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -349,7 +349,7 @@ export const createWarehouse = createServerFn({ method: "POST" })
 /** Saldo de cada ítem por bodega, para el selector del inventario. */
 export const listStockByWarehouse = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({ clinicId: z.string().uuid(), warehouseId: z.string().uuid().nullish() })
       .parse(input),
@@ -388,7 +388,7 @@ export interface AppointmentStatusOption {
 
 export const listAppointmentStatuses = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({ clinicId: z.string().uuid(), incluirInactivos: z.boolean().default(false) })
       .parse(input),
@@ -416,7 +416,7 @@ export const listAppointmentStatuses = createServerFn({ method: "GET" })
 
 export const upsertAppointmentStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -465,7 +465,7 @@ export const upsertAppointmentStatus = createServerFn({ method: "POST" })
 
 export const setAppointmentStatusActive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -502,7 +502,7 @@ export const setAppointmentStatusActive = createServerFn({ method: "POST" })
  */
 export const listDuplicateCandidates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(
     async ({
       data,
@@ -579,7 +579,7 @@ export const listDuplicateCandidates = createServerFn({ method: "GET" })
  */
 export const mergePatients = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

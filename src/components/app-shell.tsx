@@ -302,8 +302,8 @@ export function AppShell({
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background text-foreground">
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-sidebar lg:flex">
+    <div className="flex min-h-dvh w-full bg-background text-foreground">
+      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border bg-sidebar lg:flex">
         <div className="space-y-4 px-5 pt-6 pb-4">
           <Link to="/dashboard" className="flex items-center gap-2.5">
             <AlikaLogo size={28} />
@@ -378,7 +378,7 @@ export function AppShell({
         </div>
       </aside>
 
-      <main id="main-content" className="flex min-h-screen min-w-0 flex-1 flex-col">
+      <main id="main-content" className="flex min-h-dvh min-w-0 flex-1 flex-col">
         <header
           className="sticky top-0 z-10 flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-background/95 px-5 backdrop-blur-sm sm:px-8"
           style={{ paddingTop: "env(safe-area-inset-top)" }}

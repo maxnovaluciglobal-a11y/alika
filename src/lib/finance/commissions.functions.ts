@@ -27,7 +27,7 @@ export type CommissionRule = {
  * un profesional = sin comisión configurada (no aparece o comisión 0). */
 export const listCommissionRules = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<CommissionRule[]> => {
     const { data: rows, error } = await context.supabase
       .from("commission_rules")
@@ -44,7 +44,7 @@ export const listCommissionRules = createServerFn({ method: "GET" })
 
 export const setCommissionRule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -74,7 +74,7 @@ export const setCommissionRule = createServerFn({ method: "POST" })
 
 export const removeCommissionRule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), professionalId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -126,7 +126,7 @@ function isUndefinedTableError(error: { code?: string } | null): boolean {
  */
 export const getCommissionReport = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -296,7 +296,7 @@ export const getCommissionReport = createServerFn({ method: "GET" })
  */
 export const closeCommissionPeriod = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -492,7 +492,7 @@ async function notifyCommissionSettled(params: {
 /** Marca un cierre existente como pagado. Solo owner/admin (RLS). */
 export const markCommissionSettlementPaid = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), settlementId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<{ ok: true }> => {

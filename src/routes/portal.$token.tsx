@@ -53,7 +53,7 @@ function PortalTokenExchange() {
 
   if (error) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
+      <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
         <p className="text-sm font-medium">Tu enlace no es válido o ya venció.</p>
         {contact?.waUrl ? (
           <a
@@ -75,7 +75,7 @@ function PortalTokenExchange() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md items-center justify-center p-6">
+    <div className="mx-auto flex min-h-dvh max-w-md items-center justify-center p-6">
       <Loader2 className="size-6 animate-spin text-brand" />
     </div>
   );

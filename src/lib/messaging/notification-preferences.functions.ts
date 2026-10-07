@@ -47,7 +47,7 @@ const updateSchema = z.object({
 /** Guarda las preferencias de notificación del usuario autenticado. */
 export const updateMyNotificationPreferences = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => updateSchema.parse(input))
+  .validator((input: unknown) => updateSchema.parse(input))
   .handler(async ({ data, context }): Promise<NotificationPreferences> => {
     const { supabase, userId } = context;
 

@@ -6,6 +6,7 @@ import { AlertTriangle, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -174,7 +175,11 @@ function ControlesDialog({ clinicId, caso }: { clinicId: string; caso: OrthoCase
   const fetchControls = useServerFn(listOrthoControls);
   const addFn = useServerFn(addOrthoControl);
 
-  const { data: controles = [] } = useQuery({
+  const {
+    data: controles = [],
+    isError: controlesConError,
+    refetch: reintentarControles,
+  } = useQuery({
     queryKey: ["ortho-controls", caso.id],
     enabled: open,
     queryFn: () => fetchControls({ data: { clinicId, orthoCaseId: caso.id } }),
@@ -231,7 +236,13 @@ function ControlesDialog({ clinicId, caso }: { clinicId: string; caso: OrthoCase
           </Button>
         </div>
         <div className="max-h-64 space-y-1.5 overflow-y-auto pt-2">
-          {controles.length === 0 && (
+          {controlesConError && (
+            <ErrorDeCarga
+              onReintentar={reintentarControles}
+              mensaje="No pudimos cargar los controles."
+            />
+          )}
+          {!controlesConError && controles.length === 0 && (
             <p className="text-sm text-muted-foreground">Sin controles registrados todavía.</p>
           )}
           {controles.map((c) => (
@@ -260,7 +271,12 @@ function OrtodonciaPage() {
   const fetchCases = useServerFn(listOrthoCases);
   const setStatusFn = useServerFn(setOrthoCaseStatus);
 
-  const { data: casos = [], isLoading } = useQuery({
+  const {
+    data: casos = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["ortho-cases", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchCases({ data: { clinicId: clinicId! } }),
@@ -286,8 +302,9 @@ function OrtodonciaPage() {
       <div className="space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">
-            {activos.length} caso{activos.length === 1 ? "" : "s"} activo
-            {activos.length === 1 ? "" : "s"}
+            {isError
+              ? "Casos de ortodoncia"
+              : `${activos.length} caso${activos.length === 1 ? "" : "s"} activo${activos.length === 1 ? "" : "s"}`}
             {atrasados.length > 0 && (
               <span className="ml-2 inline-flex items-center gap-1 text-destructive">
                 <AlertTriangle className="size-3.5" />
@@ -300,11 +317,13 @@ function OrtodonciaPage() {
 
         {isLoading && <p className="text-sm text-muted-foreground">Cargando casos…</p>}
 
-        {!isLoading && casos.length === 0 && (
+        {isError && <ErrorDeCarga onReintentar={refetch} mensaje="No pudimos cargar los casos." />}
+
+        {!isLoading && !isError && casos.length === 0 && (
           <div className="card-clinical p-8 text-center">
             <p className="mb-1 font-display text-lg font-semibold">Sin casos de ortodoncia</p>
             <p className="mx-auto max-w-md text-sm text-muted-foreground">
-              Registra acá los tratamientos largos — brackets o alineadores — con su control y su
+              Registra aquí los tratamientos largos — brackets o alineadores — con su control y su
               cuota mensual, para que no se pierdan entre las citas del día a día.
             </p>
           </div>

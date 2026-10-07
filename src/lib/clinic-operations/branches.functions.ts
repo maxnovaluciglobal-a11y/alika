@@ -31,7 +31,7 @@ const branchInputSchema = z.object({
  * clinic-catalog.functions.ts, que es liviana y solo trae activas. */
 export const listBranchesDetailed = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<BranchDetail[]> => {
     const { data: branches, error } = await context.supabase
       .from("branches")
@@ -76,7 +76,7 @@ export const listBranchesDetailed = createServerFn({ method: "GET" })
  * (branches_write / operatories_write) ya exige can_manage_clinic. */
 export const createBranch = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), branch: branchInputSchema }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -123,7 +123,7 @@ export const createBranch = createServerFn({ method: "POST" })
  * historial de citas/pacientes asociados. */
 export const updateBranch = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -159,7 +159,7 @@ export const updateBranch = createServerFn({ method: "POST" })
 /** Agrega un box/operatorio a una sucursal existente. */
 export const addOperatory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -201,7 +201,7 @@ export interface BranchComparisonRow {
  */
 export const getBranchComparison = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

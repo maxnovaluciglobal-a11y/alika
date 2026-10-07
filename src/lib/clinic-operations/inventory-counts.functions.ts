@@ -30,7 +30,7 @@ const MIGRATION_PENDING_MESSAGE =
  */
 export const recordInventoryCount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -127,7 +127,7 @@ export const recordInventoryCount = createServerFn({ method: "POST" })
  * lectura correcta en los dos casos. */
 export const listInventoryCounts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), itemId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<{ counts: InventoryCount[] }> => {

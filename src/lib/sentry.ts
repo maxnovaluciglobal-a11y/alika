@@ -1,5 +1,7 @@
 import type * as SentryReact from "@sentry/react";
 
+import { redactPostgresLiterals } from "@/lib/sentry-redact";
+
 /**
  * Init de Sentry seguro y lazy. Si no hay DSN configurado (ni en Vite env
  * ni en process.env), `@sentry/react` ni se descarga — el import es dinámico
@@ -39,7 +41,10 @@ function readEnv(): string {
   if (typeof process !== "undefined" && process.env?.SENTRY_ENVIRONMENT) {
     return process.env.SENTRY_ENVIRONMENT;
   }
-  return "development";
+  // En el navegador no hay process.env: sin esto todo llegaba a Sentry como
+  // "development". El build de Vite sabe si es producción.
+  const env = (import.meta as unknown as { env?: { PROD?: boolean } }).env;
+  return env?.PROD ? "production" : "development";
 }
 
 function readSampleRate(): number {
@@ -48,35 +53,11 @@ function readSampleRate(): number {
   return Number.isFinite(parsed) ? parsed : 0.1;
 }
 
-// Mensajes de error de Postgres suelen citar el valor literal que violó la
-// constraint, ej.: `Key (email)=(paciente@real.com) already exists.` o
-// `duplicate key value violates unique constraint "patients_dni_key"`.
-// Si ese mensaje llega tal cual a Sentry, un campo de columna puede terminar
-// filtrando un dato real (email, teléfono, DNI, etc.) fuera de la DB.
-// Truncamos/redactamos el patrón `(columna)=(valor)` para no perder la
-// causa del error (nombre de columna/constraint) pero sin el valor literal.
-const POSTGRES_KEY_VALUE_PATTERN = /\(([^()=]+)\)=\(([^()]*)\)/g;
-
-function redactPostgresLiteralsInString(message: string): string {
-  return message.replace(
-    POSTGRES_KEY_VALUE_PATTERN,
-    (_match, column: string) => `(${column})=(redacted)`,
-  );
-}
-
-function redactPostgresLiterals(event: SentryReact.Event): void {
-  if (event.message) {
-    event.message = redactPostgresLiteralsInString(event.message);
-  }
-  for (const value of event.exception?.values ?? []) {
-    if (value.value) {
-      value.value = redactPostgresLiteralsInString(value.value);
-    }
-  }
-}
-
 export async function initSentry(): Promise<void> {
   if (inited) return;
+  // En el SSR este módulo también se evalúa: el servidor reporta con
+  // `sentry.server.ts` (@sentry/node), no con el SDK del navegador.
+  if (typeof window === "undefined") return;
   const dsn = readDsn();
   if (!dsn) return;
 

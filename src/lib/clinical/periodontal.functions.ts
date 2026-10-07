@@ -92,7 +92,7 @@ function groupMeasurements(rows: MeasurementRow[]): PeriodontalToothMeasurement[
 /** Historial de sondajes de un paciente (resumen, sin el detalle de cada punto). */
 export const listPeriodontalCharts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<PeriodontalChartSummary[]> => {
@@ -153,7 +153,7 @@ export const listPeriodontalCharts = createServerFn({ method: "GET" })
 /** El sondaje más reciente del paciente, con el detalle completo por pieza/punto. */
 export const getLatestPeriodontalChart = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<PeriodontalChart | null> => {
@@ -182,7 +182,7 @@ export const getLatestPeriodontalChart = createServerFn({ method: "GET" })
 /** Detalle completo de un chart puntual (usado por getLatestPeriodontalChart y por el historial). */
 export const getPeriodontalChartById = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), chartId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<PeriodontalChart | null> => {
@@ -234,7 +234,7 @@ export const getPeriodontalChartById = createServerFn({ method: "GET" })
  */
 export const createPeriodontalChart = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

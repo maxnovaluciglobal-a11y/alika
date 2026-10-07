@@ -39,10 +39,10 @@ function PrimerosPasos() {
         clínicas.
       </LegalP>
 
-      <LegalH2>4. Agenda tu primer turno</LegalH2>
+      <LegalH2>4. Agenda tu primera cita</LegalH2>
       <LegalP>
-        Desde la agenda, elige paciente, profesional y horario. Cuando el turno esté cerca, va a
-        aparecer en la cola de recordatorios de WhatsApp para que tu equipo lo despache — no hace
+        Desde la agenda, elige paciente, profesional y horario. Cuando la cita esté cerca, su
+        recordatorio va a aparecer en la cola de WhatsApp para que tu equipo lo despache — no hace
         falta configurar nada más para eso.
       </LegalP>
 
@@ -55,7 +55,7 @@ function PrimerosPasos() {
         <LegalLi>
           Para conectar el número real de WhatsApp de tu clínica, ver "Conectar WhatsApp".
         </LegalLi>
-        <LegalLi>Para que tus pacientes pidan turno solos, ver "Portal de pacientes".</LegalLi>
+        <LegalLi>Para que tus pacientes pidan citas solos, ver "Portal de pacientes".</LegalLi>
       </LegalUl>
     </article>
   );

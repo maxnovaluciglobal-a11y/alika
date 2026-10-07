@@ -52,7 +52,7 @@ function AccesoRestringido({ error: errorDesconocido }: ErrorComponentProps) {
   const error =
     errorDesconocido instanceof Error ? errorDesconocido : new Error(String(errorDesconocido));
   return (
-    <div className="grid min-h-screen place-items-center bg-surface px-6 text-foreground">
+    <div className="grid min-h-dvh place-items-center bg-surface px-6 text-foreground">
       <div className="card-clinical max-w-md p-8 text-center">
         <AlikaLogo size={40} className="mx-auto mb-4" />
         <h1 className="mb-2 font-display text-xl font-semibold">Acceso restringido</h1>
@@ -202,7 +202,7 @@ function AdminLeadsPage() {
   const leads = Route.useLoaderData();
 
   return (
-    <div className="min-h-screen bg-surface px-4 py-10 sm:py-12">
+    <div className="min-h-dvh bg-surface px-4 py-10 sm:py-12">
       <div className="mx-auto w-full max-w-6xl">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -230,7 +230,7 @@ function AdminLeadsPage() {
             </p>
             <p className="mx-auto max-w-md text-sm text-muted-foreground">
               En cuanto alguien complete la calculadora o el checklist de la landing, va a aparecer
-              acá.
+              aquí.
             </p>
           </div>
         ) : (

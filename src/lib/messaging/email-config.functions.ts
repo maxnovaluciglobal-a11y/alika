@@ -35,7 +35,7 @@ function rowToConfig(row: EmailSandboxRow): EmailSandboxConfig {
  * verdad — la misma que consulta el servidor al enviar. */
 export const getEmailSandboxConfig = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<EmailSandboxConfig> => {
     const { data: row, error } = await context.supabase
       .from("email_sandbox_config")
@@ -54,7 +54,7 @@ export const getEmailSandboxConfig = createServerFn({ method: "GET" })
 
 export const setEmailSandboxConfig = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

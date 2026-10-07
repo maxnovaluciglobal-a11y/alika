@@ -28,7 +28,7 @@ export type ProcedureSupply = {
  * (SELECT). */
 export const listProcedureSupplies = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), procedureId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<{ supplies: ProcedureSupply[] }> => {
@@ -96,7 +96,7 @@ export const listProcedureSupplies = createServerFn({ method: "GET" })
  * (`procedure_supplies_write_managers`) ya exige owner/admin/dentist. */
 export const setProcedureSupplies = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

@@ -109,7 +109,7 @@ function mapTemplate(row: TemplateRow): MessageTemplate {
 /** Templates activos de la clínica. */
 export const listMessageTemplates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<MessageTemplate[]> => {
     const { data: rows, error } = await context.supabase
       .from("message_templates")
@@ -126,7 +126,7 @@ export const listMessageTemplates = createServerFn({ method: "GET" })
 /** Historial de mensajes del paciente (más reciente primero). */
 export const listMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<Message[]> => {
@@ -152,7 +152,7 @@ export const listMessages = createServerFn({ method: "GET" })
  */
 export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -304,7 +304,7 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
  */
 export const sendEmailFromTemplate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -444,7 +444,7 @@ export interface PendingReminder {
  */
 export const listPendingReminders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<PendingReminder[]> => {
     const { supabase } = context;
     const ahora = Date.now();
@@ -628,7 +628,7 @@ export interface PendingOutreachItem {
  */
 export const listPendingOutreach = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<PendingOutreachItem[]> => {
     const { supabase } = context;
     const clinicId = data.clinicId;
@@ -945,7 +945,7 @@ export const listPendingOutreach = createServerFn({ method: "GET" })
 /** Prende/apaga el opt-in de WhatsApp del paciente. Lo apaga siempre puede cualquier operador; prenderlo requiere haberlo hablado con el paciente. */
 export const setPatientWhatsAppOptIn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({ clinicId: z.string().uuid(), patientId: z.string().uuid(), optIn: z.boolean() })
       .parse(input),

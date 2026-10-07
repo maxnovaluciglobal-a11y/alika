@@ -1,7 +1,17 @@
 import { Fragment, useMemo, useState, type KeyboardEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { History, Info, List, LayoutGrid, Loader2, Receipt, RotateCcw, X } from "lucide-react";
+import {
+  ArrowRight,
+  History,
+  Info,
+  List,
+  LayoutGrid,
+  Loader2,
+  Receipt,
+  RotateCcw,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { useOfflineMutation } from "@/hooks/use-offline-mutation";
@@ -36,6 +46,7 @@ import {
   listOdontogramMarks,
   setOdontogramMark,
 } from "@/lib/clinical/odontogram.functions";
+import { piezasConHallazgos } from "@/components/odontograma-hallazgos";
 import { cn } from "@/lib/utils";
 
 const TOOTH_SIZE = 40;
@@ -692,5 +703,81 @@ export function Odontogram({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Resumen del odontograma para la pestaña "Resumen" de la ficha: qué piezas
+ * tienen hallazgos y un acceso a la pestaña completa. Antes la ficha montaba
+ * el `<Odontogram>` entero dos veces (Resumen y Odontograma, auditoría 360 del
+ * 07-oct-2026); ahora el editor vive solo en su pestaña y acá queda una vista
+ * de lectura. Comparte la query (`odontogram-marks`) con el editor, así que
+ * pasar de una pestaña a la otra no vuelve a pedir las marcas.
+ */
+export function OdontogramResumen({
+  clinicId,
+  patientId,
+  onVerOdontograma,
+}: {
+  clinicId: string;
+  patientId: string;
+  onVerOdontograma: () => void;
+}) {
+  const fetchMarks = useServerFn(listOdontogramMarks);
+  const { data: marks = [], isLoading } = useQuery({
+    queryKey: ["odontogram-marks", clinicId, patientId],
+    queryFn: () => fetchMarks({ data: { clinicId, patientId } }),
+  });
+  const piezas = useMemo(() => piezasConHallazgos(marks), [marks]);
+
+  return (
+    <section aria-labelledby="odontograma-resumen" className="card-clinical p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 id="odontograma-resumen" className="font-display text-lg font-semibold">
+            Odontograma
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            {isLoading
+              ? "Cargando…"
+              : piezas.length === 0
+                ? "Sin hallazgos registrados."
+                : `${piezas.length} ${piezas.length === 1 ? "pieza" : "piezas"} con hallazgos`}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onVerOdontograma}
+          className={cn(
+            "inline-flex items-center gap-1 rounded-md text-sm font-medium text-brand-700 hover:underline",
+            FOCUS_RING_CLASS,
+          )}
+        >
+          Ver odontograma <ArrowRight className="size-3.5" aria-hidden />
+        </button>
+      </div>
+      {piezas.length > 0 && (
+        <ul className="mt-4 flex flex-wrap gap-1.5">
+          {piezas.map((p) => (
+            <li
+              key={p.tooth}
+              className="inline-flex items-center gap-1.5 rounded-md border border-hairline px-2 py-1 text-xs"
+            >
+              <span className="font-semibold tabular-nums">{p.tooth}</span>
+              {p.condiciones.map((c) => (
+                <span key={c} className="inline-flex items-center gap-1 text-muted-foreground">
+                  <span
+                    aria-hidden="true"
+                    className="size-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: CONDITION_COLORS[c] }}
+                  />
+                  {CONDITION_LABELS[c]}
+                </span>
+              ))}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

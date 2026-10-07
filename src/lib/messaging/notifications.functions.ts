@@ -140,7 +140,7 @@ export const listMyNotifications = createServerFn({ method: "GET" })
 /** Marca una notificación (o todas) como leídas. */
 export const markNotificationsRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ notificationId: z.string().uuid().nullable().optional() }).parse(input),
   )
   .handler(async ({ data, context }) => {

@@ -127,7 +127,7 @@ const PATIENTS_ROW_LIMIT = 5_000;
  */
 export const listPatients = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<{ items: Paciente[]; truncated: boolean }> => {
     const { supabase } = context;
 
@@ -240,7 +240,7 @@ export async function fetchPatientBalances(
 /** Ficha de un paciente, con timeline construido desde citas reales. */
 export const getPatient = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<Paciente | null> => {
@@ -324,7 +324,7 @@ export const getPatient = createServerFn({ method: "GET" })
 
 export const createPatient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -446,7 +446,7 @@ export interface ImportPreviewRow {
  */
 export const previewImportPatients = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -514,7 +514,7 @@ export const previewImportPatients = createServerFn({ method: "POST" })
  */
 export const importPatients = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -674,7 +674,7 @@ export async function writePatientFields(
 
 export const updatePatient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

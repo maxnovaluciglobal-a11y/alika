@@ -165,7 +165,7 @@ function parsearLead(input: unknown) {
 }
 
 export const submitMarketingLead = createServerFn({ method: "POST" })
-  .inputValidator(parsearLead)
+  .validator(parsearLead)
   .handler(async ({ data }) => {
     // Honeypot lleno: fingimos éxito. Devolver un error le confirma al bot
     // que detectamos la trampa y le enseña a evitarla.

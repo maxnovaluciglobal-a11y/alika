@@ -43,10 +43,10 @@ function DocsWhatsapp() {
 
       <LegalH2>Qué se envía por WhatsApp</LegalH2>
       <LegalP>
-        Recordatorios de turno (48h y 3h antes), avisos de lista de espera cuando se libera un
-        hueco, seguimiento de presupuestos enviados sin respuesta, y — si tu clínica lo activa —
-        saludos de cumpleaños, seguimiento post-tratamiento e invitaciones a referir. Todo respeta
-        el opt-in del paciente: si un paciente responde BAJA o STOP, deja de recibir estos mensajes.
+        Recordatorios de cita (48h y 3h antes), avisos de lista de espera cuando se libera un hueco,
+        seguimiento de presupuestos enviados sin respuesta, y — si tu clínica lo activa — saludos de
+        cumpleaños, seguimiento post-tratamiento e invitaciones a referir. Todo respeta el opt-in
+        del paciente: si un paciente responde BAJA o STOP, deja de recibir estos mensajes.
       </LegalP>
     </article>
   );

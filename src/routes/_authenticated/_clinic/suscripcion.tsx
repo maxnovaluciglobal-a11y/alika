@@ -6,6 +6,7 @@ import { Check, CreditCard, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import {
   createBillingPortalSession,
   createCheckoutSession,
@@ -79,7 +80,12 @@ function BillingPage() {
   const checkout = useServerFn(createCheckoutSession);
   const portal = useServerFn(createBillingPortalSession);
 
-  const { data: sub, isLoading } = useQuery({
+  const {
+    data: sub,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["my-subscription", clinicId],
     queryFn: () => cargar({ data: { clinicId } }),
   });
@@ -147,14 +153,17 @@ function BillingPage() {
   // dispara — es justo a quien está apuntado este atajo).
   const intentoDisparado = useRef(false);
   useEffect(() => {
-    if (intentoDisparado.current || isLoading) return;
+    // Con error no sabemos si ya paga: no se consume la intención ni se abre
+    // el checkout (podía cobrarle de nuevo a una clínica activa). Al
+    // reintentar con éxito, el efecto vuelve a correr.
+    if (intentoDisparado.current || isLoading || isError) return;
     intentoDisparado.current = true;
     const planComprado = consumePlanIntent();
     if (!planComprado || yaFacturando) return;
     setPlan(planComprado);
     startCheckout.mutate(planComprado);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, yaFacturando]);
+  }, [isLoading, isError, yaFacturando]);
 
   return (
     <AppShell title="Suscripción" access={access}>
@@ -169,7 +178,7 @@ function BillingPage() {
                 <span className="font-medium">
                   {usd(activePlanInfo?.promoCents ?? PLANS.clinica.promoCents)} / mes
                 </span>{" "}
-                · trial de 14 días.
+                · prueba gratis de 14 días.
               </p>
               <p className="mt-1 text-xs text-muted-foreground/80">
                 {approxLocalPricesLabel(
@@ -184,6 +193,14 @@ function BillingPage() {
             <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" /> Cargando…
             </div>
+          ) : isError ? (
+            // Un error no es "no tienes suscripción": invitar a empezar la
+            // prueba a quien ya paga es peor que no decir nada.
+            <ErrorDeCarga
+              onReintentar={refetch}
+              mensaje="No pudimos cargar el estado de tu suscripción."
+              className="mt-6"
+            />
           ) : sub ? (
             <dl className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
@@ -195,7 +212,7 @@ function BillingPage() {
               {sub.status === "trialing" && daysLeft !== null && (
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Días de trial restantes
+                    Días de prueba restantes
                   </dt>
                   <dd className="mt-1 text-sm font-medium">
                     {daysLeft} {daysLeft === 1 ? "día" : "días"}
@@ -219,8 +236,8 @@ function BillingPage() {
             </dl>
           ) : (
             <p className="mt-6 text-sm text-muted-foreground">
-              Aún no tienes una suscripción activa. Empieza tu trial de 14 días abajo — no cobramos
-              hasta que termine.
+              Aún no tienes una suscripción activa. Empieza tu prueba gratis de 14 días abajo — no
+              cobramos hasta que termine.
             </p>
           )}
         </section>
@@ -230,7 +247,7 @@ function BillingPage() {
           <p className="text-sm text-muted-foreground">
             {hasCustomer
               ? "Gestiona método de pago, descarga facturas o cancela desde el portal seguro de Stripe."
-              : "Al activar la suscripción vas a Stripe para dejar el método de pago. Puedes cancelar durante el trial y no te cobramos."}
+              : "Al activar la suscripción vas a Stripe para dejar el método de pago. Puedes cancelar durante la prueba y no te cobramos."}
           </p>
 
           {!yaFacturando && (

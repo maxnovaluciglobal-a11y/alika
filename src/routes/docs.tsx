@@ -34,7 +34,7 @@ const nav = [
 function DocsLayout() {
   const { pathname } = useLocation();
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-dvh bg-background text-foreground">
       <SiteHeader />
       <main
         id="main-content"

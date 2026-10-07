@@ -162,7 +162,7 @@ export interface FinanceSummary {
  */
 export const getFinanceSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -332,7 +332,7 @@ export interface QuoteConversionReport {
  */
 export const getQuoteConversionReport = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -441,7 +441,7 @@ export interface PanelDesempeno {
  */
 export const getPanelDesempeno = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -626,7 +626,7 @@ export const getPanelDesempeno = createServerFn({ method: "GET" })
  */
 export const getAccountsReceivableAging = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<AccountsReceivableAgingRow[]> => {
     const { supabase, userId } = context;
     await requireFinanceView(supabase, data.clinicId, userId);

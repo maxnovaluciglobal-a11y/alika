@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, Inbox, Loader2, MessageSquare, TrendingDown } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { LlamadaDesbloqueo } from "@/components/llamada-desbloqueo";
 import { requirePermission } from "@/lib/access/route-guards";
 import { requiereLlamadaOSuscripcion } from "@/lib/billing";
@@ -126,7 +127,7 @@ function EfectividadPage() {
   );
 
   const fetchEfectividad = useServerFn(getEfectividad);
-  const { data, isPending, error } = useQuery({
+  const { data, isPending, error, refetch } = useQuery({
     queryKey: ["efectividad", clinicId],
     queryFn: () => fetchEfectividad({ data: { clinicId: clinicId! } }),
     enabled: Boolean(clinicId) && !bloqueado,
@@ -159,9 +160,11 @@ function EfectividadPage() {
               </p>
             )}
             {error && (
-              <p className="mt-8 text-sm text-destructive">
-                No pudimos calcular la efectividad. Vuelve a intentarlo en un momento.
-              </p>
+              <ErrorDeCarga
+                onReintentar={refetch}
+                mensaje="No pudimos calcular la efectividad."
+                className="mt-8"
+              />
             )}
 
             {data && (

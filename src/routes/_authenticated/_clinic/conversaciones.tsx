@@ -18,7 +18,10 @@ import {
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
+import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/access/route-guards";
+import { clasePastilla } from "@/lib/clinic-operations/estado-cita-tono";
 import { MESSAGE_TEMPLATE_KIND_LABELS, type MessageTemplateKind } from "@/lib/messaging/messaging";
 import {
   estadoOptIn,
@@ -63,7 +66,7 @@ function ConversacionesPage() {
   const [soloSinResponder, setSoloSinResponder] = useState(false);
 
   const fetchConversations = useServerFn(listConversations);
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ["conversations", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchConversations({ data: { clinicId: clinicId! } }),
@@ -78,28 +81,57 @@ function ConversacionesPage() {
     void navigate({ search: { paciente: patientId }, replace: true });
   }
 
+  const titular =
+    isLoading || isError
+      ? "Conversaciones"
+      : conversaciones.length === 0
+        ? "Todavía no hay conversaciones."
+        : pendientes === 0
+          ? "Todo respondido."
+          : `${pendientes} ${pendientes === 1 ? "conversación espera" : "conversaciones esperan"} respuesta.`;
+
   return (
     <AppShell title="Conversaciones" access={access}>
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Todo lo que tus pacientes escribieron por WhatsApp, en un hilo por persona. Una
-            conversación queda marcada <strong>sin responder</strong> cuando el último mensaje lo
-            escribió el paciente.
-          </p>
-          <div className="flex shrink-0 items-center gap-1 rounded-lg border border-hairline p-1">
+      <div className="mx-auto max-w-6xl space-y-8">
+        {/* En celular, con un hilo abierto, la conversación es su propia
+            pantalla: el encabezado y la lista se ocultan. */}
+        <header
+          className={cn(
+            "flex flex-wrap items-end justify-between gap-4",
+            pacienteSeleccionado && "hidden lg:flex",
+          )}
+        >
+          <div className="min-w-0">
+            <p className="kicker">Mensajes · WhatsApp</p>
+            <h2 className="mt-2 font-display text-4xl font-normal leading-tight text-balance sm:text-[44px] sm:leading-none">
+              {titular}
+            </h2>
+            <p className="mt-3 max-w-prose text-sm text-muted-foreground">
+              Un hilo por paciente. Queda <span className="text-warning">sin responder</span> cuando
+              el último mensaje lo escribió el paciente.
+            </p>
+          </div>
+          <div role="group" aria-label="Filtrar conversaciones" className="flex shrink-0 gap-1">
             <FiltroBoton activo={!soloSinResponder} onClick={() => setSoloSinResponder(false)}>
-              Todas ({conversaciones.length})
+              Todas <span className="tabular-nums">({conversaciones.length})</span>
             </FiltroBoton>
             <FiltroBoton activo={soloSinResponder} onClick={() => setSoloSinResponder(true)}>
-              Sin responder ({pendientes})
+              Sin responder{" "}
+              <span className={cn("tabular-nums", pendientes > 0 && "text-warning")}>
+                ({pendientes})
+              </span>
             </FiltroBoton>
           </div>
-        </div>
+        </header>
 
         {data?.truncated && (
-          <p className="flex items-start gap-2 rounded-lg bg-warning-soft p-3 text-xs text-warning">
-            <AlertTriangle className="mt-px size-3.5 shrink-0" />
+          <p
+            className={cn(
+              "flex items-start gap-2 border-y border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning",
+              pacienteSeleccionado && "hidden lg:flex",
+            )}
+          >
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
             <span>
               Se están mostrando los 1.000 mensajes más recientes de la clínica. Las conversaciones
               más viejas siguen completas en la ficha de cada paciente.
@@ -107,16 +139,28 @@ function ConversacionesPage() {
           </p>
         )}
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
-          <div className={cn("min-w-0", pacienteSeleccionado && "hidden lg:block")}>
-            <ListaConversaciones
-              conversaciones={visibles}
-              cargando={isLoading}
-              seleccionado={pacienteSeleccionado}
-              onSeleccionar={seleccionar}
-              vacioPorFiltro={soloSinResponder && conversaciones.length > 0}
-            />
-          </div>
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+          <section
+            aria-label="Lista de conversaciones"
+            className={cn("min-w-0", pacienteSeleccionado && "hidden lg:block")}
+          >
+            {isError ? (
+              <ErrorDeCarga
+                mensaje="No pudimos cargar las conversaciones. Revisa la conexión."
+                onReintentar={() => void refetch()}
+                reintentando={isFetching}
+              />
+            ) : (
+              <ListaConversaciones
+                conversaciones={visibles}
+                cargando={isLoading}
+                seleccionado={pacienteSeleccionado}
+                onSeleccionar={seleccionar}
+                vacioPorFiltro={soloSinResponder && conversaciones.length > 0}
+                onVerTodas={() => setSoloSinResponder(false)}
+              />
+            )}
+          </section>
 
           <div className={cn("min-w-0", !pacienteSeleccionado && "hidden lg:block")}>
             {pacienteSeleccionado && clinicId ? (
@@ -126,9 +170,9 @@ function ConversacionesPage() {
                 onVolver={() => seleccionar(undefined)}
               />
             ) : (
-              <div className="card-clinical flex h-full min-h-[24rem] flex-col items-center justify-center gap-2 p-8 text-center">
-                <Inbox className="size-8 text-muted-foreground/50" />
-                <p className="text-sm text-muted-foreground">
+              <div className="flex h-full min-h-[24rem] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border p-8 text-center">
+                <Inbox className="size-7 text-muted-foreground" aria-hidden />
+                <p className="max-w-xs text-sm text-muted-foreground">
                   Elige una conversación de la lista para leerla y responder.
                 </p>
               </div>
@@ -155,8 +199,10 @@ function FiltroBoton({
       onClick={onClick}
       aria-pressed={activo}
       className={cn(
-        "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-        activo ? "bg-brand text-brand-foreground" : "text-muted-foreground hover:bg-muted",
+        "h-10 border-b-2 px-3 text-sm transition-colors",
+        activo
+          ? "border-brand font-medium text-foreground"
+          : "border-transparent text-muted-foreground hover:text-foreground",
       )}
     >
       {children}
@@ -170,83 +216,114 @@ function ListaConversaciones({
   seleccionado,
   onSeleccionar,
   vacioPorFiltro,
+  onVerTodas,
 }: {
   conversaciones: ConversationSummary[];
   cargando: boolean;
   seleccionado: string | undefined;
   onSeleccionar: (id: string) => void;
   vacioPorFiltro: boolean;
+  onVerTodas: () => void;
 }) {
   if (cargando) {
-    return <div className="card-clinical p-6 text-sm text-muted-foreground">Cargando…</div>;
+    return (
+      <p className="border-y border-border py-8 text-sm text-muted-foreground">
+        Cargando conversaciones…
+      </p>
+    );
   }
 
   if (conversaciones.length === 0) {
     return (
-      <div className="card-clinical space-y-2 p-6">
+      <div className="space-y-3 border-y border-border py-6">
         <p className="text-sm font-medium">
           {vacioPorFiltro ? "No queda nada sin responder." : "Todavía no hay conversaciones."}
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {vacioPorFiltro
             ? "Todos los hilos terminan con un mensaje de la clínica."
-            : "Acá van a aparecer los mensajes que te escriban los pacientes por WhatsApp, y los que la clínica les mande."}
+            : "Cuando un paciente escriba al WhatsApp de la clínica, o le mandes un recordatorio, el hilo aparece acá."}
         </p>
+        {vacioPorFiltro ? (
+          <button
+            type="button"
+            onClick={onVerTodas}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            Ver todas
+          </button>
+        ) : (
+          <Link to="/whatsapp" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            Revisar la conexión de WhatsApp
+          </Link>
+        )}
       </div>
     );
   }
 
   return (
-    <ul className="card-clinical divide-y divide-hairline overflow-hidden p-0">
+    <ul className="divide-y divide-hairline border-y border-border">
       {conversaciones.map((c) => {
         const pendiente = sinResponder(c);
+        const activo = seleccionado === c.patientId;
+        const deBaja = estadoOptIn(c) === "dado_de_baja";
         return (
           <li key={c.patientId}>
             <button
               type="button"
               onClick={() => onSeleccionar(c.patientId)}
-              aria-current={seleccionado === c.patientId ? "true" : undefined}
+              aria-current={activo ? "true" : undefined}
               className={cn(
-                "flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-muted/60",
-                seleccionado === c.patientId && "bg-brand-soft/60",
+                "flex w-full flex-col gap-1 px-3 py-3.5 text-left transition-colors",
+                activo ? "bg-brand-soft" : "hover:bg-muted/60",
               )}
             >
-              <span
-                className={cn(
-                  "mt-1.5 size-2 shrink-0 rounded-full",
-                  pendiente ? "bg-brand" : "bg-transparent",
-                )}
-                aria-hidden
-              />
-              {pendiente && <span className="sr-only">Sin responder: </span>}
-              <span className="min-w-0 flex-1">
-                <span className="flex items-baseline justify-between gap-2">
-                  <span
-                    className={cn("truncate text-sm", pendiente ? "font-semibold" : "font-medium")}
-                  >
-                    {c.patientName}
-                  </span>
-                  <span className="shrink-0 text-[11px] text-muted-foreground">
-                    {tiempoRelativo(c.lastMessageAt)}
-                  </span>
-                </span>
-                <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  {c.lastMessageDirection === "outbound" && (
-                    <Check className="size-3 shrink-0" aria-label="Último mensaje de la clínica" />
+              <span className="flex items-baseline justify-between gap-3">
+                <span
+                  className={cn(
+                    "truncate",
+                    pendiente || activo ? "font-semibold" : "font-medium",
+                    activo && "text-brand-700",
                   )}
-                  <span className="truncate">{c.lastMessageBody}</span>
+                >
+                  {c.patientName}
                 </span>
-                {pendiente && c.inboundStreak > 1 && (
-                  <span className="mt-1 inline-block rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand-700">
-                    {c.inboundStreak} mensajes sin responder
-                  </span>
-                )}
-                {estadoOptIn(c) === "dado_de_baja" && (
-                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-destructive">
-                    <BellOff className="size-3" /> pidió baja
-                  </span>
-                )}
+                <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                  {tiempoRelativo(c.lastMessageAt)}
+                </span>
               </span>
+              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                {c.lastMessageDirection === "outbound" && (
+                  <Check className="size-3.5 shrink-0" aria-label="Último mensaje de la clínica" />
+                )}
+                <span className="truncate">{c.lastMessageBody}</span>
+              </span>
+              {(pendiente || deBaja) && (
+                <span className="mt-1 flex flex-wrap gap-1.5">
+                  {pendiente && (
+                    <span
+                      className={cn(
+                        "inline-flex rounded-sm border px-2 py-0.5 text-xs",
+                        clasePastilla.warning,
+                      )}
+                    >
+                      {c.inboundStreak > 1
+                        ? `${c.inboundStreak} mensajes sin responder`
+                        : "Sin responder"}
+                    </span>
+                  )}
+                  {deBaja && (
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-xs",
+                        clasePastilla.danger,
+                      )}
+                    >
+                      <BellOff className="size-3" aria-hidden /> Pidió la baja
+                    </span>
+                  )}
+                </span>
+              )}
             </button>
           </li>
         );
@@ -269,7 +346,13 @@ function Hilo({
   const finRef = useRef<HTMLDivElement>(null);
 
   const fetchThread = useServerFn(listConversationThread);
-  const { data: hilo, isLoading } = useQuery({
+  const {
+    data: hilo,
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = useQuery({
     queryKey: ["conversation-thread", clinicId, patientId],
     queryFn: () => fetchThread({ data: { clinicId, patientId } }),
     refetchInterval: 60_000,
@@ -299,135 +382,172 @@ function Hilo({
     onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
+  const volver = (
+    <button
+      type="button"
+      onClick={onVolver}
+      className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "-ml-2 lg:hidden")}
+    >
+      <ArrowLeft aria-hidden /> Conversaciones
+    </button>
+  );
+
+  if (isError) {
+    return (
+      <div className="space-y-3">
+        {volver}
+        <ErrorDeCarga
+          mensaje="No pudimos cargar esta conversación. Revisa la conexión."
+          onReintentar={() => void refetch()}
+          reintentando={isFetching}
+        />
+      </div>
+    );
+  }
+
   if (isLoading || !hilo) {
-    return <div className="card-clinical p-6 text-sm text-muted-foreground">Cargando hilo…</div>;
+    return (
+      <div className="space-y-3">
+        {volver}
+        <p className="border-y border-border py-8 text-sm text-muted-foreground">
+          Cargando conversación…
+        </p>
+      </div>
+    );
   }
 
   const ventanaAbierta = hilo.ventanaMinutos > 0;
   const enviaPorApi = ventanaAbierta && hilo.apiConectada;
 
   return (
-    <div className="card-clinical flex h-full flex-col p-0">
-      <header className="flex items-center gap-3 border-b border-hairline p-3">
-        <button
-          type="button"
-          onClick={onVolver}
-          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted lg:hidden"
-          aria-label="Volver a la lista"
-        >
-          <ArrowLeft className="size-4" />
-        </button>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{hilo.patientName}</p>
-          <p className="truncate text-xs text-muted-foreground">
-            {hilo.patientPhone ?? "sin teléfono en la ficha"}
-          </p>
-        </div>
-        <Link
-          to="/pacientes/$pacienteId"
-          params={{ pacienteId: patientId }}
-          className="flex shrink-0 items-center gap-1.5 rounded-md border border-hairline px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-muted"
-        >
-          <User className="size-3.5" /> Ficha
-        </Link>
-      </header>
-
-      {estadoOptIn(hilo) === "dado_de_baja" && (
-        <p className="flex items-start gap-2 border-b border-hairline bg-destructive/10 p-3 text-xs text-destructive">
-          <BellOff className="mt-px size-3.5 shrink-0" />
-          <span>
-            Este paciente pidió la baja
-            {hilo.waOptOutAt && ` el ${new Date(hilo.waOptOutAt).toLocaleDateString("es-CL")}`}. No
-            recibe recordatorios automáticos. Responder a mano a algo que él mismo escribió está
-            bien; volver a incluirlo en envíos masivos, no.
-          </span>
-        </p>
-      )}
-      {estadoOptIn(hilo) === "sin_opt_in" && (
-        <p className="flex items-start gap-2 border-b border-hairline bg-warning-soft p-3 text-xs text-warning">
-          <BellOff className="mt-px size-3.5 shrink-0" />
-          <span>
-            Todavía no dio consentimiento para recibir mensajes automáticos — no es lo mismo que
-            haber pedido la baja. Puedes contestarle lo que él mismo escribió; para incluirlo en
-            recordatorios, primero activa el opt-in desde su ficha.
-          </span>
-        </p>
-      )}
-
-      <div className="flex-1 space-y-3 overflow-y-auto p-4" style={{ maxHeight: "26rem" }}>
-        {hilo.messages.length === 0 && (
-          <p className="text-xs text-muted-foreground">No hay mensajes en este hilo.</p>
-        )}
-        {hilo.messages.map((m) => (
-          <Burbuja key={m.id} mensaje={m} />
-        ))}
-        <div ref={finRef} />
-      </div>
-
-      <footer className="space-y-2 border-t border-hairline p-3">
-        <p
-          className={cn(
-            "flex items-center gap-1.5 text-xs",
-            enviaPorApi ? "text-success" : "text-muted-foreground",
-          )}
-        >
-          <Clock className="size-3" />
-          {enviaPorApi ? (
-            <>
-              Ventana de respuesta abierta ({formatVentana(hilo.ventanaMinutos)}). Se envía directo,
-              sin salir de Alika.
-            </>
-          ) : ventanaAbierta ? (
-            <>
-              Ventana abierta ({formatVentana(hilo.ventanaMinutos)}), pero todavía no hay un número
-              conectado a la API — se abre WhatsApp con el texto listo.
-            </>
-          ) : (
-            <>
-              Pasaron más de 24h desde el último mensaje del paciente: WhatsApp no deja responder
-              texto libre por la API. Se abre WhatsApp con el texto listo.
-            </>
-          )}
-        </p>
-        <form
-          className="flex items-end gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const limpio = texto.trim();
-            if (!limpio || mutation.isPending) return;
-            mutation.mutate(limpio);
-          }}
-        >
-          <textarea
-            value={texto}
-            onChange={(e) => setTexto(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                e.currentTarget.form?.requestSubmit();
-              }
-            }}
-            rows={2}
-            maxLength={4096}
-            placeholder="Escribe tu respuesta…"
-            aria-label="Respuesta al paciente"
-            className="min-h-[2.75rem] flex-1 resize-y rounded-lg border border-hairline bg-background p-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-brand"
-          />
-          <button
-            type="submit"
-            disabled={!texto.trim() || mutation.isPending}
-            className="flex h-11 shrink-0 items-center gap-2 rounded-lg border border-brand bg-transparent px-4 text-sm font-medium text-brand-700 disabled:opacity-50"
+    <div className="space-y-3">
+      {volver}
+      <section
+        aria-label={`Conversación con ${hilo.patientName}`}
+        className="flex flex-col overflow-hidden rounded-lg border border-border"
+      >
+        <header className="flex items-center gap-3 border-b border-hairline px-4 py-3.5">
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate font-display text-xl font-semibold leading-tight">
+              {hilo.patientName}
+            </h3>
+            <p className="truncate text-sm text-muted-foreground tabular-nums">
+              {hilo.patientPhone ?? "Sin teléfono en la ficha"}
+            </p>
+          </div>
+          <Link
+            to="/pacientes/$pacienteId"
+            params={{ pacienteId: patientId }}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}
           >
-            {mutation.isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : enviaPorApi ? (
-              <Send className="size-4" />
-            ) : (
-              <ExternalLink className="size-4" />
+            <User aria-hidden /> Ficha
+          </Link>
+        </header>
+
+        {estadoOptIn(hilo) === "dado_de_baja" && (
+          <p className="flex items-start gap-2 border-b border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive">
+            <BellOff className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <span>
+              Este paciente pidió la baja
+              {hilo.waOptOutAt && ` el ${new Date(hilo.waOptOutAt).toLocaleDateString("es-CL")}`}.
+              No recibe recordatorios automáticos. Responder a mano a algo que él mismo escribió
+              está bien; volver a incluirlo en envíos masivos, no.
+            </span>
+          </p>
+        )}
+        {estadoOptIn(hilo) === "sin_opt_in" && (
+          <p className="flex items-start gap-2 border-b border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning">
+            <BellOff className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <span>
+              Todavía no dio consentimiento para recibir mensajes automáticos — no es lo mismo que
+              haber pedido la baja. Puedes contestarle lo que él mismo escribió; para incluirlo en
+              recordatorios, primero activa el opt-in desde su ficha.
+            </span>
+          </p>
+        )}
+
+        <div className="max-h-[60dvh] flex-1 space-y-3 overflow-y-auto px-4 py-4 lg:max-h-[30rem]">
+          {hilo.messages.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No hay mensajes en este hilo todavía. Lo que escribas abajo será el primero.
+            </p>
+          )}
+          {hilo.messages.map((m) => (
+            <Burbuja key={m.id} mensaje={m} />
+          ))}
+          <div ref={finRef} />
+        </div>
+
+        <footer className="space-y-2.5 border-t border-hairline px-4 py-3.5">
+          <p
+            className={cn(
+              "flex items-start gap-1.5 text-sm",
+              enviaPorApi ? "text-success" : "text-muted-foreground",
             )}
-            {enviaPorApi ? "Enviar" : "Abrir WhatsApp"}
-          </button>
-        </form>
-      </footer>
+          >
+            <Clock className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+            <span>
+              {enviaPorApi ? (
+                <>
+                  Ventana de respuesta abierta ({formatVentana(hilo.ventanaMinutos)}). Se envía
+                  directo, sin salir de Alika.
+                </>
+              ) : ventanaAbierta ? (
+                <>
+                  Ventana abierta ({formatVentana(hilo.ventanaMinutos)}), pero todavía no hay un
+                  número conectado a la API: se abre WhatsApp con el texto listo.
+                </>
+              ) : (
+                <>
+                  Pasaron más de 24 h desde el último mensaje del paciente: WhatsApp no deja
+                  responder texto libre por la API. Se abre WhatsApp con el texto listo.
+                </>
+              )}
+            </span>
+          </p>
+          <form
+            className="flex items-end gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const limpio = texto.trim();
+              if (!limpio || mutation.isPending) return;
+              mutation.mutate(limpio);
+            }}
+          >
+            <textarea
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.currentTarget.form?.requestSubmit();
+                }
+              }}
+              rows={2}
+              maxLength={4096}
+              placeholder="Escribe tu respuesta…"
+              aria-label="Respuesta al paciente"
+              className="min-h-[2.75rem] flex-1 resize-y rounded-lg border border-input bg-card p-2.5 text-sm outline-none pointer-coarse:text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            />
+            <button
+              type="submit"
+              disabled={!texto.trim() || mutation.isPending}
+              className={cn(
+                buttonVariants({ variant: enviaPorApi ? "default" : "outline" }),
+                "h-11 shrink-0",
+              )}
+            >
+              {mutation.isPending ? (
+                <Loader2 className="animate-spin" aria-hidden />
+              ) : enviaPorApi ? (
+                <Send aria-hidden />
+              ) : (
+                <ExternalLink aria-hidden />
+              )}
+              {enviaPorApi ? "Enviar" : "Abrir WhatsApp"}
+            </button>
+          </form>
+        </footer>
+      </section>
     </div>
   );
 }
@@ -443,33 +563,33 @@ function Burbuja({ mensaje: m }: { mensaje: ConversationMessage }) {
     <div className={cn("flex", entrante ? "justify-start" : "justify-end")}>
       <div
         className={cn(
-          "max-w-[85%] rounded-2xl px-3.5 py-2",
+          "max-w-[85%] rounded-lg px-3.5 py-2.5",
           entrante
-            ? "rounded-bl-sm bg-muted text-foreground"
-            : "rounded-br-sm bg-brand-soft text-foreground",
+            ? "rounded-bl-sm border border-hairline bg-muted text-foreground"
+            : "rounded-br-sm border border-hairline bg-brand-soft text-foreground",
         )}
       >
-        {etiqueta && (
-          <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            {etiqueta}
-          </p>
-        )}
+        {etiqueta && <p className="kicker mb-1">{etiqueta}</p>}
         <p className="whitespace-pre-wrap text-sm">{m.body}</p>
-        <p className="mt-1 flex items-center justify-end gap-1 text-[11px] text-muted-foreground">
+        <p className="mt-1 flex items-center justify-end gap-1 text-xs text-muted-foreground tabular-nums">
           {new Date(m.createdAt).toLocaleString("es-CL", {
             day: "2-digit",
             month: "2-digit",
             hour: "2-digit",
             minute: "2-digit",
           })}
-          {!entrante && m.status === "read" && <CheckCheck className="size-3 text-brand" />}
-          {!entrante && m.status === "delivered" && <CheckCheck className="size-3" />}
-          {!entrante && m.status === "sent" && <Check className="size-3" />}
+          {!entrante && m.status === "read" && (
+            <CheckCheck className="size-3.5 text-info" aria-label="Leído" />
+          )}
+          {!entrante && m.status === "delivered" && (
+            <CheckCheck className="size-3.5" aria-label="Entregado" />
+          )}
+          {!entrante && m.status === "sent" && <Check className="size-3.5" aria-label="Enviado" />}
           {!entrante && m.status === "failed" && (
-            <AlertTriangle className="size-3 text-destructive" />
+            <AlertTriangle className="size-3.5 text-destructive" aria-label="No se pudo enviar" />
           )}
         </p>
-        {m.error && <p className="mt-1 text-[11px] text-destructive">{m.error}</p>}
+        {m.error && <p className="mt-1 text-xs text-destructive">{m.error}</p>}
       </div>
     </div>
   );

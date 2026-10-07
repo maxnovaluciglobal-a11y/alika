@@ -21,7 +21,7 @@ function DocsPortal() {
 
       <LegalH2>Qué es</LegalH2>
       <LegalP>
-        Un link que tu clínica le manda a un paciente por WhatsApp para que pida un turno o consulte
+        Un link que tu clínica le manda a un paciente por WhatsApp para que pida una cita o consulte
         su próxima cita, sin necesidad de crear una cuenta ni descargar nada.
       </LegalP>
 
@@ -35,7 +35,7 @@ function DocsPortal() {
 
       <LegalH2>Qué puede hacer el paciente ahí</LegalH2>
       <LegalP>
-        Ver sus próximas citas y pedir un nuevo turno. Las solicitudes de turno del portal aparecen
+        Ver sus próximas citas y pedir una nueva cita. Las solicitudes de cita del portal aparecen
         en una bandeja dentro de la agenda de tu clínica para que el staff las confirme — no se
         agendan solas sin que alguien de tu equipo las revise. Hay un límite de 3 solicitudes por
         paciente cada 24 horas para evitar abuso del link.

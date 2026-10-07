@@ -160,7 +160,7 @@ export function appointmentDateRangeToUtcBounds(
  */
 export const listAppointments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -375,7 +375,7 @@ export async function validarHorarioYSolapamiento(
 
 export const createAppointment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         // Lo genera el cliente cuando la cita se capturó sin conexión, para
@@ -452,7 +452,7 @@ export const createAppointment = createServerFn({ method: "POST" })
  */
 export const updateAppointment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         appointmentId: z.string().uuid(),
@@ -494,7 +494,7 @@ export const updateAppointment = createServerFn({ method: "POST" })
 
 export const setAppointmentStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         appointmentId: z.string().uuid(),
@@ -532,7 +532,7 @@ export const setAppointmentStatus = createServerFn({ method: "POST" })
  */
 export const setPatientConfirmation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         appointmentId: z.string().uuid(),
@@ -573,7 +573,7 @@ export const setPatientConfirmation = createServerFn({ method: "POST" })
  */
 export const getAppointmentPatientBalances = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

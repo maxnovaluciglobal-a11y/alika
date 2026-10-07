@@ -82,7 +82,7 @@ async function nombres(
  */
 export const getComplianceLog = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => filtros.parse(input))
+  .validator((input: unknown) => filtros.parse(input))
   .handler(
     async ({ data, context }): Promise<{ events: ComplianceEvent[]; truncated: boolean }> => {
       const { supabase } = context;

@@ -29,7 +29,7 @@ import {
 
 export const generateLabPortalLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -73,7 +73,7 @@ async function requireLabPortalSession(): Promise<LabTokenClaims> {
 }
 
 export const openLabPortalSession = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => z.object({ token: z.string().min(20) }).parse(input))
+  .validator((input: unknown) => z.object({ token: z.string().min(20) }).parse(input))
   .handler(async ({ data }) => {
     const payload = await verifyLabToken(data.token);
     const secureFlag = process.env.NODE_ENV === "production" ? "; Secure" : "";
@@ -155,7 +155,7 @@ export const getMyLabPortalOrders = createServerFn({ method: "GET" }).handler(
 const ESTADOS_PERMITIDOS_AL_LABORATORIO: LabOrderStatus[] = ["en_proceso", "recibido"];
 
 export const updateLabOrderStatusFromPortal = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         orderId: z.string().uuid(),

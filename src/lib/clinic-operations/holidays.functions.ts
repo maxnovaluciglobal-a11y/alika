@@ -11,7 +11,7 @@ import { fetchPublicHolidays, type PublicHoliday } from "@/lib/clinic-operations
  * y no tiene JWT de Supabase (ver requirePortalSession en portal.functions.ts).
  */
 export const getPublicHolidays = createServerFn({ method: "GET" })
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         country: z.string().trim().length(2),

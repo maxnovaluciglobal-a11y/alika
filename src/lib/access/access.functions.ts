@@ -120,7 +120,7 @@ export const getMyAccess = createServerFn({ method: "GET" })
  * cookie es solo una preferencia de UI, nunca una fuente de autorización. */
 export const setActiveClinic = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { supabase, userId } = context;
 
@@ -144,7 +144,7 @@ export const setActiveClinic = createServerFn({ method: "POST" })
 /** Integrantes de una clínica. RLS solo devuelve filas de clínicas donde el usuario es miembro. */
 export const listClinicMembers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<ClinicMember[]> => {
     const { data: rows, error } = await context.supabase
       .from("clinic_members")
@@ -180,7 +180,7 @@ export const listClinicMembers = createServerFn({ method: "GET" })
  */
 export const updateMemberRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         memberId: z.string().uuid(),
@@ -230,7 +230,7 @@ export const updateMemberRole = createServerFn({ method: "POST" })
  */
 export const inviteMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -324,7 +324,7 @@ export const inviteMember = createServerFn({ method: "POST" })
 
 export const removeMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ memberId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ memberId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 

@@ -6,6 +6,7 @@ import { AlertTriangle, Loader2, Merge } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -54,7 +55,12 @@ function FusionarFichasPage() {
   const fetchCandidates = useServerFn(listDuplicateCandidates);
   const mergeFn = useServerFn(mergePatients);
 
-  const { data: grupos = [], isLoading } = useQuery({
+  const {
+    data: grupos = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["duplicate-candidates", clinicId],
     enabled: Boolean(clinicId),
     queryFn: () => fetchCandidates({ data: { clinicId: clinicId! } }),
@@ -89,7 +95,11 @@ function FusionarFichasPage() {
 
         {isLoading && <p className="text-sm text-muted-foreground">Buscando duplicados…</p>}
 
-        {!isLoading && grupos.length === 0 && (
+        {isError && (
+          <ErrorDeCarga onReintentar={refetch} mensaje="No pudimos buscar fichas duplicadas." />
+        )}
+
+        {!isLoading && !isError && grupos.length === 0 && (
           <div className="card-clinical p-8 text-center">
             <p className="mb-1 font-display text-lg font-semibold">No encontramos duplicados</p>
             <p className="mx-auto max-w-md text-sm text-muted-foreground">

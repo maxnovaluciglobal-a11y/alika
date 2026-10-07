@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp, Loader2, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { TrialDesbloqueo } from "@/components/trial-desbloqueo";
 import { Button } from "@/components/ui/button";
 import {
@@ -339,7 +340,12 @@ function CoberturaDelConvenio({
   currency: string;
 }) {
   const fetchCoverage = useServerFn(listAgreementCoverage);
-  const { data: cobertura = [], isLoading } = useQuery({
+  const {
+    data: cobertura = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["agreement-coverage", clinicId, agreementId],
     queryFn: () => fetchCoverage({ data: { clinicId, agreementId } }),
   });
@@ -351,6 +357,16 @@ function CoberturaDelConvenio({
 
   if (isLoading)
     return <p className="px-4 py-3 text-xs text-muted-foreground">Cargando cobertura…</p>;
+
+  // Sin esto, un error mostraba la tabla como si el convenio no cubriera nada.
+  if (isError)
+    return (
+      <ErrorDeCarga
+        onReintentar={refetch}
+        mensaje="No pudimos cargar la cobertura de este convenio."
+        className="m-3"
+      />
+    );
 
   if (procedures.length === 0)
     return (
@@ -407,7 +423,12 @@ function ConveniosPage() {
   const fetchProcedures = useServerFn(listProcedures);
   const setActiveFn = useServerFn(setAgreementActive);
 
-  const { data: convenios = [], isLoading } = useQuery({
+  const {
+    data: convenios = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["agreements", clinicId, "todos"],
     enabled: Boolean(clinicId) && !bloqueado,
     queryFn: () =>
@@ -446,12 +467,16 @@ function ConveniosPage() {
 
           {isLoading && <p className="text-sm text-muted-foreground">Cargando convenios…</p>}
 
-          {!isLoading && convenios.length === 0 && (
+          {isError && (
+            <ErrorDeCarga onReintentar={refetch} mensaje="No pudimos cargar los convenios." />
+          )}
+
+          {!isLoading && !isError && convenios.length === 0 && (
             <div className="card-clinical p-8 text-center">
               <p className="mb-1 font-display text-lg font-semibold">Todavía no hay convenios</p>
               <p className="mx-auto mb-4 max-w-md text-sm text-muted-foreground">
-                Si atiendes Fonasa, Isapre o convenios de empresa, cárgalos acá una vez y define qué
-                cubre cada uno. Sin esto, cada presupuesto con convenio se calcula a mano.
+                Si atiendes Fonasa, Isapre o convenios de empresa, cárgalos aquí una vez y define
+                qué cubre cada uno. Sin esto, cada presupuesto con convenio se calcula a mano.
               </p>
               <div className="flex justify-center">
                 <ConvenioDialog clinicId={clinicId!} />

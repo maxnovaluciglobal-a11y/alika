@@ -57,7 +57,7 @@ export interface Efectividad {
  */
 export const getEfectividad = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<Efectividad> => {
     const { supabase } = context;
     await throwIfRequiresLlamadaOSuscripcion(supabase, data.clinicId, SIN_PERMISOS_EFECTIVIDAD);

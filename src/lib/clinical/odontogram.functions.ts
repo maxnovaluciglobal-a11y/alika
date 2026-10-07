@@ -62,7 +62,7 @@ const MARK_COLUMNS =
 /** Marcas vigentes del odontograma del paciente. */
 export const listOdontogramMarks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ clinicId: z.string().uuid(), patientId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<OdontogramMark[]> => {
@@ -91,7 +91,7 @@ export const listOdontogramMarks = createServerFn({ method: "GET" })
 /** Historia completa (incluye marcas cerradas) para una pieza específica o todo el paciente. */
 export const listOdontogramHistory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -145,7 +145,7 @@ export type OdontogramSaveResult = { id: string; conflict?: false } | Odontogram
  */
 export const setOdontogramMark = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),

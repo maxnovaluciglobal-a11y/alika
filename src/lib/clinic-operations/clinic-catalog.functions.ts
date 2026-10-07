@@ -8,7 +8,7 @@ import { mensajeDb } from "@/lib/db-errors";
 /** Sucursales de la clínica. RLS: solo las de clínicas donde el usuario es miembro. */
 export const listBranches = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<Sucursal[]> => {
     const { data: rows, error } = await context.supabase
       .from("branches")
@@ -27,7 +27,7 @@ export const listBranches = createServerFn({ method: "GET" })
  * review_request pedía la reseña sin dar un link directo). */
 export const listBranchesForReviewLinks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(
     async ({
       data,
@@ -58,7 +58,7 @@ export const listBranchesForReviewLinks = createServerFn({ method: "GET" })
  * es cinturón de defensa en profundidad, no la fuente de la autorización. */
 export const updateBranchGoogleReviewUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         clinicId: z.string().uuid(),
@@ -82,7 +82,7 @@ export const updateBranchGoogleReviewUrl = createServerFn({ method: "POST" })
 /** Profesionales de la clínica, con especialidad y box por defecto resueltos. */
 export const listProfessionals = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<Profesional[]> => {
     const { supabase } = context;
 
@@ -137,7 +137,7 @@ export const listProfessionals = createServerFn({ method: "GET" })
 /** Especialidades de la clínica — catálogo liviano para selects. */
 export const listSpecialties = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<{ id: string; name: string }[]> => {
     const { data: rows, error } = await context.supabase
       .from("specialties")
