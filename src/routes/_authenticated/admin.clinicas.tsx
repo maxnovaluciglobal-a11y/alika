@@ -131,14 +131,14 @@ function Activacion({ row }: { row: ClinicaStaffRow }) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <span
-        className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
+        className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
           activada ? "bg-success-soft text-success" : "bg-secondary text-muted-foreground"
         }`}
       >
         <CalendarCheck className="size-3" />
         {activada ? "Activada en <72h" : "Activada, pero después de 72h"}
       </span>
-      <span className="whitespace-nowrap font-mono text-[11px] text-muted-foreground">
+      <span className="whitespace-nowrap font-mono text-xs text-muted-foreground">
         {formatFechaHora(row.firstAppointmentAt)}
       </span>
     </div>
@@ -154,7 +154,7 @@ function EstadoSuscripcion({ row }: { row: ClinicaStaffRow }) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <span
-        className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ${ESTADO_TONO[sub.status]}`}
+        className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium ${ESTADO_TONO[sub.status]}`}
       >
         {SUBSCRIPTION_STATUS_LABELS[sub.status]}
       </span>
@@ -223,7 +223,7 @@ function AdminClinicasPage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[48rem] text-sm">
                 <thead>
-                  <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <tr className="border-b border-hairline text-xs uppercase tracking-wider text-muted-foreground">
                     <th className="px-4 py-2 text-left font-medium">Clínica</th>
                     <th className="px-3 py-2 text-left font-medium">Alta</th>
                     <th className="px-3 py-2 text-left font-medium">Suscripción</th>

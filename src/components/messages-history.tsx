@@ -60,7 +60,7 @@ export function MessagesHistory({ clinicId, patientId }: Props) {
                   entrante ? "border-brand/30 bg-brand-soft/40" : "border-hairline",
                 )}
               >
-                <div className="mb-1 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+                <div className="mb-1 flex items-center justify-between gap-3 text-xs text-muted-foreground">
                   <div className="flex items-center gap-2">
                     {entrante ? (
                       <ArrowDownLeft className="size-3.5 text-brand" />
@@ -76,7 +76,7 @@ export function MessagesHistory({ clinicId, patientId }: Props) {
                   <span>{new Date(m.createdAt).toLocaleString("es-CL")}</span>
                 </div>
                 <p className="mt-1 whitespace-pre-wrap text-xs text-foreground/90">{m.body}</p>
-                <p className="mt-1 text-[10px] text-muted-foreground">
+                <p className="mt-1 text-[11px] text-muted-foreground">
                   {entrante ? `del paciente · ${m.recipient}` : `a ${m.recipient}`}
                 </p>
               </div>

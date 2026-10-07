@@ -49,7 +49,7 @@ export function LlamadaDesbloqueo({
           <Lock className="size-3.5 shrink-0 text-muted-foreground" />
           {feature} se activa con tu puesta en marcha
         </p>
-        <p className="text-[11px] text-muted-foreground">{descripcion}</p>
+        <p className="text-xs text-muted-foreground">{descripcion}</p>
         <div className="flex flex-wrap gap-2 pt-0.5">
           <a
             href={calendlyUrl}

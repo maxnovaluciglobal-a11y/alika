@@ -92,7 +92,7 @@ export function SearchField({
 }) {
   return (
     <label className={cn("block", className)}>
-      <span className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+      <span className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </span>
       <span className="relative block">
@@ -125,7 +125,7 @@ export function SelectField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+      <span className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </span>
       <select
@@ -156,7 +156,7 @@ export function DateField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+      <span className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </span>
       <input

@@ -363,7 +363,7 @@ function CoberturaDelConvenio({
     <div className="overflow-x-auto border-t border-hairline">
       <table className="w-full min-w-[36rem] text-sm">
         <thead>
-          <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
+          <tr className="border-b border-hairline text-xs uppercase tracking-wider text-muted-foreground">
             <th className="px-4 py-2 text-left font-medium">Prestación</th>
             <th className="px-3 py-2 text-right font-medium">Precio</th>
             <th className="px-3 py-2 text-right font-medium">Cubre</th>
@@ -475,17 +475,17 @@ function ConveniosPage() {
                       <p className="flex items-center gap-2 text-sm font-medium">
                         <span className="truncate">{c.name}</span>
                         {c.kind && (
-                          <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                          <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
                             {c.kind}
                           </span>
                         )}
                         {!c.isActive && (
-                          <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                          <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
                             De baja
                           </span>
                         )}
                       </p>
-                      <p className="truncate text-[11px] text-muted-foreground">
+                      <p className="truncate text-xs text-muted-foreground">
                         {[c.contactName, c.contactPhone, c.contactEmail]
                           .filter(Boolean)
                           .join(" · ") || "Sin datos de contacto"}

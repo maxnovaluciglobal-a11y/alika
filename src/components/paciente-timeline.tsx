@@ -59,14 +59,14 @@ export function PacienteTimeline({
                 e.actual ? "bg-brand" : "bg-border",
               )}
             />
-            <p className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
+            <p className="text-[11px] font-bold uppercase tracking-tight text-muted-foreground">
               {e.fecha}
             </p>
             <p className="text-sm font-medium">{e.titulo}</p>
             {e.detalle && <p className="mt-1 text-xs text-muted-foreground">{e.detalle}</p>}
             {e.tipo === "imagen" && (
               <div className="mt-2 grid size-16 place-items-center rounded-md bg-secondary">
-                <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
                   RX
                 </span>
               </div>

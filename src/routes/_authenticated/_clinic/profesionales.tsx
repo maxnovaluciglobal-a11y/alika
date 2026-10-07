@@ -429,7 +429,7 @@ function ComisionDialog({
                 className={inputClass()}
                 placeholder="Ej: 40"
               />
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Comisión = {percent || 0}% de lo producido (procedimientos completados) en el
                 período.
               </p>
@@ -445,7 +445,7 @@ function ComisionDialog({
                 onChange={(e) => setFixed(e.target.value)}
                 className={inputClass()}
               />
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Comisión = {formatMoney(toCents(Number(fixed || 0), currency), currency)} × cantidad
                 de procedimientos completados.
               </p>

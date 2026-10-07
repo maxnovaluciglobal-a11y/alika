@@ -102,9 +102,7 @@ export function GlobalSearch({
       >
         <Search className="size-4 shrink-0" aria-hidden />
         <span className="hidden flex-1 truncate text-left sm:inline">Buscar paciente…</span>
-        <kbd className="hidden rounded-sm border border-border px-1.5 text-[11px] sm:inline">
-          ⌘K
-        </kbd>
+        <kbd className="hidden rounded-sm border border-border px-1.5 text-xs sm:inline">⌘K</kbd>
       </button>
 
       <Dialog open={abierto} onOpenChange={setAbierto}>

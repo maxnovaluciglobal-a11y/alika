@@ -226,7 +226,7 @@ function ComisionesPage() {
             <>
               <section className="grid gap-4 sm:grid-cols-2">
                 <div className="card-clinical p-5">
-                  <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <Percent className="size-3.5" />{" "}
                     {veTodo ? "Comisión total del período" : "Mi comisión del período"}
                   </p>
@@ -235,7 +235,7 @@ function ComisionesPage() {
                   </p>
                 </div>
                 <div className="card-clinical p-5">
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Producción {veTodo ? "total" : "mía"}
                   </p>
                   <p className="font-display text-2xl font-semibold">

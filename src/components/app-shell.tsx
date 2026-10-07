@@ -59,7 +59,7 @@ function BarraInferior({
   const masActivo = enAjustes || resto.some((d) => d.id === destinoActualId);
 
   const item =
-    "flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] transition-colors";
+    "flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-xs transition-colors";
 
   return (
     <nav
@@ -80,7 +80,7 @@ function BarraInferior({
             <span className="relative">
               <Icon className={cn("size-5", activo && "text-brand-700")} aria-hidden />
               {badge > 0 && (
-                <span className="absolute -top-1.5 -right-3 min-w-4 rounded-sm bg-brand-700 px-0.5 text-center text-[10px] leading-4 tabular-nums text-white">
+                <span className="absolute -top-1.5 -right-3 min-w-4 rounded-sm bg-brand-700 px-0.5 text-center text-[11px] leading-4 tabular-nums text-white">
                   {badge > 9 ? "9+" : badge}
                 </span>
               )}
@@ -384,7 +384,7 @@ export function AppShell({
               <p className="text-sm font-medium">
                 {access.fullName ?? access.email ?? "Mi cuenta"}
               </p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground">
                 {access.role ? ROLE_LABELS[access.role] : "Sin rol"}
                 {access.simulatedRole ? " · simulado" : ""}
               </p>

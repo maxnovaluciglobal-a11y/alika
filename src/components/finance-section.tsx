@@ -416,7 +416,7 @@ function QuoteItemsEditor({
         onClick={() =>
           setItems((arr) => [...arr, emptyItem({ phaseLabel: arr.at(-1)?.phaseLabel ?? "" })])
         }
-        className="inline-flex items-center gap-1 text-[11px] font-medium text-brand-700 hover:underline"
+        className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline"
       >
         <Plus className="size-3" /> Agregar otro ítem
       </button>
@@ -435,7 +435,7 @@ function QuoteStatusBadge({ status }: { status: QuoteStatus }) {
   };
   return (
     <span
-      className={cn("inline-block rounded px-1.5 py-0.5 text-[10px] font-medium", tone[status])}
+      className={cn("inline-block rounded px-1.5 py-0.5 text-[11px] font-medium", tone[status])}
     >
       {QUOTE_STATUS_LABELS[status]}
     </span>
@@ -483,7 +483,7 @@ function PagoDot({
     <span
       title={detalle}
       aria-label={detalle}
-      className="inline-flex shrink-0 items-center gap-1 text-[11px] whitespace-nowrap text-muted-foreground"
+      className="inline-flex shrink-0 items-center gap-1 text-xs whitespace-nowrap text-muted-foreground"
     >
       <span aria-hidden className={cn("size-2 rounded-full", tono[estado])} />
       <span aria-hidden>{CORTO[estado]}</span>
@@ -500,7 +500,7 @@ function PiezaTag({ tooth, surface }: { tooth: number; surface: ToothSurface | n
       title={[comun ? `Diente ${tooth} (${comun})` : `Diente ${tooth}`, zona]
         .filter(Boolean)
         .join(" · ")}
-      className="shrink-0 rounded bg-secondary px-1.5 py-0.5 tabular-nums text-[10px] text-muted-foreground"
+      className="shrink-0 rounded bg-secondary px-1.5 py-0.5 tabular-nums text-[11px] text-muted-foreground"
     >
       {tooth}
       {zona && <span className="ml-1 font-sans">{zona.slice(0, 3)}</span>}
@@ -526,7 +526,7 @@ function ItemStatusPicker({
       value={current}
       disabled={disabled}
       onChange={(e) => onChange(e.target.value as TreatmentItemStatus)}
-      className="rounded-md border border-hairline bg-transparent px-1.5 py-0.5 text-[10px] disabled:opacity-50"
+      className="rounded-md border border-hairline bg-transparent px-1.5 py-0.5 text-[11px] disabled:opacity-50"
     >
       {TREATMENT_ITEM_STATUSES.map((s) => (
         <option key={s} value={s}>
@@ -596,7 +596,7 @@ function NuevoProcedimientoInline({
       <DialogTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-1 text-[11px] font-medium text-brand-700 hover:underline"
+          className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline"
         >
           <Plus className="size-3" /> Nuevo procedimiento
         </button>
@@ -1585,19 +1585,19 @@ export function FinanceSection({
       {(totalBilled > 0 || totalPaid > 0) && (
         <div className="mb-5 grid gap-3 rounded-lg border border-hairline bg-secondary/40 p-3 sm:grid-cols-3">
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Facturado</p>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Facturado</p>
             <p className="font-display text-base font-semibold">
               {formatMoney(totalBilled, currency)}
             </p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Pagado</p>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Pagado</p>
             <p className="font-display text-base font-semibold">
               {formatMoney(totalPaid, currency)}
             </p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
               {balance > 0 ? "Saldo pendiente" : balance < 0 ? "A favor del paciente" : "Saldo"}
             </p>
             <p
@@ -1629,7 +1629,7 @@ export function FinanceSection({
       {!isLoading && (
         <div className="space-y-6">
           <section>
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Planes de tratamiento
             </p>
             {plans.length === 0 && (
@@ -1650,7 +1650,7 @@ export function FinanceSection({
                       <FileText className="size-4 text-brand" />
                       <div>
                         <p className="text-sm font-medium">{plan.name}</p>
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           {TREATMENT_PLAN_STATUS_LABELS[plan.status]} · {done}/{plan.items.length}{" "}
                           ítems completados
                         </p>
@@ -1677,10 +1677,10 @@ export function FinanceSection({
                               ruido de una "Sin fase" que no agrupa nada. */}
                             {planTieneFases(plan) && (
                               <div className="flex items-center justify-between gap-3 bg-secondary/40 px-4 py-1.5">
-                                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                   {fase.label ?? SIN_FASE_LABEL}
                                 </span>
-                                <span className="tabular-nums text-[11px] text-muted-foreground">
+                                <span className="tabular-nums text-xs text-muted-foreground">
                                   {formatMoney(fase.subtotalCents, plan.currency)}
                                 </span>
                               </div>
@@ -1713,7 +1713,7 @@ export function FinanceSection({
                                         title={`Precio ${formatMoney(it.priceCents, plan.currency)} · cubre el convenio ${formatMoney(it.coverageCents ?? 0, plan.currency)}`}
                                       >
                                         {formatMoney(it.patientCents, plan.currency)}
-                                        <span className="ml-1 text-[10px] line-through opacity-60">
+                                        <span className="ml-1 text-[11px] line-through opacity-60">
                                           {formatMoney(it.priceCents, plan.currency)}
                                         </span>
                                       </span>
@@ -1755,7 +1755,7 @@ export function FinanceSection({
           </section>
 
           <section>
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Presupuestos
             </p>
             {quotes.length === 0 && (
@@ -1775,7 +1775,7 @@ export function FinanceSection({
                       <FileText className="size-4 text-muted-foreground" />
                       <div>
                         <p className="text-sm font-medium">{quote.number}</p>
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           {new Date(quote.createdAt).toLocaleDateString("es-CL")} ·{" "}
                           {quote.items.length} ítems
                         </p>
@@ -1817,10 +1817,10 @@ export function FinanceSection({
                           <div key={fase.label ?? "sin-fase"}>
                             {planTieneFases(quote) && (
                               <div className="flex items-center justify-between gap-3 bg-secondary/40 px-4 py-1.5">
-                                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                   {fase.label ?? SIN_FASE_LABEL}
                                 </span>
-                                <span className="tabular-nums text-[11px] text-muted-foreground">
+                                <span className="tabular-nums text-xs text-muted-foreground">
                                   {formatMoney(fase.subtotalCents, quote.currency)}
                                 </span>
                               </div>
@@ -1946,7 +1946,7 @@ export function FinanceSection({
           </section>
 
           <section>
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Pagos registrados
             </p>
             {payments.length === 0 && (
@@ -1973,7 +1973,7 @@ export function FinanceSection({
                       <p className={cn("text-sm font-medium", pay.reversedAt && "line-through")}>
                         {formatMoney(pay.amountCents, pay.currency)}
                       </p>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {PAYMENT_METHOD_LABELS[pay.method]}
                         {plan && ` · ${plan.name}`}
                         {!plan && pay.treatmentPlanId === null && " · A cuenta"}
@@ -1994,7 +1994,7 @@ export function FinanceSection({
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-6 px-2 text-[11px] text-destructive hover:text-destructive"
+                        className="h-6 px-2 text-xs text-destructive hover:text-destructive"
                         onClick={() => setReversingPaymentId(pay.id)}
                       >
                         Reversar

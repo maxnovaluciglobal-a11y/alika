@@ -73,7 +73,7 @@ export function NotificationsBell({ userId }: { userId?: string | null }) {
       >
         <Bell className="size-4" />
         {sinLeer > 0 && (
-          <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-brand px-1 text-[10px] font-semibold leading-4 text-brand-foreground">
+          <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-brand px-1 text-[11px] font-semibold leading-4 text-brand-foreground">
             {sinLeer > 9 ? "9+" : sinLeer}
           </span>
         )}
@@ -90,7 +90,7 @@ export function NotificationsBell({ userId }: { userId?: string | null }) {
               {sinLeer > 0 && (
                 <button
                   onClick={() => marcar.mutate(null)}
-                  className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
                 >
                   {marcar.isPending ? (
                     <Loader2 className="size-3 animate-spin" />
@@ -114,11 +114,9 @@ export function NotificationsBell({ userId }: { userId?: string | null }) {
                   <>
                     <p className="text-xs font-medium">{n.title}</p>
                     {n.body && (
-                      <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">
-                        {n.body}
-                      </p>
+                      <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.body}</p>
                     )}
-                    <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                    <p className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">
                       {NOTIFICATION_KIND_LABELS[n.kind] ?? "Aviso"} · {tiempoRelativo(n.createdAt)}
                     </p>
                   </>

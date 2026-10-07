@@ -241,7 +241,7 @@ function MediosDePagoPage() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[40rem] text-sm">
                   <thead>
-                    <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <tr className="border-b border-hairline text-xs uppercase tracking-wider text-muted-foreground">
                       <th className="px-4 py-2 text-left font-medium">Medio de pago</th>
                       <th className="px-3 py-2 text-right font-medium">Retención</th>
                       <th className="px-3 py-2 text-right font-medium">
@@ -263,7 +263,7 @@ function MediosDePagoPage() {
                         <td className="px-4 py-2">
                           {m.name}
                           {!m.isActive && (
-                            <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                            <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
                               Deshabilitado
                             </span>
                           )}

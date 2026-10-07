@@ -353,7 +353,7 @@ function OnboardingPage() {
                         />
                         {s.name}
                       </span>
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         {s.defaultDurationMin} min
                       </span>
                     </button>

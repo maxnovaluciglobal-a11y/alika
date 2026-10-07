@@ -37,7 +37,7 @@ export function PatientConfirmedBadge({
       title="El paciente respondió que viene. No reemplaza la confirmación del profesional."
       className={cn(
         "inline-flex shrink-0 items-center gap-1 rounded bg-success-soft font-medium text-success",
-        compacto ? "px-1 py-0.5 text-[9px]" : "px-1.5 py-0.5 text-[10px]",
+        compacto ? "px-1 py-0.5 text-[11px]" : "px-1.5 py-0.5 text-[11px]",
       )}
     >
       <UserCheck className={compacto ? "size-2.5" : "size-3"} aria-hidden />

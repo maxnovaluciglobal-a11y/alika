@@ -228,7 +228,7 @@ function EquipoPage() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">
                       {m.fullName ?? m.email ?? "Integrante"}
-                      {esYo && <span className="ml-2 text-[10px] text-muted-foreground">(tú)</span>}
+                      {esYo && <span className="ml-2 text-[11px] text-muted-foreground">(tú)</span>}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">{m.email ?? "—"}</p>
                   </div>
@@ -277,7 +277,7 @@ function EquipoPage() {
                   {permissionsForRole(r).map((p) => (
                     <li
                       key={p}
-                      className="rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                      className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground"
                     >
                       {p}
                     </li>

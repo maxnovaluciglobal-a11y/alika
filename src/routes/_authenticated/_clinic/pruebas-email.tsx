@@ -384,7 +384,7 @@ function PruebasEmailPage() {
                       >
                         {v.label}
                         {v.requerida ? <span className="text-destructive"> *</span> : null}{" "}
-                        <code className="rounded bg-muted px-1 text-[10px] text-muted-foreground">
+                        <code className="rounded bg-muted px-1 text-[11px] text-muted-foreground">
                           {`{{${v.clave}}}`}
                         </code>
                       </label>

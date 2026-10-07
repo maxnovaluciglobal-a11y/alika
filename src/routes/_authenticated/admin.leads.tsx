@@ -146,7 +146,7 @@ const CONVERSION_TONO: Record<MetaLead["conversion_bucket"], string> = {
 function Pill({ tono, children }: { tono: string; children: React.ReactNode }) {
   return (
     <span
-      className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ${tono}`}
+      className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium ${tono}`}
     >
       {children}
     </span>
@@ -238,7 +238,7 @@ function AdminLeadsPage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[64rem] text-sm">
                 <thead>
-                  <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <tr className="border-b border-hairline text-xs uppercase tracking-wider text-muted-foreground">
                     <th className="px-4 py-2 text-left font-medium">Fecha</th>
                     <th className="px-3 py-2 text-left font-medium">Contacto</th>
                     <th className="px-3 py-2 text-left font-medium">Clínica</th>

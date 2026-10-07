@@ -489,7 +489,7 @@ function GastosPage() {
 
           {!isLoading && porCategoria.length > 1 && (
             <section className="card-clinical p-5">
-              <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Por categoría
               </p>
               <div className="space-y-2">
@@ -516,7 +516,7 @@ function GastosPage() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[44rem] text-sm">
                   <thead>
-                    <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <tr className="border-b border-hairline text-xs uppercase tracking-wider text-muted-foreground">
                       <th className="px-4 py-2 text-left font-medium">Fecha</th>
                       <th className="px-3 py-2 text-left font-medium">Categoría</th>
                       <th className="px-3 py-2 text-left font-medium">Descripción</th>

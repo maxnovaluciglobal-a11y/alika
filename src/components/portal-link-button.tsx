@@ -90,11 +90,11 @@ export function PortalLinkButton({ clinicId, patientId, bloqueado }: Props) {
 
   return (
     <div className="space-y-2 rounded-lg border border-hairline bg-card p-3">
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Link válido {mut.data.expiresInDays} día{mut.data.expiresInDays === 1 ? "" : "s"}
       </p>
       <div className="flex items-center gap-2">
-        <code className="min-w-0 flex-1 truncate rounded bg-muted px-2 py-1 text-[11px] text-foreground/80">
+        <code className="min-w-0 flex-1 truncate rounded bg-muted px-2 py-1 text-xs text-foreground/80">
           {mut.data.url}
         </code>
         <button
@@ -109,7 +109,7 @@ export function PortalLinkButton({ clinicId, patientId, bloqueado }: Props) {
           {copiedAt ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
         </button>
         {mut.data.viaApi && (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand-soft px-2 py-1.5 text-[11px] font-medium text-brand-700">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand-soft px-2 py-1.5 text-xs font-medium text-brand-700">
             <CheckCircle2 className="size-3.5" /> Enviado
           </span>
         )}
@@ -117,7 +117,7 @@ export function PortalLinkButton({ clinicId, patientId, bloqueado }: Props) {
           <button
             type="button"
             onClick={openWhatsApp}
-            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-brand bg-transparent px-2 py-1.5 text-[11px] font-medium text-brand-700 outline-none hover:bg-brand/12 focus-visible:ring-1 focus-visible:ring-ring"
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-brand bg-transparent px-2 py-1.5 text-xs font-medium text-brand-700 outline-none hover:bg-brand/12 focus-visible:ring-1 focus-visible:ring-ring"
           >
             <MessageCircle className="size-3.5" /> WhatsApp
           </button>

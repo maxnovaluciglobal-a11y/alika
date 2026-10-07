@@ -53,7 +53,7 @@ export function ReferralCodeCard({ clinicId, patientName, referralCode }: Props)
 
   return (
     <div className="space-y-2 rounded-lg border border-hairline bg-card p-3">
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Código de referido de {patientName.split(" ")[0]}
       </p>
       <div className="flex items-center gap-2">
@@ -75,12 +75,12 @@ export function ReferralCodeCard({ clinicId, patientName, referralCode }: Props)
           <button
             type="button"
             onClick={share}
-            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-brand bg-transparent px-2 py-1.5 text-[11px] font-medium text-brand-700 hover:bg-brand/12"
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-brand bg-transparent px-2 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand/12"
           >
             <Share2 className="size-3.5" /> Compartir
           </button>
         ) : (
-          <span className="shrink-0 text-[10px] text-muted-foreground">
+          <span className="shrink-0 text-[11px] text-muted-foreground">
             Conecta WhatsApp para compartir por link
           </span>
         )}

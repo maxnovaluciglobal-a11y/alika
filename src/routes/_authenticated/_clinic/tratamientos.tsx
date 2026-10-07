@@ -182,7 +182,7 @@ function TratamientosPage() {
                     </span>
                     <span
                       className={cn(
-                        "w-fit rounded px-1.5 py-0.5 text-[10px] font-medium",
+                        "w-fit rounded px-1.5 py-0.5 text-[11px] font-medium",
                         estadoClase[t.status],
                       )}
                     >

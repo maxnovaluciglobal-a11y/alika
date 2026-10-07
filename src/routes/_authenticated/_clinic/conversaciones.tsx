@@ -225,7 +225,7 @@ function ListaConversaciones({
                   >
                     {c.patientName}
                   </span>
-                  <span className="shrink-0 text-[10px] text-muted-foreground">
+                  <span className="shrink-0 text-[11px] text-muted-foreground">
                     {tiempoRelativo(c.lastMessageAt)}
                   </span>
                 </span>
@@ -236,12 +236,12 @@ function ListaConversaciones({
                   <span className="truncate">{c.lastMessageBody}</span>
                 </span>
                 {pendiente && c.inboundStreak > 1 && (
-                  <span className="mt-1 inline-block rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand-700">
+                  <span className="mt-1 inline-block rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand-700">
                     {c.inboundStreak} mensajes sin responder
                   </span>
                 )}
                 {estadoOptIn(c) === "dado_de_baja" && (
-                  <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-destructive">
+                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-destructive">
                     <BellOff className="size-3" /> pidió baja
                   </span>
                 )}
@@ -366,7 +366,7 @@ function Hilo({
       <footer className="space-y-2 border-t border-hairline p-3">
         <p
           className={cn(
-            "flex items-center gap-1.5 text-[11px]",
+            "flex items-center gap-1.5 text-xs",
             enviaPorApi ? "text-success" : "text-muted-foreground",
           )}
         >
@@ -449,12 +449,12 @@ function Burbuja({ mensaje: m }: { mensaje: ConversationMessage }) {
         )}
       >
         {etiqueta && (
-          <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             {etiqueta}
           </p>
         )}
         <p className="whitespace-pre-wrap text-sm">{m.body}</p>
-        <p className="mt-1 flex items-center justify-end gap-1 text-[10px] text-muted-foreground">
+        <p className="mt-1 flex items-center justify-end gap-1 text-[11px] text-muted-foreground">
           {new Date(m.createdAt).toLocaleString("es-CL", {
             day: "2-digit",
             month: "2-digit",
@@ -468,7 +468,7 @@ function Burbuja({ mensaje: m }: { mensaje: ConversationMessage }) {
             <AlertTriangle className="size-3 text-destructive" />
           )}
         </p>
-        {m.error && <p className="mt-1 text-[10px] text-destructive">{m.error}</p>}
+        {m.error && <p className="mt-1 text-[11px] text-destructive">{m.error}</p>}
       </div>
     </div>
   );

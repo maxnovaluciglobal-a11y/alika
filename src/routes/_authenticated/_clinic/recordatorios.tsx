@@ -182,7 +182,7 @@ function RecordatoriosPage() {
           <section className="space-y-3">
             <h2 className="flex items-center gap-1.5 font-display text-lg font-semibold">
               <Clock className="size-4 text-warning" /> Aviso de 3h
-              <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning">
+              <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-semibold text-warning">
                 {aviso3h.length}
               </span>
             </h2>
@@ -199,7 +199,7 @@ function RecordatoriosPage() {
           <section className="space-y-3">
             <h2 className="flex items-center gap-1.5 font-display text-lg font-semibold">
               <Clock className="size-4 text-brand" /> Recordatorio de 48h
-              <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-700">
+              <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand-700">
                 {recordatorio48h.length}
               </span>
             </h2>
@@ -225,7 +225,7 @@ function RecordatoriosPage() {
                   {meta.label}
                   <span
                     className={cn(
-                      "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                      "rounded-full px-2 py-0.5 text-xs font-semibold",
                       meta.badgeClass,
                     )}
                   >
@@ -269,7 +269,7 @@ function ReminderList({
               <p className="truncate text-sm font-medium">{r.patientName}</p>
               <span
                 className={cn(
-                  "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium",
+                  "shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium",
                   filaClass(r.reminderKind),
                 )}
               >
@@ -280,7 +280,7 @@ function ReminderList({
               {r.treatmentLabel} · {r.professionalName} · {r.fechaLarga} {r.hora}
             </p>
             {!r.patientPhone && !r.patientEmail && (
-              <p className="mt-1 text-[11px] text-destructive">
+              <p className="mt-1 text-xs text-destructive">
                 Sin teléfono ni email cargados — no se puede enviar.
               </p>
             )}
@@ -415,7 +415,7 @@ function OutreachList({
             <p className="truncate text-sm font-medium">{item.patientName}</p>
             <p className="truncate text-xs text-muted-foreground">{outreachDetail(item)}</p>
             {!item.patientPhone && (
-              <p className="mt-1 text-[11px] text-destructive">
+              <p className="mt-1 text-xs text-destructive">
                 Sin teléfono cargado — no se puede enviar.
               </p>
             )}

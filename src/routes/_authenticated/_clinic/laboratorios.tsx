@@ -524,7 +524,7 @@ function LaboratoriosPage() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[52rem] text-sm">
                   <thead>
-                    <tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <tr className="border-b border-hairline text-xs uppercase tracking-wider text-muted-foreground">
                       <th className="px-4 py-2 text-left font-medium">Enviado</th>
                       <th className="px-3 py-2 text-left font-medium">Paciente</th>
                       <th className="px-3 py-2 text-left font-medium">Trabajo</th>
@@ -546,7 +546,7 @@ function LaboratoriosPage() {
                           <td className="px-3 py-2">
                             {o.description}
                             {o.toothNumbers?.length ? (
-                              <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 tabular-nums text-[10px] text-muted-foreground">
+                              <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 tabular-nums text-[11px] text-muted-foreground">
                                 {o.toothNumbers.join(" · ")}
                               </span>
                             ) : null}

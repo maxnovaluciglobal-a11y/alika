@@ -66,7 +66,7 @@ export function VersionDiffDialog({ versiones, desde, hasta, onClose }: Props) {
               </option>
             ))}
           </select>
-          <span className="ml-auto text-[11px] text-muted-foreground">
+          <span className="ml-auto text-xs text-muted-foreground">
             <span className="text-brand-700">+{conteo.agregadas}</span> ·{" "}
             <span className="text-destructive">−{conteo.eliminadas}</span> líneas
           </span>
@@ -78,7 +78,7 @@ export function VersionDiffDialog({ versiones, desde, hasta, onClose }: Props) {
               No hay diferencias de contenido entre estas dos versiones.
             </p>
           ) : (
-            <div className="space-y-0.5 font-mono text-[11px] leading-relaxed">
+            <div className="space-y-0.5 font-mono text-xs leading-relaxed">
               {lineas.map((l, i) => (
                 <div
                   key={i}
@@ -100,7 +100,7 @@ export function VersionDiffDialog({ versiones, desde, hasta, onClose }: Props) {
           )}
         </div>
 
-        <div className="border-t border-hairline px-5 py-3 text-[10px] text-muted-foreground">
+        <div className="border-t border-hairline px-5 py-3 text-[11px] text-muted-foreground">
           Comparación de contenido clínico. Las versiones son inmutables y quedan registradas en la
           auditoría.
         </div>

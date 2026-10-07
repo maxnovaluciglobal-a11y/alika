@@ -75,7 +75,7 @@ function ChartTable({ chart }: { chart: PeriodontalChartData }) {
     <div className="overflow-x-auto">
       <table className="w-full min-w-[720px] border-collapse text-xs">
         <thead>
-          <tr className="border-b border-hairline text-[10px] uppercase tracking-wide text-muted-foreground">
+          <tr className="border-b border-hairline text-[11px] uppercase tracking-wide text-muted-foreground">
             <th className="py-1.5 pr-3 text-left">Pieza</th>
             {PERIODONTAL_POINTS.map((p) => (
               <th key={p} className="px-1.5 py-1.5 text-center" title={POINT_LABELS[p]}>
@@ -111,7 +111,7 @@ function ChartTable({ chart }: { chart: PeriodontalChartData }) {
           })}
         </tbody>
       </table>
-      <p className="mt-2 text-[10px] text-muted-foreground">
+      <p className="mt-2 text-[11px] text-muted-foreground">
         Profundidad de sondaje en mm por punto (mv, v, dv, ml, l, dl) · el punto rojo indica
         sangrado al sondeo · color según severidad (verde ≤3mm, ámbar 4-5mm, naranja 6mm, rojo
         &gt;6mm).
@@ -245,7 +245,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
 
         <div className="space-y-4">
           <div>
-            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Piezas medidas
             </p>
             <div className="flex flex-wrap gap-1">
@@ -278,7 +278,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                       <button
                         type="button"
                         onClick={() => toggleTooth(tooth)}
-                        className="text-[11px] text-muted-foreground hover:text-destructive"
+                        className="text-xs text-muted-foreground hover:text-destructive"
                       >
                         Quitar
                       </button>
@@ -286,7 +286,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                     <div className="overflow-x-auto">
                       <table className="w-full min-w-[560px] text-xs">
                         <thead>
-                          <tr className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                          <tr className="text-[11px] uppercase tracking-wide text-muted-foreground">
                             <th className="pb-1 pr-2 text-left">Punto</th>
                             <th className="px-1.5 pb-1 text-center">PD (mm)</th>
                             <th className="px-1.5 pb-1 text-center">Sangrado</th>
@@ -340,7 +340,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                     </div>
                     <div className="mt-2 flex flex-wrap gap-4">
                       <div className="flex items-center gap-2">
-                        <Label className="text-[11px]">Movilidad (Miller)</Label>
+                        <Label className="text-xs">Movilidad (Miller)</Label>
                         <select
                           value={draft.mobility}
                           onChange={(e) => updateTooth(tooth, { mobility: e.target.value })}
@@ -356,7 +356,7 @@ function NuevoSondajeDialog({ clinicId, patientId }: { clinicId: string; patient
                       </div>
                       {molar && (
                         <div className="flex items-center gap-2">
-                          <Label className="text-[11px]">Furca</Label>
+                          <Label className="text-xs">Furca</Label>
                           <select
                             value={draft.furcation}
                             onChange={(e) => updateTooth(tooth, { furcation: e.target.value })}
@@ -469,9 +469,9 @@ export function PeriodontalChart({ clinicId, patientId, puedeEditar }: Props) {
             >
               <Activity className="size-3" />
               {formatoFechaHora(h.recordedAt)}
-              <span className="text-[10px] opacity-70">{h.teethCount} piezas</span>
+              <span className="text-[11px] opacity-70">{h.teethCount} piezas</span>
               {h.bleedingSitesCount > 0 && (
-                <span className="rounded-full bg-destructive/10 px-1.5 text-[9px] text-destructive">
+                <span className="rounded-full bg-destructive/10 px-1.5 text-[11px] text-destructive">
                   {h.bleedingSitesCount} con sangrado
                 </span>
               )}
@@ -488,7 +488,7 @@ export function PeriodontalChart({ clinicId, patientId, puedeEditar }: Props) {
         </p>
       ) : (
         <div className="space-y-2">
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {viewChartId ? "Sondaje" : "Sondaje más reciente"} ·{" "}
             {formatoFechaHora(chartToShow.recordedAt)} · {chartToShow.recordedByName ?? "Usuario"}
             {chartToShow.notes ? ` · ${chartToShow.notes}` : ""}
