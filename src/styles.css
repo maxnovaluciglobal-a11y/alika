@@ -1,3 +1,14 @@
+/* Fuentes servidas desde el propio sitio (sin Google Fonts): una conexión
+   externa menos y una CSP más estrecha. Subconjunto latin: cubre el
+   español completo (tildes, ñ, ¿¡). */
+@import "@fontsource/cormorant-garamond/latin-400.css";
+@import "@fontsource/cormorant-garamond/latin-500.css";
+@import "@fontsource/cormorant-garamond/latin-600.css";
+@import "@fontsource/cormorant-garamond/latin-400-italic.css";
+@import "@fontsource/lora/latin-400.css";
+@import "@fontsource/lora/latin-500.css";
+@import "@fontsource/lora/latin-600.css";
+@import "@fontsource/lora/latin-400-italic.css";
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
