@@ -41,7 +41,10 @@ function readEnv(): string {
   if (typeof process !== "undefined" && process.env?.SENTRY_ENVIRONMENT) {
     return process.env.SENTRY_ENVIRONMENT;
   }
-  return "development";
+  // En el navegador no hay process.env: sin esto todo llegaba a Sentry como
+  // "development". El build de Vite sabe si es producción.
+  const env = (import.meta as unknown as { env?: { PROD?: boolean } }).env;
+  return env?.PROD ? "production" : "development";
 }
 
 function readSampleRate(): number {
