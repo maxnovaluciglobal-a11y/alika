@@ -21,7 +21,7 @@ export const Route = createFileRoute("/portal/")({
 
 function PortalIndex() {
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 p-8 text-center">
+    <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-6 p-8 text-center">
       <div className="grid size-14 place-items-center rounded-2xl bg-brand-soft">
         <Clock className="size-7 text-brand" />
       </div>

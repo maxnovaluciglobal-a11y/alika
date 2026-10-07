@@ -133,7 +133,7 @@ export const Route = createFileRoute("/faq")({
 
 function Faq() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-dvh bg-background text-foreground">
       <SiteHeader />
       <main id="main-content" className="mx-auto max-w-2xl px-6 py-16 sm:py-20">
         <p className="text-xs font-semibold uppercase tracking-wider text-brand-700">Recursos</p>

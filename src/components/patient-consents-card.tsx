@@ -220,7 +220,7 @@ export function PatientConsentsCard({
                   />
                 </div>
                 {!firmaElectronica && <SignaturePad onChange={setSignatureDataUrl} />}
-                <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                <label className="-mx-2 flex min-h-11 cursor-pointer items-start gap-2 rounded-md px-2 py-2 text-xs text-muted-foreground">
                   <input
                     type="checkbox"
                     checked={firmaElectronica}
@@ -228,7 +228,7 @@ export function PatientConsentsCard({
                       setFirmaElectronica(e.target.checked);
                       if (e.target.checked) setSignatureDataUrl(null);
                     }}
-                    className="mt-0.5"
+                    className="mt-0.5 size-4 shrink-0 pointer-coarse:size-5"
                   />
                   Firmar electrónicamente con el nombre de arriba, sin trazo manuscrito — usar
                   cuando quien firma no puede dibujar con mouse, dedo o trackpad (teclado, lector de

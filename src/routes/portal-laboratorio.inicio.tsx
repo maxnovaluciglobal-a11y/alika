@@ -44,7 +44,7 @@ function LabPortalInicio() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-2xl items-center justify-center p-6">
+      <div className="mx-auto flex min-h-dvh max-w-2xl items-center justify-center p-6">
         <Loader2 className="size-6 animate-spin text-brand" />
       </div>
     );
@@ -52,7 +52,7 @@ function LabPortalInicio() {
 
   if (isError || !data) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-3 p-6 text-center">
+      <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-3 p-6 text-center">
         <p className="text-sm font-medium">Tu sesión venció.</p>
         <p className="text-xs text-muted-foreground">Pedile a la clínica un enlace nuevo.</p>
       </div>

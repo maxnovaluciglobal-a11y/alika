@@ -120,7 +120,9 @@ export function GlobalSearch({
       </button>
 
       <Dialog open={abierto} onOpenChange={setAbierto}>
-        <DialogContent className="overflow-hidden p-0">
+        {/* En celular va arriba y no centrado: centrado, el teclado tapaba
+            los resultados. */}
+        <DialogContent className="overflow-hidden p-0 max-sm:top-[8dvh] max-sm:w-[calc(100%-2rem)] max-sm:translate-y-0 max-sm:rounded-lg">
           <DialogTitle className="sr-only">Buscar en Alika</DialogTitle>
           <Command
             label="Buscar en Alika"
