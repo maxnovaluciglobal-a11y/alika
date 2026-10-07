@@ -322,7 +322,6 @@ type Plan = {
   alcance: string;
   nombre: string;
   usd: number | null;
-  listaUsd: number | null;
   incluye: readonly string[];
   recomendado?: boolean;
 };
@@ -333,11 +332,11 @@ const planes: readonly Plan[] = [
     alcance: "1 profesional",
     nombre: "Solo",
     usd: 29,
-    listaUsd: 49,
     incluye: [
       "Agenda y ficha clínica",
       "Recordatorios por WhatsApp",
       "Caja y presupuestos",
+      "Importación de pacientes por planilla",
       "Soporte directo con el equipo que lo construye",
     ],
   },
@@ -346,21 +345,14 @@ const planes: readonly Plan[] = [
     alcance: "Hasta 3 profesionales",
     nombre: "Clínica",
     usd: 69,
-    listaUsd: 99,
     recomendado: true,
-    incluye: [
-      "Todo lo de Solo",
-      "Comisiones y roles",
-      "Portal de pacientes",
-      "Importación por planilla",
-    ],
+    incluye: ["Todo lo de Solo", "Comisiones y roles", "Portal de pacientes"],
   },
   {
     id: "red",
     alcance: "Varias sedes",
     nombre: "Red",
     usd: null,
-    listaUsd: null,
     incluye: [
       "Todo lo de Clínica",
       "Multisede e inventario",
@@ -445,7 +437,7 @@ function Precios() {
                   <span className="ml-1 font-body text-base text-muted-foreground">/mes</span>
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  US${p.usd} · antes <span className="line-through">US${p.listaUsd}</span>
+                  US${p.usd} al mes
                   {moneda !== "USD" && " · referencial, el cobro es en USD"}
                 </p>
               </>
