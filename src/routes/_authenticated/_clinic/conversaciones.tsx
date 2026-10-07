@@ -218,6 +218,7 @@ function ListaConversaciones({
                 )}
                 aria-hidden
               />
+              {pendiente && <span className="sr-only">Sin responder: </span>}
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline justify-between gap-2">
                   <span
