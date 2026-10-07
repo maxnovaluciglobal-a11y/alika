@@ -9,10 +9,12 @@ import { cn } from "@/lib/utils";
 export function ErrorDeCarga({
   onReintentar,
   mensaje = "No pudimos cargar estos datos. Revisa la conexión.",
+  reintentando = false,
   className,
 }: {
   onReintentar: () => unknown;
   mensaje?: string;
+  reintentando?: boolean;
   className?: string;
 }) {
   return (
@@ -27,9 +29,10 @@ export function ErrorDeCarga({
       <button
         type="button"
         onClick={() => void onReintentar()}
+        disabled={reintentando}
         className={buttonVariants({ variant: "outline", size: "sm" })}
       >
-        Reintentar
+        {reintentando ? "Reintentando…" : "Reintentar"}
       </button>
     </div>
   );

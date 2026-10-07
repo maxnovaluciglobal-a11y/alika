@@ -153,14 +153,17 @@ function BillingPage() {
   // dispara — es justo a quien está apuntado este atajo).
   const intentoDisparado = useRef(false);
   useEffect(() => {
-    if (intentoDisparado.current || isLoading) return;
+    // Con error no sabemos si ya paga: no se consume la intención ni se abre
+    // el checkout (podía cobrarle de nuevo a una clínica activa). Al
+    // reintentar con éxito, el efecto vuelve a correr.
+    if (intentoDisparado.current || isLoading || isError) return;
     intentoDisparado.current = true;
     const planComprado = consumePlanIntent();
     if (!planComprado || yaFacturando) return;
     setPlan(planComprado);
     startCheckout.mutate(planComprado);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, yaFacturando]);
+  }, [isLoading, isError, yaFacturando]);
 
   return (
     <AppShell title="Suscripción" access={access}>

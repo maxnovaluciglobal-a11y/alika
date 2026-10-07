@@ -34,7 +34,7 @@ export function OfflineBanner() {
       <div className="flex items-center gap-2">
         <WifiOff className="size-4 shrink-0" aria-hidden />
         <span className="min-w-0 flex-1">
-          <strong>Sin conexión:</strong> lo que hagas se guarda y se envía al volver.
+          <strong>Sin conexión:</strong> citas, cobros y fichas se guardan y se envían al volver.
         </span>
         <button
           type="button"

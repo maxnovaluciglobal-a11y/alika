@@ -6,7 +6,7 @@ import { Loader2, Lock, LockOpen } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
-import { ErrorDeCarga } from "@/components/error-de-carga";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { KpisEnFilete, type KpiFilete } from "@/components/kpis-en-filete";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {

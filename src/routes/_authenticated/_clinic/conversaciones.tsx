@@ -18,7 +18,7 @@ import {
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
-import { ErrorDeCarga } from "@/components/error-de-carga";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/access/route-guards";
 import { clasePastilla } from "@/lib/clinic-operations/estado-cita-tono";

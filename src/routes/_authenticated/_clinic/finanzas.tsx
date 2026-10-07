@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { AppShell } from "@/components/app-shell";
-import { ErrorDeCarga } from "@/components/error-de-carga";
+import { ErrorDeCarga } from "@/components/estado-error";
 import { KpisEnFilete, type KpiFilete } from "@/components/kpis-en-filete";
 import { TrialDesbloqueo } from "@/components/trial-desbloqueo";
 import { buttonVariants } from "@/components/ui/button";
