@@ -6,6 +6,7 @@ import { CalendarPlus, Check, Lock, Sparkles, UserPlus } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { ColaConfirmacion } from "@/components/cola-confirmacion";
+import { EstadoCitaPastilla } from "@/components/estado-cita-pastilla";
 import { PanelDesempeno } from "@/components/panel-desempeno";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/access/route-guards";
@@ -14,7 +15,6 @@ import { listClinicMembers } from "@/lib/access/access.functions";
 import { getMySubscription } from "@/lib/billing.functions";
 import { trialInformesBloqueados } from "@/lib/billing";
 import {
-  etiquetaEstado,
   formatoFecha,
   formatoFechaLarga,
   hoyISO,
@@ -30,12 +30,7 @@ import { formatMoney } from "@/lib/finance/finance";
 import { countConversacionesSinResponder } from "@/lib/messaging/conversations.functions";
 import { listPendingOutreach, listPendingReminders } from "@/lib/messaging/messaging.functions";
 import { listPatients } from "@/lib/patients/patients.functions";
-import {
-  clasePastilla,
-  claseTexto,
-  tonoDeCita,
-  type TonoEstado,
-} from "@/lib/clinic-operations/estado-cita-tono";
+import { claseTexto, type TonoEstado } from "@/lib/clinic-operations/estado-cita-tono";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_clinic/dashboard")({
@@ -165,24 +160,10 @@ function FilaKpis({ kpis, cargando }: { kpis: Kpi[]; cargando: boolean }) {
   );
 }
 
-/** Siempre con texto: el tono acompaña, no informa solo (auditoría 04-sep). */
+/** Siempre con texto: el tono acompaña, no informa solo (auditoría 04-sep).
+ * Forma + ícono por estado desde el 08-oct (dirección híbrida). */
 function EstadoCita({ cita }: { cita: Cita }) {
-  const texto =
-    cita.estado === "tentativa"
-      ? cita.pacienteConfirmo
-        ? "Paciente confirmó"
-        : "Sin respuesta"
-      : etiquetaEstado[cita.estado];
-  return (
-    <span
-      className={cn(
-        "inline-flex whitespace-nowrap rounded-sm border px-2 py-0.5 text-xs",
-        clasePastilla[tonoDeCita(cita)],
-      )}
-    >
-      {texto}
-    </span>
-  );
+  return <EstadoCitaPastilla cita={cita} />;
 }
 
 type Tarea = { n: number; titulo: string; detalle: string; cta: string; to: string };
