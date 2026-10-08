@@ -234,7 +234,7 @@ function saludo(timezone: string | undefined) {
       timeZone: timezone || "America/Santiago",
     }).format(new Date()),
   );
-  if (hora < 12) return "Buen día";
+  if (hora < 12) return "Buenos días";
   if (hora < 20) return "Buenas tardes";
   return "Buenas noches";
 }
