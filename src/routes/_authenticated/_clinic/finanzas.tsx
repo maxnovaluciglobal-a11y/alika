@@ -79,12 +79,12 @@ export const Route = createFileRoute("/_authenticated/_clinic/finanzas")({
   beforeLoad: requirePermission("finance:view"),
   head: () => ({
     meta: [
-      { title: "Finanzas | Alika" },
+      { title: "Finanzas | Esmalia" },
       {
         name: "description",
         content: "Caja del período, desglose por método de pago y producción por profesional.",
       },
-      { property: "og:title", content: "Finanzas | Alika" },
+      { property: "og:title", content: "Finanzas | Esmalia" },
       {
         property: "og:description",
         content: "Caja, métodos de pago y producción por profesional en un rango de fechas.",

@@ -6,7 +6,7 @@ export const Route = createFileRoute("/docs/datos-y-seguridad")({
   head: () => {
     const canonical = canonicalHead("/docs/datos-y-seguridad");
     return {
-      meta: [{ title: "Datos y seguridad · Documentación · Alika" }, ...canonical.meta],
+      meta: [{ title: "Datos y seguridad · Documentación · Esmalia" }, ...canonical.meta],
       links: canonical.links,
     };
   },
@@ -29,11 +29,11 @@ function DocsSeguridad() {
 
       <LegalH2>Aislamiento entre clínicas</LegalH2>
       <LegalP>
-        Alika es multi-clínica sobre una misma base de datos, pero el aislamiento no depende solo de
-        la interfaz: cada consulta a la base de datos pasa por políticas de row-level security (RLS)
-        que verifican que el usuario pertenece a esa clínica antes de devolver una sola fila. Aunque
-        hubiera un error en el código de la aplicación, la base de datos igual bloquea el acceso
-        cruzado.
+        Esmalia es multi-clínica sobre una misma base de datos, pero el aislamiento no depende solo
+        de la interfaz: cada consulta a la base de datos pasa por políticas de row-level security
+        (RLS) que verifican que el usuario pertenece a esa clínica antes de devolver una sola fila.
+        Aunque hubiera un error en el código de la aplicación, la base de datos igual bloquea el
+        acceso cruzado.
       </LegalP>
 
       <LegalH2>Permisos por rol</LegalH2>
@@ -103,7 +103,7 @@ function DocsSeguridad() {
       <LegalH2>Dónde vive la infraestructura</LegalH2>
       <LegalP>
         Base de datos, autenticación y almacenamiento corren sobre Supabase, región sa-east-1 (São
-        Paulo, Brasil). Toda la comunicación entre tu navegador y Alika viaja cifrada por HTTPS.
+        Paulo, Brasil). Toda la comunicación entre tu navegador y Esmalia viaja cifrada por HTTPS.
       </LegalP>
 
       <LegalH2>Portal de pacientes</LegalH2>

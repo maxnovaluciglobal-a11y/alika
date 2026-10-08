@@ -19,7 +19,7 @@ import { mensajeDeError } from "@/lib/mensaje-error";
 
 export const Route = createFileRoute("/_authenticated/_clinic/suscripcion")({
   head: () => ({
-    meta: [{ title: "Suscripción | Alika" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Suscripción | Esmalia" }, { name: "robots", content: "noindex" }],
   }),
   component: BillingPage,
 });
@@ -92,7 +92,7 @@ function BillingPage() {
 
   const startCheckout = useMutation({
     // Acepta un plan explícito para el disparo automático desde "Comprar
-    // Alika X" del landing (ver efecto de plan-intent más abajo) — ahí no
+    // Esmalia X" del landing (ver efecto de plan-intent más abajo) — ahí no
     // podemos depender de que `setPlan` ya haya re-renderizado antes de
     // llamar a `.mutate()`. El botón manual de abajo sigue llamando
     // `.mutate()` sin argumento, que cae al `plan` seleccionado en pantalla.
@@ -133,7 +133,7 @@ function BillingPage() {
   // suscripción pagada. Acá la pregunta es otra — "¿ya está cobrando
   // Stripe?" — y con ese criterio invertido, una clínica recién creada
   // (trial fresco, sin stripeCustomerId) nunca mostraba ningún botón de
-  // pago: rompía en el último paso el flujo de "Comprar Alika X" del
+  // pago: rompía en el último paso el flujo de "Comprar Esmalia X" del
   // landing (ver plan-intent.ts), que depende de este mismo botón para
   // saltar el trial. `yaFacturando` solo es `true` con una suscripción
   // realmente pagada — un trial, vencido o no, deja ver el botón.
@@ -142,7 +142,7 @@ function BillingPage() {
   const activePlan = planFromPriceId(sub?.stripePriceId ?? null);
   const activePlanInfo = activePlan ? PLANS[activePlan] : null;
 
-  // "Comprar Alika X" del landing termina acá: auth → onboarding → esta
+  // "Comprar Esmalia X" del landing termina acá: auth → onboarding → esta
   // pantalla, con el plan elegido esperando en sessionStorage (ver
   // `plan-intent.ts`). Una vez que sabemos si ya está pagando (`isLoading`
   // ya resolvió), lo consumimos UNA sola vez — `consumePlanIntent` lo borra
@@ -174,7 +174,7 @@ function BillingPage() {
             <div className="flex-1">
               <h2 className="font-heading text-base font-semibold">Plan actual</h2>
               <p className="text-sm text-muted-foreground">
-                Alika {activePlanInfo?.label ?? "Clínica"} —{" "}
+                Esmalia {activePlanInfo?.label ?? "Clínica"} —{" "}
                 <span className="font-medium">
                   {usd(activePlanInfo?.promoCents ?? PLANS.clinica.promoCents)} / mes
                 </span>{" "}
@@ -265,7 +265,7 @@ function BillingPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold">Alika {info.label}</span>
+                      <span className="text-sm font-semibold">Esmalia {info.label}</span>
                       {plan === key && <Check className="size-4 text-primary" />}
                     </div>
                     <p className="text-xs text-muted-foreground">{info.blurb}</p>
@@ -298,7 +298,7 @@ function BillingPage() {
                     <Loader2 className="size-4 animate-spin" /> Redirigiendo…
                   </>
                 ) : hasCustomer ? (
-                  `Reactivar suscripción · Alika ${PLANS[plan].label}`
+                  `Reactivar suscripción · Esmalia ${PLANS[plan].label}`
                 ) : (
                   `Activar suscripción · ${usd(PLANS[plan].promoCents)}/mes`
                 )}
@@ -324,7 +324,7 @@ function BillingPage() {
         </section>
 
         <p className="text-xs text-muted-foreground">
-          Los pagos los procesa Stripe. Alika nunca ve el número de tarjeta.
+          Los pagos los procesa Stripe. Esmalia nunca ve el número de tarjeta.
         </p>
       </div>
     </AppShell>

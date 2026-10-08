@@ -41,16 +41,16 @@ export const Route = createFileRoute("/auth")({
   }),
   head: () => ({
     meta: [
-      { title: "Acceder a Alika — Gestión odontológica" },
+      { title: "Acceder a Esmalia — Gestión odontológica" },
       {
         name: "description",
         content:
-          "Inicia sesión o crea tu cuenta de Alika para configurar tu clínica dental, sucursales y equipo profesional.",
+          "Inicia sesión o crea tu cuenta de Esmalia para configurar tu clínica dental, sucursales y equipo profesional.",
       },
-      { property: "og:title", content: "Acceder a Alika — Gestión odontológica" },
+      { property: "og:title", content: "Acceder a Esmalia — Gestión odontológica" },
       {
         property: "og:description",
-        content: "Accede a Alika y configura tu clínica dental en minutos.",
+        content: "Accede a Esmalia y configura tu clínica dental en minutos.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

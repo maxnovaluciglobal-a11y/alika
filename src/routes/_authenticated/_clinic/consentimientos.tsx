@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/consentimientos")(
   beforeLoad: requirePermission("settings:manage"),
   head: () => ({
     meta: [
-      { title: "Plantillas de consentimiento | Alika" },
+      { title: "Plantillas de consentimiento | Esmalia" },
       {
         name: "description",
         content: "Textos reutilizables para consentimientos informados que el paciente firma.",

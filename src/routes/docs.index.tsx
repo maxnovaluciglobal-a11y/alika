@@ -39,7 +39,7 @@ function DocsIndex() {
     <div>
       <h1 className="font-display text-3xl font-bold tracking-tight">Documentación</h1>
       <p className="mt-3 max-w-lg text-base leading-relaxed text-muted-foreground">
-        Guías cortas para sacarle jugo a Alika. Si buscas algo más puntual, el{" "}
+        Guías cortas para sacarle jugo a Esmalia. Si buscas algo más puntual, el{" "}
         <Link to="/faq" className="text-brand-700 underline underline-offset-2">
           FAQ
         </Link>{" "}

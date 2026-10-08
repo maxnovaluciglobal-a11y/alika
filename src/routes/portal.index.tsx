@@ -8,7 +8,7 @@ import { Clock, Phone } from "lucide-react";
 export const Route = createFileRoute("/portal/")({
   head: () => ({
     meta: [
-      { title: "Portal del paciente · Alika" },
+      { title: "Portal del paciente · Esmalia" },
       {
         name: "description",
         content: "El acceso al portal es por el link que te envía tu clínica.",

@@ -47,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/convenios")({
   beforeLoad: requirePermission("settings:manage"),
   head: () => ({
     meta: [
-      { title: "Convenios | Alika" },
+      { title: "Convenios | Esmalia" },
       {
         name: "description",
         content:

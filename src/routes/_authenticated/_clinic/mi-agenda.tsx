@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/mi-agenda")({
   beforeLoad: requirePermission("agenda:view"),
   head: () => ({
     meta: [
-      { title: "Mi agenda | Alika" },
+      { title: "Mi agenda | Esmalia" },
       {
         name: "description",
         content: "Vista simplificada de agenda: citas de hoy y pendientes de aceptar.",

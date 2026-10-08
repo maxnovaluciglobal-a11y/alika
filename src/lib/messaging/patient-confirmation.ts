@@ -4,7 +4,7 @@
  * ── Por qué esto existe otra vez ──────────────────────────────────────────
  * La confirmación automática existió y se removió en `505eb7d` (01-sep-2026)
  * por pedido de una clienta potencial. El motivo NO era que la función
- * sobrara: era que Alika usaba **un solo estado `confirmada` para dos hechos
+ * sobrara: era que Esmalia usaba **un solo estado `confirmada` para dos hechos
  * distintos** — que el odontólogo aceptó la cita, y que el paciente avisó que
  * viene. Al colapsarlos, dejar que el paciente escribiera "SI" le daba
  * permiso de escritura sobre la agenda del profesional.

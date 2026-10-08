@@ -58,7 +58,7 @@ function requireMetaAppConfig() {
   const systemUserToken = process.env.WHATSAPP_SYSTEM_USER_TOKEN;
   if (!appId || !appSecret || !systemUserToken) {
     throw new Error(
-      "WhatsApp no está configurado a nivel de plataforma todavía (falta enrolarse como Tech Provider en Meta). Contacta al equipo de Alika.",
+      "WhatsApp no está configurado a nivel de plataforma todavía (falta enrolarse como Tech Provider en Meta). Contacta al equipo de Esmalia.",
     );
   }
   return { appId, appSecret, systemUserToken };

@@ -30,7 +30,7 @@ export function siteJsonLdScripts() {
     ldJsonScript({
       "@context": "https://schema.org",
       "@type": "Organization",
-      name: "Alika",
+      name: "Esmalia",
       url: SITE_URL,
       logo: `${SITE_URL}/icons/apple-touch-icon.png`,
       description: "Software de gestión para clínicas dentales de Latinoamérica.",
@@ -38,13 +38,13 @@ export function siteJsonLdScripts() {
     ldJsonScript({
       "@context": "https://schema.org",
       "@type": "WebSite",
-      name: "Alika",
+      name: "Esmalia",
       url: SITE_URL,
     }),
     ldJsonScript({
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "Alika",
+      name: "Esmalia",
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       url: SITE_URL,

@@ -13,6 +13,7 @@ import {
   type EmailSandboxConfig,
 } from "@/lib/messaging/email-sandbox";
 import type { PreflightReport } from "@/lib/messaging/email-preflight";
+import { SITE_URL } from "@/lib/seo";
 
 /** Un preflight aprobado caduca a los 10 minutos. */
 const PREFLIGHT_VIGENCIA_MS = 10 * 60 * 1000;
@@ -53,7 +54,7 @@ const V = {
   clinica: {
     clave: "clinica",
     label: "Nombre de la clínica",
-    ejemplo: "Clínica Alika Centro",
+    ejemplo: "Clínica Esmalia Centro",
     requerida: true,
   },
   profesional: {
@@ -66,7 +67,7 @@ const V = {
   enlace: {
     clave: "enlace",
     label: "Enlace a la nota",
-    ejemplo: "https://alika.app/pacientes/123",
+    ejemplo: `${SITE_URL}/pacientes/123`,
     requerida: true,
   },
   comentario: {
@@ -127,7 +128,7 @@ export const EMAIL_TEST_TEMPLATES: EmailTemplateDef[] = [
   {
     id: "smoke_test",
     label: "Prueba de entregabilidad",
-    asunto: "{{clinica}}: prueba de entregabilidad de Alika",
+    asunto: "{{clinica}}: prueba de entregabilidad de Esmalia",
     cuerpo:
       "Este es un correo de prueba enviado desde {{clinica}} para medir tiempos de entrega, rebotes y filtros de spam.",
     descripcion: "Correo mínimo para medir tiempos, rebotes y filtros de spam.",
@@ -368,7 +369,7 @@ export async function ejecutarPruebaEmail({
   }
 
   const plantilla = EMAIL_TEST_TEMPLATES.find((t) => t.id === template);
-  const asuntoBase = renderPlantilla(plantilla?.asunto ?? "Prueba de Alika", datos);
+  const asuntoBase = renderPlantilla(plantilla?.asunto ?? "Prueba de Esmalia", datos);
   const resultados: EmailTestEntry[] = [];
 
   for (const bruto of destinatarios) {

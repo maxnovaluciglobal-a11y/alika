@@ -123,9 +123,9 @@ export function GlobalSearch({
         {/* En celular va arriba y no centrado: centrado, el teclado tapaba
             los resultados. */}
         <DialogContent className="overflow-hidden p-0 max-sm:top-[8dvh] max-sm:w-[calc(100%-2rem)] max-sm:translate-y-0 max-sm:rounded-lg">
-          <DialogTitle className="sr-only">Buscar en Alika</DialogTitle>
+          <DialogTitle className="sr-only">Buscar en Esmalia</DialogTitle>
           <Command
-            label="Buscar en Alika"
+            label="Buscar en Esmalia"
             shouldFilter={false}
             className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]]:px-2 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-2.5"
           >

@@ -6,7 +6,7 @@ import { Loader2, MessageCircle } from "lucide-react";
 import { getExpiredPortalContact, openPortalSession } from "@/lib/patients/portal.functions";
 
 /**
- * Entrada del portal: `alika.com/portal/<jwt>`.
+ * Entrada del portal: `<dominio>/portal/<jwt>`.
  *
  * `openPortalSession` valida el token y setea la cookie HttpOnly via
  * `Set-Cookie`. La llamada debe ir a través del HTTP boundary (fetch

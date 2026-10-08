@@ -6,7 +6,7 @@
 // Las fórmulas son las del producto, no inventadas:
 //   - la retención del medio de pago usa netAfterRetention (finance.ts:77)
 //   - el resultado del período replica getFinanceSummary: neto − gastos
-// Si acá dijéramos algo distinto de lo que Alika muestra adentro, el lead
+// Si acá dijéramos algo distinto de lo que Esmalia muestra adentro, el lead
 // magnet estaría prometiendo una pantalla que no existe.
 
 import { netAfterRetention } from "@/lib/finance/finance";

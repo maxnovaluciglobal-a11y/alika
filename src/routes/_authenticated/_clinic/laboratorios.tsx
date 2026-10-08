@@ -59,7 +59,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/laboratorios")({
   beforeLoad: requirePermission("treatments:view"),
   head: () => ({
     meta: [
-      { title: "Laboratorios | Alika" },
+      { title: "Laboratorios | Esmalia" },
       {
         name: "description",
         content:
@@ -335,7 +335,7 @@ function NuevaOrdenDialog({
 /**
  * Portal externo de laboratorio: cada laboratorio activo tiene su propio
  * link firmado para ver y actualizar el estado de sus órdenes sin cuenta de
- * staff en Alika. Self-contained (fetch propio de `listLabs`) para no
+ * staff en Esmalia. Self-contained (fetch propio de `listLabs`) para no
  * meterle otra query al estado de `LaboratoriosPage`.
  */
 function LabPortalSection({ clinicId }: { clinicId: string }) {

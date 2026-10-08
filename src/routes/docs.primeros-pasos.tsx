@@ -6,7 +6,7 @@ export const Route = createFileRoute("/docs/primeros-pasos")({
   head: () => {
     const canonical = canonicalHead("/docs/primeros-pasos");
     return {
-      meta: [{ title: "Primeros pasos · Documentación · Alika" }, ...canonical.meta],
+      meta: [{ title: "Primeros pasos · Documentación · Esmalia" }, ...canonical.meta],
       links: canonical.links,
     };
   },

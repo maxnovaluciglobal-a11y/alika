@@ -8,7 +8,7 @@ import { buildWaMeUrl } from "@/lib/messaging/messaging";
 
 export const EMAIL_CONTACTO = "maxnovaluciglobal@gmail.com";
 
-const MENSAJE_INICIAL = "Hola, quiero conocer Alika para mi clínica.";
+const MENSAJE_INICIAL = "Hola, quiero conocer Esmalia para mi clínica.";
 
 export function enlaceWhatsAppVentas(): { href: string; esWhatsApp: boolean } {
   const numero = import.meta.env.VITE_SALES_WHATSAPP as string | undefined;

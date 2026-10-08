@@ -37,13 +37,13 @@ export const Route = createFileRoute("/_authenticated/_clinic/tratamientos")({
   beforeLoad: requirePermission("treatments:view"),
   head: () => ({
     meta: [
-      { title: "Tratamientos | Alika" },
+      { title: "Tratamientos | Esmalia" },
       {
         name: "description",
         content:
           "Planes de tratamiento con filtros por estado y fecha, avance por sesión y saldo asociado.",
       },
-      { property: "og:title", content: "Tratamientos | Alika" },
+      { property: "og:title", content: "Tratamientos | Esmalia" },
       {
         property: "og:description",
         content:

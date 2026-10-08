@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/conversaciones")({
   }),
   head: () => ({
     meta: [
-      { title: "Conversaciones | Alika" },
+      { title: "Conversaciones | Esmalia" },
       {
         name: "description",
         content:
@@ -490,7 +490,7 @@ function Hilo({
               {enviaPorApi ? (
                 <>
                   Ventana de respuesta abierta ({formatVentana(hilo.ventanaMinutos)}). Se envía
-                  directo, sin salir de Alika.
+                  directo, sin salir de Esmalia.
                 </>
               ) : ventanaAbierta ? (
                 <>

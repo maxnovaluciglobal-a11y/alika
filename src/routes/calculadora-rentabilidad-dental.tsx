@@ -3,7 +3,7 @@
 // Lead magnet público (Task 7 del plan de captación). Resultado primero: el
 // panel de la derecha se ve completo sin pedir nada — el email sólo se pide
 // para guardar el diagnóstico, nunca para verlo (ver LeadForm, que además NO
-// promete "te lo mandamos": Alika no tiene RESEND_API_KEY todavía).
+// promete "te lo mandamos": Esmalia no tiene RESEND_API_KEY todavía).
 //
 // Regla no-negociable #2 del proyecto, la que más importa acá: el semáforo
 // (sano/bajo/atención/alto) SOLO se enciende en ausentismo, overhead total y
@@ -47,7 +47,7 @@ function ldJsonScript(data: Record<string, unknown>) {
 // Las 4 preguntas repiten LITERALMENTE las fórmulas de src/lib/marketing/calculadora.ts
 // (Task 5) — no son copy de marketing genérico. Es la mitad del valor SEO de
 // esta tarea: un buscador generativo (ChatGPT, Perplexity, Google AI Overview)
-// puede citar la fórmula real de Alika en vez de alucinar una.
+// puede citar la fórmula real de Esmalia en vez de alucinar una.
 const PREGUNTAS_CALCULADORA: { q: string; a: string }[] = [
   {
     q: "¿Cómo se calcula la utilidad de una clínica dental?",
@@ -70,7 +70,7 @@ const PREGUNTAS_CALCULADORA: { q: string; a: string }[] = [
 export const Route = createFileRoute("/calculadora-rentabilidad-dental")({
   head: () => {
     const canonical = canonicalHead("/calculadora-rentabilidad-dental");
-    const titulo = "Calculadora de rentabilidad dental · Alika";
+    const titulo = "Calculadora de rentabilidad dental · Esmalia";
     const descripcion =
       "Calcula el estado de resultados y las fugas de dinero de tu clínica dental en Chile, México, Colombia, Perú o Argentina. Resultado completo al instante, sin registrarte.";
     const url = `${SITE_URL}/calculadora-rentabilidad-dental`;
@@ -85,7 +85,7 @@ export const Route = createFileRoute("/calculadora-rentabilidad-dental")({
       ],
       links: canonical.links,
       // WebApplication describe la calculadora como herramienta puntual (no
-      // Alika en general — eso ya lo cubre siteJsonLdScripts() en __root.tsx).
+      // Esmalia en general — eso ya lo cubre siteJsonLdScripts() en __root.tsx).
       // BreadcrumbList: 2 niveles, Inicio → Calculadora de rentabilidad.
       // FAQPage vía el helper compartido de seo.ts.
       scripts: [
@@ -1044,7 +1044,7 @@ function CalculadoraRentabilidadDental() {
             cargaste, sin compararlo contra nada que no podamos citar.
           </p>
           <p>
-            Ninguno de estos rangos es "el promedio de nuestras clínicas": Alika todavía no tiene
+            Ninguno de estos rangos es "el promedio de nuestras clínicas": Esmalia todavía no tiene
             esa base. Úsalos como brújula, no como sentencia.
           </p>
         </div>

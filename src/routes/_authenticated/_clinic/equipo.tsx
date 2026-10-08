@@ -134,10 +134,11 @@ export const Route = createFileRoute("/_authenticated/_clinic/equipo")({
   beforeLoad: requirePermission("team:view"),
   head: () => ({
     meta: [
-      { title: "Equipo y permisos | Alika" },
+      { title: "Equipo y permisos | Esmalia" },
       {
         name: "description",
-        content: "Gestiona los integrantes de tu clínica y qué puede ver cada rol dentro de Alika.",
+        content:
+          "Gestiona los integrantes de tu clínica y qué puede ver cada rol dentro de Esmalia.",
       },
       { name: "robots", content: "noindex" },
     ],

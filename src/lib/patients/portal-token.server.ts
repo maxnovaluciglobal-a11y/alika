@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify, errors } from "jose";
 
 /**
  * Tokens del portal del paciente (Opción C: URL firmada por wa.me, sin
- * login). El paciente recibe `https://alika.com/portal/[token]` por
+ * login). El paciente recibe `<dominio>/portal/[token]` por
  * WhatsApp desde la clínica; el server valida el JWT y setea una cookie
  * de sesión por el resto de la navegación.
  *
@@ -98,7 +98,7 @@ export async function verifyPortalToken(token: string): Promise<PortalTokenPaylo
  * salida (auditoría UX, 30-ago: las 3 pantallas de error del portal
  * mostraban "contactá a tu clínica" en texto plano, sin poder saber cuál
  * era la clínica). No otorga ningún acceso — la firma sigue siendo la
- * única fuente de verdad de que el token lo emitió Alika de verdad para esa
+ * única fuente de verdad de que el token lo emitió Esmalia de verdad para esa
  * clínica; `jose` expone el payload en `JWTExpired.payload` para
  * exactamente este caso de uso.
  */

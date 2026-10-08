@@ -20,15 +20,15 @@ const DEMO_PASSWORD = "AlikaDemo2026!";
 export const Route = createFileRoute("/demo")({
   head: () => ({
     meta: [
-      { title: "Demo · Alika" },
+      { title: "Demo · Esmalia" },
       {
         name: "description",
-        content: "Entra a la demo pública de Alika con datos reales de una clínica de prueba.",
+        content: "Entra a la demo pública de Esmalia con datos reales de una clínica de prueba.",
       },
-      { property: "og:title", content: "Demo · Alika" },
+      { property: "og:title", content: "Demo · Esmalia" },
       {
         property: "og:description",
-        content: "Entra a la demo pública de Alika con datos reales de una clínica de prueba.",
+        content: "Entra a la demo pública de Esmalia con datos reales de una clínica de prueba.",
       },
       { name: "robots", content: "noindex" },
     ],

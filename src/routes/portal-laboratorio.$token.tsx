@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { openLabPortalSession } from "@/lib/clinic-operations/lab-portal.functions";
 
 /**
- * Entrada del portal de laboratorio: `alika.com/portal-laboratorio/<jwt>`.
+ * Entrada del portal de laboratorio: `<dominio>/portal-laboratorio/<jwt>`.
  * Mismo mecanismo que `/portal/$token` — ver ese archivo para el porqué del
  * useEffect (el Set-Cookie necesita el boundary HTTP real, no SSR).
  */

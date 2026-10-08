@@ -69,7 +69,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/comisiones")({
   beforeLoad: requireAnyPermission("finance:view", "commission:view-own"),
   head: () => ({
     meta: [
-      { title: "Comisiones | Alika" },
+      { title: "Comisiones | Esmalia" },
       {
         name: "description",
         content:

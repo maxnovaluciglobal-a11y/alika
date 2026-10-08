@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/efectividad")({
   beforeLoad: requirePermission("dashboard:view"),
   head: () => ({
     meta: [
-      { title: "Efectividad | Alika" },
+      { title: "Efectividad | Esmalia" },
       {
         name: "description",
         content:
@@ -149,7 +149,7 @@ function EfectividadPage() {
               Efectividad
             </h1>
             <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
-              Si lo que Alika automatiza está sirviendo, medido sobre los últimos 90 días de tu
+              Si lo que Esmalia automatiza está sirviendo, medido sobre los últimos 90 días de tu
               propia clínica. Cuando la muestra es chica se muestra el conteo en vez del porcentaje:
               con pocos casos, un porcentaje parece una conclusión y no lo es.
             </p>
@@ -215,7 +215,7 @@ function EfectividadPage() {
                 >
                   <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
                     <span className="text-sm text-muted-foreground">
-                      De los mensajes que entraron, cuántos entendió Alika sola
+                      De los mensajes que entraron, cuántos entendió Esmalia sola
                     </span>
                     <Cifra p={data.cobertura.resueltos} sufijo="mensajes" />
                   </div>

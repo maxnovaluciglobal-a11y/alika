@@ -616,7 +616,7 @@ export const getPanelDesempeno = createServerFn({ method: "GET" })
 /**
  * Morosidad: pacientes con saldo pendiente, agrupados por antigüedad de la
  * deuda. Gap identificado en la auditoría comparativa vs. SuperClini
- * (22-sep-2026) — hasta ahora Alika mostraba el saldo por paciente en su
+ * (22-sep-2026) — hasta ahora Esmalia mostraba el saldo por paciente en su
  * ficha pero no había una vista consolidada de "a quién llamar hoy".
  *
  * Reusa `fetchPatientBalances` (misma cuenta que ya usa la ficha del

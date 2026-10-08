@@ -333,7 +333,7 @@ export const escribirLeadEnBase = createServerOnlyFn(async function escribirLead
    *
    * 1. `consent_at`/`consent_text` NO se tocan. Esta tabla existe para
    *    poder probar consentimiento (Ley 21.719 pone la carga de la prueba
-   *    en Alika) — pisar el texto/fecha del consentimiento ORIGINAL en
+   *    en Esmalia) — pisar el texto/fecha del consentimiento ORIGINAL en
    *    cada reenvío destruye esa prueba. Quedan como se guardaron en el
    *    primer INSERT.
    * 2. `phone`, `phone_valid`, `name`, `clinic_name` y `email` sólo se
@@ -526,7 +526,7 @@ export const escribirLeadEnBase = createServerOnlyFn(async function escribirLead
   return { ok: true as const };
 });
 
-/** Lectura de leads para el equipo de Alika. No existe un rol "staff de la
+/** Lectura de leads para el equipo de Esmalia. No existe un rol "staff de la
  *  empresa" en el schema (todos los roles son de clínica), así que el gate es
  *  una allowlist de emails por env var. */
 export const listMarketingLeads = createServerFn({ method: "GET" })

@@ -37,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/admin/clinicas")({
   loader: () => listClinicsForStaff({}),
   head: () => ({
     meta: [
-      { title: "Clínicas | Alika" },
+      { title: "Clínicas | Esmalia" },
       {
         name: "description",
         content: "Estado de suscripción y llamada de puesta en marcha por clínica.",

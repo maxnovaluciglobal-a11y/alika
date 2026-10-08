@@ -67,7 +67,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/gastos")({
   beforeLoad: requirePermission("finance:view"),
   head: () => ({
     meta: [
-      { title: "Gastos | Alika" },
+      { title: "Gastos | Esmalia" },
       {
         name: "description",
         content: "Egresos de la clínica por categoría, sucursal y medio de pago.",

@@ -166,13 +166,13 @@ export const Route = createFileRoute("/_authenticated/_clinic/agenda")({
   beforeLoad: requirePermission("agenda:view"),
   head: () => ({
     meta: [
-      { title: "Agenda inteligente | Alika" },
+      { title: "Agenda inteligente | Esmalia" },
       {
         name: "description",
         content:
           "Agenda por fecha, profesional, sucursal y estado, con lista de espera inteligente.",
       },
-      { property: "og:title", content: "Agenda inteligente | Alika" },
+      { property: "og:title", content: "Agenda inteligente | Esmalia" },
       {
         property: "og:description",
         content:

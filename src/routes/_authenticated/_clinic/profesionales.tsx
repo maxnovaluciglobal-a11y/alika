@@ -607,7 +607,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/profesionales")({
   beforeLoad: requirePermission("settings:manage"),
   head: () => ({
     meta: [
-      { title: "Profesionales | Alika" },
+      { title: "Profesionales | Esmalia" },
       {
         name: "description",
         content: "Administra los profesionales de la clínica y su horario de atención.",

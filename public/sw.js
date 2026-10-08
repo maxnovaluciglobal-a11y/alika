@@ -1,5 +1,5 @@
 /**
- * Service worker de Alika — escrito a mano, a propósito.
+ * Service worker de Esmalia — escrito a mano, a propósito.
  *
  * Por qué no `vite-plugin-pwa`: el plugin arma su manifiesto de precache en el
  * hook `closeBundle` de Vite, pero en este stack (TanStack Start + Nitro) los

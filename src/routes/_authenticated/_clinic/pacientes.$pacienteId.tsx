@@ -72,10 +72,10 @@ export const Route = createFileRoute("/_authenticated/_clinic/pacientes/$pacient
   head: ({ loaderData }) => {
     if (!loaderData) {
       return {
-        meta: [{ title: "Ficha no disponible | Alika" }, { name: "robots", content: "noindex" }],
+        meta: [{ title: "Ficha no disponible | Esmalia" }, { name: "robots", content: "noindex" }],
       };
     }
-    const titulo = `${loaderData.paciente.nombre} · Ficha clínica | Alika`;
+    const titulo = `${loaderData.paciente.nombre} · Ficha clínica | Esmalia`;
     const desc = `Ficha clínica de ${loaderData.paciente.nombre}: timeline, saldo y próximos controles.`;
     return {
       meta: [
@@ -603,7 +603,7 @@ function PacienteDetalle() {
               <NotasClinicas
                 paciente={paciente}
                 clinicId={clinicId ?? null}
-                clinicaNombre={access.clinic?.name ?? "Alika"}
+                clinicaNombre={access.clinic?.name ?? "Esmalia"}
                 puedeEditar={puedeEscribirClinico}
                 userId={access.userId}
                 rol={access.role}

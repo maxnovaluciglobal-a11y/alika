@@ -8,16 +8,16 @@ export const Route = createFileRoute("/_authenticated/_clinic/permisos")({
   beforeLoad: requirePermission("team:manage"),
   head: () => ({
     meta: [
-      { title: "Matriz de permisos | Alika" },
+      { title: "Matriz de permisos | Esmalia" },
       {
         name: "description",
         content:
           "Consulta qué acciones puede realizar cada rol de la clínica según el estado de la nota clínica.",
       },
-      { property: "og:title", content: "Matriz de permisos | Alika" },
+      { property: "og:title", content: "Matriz de permisos | Esmalia" },
       {
         property: "og:description",
-        content: "Permisos por rol y por estado de la nota clínica en Alika.",
+        content: "Permisos por rol y por estado de la nota clínica en Esmalia.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

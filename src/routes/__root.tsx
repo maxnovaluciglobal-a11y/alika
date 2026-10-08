@@ -120,26 +120,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Alika · Software de gestión dental" },
+      { title: "Esmalia · Software de gestión dental" },
       {
         name: "description",
         content:
-          "Alika es el sistema operativo de la clínica dental: agenda, pacientes, historia clínica e IA en una sola plataforma.",
+          "Esmalia es el sistema operativo de la clínica dental: agenda, pacientes, historia clínica e IA en una sola plataforma.",
       },
-      { name: "author", content: "Alika" },
-      { property: "og:title", content: "Alika · Software de gestión dental" },
+      { name: "author", content: "Esmalia" },
+      { property: "og:title", content: "Esmalia · Software de gestión dental" },
       {
         property: "og:description",
         content: "Agenda, pacientes, historia clínica e IA para clínicas dentales de LatAm.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "Alika" },
+      { property: "og:site_name", content: "Esmalia" },
       { property: "og:locale", content: "es_419" },
       { property: "og:image", content: SOCIAL_IMAGE_URL },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Alika · Software de gestión dental" },
+      { name: "twitter:title", content: "Esmalia · Software de gestión dental" },
       {
         name: "twitter:description",
         content: "Agenda, pacientes, historia clínica e IA para clínicas dentales de LatAm.",
@@ -150,7 +150,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#f3f2f2", media: "(prefers-color-scheme: light)" },
       { name: "theme-color", content: "#1d1c1b", media: "(prefers-color-scheme: dark)" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-title", content: "Alika" },
+      { name: "apple-mobile-web-app-title", content: "Esmalia" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
     ],
     links: [

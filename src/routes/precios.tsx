@@ -29,13 +29,13 @@ import { registrarEvento } from "@/lib/marketing/eventos";
 import { canonicalHead, faqJsonLdScript, SITE_URL } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
-const TITULO = "Precios · Alika — software dental desde US$29";
+const TITULO = "Precios · Esmalia — software dental desde US$29";
 const DESCRIPCION =
-  "Planes de Alika para clínicas dentales: Solo US$29/mes (1 profesional), Clínica US$69/mes (hasta 3) y Red a medida. 14 días gratis, sin tarjeta. Cobro en USD.";
+  "Planes de Esmalia para clínicas dentales: Solo US$29/mes (1 profesional), Clínica US$69/mes (hasta 3) y Red a medida. 14 días gratis, sin tarjeta. Cobro en USD.";
 
 const preguntas: { q: string; a: string }[] = [
   {
-    q: "¿Necesito tarjeta para probar Alika?",
+    q: "¿Necesito tarjeta para probar Esmalia?",
     a: "No. Tienes 14 días gratis desde que creas tu clínica, sin dejar tarjeta. Si al terminar no te suscribes, agenda, pacientes y ficha clínica siguen abiertos; finanzas, comisiones, inventario y los demás informes se activan al suscribirte.",
   },
   {
@@ -63,10 +63,10 @@ function productoJsonLd() {
     children: JSON.stringify({
       "@context": "https://schema.org",
       "@type": "Product",
-      name: "Alika",
+      name: "Esmalia",
       description:
         "Software de gestión para clínicas dentales: agenda, ficha clínica, odontograma, presupuestos, caja y recordatorios por WhatsApp.",
-      brand: { "@type": "Brand", name: "Alika" },
+      brand: { "@type": "Brand", name: "Esmalia" },
       url,
       offers: {
         "@type": "AggregateOffer",

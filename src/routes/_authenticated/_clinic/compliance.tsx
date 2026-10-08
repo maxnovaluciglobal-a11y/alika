@@ -8,13 +8,13 @@ export const Route = createFileRoute("/_authenticated/_clinic/compliance")({
   beforeLoad: requirePermission("team:manage"),
   head: () => ({
     meta: [
-      { title: "Compliance y auditoría | Alika" },
+      { title: "Compliance y auditoría | Esmalia" },
       {
         name: "description",
         content:
           "Exporta en CSV o PDF el historial de revisión y auditoría clínica filtrado por clínica y rango de fechas.",
       },
-      { property: "og:title", content: "Compliance y auditoría | Alika" },
+      { property: "og:title", content: "Compliance y auditoría | Esmalia" },
       {
         property: "og:description",
         content: "Historial de auditoría y revisión clínica exportable para compliance.",
