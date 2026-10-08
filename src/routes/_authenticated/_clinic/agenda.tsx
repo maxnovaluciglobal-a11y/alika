@@ -95,6 +95,7 @@ import {
   type PendingAppointmentRequest,
 } from "@/lib/patients/portal.functions";
 import { coincide, num, paginar, str } from "@/lib/search";
+import { EstadoCitaPastilla } from "@/components/estado-cita-pastilla";
 import { cn } from "@/lib/utils";
 import { mensajeDeError } from "@/lib/mensaje-error";
 
@@ -1707,9 +1708,7 @@ function AgendaPage() {
                           />
                         </span>
                       ) : (
-                        <span className={claseEstadoBadge(c.estado)}>
-                          {etiquetaEstado[c.estado]}
-                        </span>
+                        <EstadoCitaPastilla cita={{ estado: c.estado }} />
                       )}
                       {clinicId && access.clinic?.name && (
                         <WhatsAppButton
