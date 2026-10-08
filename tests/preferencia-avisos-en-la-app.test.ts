@@ -3,7 +3,7 @@ import type { Client } from "pg";
 import { conectar, sembrarEscenario } from "./helpers/db";
 
 /**
- * El interruptor "Avisos dentro de Alika" apaga los avisos de verdad.
+ * El interruptor "Avisos dentro de Esmalia" apaga los avisos de verdad.
  *
  * Antes, `notification_preferences.inapp_enabled` sólo lo leía y escribía su
  * propia pantalla: ningún camino lo consultaba antes de insertar, así que el
