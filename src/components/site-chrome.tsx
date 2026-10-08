@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
-import { AlikaLogo } from "@/components/alika-logo";
+import { EsmaliaLogo } from "@/components/esmalia-logo";
 import { buttonVariants } from "@/components/ui/button";
 import { EMAIL_CONTACTO, enlaceWhatsAppVentas } from "@/lib/marketing/contacto";
 import { registrarEvento } from "@/lib/marketing/eventos";
@@ -23,11 +23,8 @@ export function SiteHeader() {
         aria-label="Principal"
         className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3"
       >
-        <Link to="/" className="flex items-center gap-2.5">
-          <AlikaLogo size={30} />
-          <span className="font-display text-2xl font-semibold leading-none text-foreground">
-            Alika
-          </span>
+        <Link to="/" className="flex items-center py-1">
+          <EsmaliaLogo size={28} />
         </Link>
         <ul className="hidden items-center gap-1 md:flex">
           {navLinks.map((l) => (
@@ -176,10 +173,7 @@ export function SiteFooter() {
       </div>
       <div className="mx-auto max-w-6xl px-6 py-6">
         <div className="flex flex-col items-center justify-between gap-4 border-t border-hairline pt-6 text-sm text-muted-foreground sm:flex-row">
-          <span className="flex items-center gap-2">
-            <AlikaLogo size={24} />
-            <span className="font-display text-lg font-semibold text-foreground">Alika</span>
-          </span>
+          <EsmaliaLogo size={22} />
           <span className="flex items-center gap-1.5 text-xs">
             Software de gestión dental · Hecho para Latinoamérica
             <Lock className="size-3" /> tus datos son tuyos

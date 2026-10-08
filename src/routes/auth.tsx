@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 
-import { AlikaLogo } from "@/components/alika-logo";
+import { EsmaliaLogo } from "@/components/esmalia-logo";
 import { getSupabase } from "@/integrations/supabase/lazy";
 import { peekPlanIntent } from "@/lib/marketing/plan-intent";
 
@@ -186,11 +186,8 @@ function AuthPage() {
           <span aria-hidden>←</span> Volver al inicio
         </Link>
 
-        <div className="mb-8 flex items-center justify-center gap-2.5">
-          <AlikaLogo size={32} />
-          <span className="font-display text-2xl font-semibold leading-none text-foreground">
-            Alika
-          </span>
+        <div className="mb-8 flex items-center justify-center">
+          <EsmaliaLogo size={34} />
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
