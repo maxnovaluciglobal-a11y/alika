@@ -18,7 +18,7 @@ import appCss from "../styles.css?url";
 import loraRegular from "@fontsource/lora/files/lora-latin-400-normal.woff2?url";
 import cormorantRegular from "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff2?url";
 import { reportBoundaryError } from "../lib/error-reporting";
-import { siteJsonLdScripts } from "@/lib/seo";
+import { SITE_URL, siteJsonLdScripts } from "@/lib/seo";
 import { captureException, initSentry } from "@/lib/sentry";
 import { attachOfflineCache, resetOfflineCache } from "@/lib/offline/offline-cache";
 import { registerServiceWorker } from "@/lib/offline/register-sw";
@@ -97,19 +97,13 @@ function ErrorComponent({ error: errorDesconocido, reset }: ErrorComponentProps)
   );
 }
 
-// Mismo criterio que src/routes/sitemap[.]xml.ts: PUBLIC_APP_URL manda si está
-// seteada; si no, se cae al dominio real de hoy (alika.com todavía no está
-// comprado, ver docs/DEPLOY_PRODUCTION.md). og:image/twitter:image necesitan
-// una URL absoluta — no alcanza con una ruta relativa como en <img src>.
-const SITE_URL =
-  (typeof process !== "undefined" && process.env.PUBLIC_APP_URL) ||
-  "https://alika-omega.vercel.app";
-
-// Recorte dedicado 1200×630 (ratio estándar OG) de la misma foto del hero —
-// hasta 01-sep-2026 reusaba dentist.jpg tal cual (1280×853, ratio ~1.5:1),
-// que Facebook/WhatsApp recortan mal al no ser 1.91:1. dentist.jpg se queda
-// intacto para el hero de la landing (src/routes/index.tsx).
-const SOCIAL_IMAGE_URL = `${SITE_URL}/landing/dentist-og.jpg`;
+// og:image/twitter:image necesitan una URL absoluta (no alcanza con una ruta
+// relativa como en <img src>), por eso se arma sobre SITE_URL, que vive en un
+// solo lugar: src/lib/seo.ts.
+// Pieza de marca 1200×630 (ratio estándar OG): wordmark + claim sobre papel,
+// generada con scripts/generar-og.mjs. Reemplaza al recorte de la foto del
+// hero (dentist-og.jpg) desde el rebrand a Esmalia (08-oct-2026).
+const SOCIAL_IMAGE_URL = `${SITE_URL}/landing/og-esmalia.png`;
 
 /**
  * Aplica el modo oscuro antes del primer pintado. El tema lo pone AppShell
