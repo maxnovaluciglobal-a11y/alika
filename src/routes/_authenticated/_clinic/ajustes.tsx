@@ -13,7 +13,7 @@ import { puedeSimular } from "@/lib/access/role-simulation";
  */
 export const Route = createFileRoute("/_authenticated/_clinic/ajustes")({
   head: () => ({
-    meta: [{ title: "Ajustes | Alika" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Ajustes | Esmalia" }, { name: "robots", content: "noindex" }],
   }),
   component: AjustesPage,
 });

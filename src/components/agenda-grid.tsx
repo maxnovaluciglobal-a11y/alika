@@ -34,6 +34,7 @@ import { claseBloque, tonoDeEstadoCita } from "@/lib/clinic-operations/estado-ci
 import { claseEstadoBadge, etiquetaBloqueCita, rangoHorarioCita } from "@/components/cita-acciones";
 import { buttonVariants } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { EstadoCitaPastilla } from "@/components/estado-cita-pastilla";
 import { cn } from "@/lib/utils";
 
 // El borde izquierdo identifica al profesional (color guardado en
@@ -408,7 +409,7 @@ function BloqueCita({
           </dd>
           <dt className="text-muted-foreground">Estado</dt>
           <dd className="flex flex-wrap items-center gap-1.5">
-            <span className={claseEstadoBadge(c.estado)}>{etiquetaEstado[c.estado]}</span>
+            <EstadoCitaPastilla cita={{ estado: c.estado }} />
             {c.pacienteConfirmo && <PatientConfirmedBadge compacto />}
           </dd>
         </dl>

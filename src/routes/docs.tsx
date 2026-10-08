@@ -12,11 +12,11 @@ import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 export const Route = createFileRoute("/docs")({
   head: () => ({
     meta: [
-      { title: "Documentación · Alika" },
+      { title: "Documentación · Esmalia" },
       {
         name: "description",
         content:
-          "Guías para empezar a usar Alika: primeros pasos, WhatsApp, portal de pacientes y cómo tratamos tus datos.",
+          "Guías para empezar a usar Esmalia: primeros pasos, WhatsApp, portal de pacientes y cómo tratamos tus datos.",
       },
     ],
   }),

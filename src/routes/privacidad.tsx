@@ -7,11 +7,11 @@ export const Route = createFileRoute("/privacidad")({
     const canonical = canonicalHead("/privacidad");
     return {
       meta: [
-        { title: "Política de privacidad · Alika" },
+        { title: "Política de privacidad · Esmalia" },
         {
           name: "description",
           content:
-            "Cómo Alika trata los datos de tu clínica, de tus pacientes y de quien usa nuestras herramientas gratuitas: qué guardamos, para qué, dónde y por cuánto tiempo.",
+            "Cómo Esmalia trata los datos de tu clínica, de tus pacientes y de quien usa nuestras herramientas gratuitas: qué guardamos, para qué, dónde y por cuánto tiempo.",
         },
         { name: "robots", content: "index,follow" },
         ...canonical.meta,
@@ -30,11 +30,11 @@ function Privacidad() {
       updated="Versión 2 · 8 de septiembre de 2026 · MAXNOVA & LUCI Global LLC"
     >
       <LegalNotice>
-        Tu clínica es la responsable de los datos de sus pacientes; Alika los procesa como encargado
-        del tratamiento, para que la aplicación funcione. Si eres paciente de una clínica que usa
-        Alika y quieres ejercer un derecho sobre tus datos (acceso, corrección, borrado), el camino
-        es contactar directamente a tu clínica — nosotros ejecutamos el pedido técnico que tu
-        clínica nos indique.
+        Tu clínica es la responsable de los datos de sus pacientes; Esmalia los procesa como
+        encargado del tratamiento, para que la aplicación funcione. Si eres paciente de una clínica
+        que usa Esmalia y quieres ejercer un derecho sobre tus datos (acceso, corrección, borrado),
+        el camino es contactar directamente a tu clínica — nosotros ejecutamos el pedido técnico que
+        tu clínica nos indique.
         <br />
         <br />
         Si llegaste aquí desde la calculadora o desde un material gratuito y todavía no eres
@@ -45,7 +45,7 @@ function Privacidad() {
 
       <LegalH2>1. Quién es responsable</LegalH2>
       <LegalP>
-        Alika lo opera MAXNOVA &amp; LUCI Global LLC, una LLC constituida en Estados Unidos. Para
+        Esmalia lo opera MAXNOVA &amp; LUCI Global LLC, una LLC constituida en Estados Unidos. Para
         cualquier consulta de privacidad, escríbenos a{" "}
         <a
           href="mailto:maxnovaluciglobal@gmail.com"
@@ -53,7 +53,7 @@ function Privacidad() {
         >
           maxnovaluciglobal@gmail.com
         </a>
-        . Ese correo lo lee el equipo que opera Alika, no un buzón automático.
+        . Ese correo lo lee el equipo que opera Esmalia, no un buzón automático.
       </LegalP>
       <LegalP>
         Hoy no tenemos un representante legal designado en Chile. Si la ley chilena nos exige
@@ -62,7 +62,7 @@ function Privacidad() {
       </LegalP>
 
       <LegalH2>2. Qué datos recopilamos</LegalH2>
-      <LegalP>Según cómo uses Alika, procesamos:</LegalP>
+      <LegalP>Según cómo uses Esmalia, procesamos:</LegalP>
       <LegalUl>
         <LegalLi>
           <strong>Datos de tu cuenta de staff</strong>: nombre, email, rol dentro de la clínica.
@@ -111,20 +111,20 @@ function Privacidad() {
         </LegalLi>
       </LegalUl>
       <LegalP>
-        <strong>Con qué base tratamos todo esto.</strong> Con los datos de pacientes, Alika actúa
+        <strong>Con qué base tratamos todo esto.</strong> Con los datos de pacientes, Esmalia actúa
         como encargado: la base de legitimidad la fija tu clínica, que es la responsable — en
         general, la atención de salud que te está dando y la relación que tienes con ella. Con las
-        cuentas de staff, la base es el contrato de servicio entre Alika y la clínica: sin cuenta no
-        hay aplicación que usar. Los datos de quien todavía no es paciente ni cliente van por otro
-        camino, con sus propias finalidades y sus propias bases, y por eso tienen su sección aparte
-        más abajo.
+        cuentas de staff, la base es el contrato de servicio entre Esmalia y la clínica: sin cuenta
+        no hay aplicación que usar. Los datos de quien todavía no es paciente ni cliente van por
+        otro camino, con sus propias finalidades y sus propias bases, y por eso tienen su sección
+        aparte más abajo.
       </LegalP>
 
       <LegalH2>3. Si usaste la calculadora o pediste un material nuestro</LegalH2>
       <LegalP>
         Este es el caso distinto a todo lo anterior: alguien que entra al sitio, usa una herramienta
-        gratuita o pide un material, y todavía no es paciente de nadie ni tiene cuenta en Alika. Ahí
-        no hay clínica de por medio — el responsable de esos datos somos nosotros, directamente.
+        gratuita o pide un material, y todavía no es paciente de nadie ni tiene cuenta en Esmalia.
+        Ahí no hay clínica de por medio — el responsable de esos datos somos nosotros, directamente.
       </LegalP>
       <LegalP>
         <strong>Qué te pedimos.</strong> Un email o un WhatsApp (al menos uno de los dos, porque sin
@@ -158,7 +158,7 @@ function Privacidad() {
           casilla que tuviste que marcar tú (no viene marcada de fábrica).
         </LegalLi>
         <LegalLi>
-          <strong>Escribirte por email para contarte qué es Alika</strong> — base: ese mismo
+          <strong>Escribirte por email para contarte qué es Esmalia</strong> — base: ese mismo
           consentimiento, cuyo texto exacto guardamos junto con la fecha en que lo diste.
         </LegalLi>
         <LegalLi>
@@ -215,9 +215,9 @@ function Privacidad() {
         así antes que prometer un botón que no está.
       </LegalP>
       <LegalP>
-        <strong>Hoy no hay envío automático de correos.</strong> Alika todavía no tiene activado el
-        envío de email, así que si dejas tu dirección queda guardada para que podamos escribirte a
-        mano, no para que un sistema te empiece a mandar cosas por su cuenta. Cuando lo activemos,
+        <strong>Hoy no hay envío automático de correos.</strong> Esmalia todavía no tiene activado
+        el envío de email, así que si dejas tu dirección queda guardada para que podamos escribirte
+        a mano, no para que un sistema te empiece a mandar cosas por su cuenta. Cuando lo activemos,
         actualizamos esta sección.
       </LegalP>
 
@@ -253,7 +253,7 @@ function Privacidad() {
       <LegalH2>5. Transferencias fuera de Chile</LegalH2>
       <LegalP>
         Hay dos, y conviene decirlas sin rodeos. La primera: los datos están alojados en Brasil (São
-        Paulo), no en Chile. La segunda: quien opera Alika es una empresa constituida en Estados
+        Paulo), no en Chile. La segunda: quien opera Esmalia es una empresa constituida en Estados
         Unidos, así que el equipo que administra la base accede desde fuera de Chile. Las dos valen
         tanto para los datos de la clínica y sus pacientes como para los de captación de la sección
         3.
@@ -265,14 +265,14 @@ function Privacidad() {
         </strong>{" "}
         Lo que sí podemos afirmar es lo que hacemos: la comunicación viaja cifrada, el aislamiento
         entre clínicas está en la base de datos y no en la pantalla (sección 7), y el acceso a
-        producción está limitado a las personas que operan Alika. Si tu clínica necesita un contrato
-        de tratamiento de datos firmado para respaldar esa transferencia ante su propio asesor,
-        escríbenos y lo firmamos.
+        producción está limitado a las personas que operan Esmalia. Si tu clínica necesita un
+        contrato de tratamiento de datos firmado para respaldar esa transferencia ante su propio
+        asesor, escríbenos y lo firmamos.
       </LegalP>
 
       <LegalH2>6. Con quién compartimos datos</LegalH2>
       <LegalP>
-        No vendemos datos a nadie. Usamos estos proveedores para que Alika funcione (subencargados
+        No vendemos datos a nadie. Usamos estos proveedores para que Esmalia funcione (subencargados
         del tratamiento):
       </LegalP>
       <LegalUl>
@@ -289,7 +289,7 @@ function Privacidad() {
           puntual; no se usa para ningún otro procesamiento automático de datos de pacientes.
         </LegalLi>
         <LegalLi>
-          <strong>Stripe</strong> — hoy Alika no cobra suscripciones, así que Stripe todavía no
+          <strong>Stripe</strong> — hoy Esmalia no cobra suscripciones, así que Stripe todavía no
           procesa pagos de clínicas. Cuando la facturación esté activa, actualizamos esta sección.
         </LegalLi>
       </LegalUl>
@@ -316,14 +316,14 @@ function Privacidad() {
             Los datos de cada clínica están separados a nivel de base de datos, no solo de pantalla.
           </strong>{" "}
           No es que la app "oculte" los pacientes de otra clínica en la interfaz: es la base de
-          datos misma la que impide la consulta, así que ni un bug de programación en Alika podría
+          datos misma la que impide la consulta, así que ni un bug de programación en Esmalia podría
           hacer que el personal de una clínica termine viendo pacientes de otra.
         </LegalLi>
         <LegalLi>
           <strong>
             Los mensajes de WhatsApp que llegan por la API se verifican criptográficamente
           </strong>{" "}
-          antes de procesarse: cada mensaje entrante trae una firma que Alika valida contra un
+          antes de procesarse: cada mensaje entrante trae una firma que Esmalia valida contra un
           secreto compartido con Meta, así que un mensaje no puede hacerse pasar por tráfico
           legítimo de WhatsApp si no viene realmente de ahí.
         </LegalLi>
@@ -335,7 +335,7 @@ function Privacidad() {
         </LegalLi>
       </LegalUl>
       <LegalP>
-        Alika es una empresa chica y todavía no tiene certificaciones formales de seguridad de la
+        Esmalia es una empresa chica y todavía no tiene certificaciones formales de seguridad de la
         información (por ejemplo SOC 2 o ISO 27001) — son procesos costosos que están fuera de
         alcance en esta etapa. Lo de arriba son controles que sí están construidos y en uso hoy, no
         una promesa de certificación futura.
@@ -360,7 +360,7 @@ function Privacidad() {
 
       <LegalH2>9. Cookies y medición</LegalH2>
       <LegalP>
-        Alika usa únicamente cookies funcionales, necesarias para que la aplicación funcione: una
+        Esmalia usa únicamente cookies funcionales, necesarias para que la aplicación funcione: una
         para recordar el estado de la barra lateral y otra para la sesión del portal de
         auto-agendamiento del paciente. Hoy no usamos cookies de analítica ni de publicidad.
       </LegalP>
@@ -383,8 +383,8 @@ function Privacidad() {
       </LegalP>
       <LegalUl>
         <LegalLi>
-          <strong>Si eres paciente de una clínica que usa Alika</strong>: pídeselo a tu clínica, que
-          es la responsable de tus datos. Nosotros ejecutamos a nivel técnico lo que ella nos
+          <strong>Si eres paciente de una clínica que usa Esmalia</strong>: pídeselo a tu clínica,
+          que es la responsable de tus datos. Nosotros ejecutamos a nivel técnico lo que ella nos
           indique.
         </LegalLi>
         <LegalLi>

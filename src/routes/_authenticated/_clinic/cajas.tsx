@@ -47,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/cajas")({
   beforeLoad: requirePermission("cash:manage"),
   head: () => ({
     meta: [
-      { title: "Caja del día | Alika" },
+      { title: "Caja del día | Esmalia" },
       {
         name: "description",
         content: "Apertura, cierre y arqueo de caja por turno.",
@@ -375,7 +375,7 @@ function CajasPage() {
               <p className="text-sm font-medium">Todavía no hay turnos registrados.</p>
               <p className="mt-1 max-w-prose text-sm text-muted-foreground">
                 Abre la caja al empezar el día con el efectivo que hay; al cerrar, cuenta lo que
-                quedó y Alika te dice si cuadra.
+                quedó y Esmalia te dice si cuadra.
               </p>
             </div>
           ) : (

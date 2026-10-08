@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/estados-de-cita")(
   beforeLoad: requirePermission("settings:manage"),
   head: () => ({
     meta: [
-      { title: "Estados de cita | Alika" },
+      { title: "Estados de cita | Esmalia" },
       {
         name: "description",
         content:

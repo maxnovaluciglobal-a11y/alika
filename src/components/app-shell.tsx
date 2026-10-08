@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { LifeBuoy, LogOut, Menu, Moon, Settings, Sun } from "lucide-react";
 
-import { AlikaLogo } from "@/components/alika-logo";
+import { EsmaliaLogo } from "@/components/esmalia-logo";
 import { ClinicSwitcher } from "@/components/clinic-switcher";
 import { GlobalSearch } from "@/components/global-search";
 import { NotificationsBell } from "@/components/notifications-bell";
@@ -305,9 +305,8 @@ export function AppShell({
     <div className="flex min-h-dvh w-full bg-background text-foreground">
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border bg-sidebar lg:flex">
         <div className="space-y-4 px-5 pt-6 pb-4">
-          <Link to="/dashboard" className="flex items-center gap-2.5">
-            <AlikaLogo size={28} />
-            <span className="font-display text-2xl font-semibold leading-none">Alika</span>
+          <Link to="/dashboard" className="flex items-center py-1">
+            <EsmaliaLogo size={28} />
           </Link>
           <ClinicSwitcher access={access} />
           <GlobalSearch access={access} atajo />

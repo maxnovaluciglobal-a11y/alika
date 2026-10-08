@@ -15,8 +15,8 @@
 //   pedimos nombre y email"), nunca "sin registro" ni "sin crear cuenta".
 // - El resumen diario solo cuenta recordatorios pendientes y mensajes sin
 //   responder: los montos se ven en la pantalla Hoy, no llegan "cada mañana".
-// - Ningún recordatorio sale solo: Alika arma la lista y alguien del equipo
-//   la despacha. No escribir "Alika confirma tus citas".
+// - Ningún recordatorio sale solo: Esmalia arma la lista y alguien del equipo
+//   la despacha. No escribir "Esmalia confirma tus citas".
 // - La franja de seguridad solo dice lo que el producto hace hoy: RLS por
 //   clínica, permisos por rol y HTTPS salen de /docs/datos-y-seguridad; el
 //   respaldo diario cifrado fuera de Supabase, de .github/workflows/backup.yml
@@ -42,13 +42,13 @@ export const Route = createFileRoute("/")({
     const canonical = canonicalHead("/");
     return {
       meta: [
-        { title: "Alika · Software de gestión dental para LatAm" },
+        { title: "Esmalia · Software de gestión dental para LatAm" },
         {
           name: "description",
           content:
             "Software para clínicas dentales de Chile, Perú, México, Colombia y Argentina: recordatorios por WhatsApp, ficha con odontograma, presupuestos y saldos. 14 días gratis, sin tarjeta.",
         },
-        { property: "og:title", content: "Alika · Cada silla vacía es plata que no vuelve" },
+        { property: "og:title", content: "Esmalia · Cada silla vacía es plata que no vuelve" },
         {
           property: "og:description",
           content:
@@ -91,7 +91,7 @@ const tonoEstado = {
 function PantallaHoy() {
   return (
     <figure
-      aria-label="Ejemplo de la pantalla Hoy de Alika"
+      aria-label="Ejemplo de la pantalla Hoy de Esmalia"
       className="animate-landing-rise min-w-0 rounded-lg border border-border bg-popover shadow-md"
     >
       <div className="flex items-baseline justify-between gap-4 border-b border-hairline px-6 py-4">
@@ -313,7 +313,7 @@ const resultados = [
     cifra: "2 avisos",
     titulo: "Nadie se queda sin recordatorio",
     texto:
-      "48 h y 3 h antes de cada cita, Alika te deja listo el recordatorio por WhatsApp y alguien de tu equipo lo envía con un toque. Quien no responde aparece en tu cola, no en tu memoria.",
+      "48 h y 3 h antes de cada cita, Esmalia te deja listo el recordatorio por WhatsApp y alguien de tu equipo lo envía con un toque. Quien no responde aparece en tu cola, no en tu memoria.",
     cta: "Ver la cola de confirmaciones",
   },
   {
@@ -415,9 +415,9 @@ function Landing() {
               <em className="text-brand-700">es plata que no vuelve.</em>
             </h1>
             <p className="mt-7 max-w-lg text-lg leading-relaxed text-foreground/80">
-              Alika te arma la lista de citas por confirmar y las mandas por WhatsApp con un toque.
-              La ficha y el odontograma quedan en el mismo lugar, y en la pantalla Hoy ves qué se
-              cobró y quién debe. Funciona en el navegador, sin instalar nada.
+              Esmalia te arma la lista de citas por confirmar y las mandas por WhatsApp con un
+              toque. La ficha y el odontograma quedan en el mismo lugar, y en la pantalla Hoy ves
+              qué se cobró y quién debe. Funciona en el navegador, sin instalar nada.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-3">
               <a
@@ -453,7 +453,7 @@ function Landing() {
           <section className="border-y border-border">
             <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6 px-6 py-6">
               <p className="text-sm text-muted-foreground">
-                Clínicas piloto que ya operan con Alika
+                Clínicas piloto que ya operan con Esmalia
               </p>
               <ul className="flex flex-wrap gap-x-10 gap-y-2 font-display text-lg">
                 {CLINICAS_PILOTO.map((c) => (
@@ -543,7 +543,7 @@ function Landing() {
         <section className="bg-foreground text-background">
           <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 px-6 py-20 md:flex-row md:items-end">
             <h2 className="max-w-xl font-display text-4xl font-normal leading-tight sm:text-5xl">
-              Mira tu agenda de mañana en Alika{" "}
+              Mira tu agenda de mañana en Esmalia{" "}
               <em className="text-brand">antes de que termine el día.</em>
             </h2>
             <div className="flex flex-wrap gap-3">

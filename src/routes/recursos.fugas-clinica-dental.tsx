@@ -13,7 +13,7 @@
 // éxito si no lo devuelve (lead que ya descargó, o falla la escritura).
 //
 // Regla no-negociable de esta tarea: cada fuga describe un problema real del
-// dueño de la clínica SIN nombrar ninguna función de Alika. Tiene que ser útil
+// dueño de la clínica SIN nombrar ninguna función de Esmalia. Tiene que ser útil
 // por sí sola para alguien que nunca vaya a usar el producto.
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
@@ -36,7 +36,7 @@ function ldJsonScript(data: Record<string, unknown>) {
 export const Route = createFileRoute("/recursos/fugas-clinica-dental")({
   head: () => {
     const canonical = canonicalHead("/recursos/fugas-clinica-dental");
-    const titulo = "15 fugas de dinero de una clínica dental · Alika";
+    const titulo = "15 fugas de dinero de una clínica dental · Esmalia";
     const descripcion =
       "Checklist gratuito para auto-chequear tu clínica dental: ausencias, presupuestos sin seguimiento, stock, laboratorio, comisiones, cobranza y más. Se lee completo, sin registrarte.";
     const url = `${SITE_URL}/recursos/fugas-clinica-dental`;

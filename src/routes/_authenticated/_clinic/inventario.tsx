@@ -898,7 +898,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/inventario")({
   beforeLoad: requirePermission("inventory:view"),
   head: () => ({
     meta: [
-      { title: "Inventario | Alika" },
+      { title: "Inventario | Esmalia" },
       {
         name: "description",
         content: "Control de stock de insumos y materiales de la clínica.",

@@ -11,7 +11,7 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        // `alika.com` todavía no está comprado (ver docs/DEPLOY_PRODUCTION.md) — hardcodearlo
+        // El dominio propio todavía no está configurado (ver docs/DEPLOY_PRODUCTION.md) — hardcodearlo
         // acá generaba URLs a un dominio que no resuelve a la app. PUBLIC_APP_URL manda
         // cuando está seteada (preview/staging/prod con dominio propio ya definido); si no,
         // se deriva del host real de la request (hoy `alika-omega.vercel.app`), así el

@@ -186,7 +186,7 @@ export function PreciosPlanes({
 }
 
 /**
- * CTA de compra directa por tarjeta de precio. Alika es trial-first (no hay
+ * CTA de compra directa por tarjeta de precio. Esmalia es trial-first (no hay
  * checkout público sin cuenta — `createCheckoutSession` necesita un
  * `clinicId` real), así que "comprar" acá significa: guardar qué plan eligió
  * ANTES de mandarlo a crear la cuenta, para que auth → onboarding →

@@ -184,7 +184,7 @@ export const AJUSTES: readonly GrupoAjustes[] = [
       {
         to: "/suscripcion",
         label: "Suscripción",
-        detalle: "Plan de Alika y facturación",
+        detalle: "Plan de Esmalia y facturación",
         permisos: ["settings:manage"],
       },
     ],

@@ -7,10 +7,10 @@ export const Route = createFileRoute("/terminos")({
     const canonical = canonicalHead("/terminos");
     return {
       meta: [
-        { title: "Términos de servicio · Alika" },
+        { title: "Términos de servicio · Esmalia" },
         {
           name: "description",
-          content: "Términos de servicio de Alika, software de gestión para clínicas dentales.",
+          content: "Términos de servicio de Esmalia, software de gestión para clínicas dentales.",
         },
         { name: "robots", content: "index,follow" },
         ...canonical.meta,
@@ -29,17 +29,17 @@ function Terminos() {
       updated="Última actualización: agosto 2026 · MAXNOVA & LUCI Global LLC"
     >
       <LegalNotice>
-        Alika está en etapa de piloto: desde US$29/mes (Solo, 1 profesional) o US$69/mes (Clínica,
+        Esmalia está en etapa de piloto: desde US$29/mes (Solo, 1 profesional) o US$69/mes (Clínica,
         hasta 3), precio fundador bloqueado para las primeras clínicas. Prueba gratis de 14 días sin
         tarjeta. Estos términos van a evolucionar cuando el producto salga de piloto — te vamos a
         avisar antes de cualquier cambio importante.
       </LegalNotice>
 
-      <LegalH2>1. Qué es Alika</LegalH2>
+      <LegalH2>1. Qué es Esmalia</LegalH2>
       <LegalP>
-        Alika es un software como servicio (SaaS) para la gestión de clínicas dentales: agenda,
+        Esmalia es un software como servicio (SaaS) para la gestión de clínicas dentales: agenda,
         fichas clínicas, odontograma, presupuestos, cobranza y mensajería por WhatsApp. Lo opera
-        MAXNOVA &amp; LUCI Global LLC ("Alika", "nosotros"). Al crear una cuenta o usar la
+        MAXNOVA &amp; LUCI Global LLC ("Esmalia", "nosotros"). Al crear una cuenta o usar la
         aplicación aceptas estos términos.
       </LegalP>
 
@@ -55,7 +55,7 @@ function Terminos() {
       <LegalP>
         Los datos que cargas sobre tus pacientes (identidad, contacto, historia clínica,
         odontograma, presupuestos, pagos) son tuyos. Tu clínica es la responsable/titular de esos
-        datos frente a tus pacientes; Alika actúa como encargado del tratamiento, es decir,
+        datos frente a tus pacientes; Esmalia actúa como encargado del tratamiento, es decir,
         procesamos esos datos para que la aplicación funcione, pero no los usamos para otro fin ni
         se los vendemos a terceros. El detalle de cómo los tratamos está en la{" "}
         <a href="/privacidad" className="text-brand-700 underline underline-offset-2">
@@ -66,11 +66,11 @@ function Terminos() {
       <LegalP>
         Eres responsable de contar con la base legal correspondiente (consentimiento del paciente, u
         otra que aplique en tu jurisdicción) para cargar y procesar los datos de tus pacientes en
-        Alika.
+        Esmalia.
       </LegalP>
 
       <LegalH2>4. Uso aceptable</LegalH2>
-      <LegalP>No puedes usar Alika para:</LegalP>
+      <LegalP>No puedes usar Esmalia para:</LegalP>
       <LegalUl>
         <LegalLi>Cargar datos de personas que no son pacientes reales de tu clínica.</LegalLi>
         <LegalLi>
@@ -85,15 +85,15 @@ function Terminos() {
       <LegalP>
         Si conectas el número de WhatsApp de tu clínica, los mensajes salientes (recordatorios,
         avisos de lista de espera, seguimiento de presupuestos, etc.) se despachan siempre desde tu
-        clínica, con revisión del personal antes de cada envío — Alika no manda mensajes de forma
+        clínica, con revisión del personal antes de cada envío — Esmalia no manda mensajes de forma
         automática sin que alguien de tu equipo lo dispare. El cumplimiento de las políticas de
         Meta/WhatsApp Business sobre plantillas y ventanas de mensajería es responsabilidad
-        compartida entre tu clínica y Alika como proveedor técnico.
+        compartida entre tu clínica y Esmalia como proveedor técnico.
       </LegalP>
 
       <LegalH2>6. Propiedad intelectual</LegalH2>
       <LegalP>
-        El software de Alika, su diseño y su marca son propiedad de MAXNOVA &amp; LUCI Global LLC.
+        El software de Esmalia, su diseño y su marca son propiedad de MAXNOVA &amp; LUCI Global LLC.
         Te damos una licencia para usarlo mientras tengas una cuenta activa; no se te transfiere
         ninguna propiedad sobre el software. Los datos que cargas siguen siendo tuyos como se
         describe en la sección 3.
@@ -102,14 +102,14 @@ function Terminos() {
       <LegalH2>7. Disponibilidad del servicio</LegalH2>
       <LegalP>
         Durante la etapa de piloto no ofrecemos un nivel de servicio (SLA) formal. Hacemos el mejor
-        esfuerzo para mantener Alika disponible y avisamos con anticipación cuando sabemos que va a
-        haber una interrupción planificada. Podemos modificar o agregar funcionalidades sin previo
+        esfuerzo para mantener Esmalia disponible y avisamos con anticipación cuando sabemos que va
+        a haber una interrupción planificada. Podemos modificar o agregar funcionalidades sin previo
         aviso mientras el producto está en desarrollo activo.
       </LegalP>
 
       <LegalH2>8. Terminación</LegalH2>
       <LegalP>
-        Puedes dejar de usar Alika y pedir el cierre de tu cuenta cuando quieras. Al cerrar tu
+        Puedes dejar de usar Esmalia y pedir el cierre de tu cuenta cuando quieras. Al cerrar tu
         cuenta te damos la posibilidad de exportar los datos de tu clínica antes de que se eliminen
         de nuestros sistemas. Podemos suspender una cuenta que incumpla la sección 4 (uso
         aceptable), avisando el motivo salvo que la ley nos impida hacerlo.
@@ -117,7 +117,7 @@ function Terminos() {
 
       <LegalH2>9. Límite de responsabilidad</LegalH2>
       <LegalP>
-        Alika se ofrece "tal cual", especialmente durante la etapa de piloto. En la medida que lo
+        Esmalia se ofrece "tal cual", especialmente durante la etapa de piloto. En la medida que lo
         permita la ley aplicable, no somos responsables por daños indirectos derivados del uso de la
         aplicación. Nada en estos términos limita responsabilidad por dolo o negligencia grave donde
         la ley no lo permita.

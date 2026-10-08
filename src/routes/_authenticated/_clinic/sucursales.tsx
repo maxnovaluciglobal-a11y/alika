@@ -490,7 +490,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/sucursales")({
   beforeLoad: requirePermission("settings:manage"),
   head: () => ({
     meta: [
-      { title: "Sucursales | Alika" },
+      { title: "Sucursales | Esmalia" },
       {
         name: "description",
         content: "Administra las sucursales, horarios y boxes de la clínica.",

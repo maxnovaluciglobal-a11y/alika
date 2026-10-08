@@ -1,6 +1,6 @@
 // src/lib/admin/staff-gate.ts
 //
-// Gate compartido de las pantallas internas del equipo de Alika (no hay un
+// Gate compartido de las pantallas internas del equipo de Esmalia (no hay un
 // rol "staff de la empresa" en el schema — todos los roles son de clínica).
 // La única autorización real es esta allowlist de emails por env var,
 // resuelta contra `auth.users` con el cliente admin.

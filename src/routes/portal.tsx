@@ -2,7 +2,7 @@ import { Outlet, createFileRoute } from "@tanstack/react-router";
 
 /**
  * Portal del paciente v2 (Opción C): la clínica manda un link firmado por
- * WhatsApp `alika.com/portal/<jwt>`. La ruta `/portal/$token` valida el
+ * WhatsApp `<dominio>/portal/<jwt>`. La ruta `/portal/$token` valida el
  * token y setea cookie HttpOnly; después `/portal/inicio` muestra las
  * citas + solicitar hora sin login.
  *
@@ -13,7 +13,7 @@ import { Outlet, createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/portal")({
   head: () => ({
     meta: [
-      { title: "Portal del paciente · Alika" },
+      { title: "Portal del paciente · Esmalia" },
       {
         name: "description",
         content: "Reserva horas y revisa tus tratamientos desde el portal de tu clínica dental.",

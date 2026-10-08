@@ -7,7 +7,7 @@ import { SignJWT } from "jose";
  * `exp`) para poder mostrarle al paciente el WhatsApp real de su clínica en
  * vez de un "contactá a tu clínica" sin ningún dato (auditoría UX, 30-ago).
  * Es lógica de seguridad — nunca debe revelar nada de un token con firma
- * inválida o manipulado, solo de uno que Alika firmó de verdad y expiró.
+ * inválida o manipulado, solo de uno que Esmalia firmó de verdad y expiró.
  */
 const SECRET = "test-only-portal-secret-32-bytes-minimum-aaaaaaaa";
 const ISSUER = "alika:portal";

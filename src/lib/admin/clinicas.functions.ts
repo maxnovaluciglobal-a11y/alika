@@ -12,7 +12,7 @@
 //
 // Con `supabaseAdmin` (service_role) a propósito: RLS de `clinics` y
 // `subscriptions` solo deja ver la propia clínica a sus miembros
-// (`is_clinic_member`) — el staff de Alika no es miembro de ninguna.
+// (`is_clinic_member`) — el staff de Esmalia no es miembro de ninguna.
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";

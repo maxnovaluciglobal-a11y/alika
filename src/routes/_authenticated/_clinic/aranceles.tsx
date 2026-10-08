@@ -58,7 +58,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/aranceles")({
   beforeLoad: requirePermission("settings:manage"),
   head: () => ({
     meta: [
-      { title: "Arancel de precios | Alika" },
+      { title: "Arancel de precios | Esmalia" },
       {
         name: "description",
         content:

@@ -93,7 +93,7 @@ export function TrialDesbloqueo({ pantalla }: { pantalla: string }) {
           }}
           className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
         >
-          Seguir usando Alika
+          Seguir usando Esmalia
         </Link>
       </div>
     </div>

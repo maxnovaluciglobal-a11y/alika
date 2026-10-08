@@ -48,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/whatsapp")({
   beforeLoad: requirePermission("team:manage"),
   head: () => ({
     meta: [
-      { title: "WhatsApp | Alika" },
+      { title: "WhatsApp | Esmalia" },
       {
         name: "description",
         content:
@@ -304,9 +304,9 @@ function WhatsAppPage() {
           <div className="card-clinical p-6">
             <p className="text-sm font-medium">WhatsApp todavía no está habilitado.</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Esto lo activa el equipo de Alika una vez enrolados como proveedor técnico ante Meta.
-              Mientras tanto, los recordatorios y avisos siguen funcionando por wa.me manual desde
-              /recordatorios y la ficha del paciente.
+              Esto lo activa el equipo de Esmalia una vez enrolados como proveedor técnico ante
+              Meta. Mientras tanto, los recordatorios y avisos siguen funcionando por wa.me manual
+              desde /recordatorios y la ficha del paciente.
             </p>
           </div>
         )}

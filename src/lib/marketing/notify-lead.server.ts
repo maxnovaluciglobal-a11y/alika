@@ -10,7 +10,7 @@
 // Deliberadamente NO reusa `sendEmail` de `email.server.ts`: ese helper pasa
 // TODO por `resolveEmailRecipient` (gate de sandbox pensado para emails a
 // PACIENTES de una clínica). Un lead no tiene `clinic_id` — el destinatario
-// acá es el equipo de Alika (`ALIKA_STAFF_EMAILS`), no un paciente, así que
+// acá es el equipo de Esmalia (`ALIKA_STAFF_EMAILS`), no un paciente, así que
 // aplicar ese gate sería la comprobación equivocada, no una de más.
 import { Resend } from "resend";
 

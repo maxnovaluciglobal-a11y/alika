@@ -6,22 +6,23 @@ import { Check, Loader2, Plus, Trash2 } from "lucide-react";
 
 import { completeClinicSetup, getMyClinics } from "@/lib/onboarding.functions";
 import { COUNTRIES, SPECIALTY_PRESETS } from "@/lib/onboarding-types";
+import { EsmaliaLogo } from "@/components/esmalia-logo";
 import { cn } from "@/lib/utils";
 import { peekPlanIntent } from "@/lib/marketing/plan-intent";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
     meta: [
-      { title: "Configura tu clínica — Alika" },
+      { title: "Configura tu clínica — Esmalia" },
       {
         name: "description",
         content:
           "Asistente de primera configuración: crea tu clínica, su sucursal, boxes, especialidades y equipo profesional.",
       },
-      { property: "og:title", content: "Configura tu clínica — Alika" },
+      { property: "og:title", content: "Configura tu clínica — Esmalia" },
       {
         property: "og:description",
-        content: "Deja tu clínica dental operativa en cuatro pasos con Alika.",
+        content: "Deja tu clínica dental operativa en cuatro pasos con Esmalia.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -127,13 +128,8 @@ function OnboardingPage() {
     <div className="min-h-dvh bg-surface px-4 py-10 sm:py-16">
       <div className="mx-auto w-full max-w-3xl">
         <header className="mb-8">
-          <div className="mb-6 flex items-center gap-2">
-            <span className="grid size-8 place-items-center rounded-lg bg-brand">
-              <span className="size-4 rounded-full border-2 border-brand-foreground" />
-            </span>
-            <span className="font-display text-xl font-bold tracking-tight text-brand-700">
-              Alika
-            </span>
+          <div className="mb-6 flex items-center">
+            <EsmaliaLogo size={28} />
           </div>
           <h1 className="font-display text-2xl font-semibold sm:text-3xl">Configura tu clínica</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -182,7 +178,7 @@ function OnboardingPage() {
                   id="clinicName"
                   value={clinicName}
                   onChange={(e) => setClinicName(e.target.value)}
-                  placeholder="Clínica Dental Alika"
+                  placeholder="Clínica Dental Esmalia"
                   className={inputClass}
                 />
               </Field>

@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/fusionar-fichas")(
   beforeLoad: requirePermission("patients:manage"),
   head: () => ({
     meta: [
-      { title: "Fichas duplicadas | Alika" },
+      { title: "Fichas duplicadas | Esmalia" },
       {
         name: "description",
         content:

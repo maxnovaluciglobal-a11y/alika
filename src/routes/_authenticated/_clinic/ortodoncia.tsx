@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/ortodoncia")({
   beforeLoad: requirePermission("clinical:write"),
   head: () => ({
     meta: [
-      { title: "Ortodoncia | Alika" },
+      { title: "Ortodoncia | Esmalia" },
       {
         name: "description",
         content: "Casos de brackets y alineadores, con seguimiento de controles.",

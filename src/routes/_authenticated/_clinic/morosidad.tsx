@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/morosidad")({
   beforeLoad: requirePermission("finance:view"),
   head: () => ({
     meta: [
-      { title: "Morosidad | Alika" },
+      { title: "Morosidad | Esmalia" },
       {
         name: "description",
         content: "Cartera pendiente de cobro, agrupada por antigüedad de la deuda.",

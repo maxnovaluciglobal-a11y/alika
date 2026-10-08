@@ -28,16 +28,16 @@ import { mensajeDeError } from "@/lib/mensaje-error";
 export const Route = createFileRoute("/_authenticated/_clinic/preferencias")({
   head: () => ({
     meta: [
-      { title: "Preferencias de aviso | Alika" },
+      { title: "Preferencias de aviso | Esmalia" },
       {
         name: "description",
         content:
-          "Elige qué avisos por email quieres recibir de Alika y desuscríbete cuando lo necesites.",
+          "Elige qué avisos por email quieres recibir de Esmalia y desuscríbete cuando lo necesites.",
       },
-      { property: "og:title", content: "Preferencias de aviso | Alika" },
+      { property: "og:title", content: "Preferencias de aviso | Esmalia" },
       {
         property: "og:description",
-        content: "Control por tipo de evento de los emails y avisos de Alika.",
+        content: "Control por tipo de evento de los emails y avisos de Esmalia.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -261,7 +261,7 @@ function PreferenciasPage() {
             <div className="flex gap-3">
               <BellRing className="mt-0.5 size-5 text-primary" />
               <div>
-                <h2 className="font-heading text-base font-semibold">Avisos dentro de Alika</h2>
+                <h2 className="font-heading text-base font-semibold">Avisos dentro de Esmalia</h2>
                 <p className="text-sm text-muted-foreground">
                   Campana de notificaciones en tiempo real dentro de la aplicación.
                 </p>
@@ -312,8 +312,8 @@ function PreferenciasPage() {
               <h2 className="font-heading text-base font-semibold">Desuscripción total</h2>
               <p className="text-sm text-muted-foreground">
                 {desuscrito
-                  ? "Estás desuscrito: Alika no te enviará ningún email de avisos. Los avisos clínicos seguirán visibles dentro de la aplicación."
-                  : "Detiene todos los emails de avisos de Alika de una sola vez. Puedes revertirlo cuando quieras."}
+                  ? "Estás desuscrito: Esmalia no te enviará ningún email de avisos. Los avisos clínicos seguirán visibles dentro de la aplicación."
+                  : "Detiene todos los emails de avisos de Esmalia de una sola vez. Puedes revertirlo cuando quieras."}
               </p>
               <button
                 type="button"

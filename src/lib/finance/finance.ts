@@ -579,7 +579,7 @@ function centsFactor(currency: string) {
  * una clínica mexicana veía "100,50" donde espera "100.50".
  *
  * La moneda no determina el locale en el caso general —el dólar se usa en
- * medio mundo— pero para el mercado de Alika la aproximación es correcta, y
+ * medio mundo— pero para el mercado de Esmalia la aproximación es correcta, y
  * es estrictamente mejor que asumir Chile siempre.
  */
 const LOCALE_POR_MONEDA: Record<string, string> = {

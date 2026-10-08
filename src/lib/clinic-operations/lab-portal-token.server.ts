@@ -4,7 +4,7 @@ import { SignJWT, jwtVerify } from "jose";
  * Tokens del portal externo de laboratorio — mismo patrón que
  * `patients/portal-token.server.ts` (Opción C: URL firmada, sin login),
  * pero para que un laboratorio externo vea y actualice el estado de sus
- * propias órdenes sin tener cuenta de staff en Alika.
+ * propias órdenes sin tener cuenta de staff en Esmalia.
  *
  * Issuer/audience/cookie propios (distintos del portal de paciente) para
  * que un token de un tipo nunca sea válido para el otro, aunque compartan

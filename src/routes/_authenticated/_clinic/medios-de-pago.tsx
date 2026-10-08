@@ -36,7 +36,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/medios-de-pago")({
   beforeLoad: requirePermission("settings:manage"),
   head: () => ({
     meta: [
-      { title: "Medios de pago | Alika" },
+      { title: "Medios de pago | Esmalia" },
       {
         name: "description",
         content:

@@ -1,6 +1,6 @@
 // src/lib/marketing/plan-intent.ts
 //
-// "Comprar ahora" desde el landing: Alika es trial-first (registrate gratis →
+// "Comprar ahora" desde el landing: Esmalia es trial-first (registrate gratis →
 // 14 días → recién ahí el gate te manda a /suscripcion), así que no existe un
 // checkout público sin cuenta — `createCheckoutSession` necesita un
 // `clinicId` real (ver `billing.functions.ts`). El atajo que sí se puede dar

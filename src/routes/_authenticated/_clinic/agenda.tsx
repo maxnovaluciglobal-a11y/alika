@@ -95,6 +95,7 @@ import {
   type PendingAppointmentRequest,
 } from "@/lib/patients/portal.functions";
 import { coincide, num, paginar, str } from "@/lib/search";
+import { EstadoCitaPastilla } from "@/components/estado-cita-pastilla";
 import { cn } from "@/lib/utils";
 import { mensajeDeError } from "@/lib/mensaje-error";
 
@@ -166,13 +167,13 @@ export const Route = createFileRoute("/_authenticated/_clinic/agenda")({
   beforeLoad: requirePermission("agenda:view"),
   head: () => ({
     meta: [
-      { title: "Agenda inteligente | Alika" },
+      { title: "Agenda inteligente | Esmalia" },
       {
         name: "description",
         content:
           "Agenda por fecha, profesional, sucursal y estado, con lista de espera inteligente.",
       },
-      { property: "og:title", content: "Agenda inteligente | Alika" },
+      { property: "og:title", content: "Agenda inteligente | Esmalia" },
       {
         property: "og:description",
         content:
@@ -1707,9 +1708,7 @@ function AgendaPage() {
                           />
                         </span>
                       ) : (
-                        <span className={claseEstadoBadge(c.estado)}>
-                          {etiquetaEstado[c.estado]}
-                        </span>
+                        <EstadoCitaPastilla cita={{ estado: c.estado }} />
                       )}
                       {clinicId && access.clinic?.name && (
                         <WhatsAppButton

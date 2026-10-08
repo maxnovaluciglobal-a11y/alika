@@ -1,7 +1,8 @@
-// Mismo criterio que src/routes/sitemap[.]xml.ts y __root.tsx: PUBLIC_APP_URL
-// manda si está seteada; si no, se cae al dominio real de hoy (alika.com
-// todavía no está comprado, ver docs/DEPLOY_PRODUCTION.md). Centralizado acá
-// para que canonical, og:url y el sitemap no diverjan.
+// URL pública del sitio: ÚNICO lugar del código con el dominio de fallback.
+// PUBLIC_APP_URL manda si está seteada; si no, se cae al dominio real de hoy
+// (el dominio propio de Esmalia todavía no está configurado, ver
+// docs/DEPLOY_PRODUCTION.md). Lo usan canonical, og:url, og:image y el JSON-LD;
+// el sitemap deriva el host de la request cuando no hay PUBLIC_APP_URL.
 export const SITE_URL =
   (typeof process !== "undefined" && process.env.PUBLIC_APP_URL) ||
   "https://alika-omega.vercel.app";
@@ -29,7 +30,7 @@ export function siteJsonLdScripts() {
     ldJsonScript({
       "@context": "https://schema.org",
       "@type": "Organization",
-      name: "Alika",
+      name: "Esmalia",
       url: SITE_URL,
       logo: `${SITE_URL}/icons/apple-touch-icon.png`,
       description: "Software de gestión para clínicas dentales de Latinoamérica.",
@@ -37,13 +38,13 @@ export function siteJsonLdScripts() {
     ldJsonScript({
       "@context": "https://schema.org",
       "@type": "WebSite",
-      name: "Alika",
+      name: "Esmalia",
       url: SITE_URL,
     }),
     ldJsonScript({
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "Alika",
+      name: "Esmalia",
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       url: SITE_URL,

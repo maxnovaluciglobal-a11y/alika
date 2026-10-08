@@ -15,6 +15,7 @@ import {
   setAppointmentStatus,
 } from "@/lib/clinic-operations/appointments.functions";
 import { clasePastilla, tonoDeEstadoCita } from "@/lib/clinic-operations/estado-cita-tono";
+import { EstadoCitaPastilla } from "@/components/estado-cita-pastilla";
 import { cn } from "@/lib/utils";
 import { mensajeDeError } from "@/lib/mensaje-error";
 
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/_clinic/mi-agenda")({
   beforeLoad: requirePermission("agenda:view"),
   head: () => ({
     meta: [
-      { title: "Mi agenda | Alika" },
+      { title: "Mi agenda | Esmalia" },
       {
         name: "description",
         content: "Vista simplificada de agenda: citas de hoy y pendientes de aceptar.",
@@ -192,14 +193,7 @@ function MiAgendaPage() {
                       </div>
                       <span className="flex shrink-0 items-center gap-1.5">
                         {c.pacienteConfirmo && <PatientConfirmedBadge />}
-                        <span
-                          className={cn(
-                            "shrink-0 rounded border px-1.5 py-0.5 text-xs font-medium",
-                            clasePastilla[tonoDeEstadoCita[c.estado]],
-                          )}
-                        >
-                          {etiquetaEstado[c.estado]}
-                        </span>
+                        <EstadoCitaPastilla cita={{ estado: c.estado }} className="shrink-0" />
                       </span>
                     </Link>
                   ))}

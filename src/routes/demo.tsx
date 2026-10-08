@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { getSupabase } from "@/integrations/supabase/lazy";
 import { ensureDemoClinicFresh } from "@/lib/demo.functions";
 import { LeadForm } from "@/components/marketing/lead-form";
-import { AlikaLogo } from "@/components/alika-logo";
+import { EsmaliaLogo } from "@/components/esmalia-logo";
 import { PublicPageShell } from "@/components/site-chrome";
 import { detectarPaisVisitante, PAIS_POR_DEFECTO } from "@/lib/marketing/pais-visitante";
 import type { PaisCaptacion } from "@/lib/marketing/leads";
@@ -20,15 +20,15 @@ const DEMO_PASSWORD = "AlikaDemo2026!";
 export const Route = createFileRoute("/demo")({
   head: () => ({
     meta: [
-      { title: "Demo · Alika" },
+      { title: "Demo · Esmalia" },
       {
         name: "description",
-        content: "Entra a la demo pública de Alika con datos reales de una clínica de prueba.",
+        content: "Entra a la demo pública de Esmalia con datos reales de una clínica de prueba.",
       },
-      { property: "og:title", content: "Demo · Alika" },
+      { property: "og:title", content: "Demo · Esmalia" },
       {
         property: "og:description",
-        content: "Entra a la demo pública de Alika con datos reales de una clínica de prueba.",
+        content: "Entra a la demo pública de Esmalia con datos reales de una clínica de prueba.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -99,7 +99,7 @@ function DemoPage() {
       mainClassName="flex w-full max-w-lg flex-1 flex-col justify-center gap-6 px-4 py-12"
     >
       <div className="text-center">
-        <AlikaLogo size={36} className="mx-auto mb-4" />
+        <EsmaliaLogo size={34} className="mx-auto mb-5 block" />
         <h1 className="font-display text-2xl font-semibold">Antes de entrar a la demo</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Solo te pedimos nombre y email, sin tarjeta ni contraseña. Así sabemos a quién le

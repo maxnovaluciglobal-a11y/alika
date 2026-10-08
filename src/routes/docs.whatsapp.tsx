@@ -6,7 +6,7 @@ export const Route = createFileRoute("/docs/whatsapp")({
   head: () => {
     const canonical = canonicalHead("/docs/whatsapp");
     return {
-      meta: [{ title: "Conectar WhatsApp · Documentación · Alika" }, ...canonical.meta],
+      meta: [{ title: "Conectar WhatsApp · Documentación · Esmalia" }, ...canonical.meta],
       links: canonical.links,
     };
   },
@@ -20,15 +20,15 @@ function DocsWhatsapp() {
       <h1 className="font-display mt-2 text-3xl font-bold tracking-tight">Conectar WhatsApp</h1>
 
       <LegalNotice>
-        En ningún modo Alika manda un mensaje sin que alguien de tu clínica lo dispare. La cola de
+        En ningún modo Esmalia manda un mensaje sin que alguien de tu clínica lo dispare. La cola de
         recordatorios y avisos siempre pasa por revisión de tu equipo antes de salir.
       </LegalNotice>
 
       <LegalH2>Modo manual (wa.me) — funciona desde el primer día</LegalH2>
       <LegalP>
         Sin configurar nada, cuando hay un recordatorio, un aviso de lista de espera o un
-        seguimiento de presupuesto pendiente, Alika arma el mensaje y te abre WhatsApp Web o la app
-        con el texto ya escrito. Tú revisas y presionas enviar. Es el modo por defecto y siempre
+        seguimiento de presupuesto pendiente, Esmalia arma el mensaje y te abre WhatsApp Web o la
+        app con el texto ya escrito. Tú revisas y presionas enviar. Es el modo por defecto y siempre
         queda disponible como respaldo, incluso si conectas tu número.
       </LegalP>
 

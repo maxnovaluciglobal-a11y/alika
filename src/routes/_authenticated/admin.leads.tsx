@@ -7,7 +7,7 @@
 //
 // Deliberadamente NO vive bajo `_authenticated/_clinic/`: el gate real no es
 // un rol de clínica (`ClinicAccess`/`hasPermission`), es una allowlist de
-// emails del equipo de Alika (`ALIKA_STAFF_EMAILS`) que ya resuelve
+// emails del equipo de Esmalia (`ALIKA_STAFF_EMAILS`) que ya resuelve
 // `listMarketingLeads` del lado del servidor. Cualquier usuario logueado
 // puede navegar a la URL; el server function decide si tiene permiso real.
 // Por eso tampoco usa `AppShell` (pide un `ClinicAccess` con rol de clínica
@@ -17,7 +17,7 @@
 
 import { createFileRoute, Link, type ErrorComponentProps } from "@tanstack/react-router";
 
-import { AlikaLogo } from "@/components/alika-logo";
+import { EsmaliaLogo } from "@/components/esmalia-logo";
 import { listMarketingLeads } from "@/lib/marketing/leads.functions";
 import type { MetaLead } from "@/lib/marketing/leads";
 import type { Json } from "@/integrations/supabase/types";
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/admin/leads")({
   loader: () => listMarketingLeads({}),
   head: () => ({
     meta: [
-      { title: "Leads capturados | Alika" },
+      { title: "Leads capturados | Esmalia" },
       {
         name: "description",
         content: "Leads capturados por la calculadora y el checklist de captación.",
@@ -54,7 +54,7 @@ function AccesoRestringido({ error: errorDesconocido }: ErrorComponentProps) {
   return (
     <div className="grid min-h-dvh place-items-center bg-surface px-6 text-foreground">
       <div className="card-clinical max-w-md p-8 text-center">
-        <AlikaLogo size={40} className="mx-auto mb-4" />
+        <EsmaliaLogo variant="icon" size={40} className="mx-auto mb-4 block" />
         <h1 className="mb-2 font-display text-xl font-semibold">Acceso restringido</h1>
         <p className="mb-6 text-sm text-muted-foreground">
           {error?.message || "No pudimos mostrar esta sección."}
@@ -206,7 +206,7 @@ function AdminLeadsPage() {
       <div className="mx-auto w-full max-w-6xl">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <AlikaLogo size={36} />
+            <EsmaliaLogo variant="icon" size={36} />
             <div>
               <h1 className="font-display text-xl font-semibold sm:text-2xl">Leads capturados</h1>
               <p className="text-sm text-muted-foreground">

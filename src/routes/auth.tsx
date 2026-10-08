@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 
-import { AlikaLogo } from "@/components/alika-logo";
+import { EsmaliaLogo } from "@/components/esmalia-logo";
 import { getSupabase } from "@/integrations/supabase/lazy";
 import { peekPlanIntent } from "@/lib/marketing/plan-intent";
 
@@ -41,16 +41,16 @@ export const Route = createFileRoute("/auth")({
   }),
   head: () => ({
     meta: [
-      { title: "Acceder a Alika — Gestión odontológica" },
+      { title: "Acceder a Esmalia — Gestión odontológica" },
       {
         name: "description",
         content:
-          "Inicia sesión o crea tu cuenta de Alika para configurar tu clínica dental, sucursales y equipo profesional.",
+          "Inicia sesión o crea tu cuenta de Esmalia para configurar tu clínica dental, sucursales y equipo profesional.",
       },
-      { property: "og:title", content: "Acceder a Alika — Gestión odontológica" },
+      { property: "og:title", content: "Acceder a Esmalia — Gestión odontológica" },
       {
         property: "og:description",
-        content: "Accede a Alika y configura tu clínica dental en minutos.",
+        content: "Accede a Esmalia y configura tu clínica dental en minutos.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -186,11 +186,8 @@ function AuthPage() {
           <span aria-hidden>←</span> Volver al inicio
         </Link>
 
-        <div className="mb-8 flex items-center justify-center gap-2.5">
-          <AlikaLogo size={32} />
-          <span className="font-display text-2xl font-semibold leading-none text-foreground">
-            Alika
-          </span>
+        <div className="mb-8 flex items-center justify-center">
+          <EsmaliaLogo size={34} />
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">

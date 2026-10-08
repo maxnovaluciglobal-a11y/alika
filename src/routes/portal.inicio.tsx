@@ -46,7 +46,7 @@ function timezoneFromCountry(country: string | undefined): string | undefined {
 
 export const Route = createFileRoute("/portal/inicio")({
   head: () => ({
-    meta: [{ title: "Mi clínica · Portal Alika" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Mi clínica · Portal Esmalia" }, { name: "robots", content: "noindex" }],
   }),
   component: PortalInicio,
 });

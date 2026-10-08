@@ -13,7 +13,7 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
     t: "General",
     items: [
       {
-        q: "¿Qué es Alika?",
+        q: "¿Qué es Esmalia?",
         a: "Un software de gestión para clínicas dentales: agenda, ficha clínica, odontograma, presupuestos, cobranza y WhatsApp integrado, todo en un solo lugar.",
       },
       {
@@ -22,7 +22,7 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
       },
       {
         q: "¿Necesito instalar algo?",
-        a: 'No hace falta: Alika funciona desde el navegador en computadora o celular. Si quieres, puedes instalarla desde el mismo navegador ("Instalar aplicación") y queda con su ícono como una app más, sin pasar por ninguna tienda.',
+        a: 'No hace falta: Esmalia funciona desde el navegador en computadora o celular. Si quieres, puedes instalarla desde el mismo navegador ("Instalar aplicación") y queda con su ícono como una app más, sin pasar por ninguna tienda.',
       },
       {
         q: "¿Qué pasa si se corta internet en la clínica?",
@@ -60,11 +60,11 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
     items: [
       {
         q: "¿Cómo funcionan los recordatorios por WhatsApp?",
-        a: "Alika arma la cola de recordatorios (48h y 3h antes de la cita) y tu equipo los despacha con un clic desde /recordatorios. Nunca se manda un mensaje sin que alguien de tu clínica lo dispare.",
+        a: "Esmalia arma la cola de recordatorios (48h y 3h antes de la cita) y tu equipo los despacha con un clic desde /recordatorios. Nunca se manda un mensaje sin que alguien de tu clínica lo dispare.",
       },
       {
         q: "¿Tengo que conectar mi número de WhatsApp?",
-        a: "No es obligatorio. Sin conectar nada, Alika arma el link de wa.me y tú lo abres manualmente. Si conectas tu número (Meta Cloud API), el envío se puede automatizar más — igual siempre queda a criterio de tu equipo cuándo despachar.",
+        a: "No es obligatorio. Sin conectar nada, Esmalia arma el link de wa.me y tú lo abres manualmente. Si conectas tu número (Meta Cloud API), el envío se puede automatizar más — igual siempre queda a criterio de tu equipo cuándo despachar.",
       },
       {
         q: "¿Qué pasa si alguien que no es mi paciente me escribe por WhatsApp?",
@@ -97,7 +97,7 @@ const grupos: { t: string; items: { q: string; a: string }[] }[] = [
     t: "Precio",
     items: [
       {
-        q: "¿Cuánto cuesta Alika?",
+        q: "¿Cuánto cuesta Esmalia?",
         a: "Desde US$29/mes (Solo, 1 profesional) o US$69/mes (Clínica, hasta 3) — sin cobro por sucursal. Las primeras clínicas quedan con este precio fundador de por vida. Prueba gratis de 14 días sin tarjeta.",
       },
     ],
@@ -109,17 +109,17 @@ export const Route = createFileRoute("/faq")({
     const canonical = canonicalHead("/faq");
     return {
       meta: [
-        { title: "Preguntas frecuentes · Alika" },
+        { title: "Preguntas frecuentes · Esmalia" },
         {
           name: "description",
           content:
-            "Respuestas sobre cómo funciona Alika: empezar, WhatsApp, portal de pacientes, tus datos y precio.",
+            "Respuestas sobre cómo funciona Esmalia: empezar, WhatsApp, portal de pacientes, tus datos y precio.",
         },
-        { property: "og:title", content: "Preguntas frecuentes · Alika" },
+        { property: "og:title", content: "Preguntas frecuentes · Esmalia" },
         {
           property: "og:description",
           content:
-            "Respuestas sobre cómo funciona Alika: empezar, WhatsApp, portal de pacientes, tus datos y precio.",
+            "Respuestas sobre cómo funciona Esmalia: empezar, WhatsApp, portal de pacientes, tus datos y precio.",
         },
         { property: "og:type", content: "website" },
         ...canonical.meta,

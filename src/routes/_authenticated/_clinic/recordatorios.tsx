@@ -33,13 +33,13 @@ export const Route = createFileRoute("/_authenticated/_clinic/recordatorios")({
   beforeLoad: requirePermission("agenda:manage"),
   head: () => ({
     meta: [
-      { title: "Recordatorios | Alika" },
+      { title: "Recordatorios | Esmalia" },
       {
         name: "description",
         content:
           "Cola de recordatorios de 48h y avisos de 3h antes de cada cita, listos para mandar por WhatsApp con un click.",
       },
-      { property: "og:title", content: "Recordatorios | Alika" },
+      { property: "og:title", content: "Recordatorios | Esmalia" },
       {
         property: "og:description",
         content: "Citas que necesitan recordatorio de 48h o aviso de 3h, sin buscarlas a mano.",

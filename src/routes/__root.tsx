@@ -18,7 +18,7 @@ import appCss from "../styles.css?url";
 import loraRegular from "@fontsource/lora/files/lora-latin-400-normal.woff2?url";
 import cormorantRegular from "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff2?url";
 import { reportBoundaryError } from "../lib/error-reporting";
-import { siteJsonLdScripts } from "@/lib/seo";
+import { SITE_URL, siteJsonLdScripts } from "@/lib/seo";
 import { captureException, initSentry } from "@/lib/sentry";
 import { attachOfflineCache, resetOfflineCache } from "@/lib/offline/offline-cache";
 import { registerServiceWorker } from "@/lib/offline/register-sw";
@@ -97,19 +97,13 @@ function ErrorComponent({ error: errorDesconocido, reset }: ErrorComponentProps)
   );
 }
 
-// Mismo criterio que src/routes/sitemap[.]xml.ts: PUBLIC_APP_URL manda si está
-// seteada; si no, se cae al dominio real de hoy (alika.com todavía no está
-// comprado, ver docs/DEPLOY_PRODUCTION.md). og:image/twitter:image necesitan
-// una URL absoluta — no alcanza con una ruta relativa como en <img src>.
-const SITE_URL =
-  (typeof process !== "undefined" && process.env.PUBLIC_APP_URL) ||
-  "https://alika-omega.vercel.app";
-
-// Recorte dedicado 1200×630 (ratio estándar OG) de la misma foto del hero —
-// hasta 01-sep-2026 reusaba dentist.jpg tal cual (1280×853, ratio ~1.5:1),
-// que Facebook/WhatsApp recortan mal al no ser 1.91:1. dentist.jpg se queda
-// intacto para el hero de la landing (src/routes/index.tsx).
-const SOCIAL_IMAGE_URL = `${SITE_URL}/landing/dentist-og.jpg`;
+// og:image/twitter:image necesitan una URL absoluta (no alcanza con una ruta
+// relativa como en <img src>), por eso se arma sobre SITE_URL, que vive en un
+// solo lugar: src/lib/seo.ts.
+// Pieza de marca 1200×630 (ratio estándar OG): wordmark + claim sobre papel,
+// generada con scripts/generar-og.mjs. Reemplaza al recorte de la foto del
+// hero (dentist-og.jpg) desde el rebrand a Esmalia (08-oct-2026).
+const SOCIAL_IMAGE_URL = `${SITE_URL}/landing/og-esmalia.png`;
 
 /**
  * Aplica el modo oscuro antes del primer pintado. El tema lo pone AppShell
@@ -126,26 +120,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Alika · Software de gestión dental" },
+      { title: "Esmalia · Software de gestión dental" },
       {
         name: "description",
         content:
-          "Alika es el sistema operativo de la clínica dental: agenda, pacientes, historia clínica e IA en una sola plataforma.",
+          "Esmalia es el sistema operativo de la clínica dental: agenda, pacientes, historia clínica e IA en una sola plataforma.",
       },
-      { name: "author", content: "Alika" },
-      { property: "og:title", content: "Alika · Software de gestión dental" },
+      { name: "author", content: "Esmalia" },
+      { property: "og:title", content: "Esmalia · Software de gestión dental" },
       {
         property: "og:description",
         content: "Agenda, pacientes, historia clínica e IA para clínicas dentales de LatAm.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "Alika" },
+      { property: "og:site_name", content: "Esmalia" },
       { property: "og:locale", content: "es_419" },
       { property: "og:image", content: SOCIAL_IMAGE_URL },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Alika · Software de gestión dental" },
+      { name: "twitter:title", content: "Esmalia · Software de gestión dental" },
       {
         name: "twitter:description",
         content: "Agenda, pacientes, historia clínica e IA para clínicas dentales de LatAm.",
@@ -156,7 +150,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#f3f2f2", media: "(prefers-color-scheme: light)" },
       { name: "theme-color", content: "#1d1c1b", media: "(prefers-color-scheme: dark)" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-title", content: "Alika" },
+      { name: "apple-mobile-web-app-title", content: "Esmalia" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
     ],
     links: [
