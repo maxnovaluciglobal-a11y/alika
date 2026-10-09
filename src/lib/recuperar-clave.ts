@@ -12,6 +12,10 @@
  * - `?code=…` (flujo PKCE): hay que canjearlo con `exchangeCodeForSession`.
  * - `?token_hash=…&type=recovery` (plantilla de correo propia): se valida con
  *   `verifyOtp`. Es la que funciona aunque el enlace se abra en otro navegador.
+ *
+ * La invitación al equipo usa la misma pantalla con `type=invite`: la persona
+ * invitada no tiene contraseña, y sin este paso el enlace le abría la sesión
+ * en la landing sin pedirle una.
  */
 
 export const RUTA_NUEVA_CLAVE = "/auth/nueva-clave";
@@ -22,10 +26,12 @@ export const LARGO_MINIMO_CLAVE = 8;
 export const MENSAJE_ENLACE_ENVIADO =
   "Si hay una cuenta con ese correo, te enviamos un enlace para crear una contraseña nueva. Revisa también spam.";
 
+export type TipoDeEnlace = "recovery" | "invite";
+
 export type RetornoDeRecuperacion =
   | { tipo: "error"; codigo: string | null }
   | { tipo: "codigo"; code: string }
-  | { tipo: "token_hash"; tokenHash: string }
+  | { tipo: "token_hash"; tokenHash: string; otp: TipoDeEnlace }
   | { tipo: "hash" }
   | { tipo: "nada" };
 
@@ -42,8 +48,9 @@ export function leerRetornoDeRecuperacion(search: string, hash: string): Retorno
   if (error || codigoError) return { tipo: "error", codigo: codigoError ?? error };
 
   const tokenHash = q.get("token_hash");
-  if (tokenHash && (q.get("type") ?? "recovery") === "recovery") {
-    return { tipo: "token_hash", tokenHash };
+  const otp = q.get("type") ?? "recovery";
+  if (tokenHash && (otp === "recovery" || otp === "invite")) {
+    return { tipo: "token_hash", tokenHash, otp };
   }
 
   const code = q.get("code");

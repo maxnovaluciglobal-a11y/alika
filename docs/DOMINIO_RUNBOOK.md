@@ -6,7 +6,9 @@
 > - Vercel: dominios `esmalia.com` y `www.esmalia.com` en el proyecto `alika`; `PUBLIC_APP_URL=https://esmalia.com`, `EMAIL_FROM=Esmalia <hola@esmalia.com>`, `ALIKA_STAFF_EMAILS`, `LIFECYCLE_EMAIL_REDIRECT_TO`. GitHub: variable `APP_URL=https://esmalia.com`.
 > - Supabase Auth: Site URL `https://esmalia.com`; Redirect URLs `https://esmalia.com/**`, `https://alika-omega.vercel.app/**`, `http://localhost:8080/**` (más las dos `/auth` previas).
 > - Stripe: **sin cambios a propósito** (el webhook sigue en `alika-omega`, que no se redirige en `/api/*`).
-> - Pendiente de Walter: `RESEND_API_KEY`, `EMAIL_UNSUBSCRIBE_SECRET`, `VITE_SALES_WHATSAPP`; la pantalla de consentimiento de Google OAuth (el proyecto de Google Cloud no está en las cuentas de Chrome); SMTP propio en Supabase con Resend.
+> - Vercel también tiene `RESEND_API_KEY` (clave `esmalia-prod`), `EMAIL_UNSUBSCRIBE_SECRET`, `VITE_SALES_WHATSAPP` y `LIFECYCLE_EMAILS_ENABLED=true` (en modo de prueba: todo va a `LIFECYCLE_EMAIL_REDIRECT_TO`).
+> - Supabase Auth: las 6 plantillas de correo con la marca Esmalia, generadas con `node scripts/plantillas-auth-supabase.mjs` (salen de `src/lib/email/plantillas-auth.ts`). Recuperar contraseña e invitación apuntan a `/auth/nueva-clave` con `token_hash`. SMTP propio (`smtp.resend.com:465`, usuario `resend`, remitente `hola@esmalia.com`): completo salvo la contraseña, que pega Walter.
+> - Pendiente: la pantalla de consentimiento de Google OAuth (el proyecto de Google Cloud no está en las cuentas de Chrome); sacar `LIFECYCLE_EMAIL_REDIRECT_TO` cuando Walter apruebe cómo se ven los correos.
 
 Hoy todo vive en `https://alika-omega.vercel.app`. Este runbook lista **cada** lugar que hay que tocar el día que se elija el nombre y se compre el dominio, en el orden que evita cortes. Inventario hecho el 06-oct-2026 con `grep` sobre el repo; si se agrega una integración nueva, sumarla acá.
 
