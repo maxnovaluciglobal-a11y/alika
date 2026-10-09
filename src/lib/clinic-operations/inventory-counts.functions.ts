@@ -18,7 +18,7 @@ export interface InventoryCount {
 }
 
 const MIGRATION_PENDING_MESSAGE =
-  "No pudimos guardar el conteo: falta aplicar la migración de conteo físico. Avisale a Walter.";
+  "No pudimos guardar el conteo: falta aplicar la migración de conteo físico. Avísale al soporte de Esmalia.";
 
 /**
  * Registra un conteo físico de un insumo (clínica entera, o de una bodega

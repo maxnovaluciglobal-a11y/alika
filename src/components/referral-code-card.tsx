@@ -35,7 +35,7 @@ export function ReferralCodeCard({ clinicId, patientName, referralCode }: Props)
     account?.status === "connected" && account.displayPhone
       ? buildWaMeUrl(
           account.displayPhone,
-          `Hola! Te recomiendo mucho a mi dentista, escribiles con este código: ${referralCode}`,
+          `¡Hola! Te recomiendo mucho a mi dentista, escríbeles con este código: ${referralCode}`,
         )
       : null;
 
