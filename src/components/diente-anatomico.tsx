@@ -32,8 +32,15 @@ const BORDE_OCLUSAL = 74;
 const TERCIO_MESIAL_DISTAL = 13;
 
 const ESMALTE = "#f4f0e7";
-const RAIZ = "#e3d4b6";
 const TRAZO = "#8c7f69";
+/**
+ * Volumen suave (elegido en vivo el 09-oct-2026 entre línea editorial,
+ * volumen y realista): degradado con luz arriba a la izquierda, contorno
+ * apenas insinuado y sin línea de brillo. El volumen lo da el degradado, no
+ * el trazo; las piezas con condición conservan su color plano y su contorno.
+ */
+const CONTORNO_VOLUMEN = "#a39578";
+const OPACIDAD_CONTORNO = 0.2;
 
 function tipoDePieza(tooth: number): Tipo {
   const cuadrante = Math.floor(tooth / 10);
@@ -158,6 +165,8 @@ export function DienteAnatomico({
   onClick: (surface: ToothSurface) => void;
 }) {
   const clipId = useId();
+  const coronaGradId = useId();
+  const raizGradId = useId();
   const tipo = tipoDePieza(tooth);
   const corona = CORONAS[tipo];
   const listaRaices = raices(tooth, tipo);
@@ -181,6 +190,9 @@ export function DienteAnatomico({
 
   const trazo = seleccionado ? "var(--color-brand-700)" : TRAZO;
   const grosor = seleccionado ? 1.6 : 0.9;
+  // Contorno del diente sano en volumen: tenue salvo cuando está seleccionado.
+  const trazoVolumen = seleccionado ? "var(--color-brand-700)" : CONTORNO_VOLUMEN;
+  const opacidadVolumen = seleccionado ? 1 : OPACIDAD_CONTORNO;
 
   return (
     <svg
@@ -201,6 +213,16 @@ export function DienteAnatomico({
           <clipPath id={clipId}>
             <path d={corona} />
           </clipPath>
+          <linearGradient id={coronaGradId} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#fdfbf6" />
+            <stop offset="0.55" stopColor="#f2ebde" />
+            <stop offset="1" stopColor="#d9ccb2" />
+          </linearGradient>
+          <linearGradient id={raizGradId} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#ecdfc5" />
+            <stop offset="0.5" stopColor="#e2d2b2" />
+            <stop offset="1" stopColor="#c8b38c" />
+          </linearGradient>
         </defs>
 
         {/* Raíz: un clic en la raíz marca la pieza completa. */}
@@ -231,9 +253,10 @@ export function DienteAnatomico({
               <path
                 key={d}
                 d={d}
-                fill={ausente ? "none" : RAIZ}
-                stroke={ausente ? "#8a8a8a" : trazo}
-                strokeWidth={grosor}
+                fill={ausente ? "none" : `url(#${raizGradId})`}
+                stroke={ausente ? "#8a8a8a" : trazoVolumen}
+                strokeOpacity={ausente ? 1 : opacidadVolumen}
+                strokeWidth={ausente ? grosor : seleccionado ? grosor : 0.7}
                 strokeDasharray={ausente ? "2.5 2" : undefined}
                 strokeLinejoin="round"
               />
@@ -256,9 +279,10 @@ export function DienteAnatomico({
         {/* Corona */}
         <path
           d={corona}
-          fill={ausente ? "none" : (coronaColor ?? ESMALTE)}
-          stroke={ausente ? "#8a8a8a" : trazo}
-          strokeWidth={grosor + 0.3}
+          fill={ausente ? "none" : (coronaColor ?? `url(#${coronaGradId})`)}
+          stroke={ausente ? "#8a8a8a" : coronaColor ? trazo : trazoVolumen}
+          strokeOpacity={ausente || coronaColor ? 1 : opacidadVolumen}
+          strokeWidth={ausente || coronaColor || seleccionado ? grosor + 0.3 : 0.8}
           strokeDasharray={ausente ? "2.5 2" : undefined}
           strokeLinejoin="round"
           pointerEvents="none"
@@ -282,16 +306,6 @@ export function DienteAnatomico({
                 />
               );
             })}
-            {/* Brillo del esmalte: da volumen sin sombras. */}
-            <path
-              d={`M${tipo === "molar" ? 9 : 13} ${CUELLO + 7} Q20 ${CUELLO + 3} ${tipo === "molar" ? 31 : 27} ${CUELLO + 7}`}
-              fill="none"
-              stroke="#ffffff"
-              strokeOpacity={coronaColor ? 0.45 : 0.9}
-              strokeWidth={1.6}
-              strokeLinecap="round"
-              pointerEvents="none"
-            />
             {lingual && !coronaColor && (
               // La cara lingual no se ve de frente: se marca como un punto
               // con anillo en el centro de la corona.
