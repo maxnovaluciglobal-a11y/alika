@@ -13,7 +13,7 @@ import {
   Save,
   Send,
   ShieldCheck,
-  Sparkles,
+  TextQuote,
   Download,
   Trash2,
   UserCheck,
@@ -53,6 +53,7 @@ import {
   NOTE_TEMPLATE_SPECIALTIES,
   getNoteTemplate,
 } from "@/lib/clinical/note-templates";
+import { PattyMark } from "@/components/patty";
 import { VersionDiffDialog } from "@/components/version-diff-dialog";
 import { DevDiagnosticsPanel } from "@/components/dev-diagnostics-panel";
 import { estadoNota, reportarBloqueo } from "@/lib/block-diagnostics";
@@ -66,10 +67,14 @@ import { mensajeDeError } from "@/lib/mensaje-error";
 
 const REVIEW_BADGE: Record<NoteReviewStatus, string> = {
   none: "border-hairline text-muted-foreground",
-  pending: "border-ai/30 bg-ai-soft text-ai",
+  pending: "border-info-border bg-info-soft text-info",
   approved: "border-brand/30 bg-brand-soft text-brand-700",
   changes_requested: "border-destructive/30 bg-destructive/10 text-destructive",
 };
+
+/** Acciones de Patty: el violeta del token `ai` marca lo que hace la IA. */
+const BOTON_PATTY =
+  "inline-flex items-center gap-1.5 rounded-lg border border-ai-border bg-ai-soft px-3 py-1.5 text-xs font-medium text-ai disabled:opacity-50";
 
 type Props = {
   paciente: Paciente;
@@ -375,7 +380,7 @@ export function NotasClinicas({
       toast.success(
         res.entities.length
           ? `${res.entities.length} campos estructurados extraídos`
-          : "La IA no encontró campos estructurables en la nota.",
+          : "Patty no encontró campos estructurables en la nota.",
       );
     },
     onError: diagError("edit"),
@@ -456,7 +461,7 @@ export function NotasClinicas({
         <div>
           <h3 className="font-display text-lg font-semibold">Notas clínicas</h3>
           <p className="text-xs text-muted-foreground">
-            Redacción y resumen asistidos por IA, con versiones y auditoría.
+            Patty (IA) redacta y resume; tú revisas y firmas. Con versiones y auditoría.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -552,7 +557,7 @@ export function NotasClinicas({
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
                 {templateId
-                  ? "La IA seguirá esta estructura al redactar o pulir la nota."
+                  ? "Patty seguirá esta estructura al redactar o pulir la nota."
                   : "Elige un motivo de consulta para partir desde un formato predefinido."}
               </p>
             </div>
@@ -572,54 +577,90 @@ export function NotasClinicas({
             onChange={(e) => setContenido(e.target.value)}
             disabled={!puedeEditar || bloqueada}
             rows={12}
-            placeholder="Escribe apuntes rápidos (ej: molestia molar 36, sensibilidad al frío, se realiza obturación) y deja que la IA los convierta en una nota SOAP."
+            placeholder="Escribe apuntes rápidos (ej: molestia molar 36, sensibilidad al frío, se realiza obturación) y deja que Patty los convierta en una nota SOAP."
             className="w-full resize-y rounded-lg border border-input bg-transparent px-3 py-2 text-sm leading-relaxed focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-700 pointer-coarse:text-base disabled:opacity-60"
           />
 
           {puedeEditar && (
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => ia.mutate("draft")}
-                disabled={ocupado || bloqueada || !contenido.trim()}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-ai/30 bg-ai-soft px-3 py-1.5 text-xs font-medium text-ai disabled:opacity-50"
+            <section
+              aria-labelledby="patty-nota-titulo"
+              className="rounded-xl border border-hairline p-3"
+            >
+              <p
+                id="patty-nota-titulo"
+                className="mb-2.5 flex items-center gap-1.5 text-xs text-muted-foreground"
               >
-                {ia.isPending && ia.variables === "draft" ? (
-                  <Loader2 className="size-3 animate-spin" />
-                ) : (
-                  <Sparkles className="size-3" />
-                )}
-                Redactar nota SOAP
-              </button>
-              <button
-                onClick={() => ia.mutate("polish")}
-                disabled={ocupado || bloqueada || !contenido.trim()}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-ai/30 bg-ai-soft px-3 py-1.5 text-xs font-medium text-ai disabled:opacity-50"
-              >
-                <Wand2 className="size-3" /> Pulir redacción
-              </button>
-              <button
-                onClick={() => ia.mutate("summary")}
-                disabled={ocupado || !contenido.trim()}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-ai/30 bg-ai-soft px-3 py-1.5 text-xs font-medium text-ai disabled:opacity-50"
-              >
-                <Sparkles className="size-3" /> Resumir
-              </button>
-              <button
-                onClick={() => estructurar.mutate()}
-                disabled={ocupado || contenido.trim().length < 10}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-ai/30 bg-ai-soft px-3 py-1.5 text-xs font-medium text-ai disabled:opacity-50"
-              >
-                {estructurar.isPending ? (
-                  <Loader2 className="size-3 animate-spin" />
-                ) : (
-                  <ListTree className="size-3" />
-                )}
-                Estructurar campos
-              </button>
+                <PattyMark size={14} />
+                <span>
+                  <span className="font-display text-[1.15em] italic text-ai">Patty</span> puede
+                  ayudarte con esta nota
+                </span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => ia.mutate("draft")}
+                  disabled={ocupado || bloqueada || !contenido.trim()}
+                  className={BOTON_PATTY}
+                >
+                  {ia.isPending && ia.variables === "draft" ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <FileText className="size-3" />
+                  )}
+                  Redactar nota SOAP
+                </button>
+                <button
+                  onClick={() => ia.mutate("polish")}
+                  disabled={ocupado || bloqueada || !contenido.trim()}
+                  className={BOTON_PATTY}
+                >
+                  {ia.isPending && ia.variables === "polish" ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <Wand2 className="size-3" />
+                  )}
+                  Pulir redacción
+                </button>
+                <button
+                  onClick={() => ia.mutate("summary")}
+                  disabled={ocupado || !contenido.trim()}
+                  className={BOTON_PATTY}
+                >
+                  {ia.isPending && ia.variables === "summary" ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <TextQuote className="size-3" />
+                  )}
+                  Resumir
+                </button>
+                <button
+                  onClick={() => estructurar.mutate()}
+                  disabled={ocupado || contenido.trim().length < 10}
+                  className={BOTON_PATTY}
+                >
+                  {estructurar.isPending ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <ListTree className="size-3" />
+                  )}
+                  Estructurar campos
+                </button>
+              </div>
+              {aiUsada && (
+                <p className="mt-2.5 text-xs text-muted-foreground">
+                  Borrador de Patty (IA), sin guardar. Revísalo antes de firmar: la versión quedará
+                  marcada como asistida.
+                </p>
+              )}
+            </section>
+          )}
+
+          {puedeEditar && (
+            <div className="flex flex-wrap justify-end gap-2">
               <button
                 onClick={() => guardar(aiUsada ? "draft" : null)}
                 disabled={ocupado || bloqueada || !contenido.trim()}
-                className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-brand bg-transparent px-3 py-1.5 text-xs font-medium text-brand-700 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-brand bg-transparent px-3 py-1.5 text-xs font-medium text-brand-700 disabled:opacity-50"
               >
                 {guardarOffline.enCurso ? (
                   <Loader2 className="size-3 animate-spin" />
@@ -785,9 +826,12 @@ export function NotasClinicas({
           )}
 
           {resumen && (
-            <div className="rounded-xl border border-ai/15 bg-ai-soft p-4">
-              <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-ai">
-                <Sparkles className="size-3" /> Resumen IA
+            <div className="rounded-xl border border-ai-border/60 bg-ai-soft p-4">
+              <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-ai">
+                <PattyMark size={14} />
+                <span>
+                  Resumen de <span className="font-display text-[1.15em] italic">Patty</span>
+                </span>
               </p>
               <p className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
                 {resumen}
@@ -863,16 +907,10 @@ export function NotasClinicas({
                 ))}
               </div>
               <p className="mt-3 text-[11px] text-muted-foreground">
-                Campos extraídos por IA para búsqueda y facturación. Valídalos antes de usarlos en
-                un cobro.
+                Campos que extrajo Patty (IA) para búsqueda y facturación. Valídalos antes de
+                usarlos en un cobro.
               </p>
             </div>
-          )}
-          {aiUsada && (
-            <p className="text-xs text-muted-foreground">
-              Texto generado con IA sin guardar. Revísalo: la versión quedará marcada como asistida
-              por IA.
-            </p>
           )}
         </div>
 
@@ -914,7 +952,7 @@ export function NotasClinicas({
                       </p>
                       {v.aiAssisted && (
                         <span className="rounded bg-ai-soft px-1.5 py-0.5 text-[11px] text-ai">
-                          {AI_ACTION_LABELS[v.aiAction ?? ""] ?? "IA"}
+                          {AI_ACTION_LABELS[v.aiAction ?? ""] ?? "Patty (IA)"}
                         </span>
                       )}
                     </div>
@@ -983,7 +1021,7 @@ export function NotasClinicas({
                             ? "bg-destructive"
                             : r.action === "cancelled"
                               ? "bg-muted-foreground"
-                              : "bg-ai";
+                              : "bg-info";
                       const etiquetaHito =
                         r.action === "approved"
                           ? "Versión aprobada"

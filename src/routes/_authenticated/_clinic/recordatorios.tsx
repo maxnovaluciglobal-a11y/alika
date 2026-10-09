@@ -77,7 +77,7 @@ const OUTREACH_META: Record<
   quote_follow_up: {
     label: "Seguimiento de presupuesto",
     icon: Receipt,
-    badgeClass: "bg-ai-soft text-ai",
+    badgeClass: "bg-info-soft text-info",
   },
   birthday_greeting: {
     label: "Cumpleaños",
@@ -92,7 +92,7 @@ const OUTREACH_META: Record<
   referral_invite: {
     label: "Invitación a referir",
     icon: Users,
-    badgeClass: "bg-ai-soft text-ai",
+    badgeClass: "bg-success-soft text-success",
   },
   nps_survey: {
     label: "Encuesta de satisfacción",

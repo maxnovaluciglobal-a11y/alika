@@ -34,6 +34,7 @@ import { Route as ApiEvRouteImport } from './routes/api.ev'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiLifecycleEmailsRouteImport } from './routes/api.lifecycle-emails'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api.whatsapp-webhook'
+import { Route as AuthNuevaClaveRouteImport } from './routes/auth_.nueva-clave'
 import { Route as CorreosBajaRouteImport } from './routes/correos.baja'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as DocsDatosYSeguridadRouteImport } from './routes/docs.datos-y-seguridad'
@@ -213,6 +214,11 @@ const ApiLifecycleEmailsRoute = ApiLifecycleEmailsRouteImport.update({
 const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
   id: '/api/whatsapp-webhook',
   path: '/api/whatsapp-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthNuevaClaveRoute = AuthNuevaClaveRouteImport.update({
+  id: '/auth_/nueva-clave',
+  path: '/auth/nueva-clave',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CorreosBajaRoute = CorreosBajaRouteImport.update({
@@ -554,6 +560,7 @@ export interface FileRoutesByFullPath {
   '/api/health': typeof ApiHealthRoute
   '/api/lifecycle-emails': typeof ApiLifecycleEmailsRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/auth/nueva-clave': typeof AuthNuevaClaveRoute
   '/correos/baja': typeof CorreosBajaRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
@@ -632,6 +639,7 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/api/lifecycle-emails': typeof ApiLifecycleEmailsRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/auth/nueva-clave': typeof AuthNuevaClaveRoute
   '/correos/baja': typeof CorreosBajaRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
@@ -715,6 +723,7 @@ export interface FileRoutesById {
   '/api/health': typeof ApiHealthRoute
   '/api/lifecycle-emails': typeof ApiLifecycleEmailsRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/auth_/nueva-clave': typeof AuthNuevaClaveRoute
   '/correos/baja': typeof CorreosBajaRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
@@ -797,6 +806,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/lifecycle-emails'
     | '/api/whatsapp-webhook'
+    | '/auth/nueva-clave'
     | '/correos/baja'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
@@ -875,6 +885,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/lifecycle-emails'
     | '/api/whatsapp-webhook'
+    | '/auth/nueva-clave'
     | '/correos/baja'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
@@ -957,6 +968,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/lifecycle-emails'
     | '/api/whatsapp-webhook'
+    | '/auth_/nueva-clave'
     | '/correos/baja'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
@@ -1037,6 +1049,7 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   ApiLifecycleEmailsRoute: typeof ApiLifecycleEmailsRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
+  AuthNuevaClaveRoute: typeof AuthNuevaClaveRoute
   CorreosBajaRoute: typeof CorreosBajaRoute
   RecursosFugasClinicaDentalRoute: typeof RecursosFugasClinicaDentalRoute
   RecursosIndexRoute: typeof RecursosIndexRoute
@@ -1220,6 +1233,13 @@ declare module '@tanstack/react-router' {
       path: '/api/whatsapp-webhook'
       fullPath: '/api/whatsapp-webhook'
       preLoaderRoute: typeof ApiWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth_/nueva-clave': {
+      id: '/auth_/nueva-clave'
+      path: '/auth/nueva-clave'
+      fullPath: '/auth/nueva-clave'
+      preLoaderRoute: typeof AuthNuevaClaveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/correos/baja': {
@@ -1792,6 +1812,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   ApiLifecycleEmailsRoute: ApiLifecycleEmailsRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
+  AuthNuevaClaveRoute: AuthNuevaClaveRoute,
   CorreosBajaRoute: CorreosBajaRoute,
   RecursosFugasClinicaDentalRoute: RecursosFugasClinicaDentalRoute,
   RecursosIndexRoute: RecursosIndexRoute,

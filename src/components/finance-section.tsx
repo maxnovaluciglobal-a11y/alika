@@ -421,7 +421,7 @@ function QuoteItemsEditor({
 function QuoteStatusBadge({ status }: { status: QuoteStatus }) {
   const tone: Record<QuoteStatus, string> = {
     draft: "bg-secondary text-muted-foreground",
-    sent: "bg-ai-soft text-ai",
+    sent: "bg-info-soft text-info",
     accepted: "bg-success-soft text-success",
     converted: "bg-success-soft text-success",
     rejected: "bg-destructive/10 text-destructive",

@@ -29,6 +29,21 @@ Dashboard `hvfkygoguxvpmwslrccb` → Authentication → URL Configuration:
 
 Sin esto, Google OAuth (`auth.tsx` → `redirectTo: origin + "/auth"`) y los links de confirmación por email rebotan.
 
+#### Recuperación de contraseña (`/auth/nueva-clave`, oct-2026)
+
+"¿Olvidaste tu contraseña?" en `/auth` llama a `resetPasswordForEmail` con `redirectTo: origin + "/auth/nueva-clave"`. Supabase solo respeta ese `redirectTo` si está en **Redirect URLs**; si no, manda el enlace a la Site URL (el código lo desvía igual a `/auth/nueva-clave` desde `__root.tsx`, pero conviene no depender de eso).
+
+**Hoy, antes de anunciar la función** (Authentication → URL Configuration → Redirect URLs):
+
+- `https://alika-omega.vercel.app/auth/nueva-clave` (si ya está `https://alika-omega.vercel.app/**`, queda cubierta).
+- Para probar en local: `http://localhost:8080/auth/nueva-clave`.
+
+**El día del dominio:** sumar `https://esmalia.com/auth/nueva-clave` (o `https://app.esmalia.com/...`, según dónde viva la app; cubierto si se carga `https://<dominio>/**`) y **mantener** la de `alika-omega.vercel.app`: los enlaces ya enviados apuntan ahí y vencen solos en una hora.
+
+**Plantilla "Reset Password"** (Authentication → Emails → Templates): la de fábrica está en inglés y sale de `noreply@mail.app.supabase.io`, con un límite de envío muy bajo. Cuando esté el SMTP propio con Resend (paso 6), configurarlo en Authentication → Emails → SMTP Settings y reescribir la plantilla con la marca Esmalia y en tuteo neutro (sin voseo, sin signos de exclamación). Sugerido: asunto "Crea tu contraseña nueva de Esmalia" y el enlace como `{{ .SiteURL }}/auth/nueva-clave?token_hash={{ .TokenHash }}&type=recovery`: con `token_hash` el enlace funciona aunque se abra en otro navegador o en la app de correo (la pantalla ya acepta ese formato, además del de fábrica `{{ .ConfirmationURL }}`). Con `{{ .SiteURL }}` la Site URL tiene que ser el dominio vigente.
+
+Verificación: pedir un enlace para una cuenta propia de prueba, abrirlo, poner la contraseña nueva y comprobar que entra al panel. Un enlace usado dos veces tiene que mostrar "Este enlace ya no sirve".
+
 ### 3. Google OAuth (proyecto personal de Google Cloud)
 
 - OAuth consent screen: dominio autorizado `NUEVO.com`, links de privacidad y términos → `https://app.NUEVO.com/privacidad` y `/terminos`. Esto es lo que hoy muestra el dominio genérico de Vercel en la pantalla de Google.
@@ -94,6 +109,7 @@ Bienvenida, fin de prueba (T-3 y T-0), suscripción activa, pago fallido y "Tu s
 ## Verificación final (todo en el dominio nuevo)
 
 - [ ] Login con Google y con email/contraseña.
+- [ ] "¿Olvidaste tu contraseña?": el enlace del correo abre `/auth/nueva-clave` en el dominio nuevo y permite guardar la contraseña.
 - [ ] Alta de cuenta nueva: llega el email de confirmación con `From` del dominio nuevo y el link abre el dominio nuevo.
 - [ ] Checkout de Stripe de punta a punta (modo test o el flujo de "Comprar") y el webhook marca la suscripción.
 - [ ] Un link de portal viejo (dominio anterior) sigue abriendo.
