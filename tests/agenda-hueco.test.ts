@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   etiquetaHueco,
   horaDeMinutos,
+  rangoDeGrilla,
   huecosLibres,
   minutosAhoraEnZona,
   redondearACuarto,
@@ -23,8 +24,9 @@ describe("redondearACuarto", () => {
     expect(redondearACuarto(164.9)).toBe(150);
   });
 
-  it("no devuelve negativos ni NaN", () => {
-    expect(redondearACuarto(-7)).toBe(0);
+  it("antes de las 08:00 sigue redondeando, sin pasar de medianoche ni dar NaN", () => {
+    expect(redondearACuarto(-7)).toBe(-15); // 07:53 → 07:45
+    expect(redondearACuarto(-9999)).toBe(-480); // nunca antes de las 00:00
     expect(redondearACuarto(Number.NaN)).toBe(0);
   });
 });
@@ -64,6 +66,34 @@ describe("huecosLibres", () => {
 
   it("sin citas, todas las franjas de 15 min", () => {
     expect(huecosLibres([], 60)).toEqual([0, 15, 30, 45]);
+  });
+});
+
+describe("rangoDeGrilla", () => {
+  it("sin citas, la jornada base de 08:00 a 20:00", () => {
+    expect(rangoDeGrilla([])).toEqual({ desde: 0, hasta: 720 });
+  });
+
+  it("se alarga hasta la hora en punto que cubre la última cita", () => {
+    // 19:30 a 20:15 → la grilla llega a las 21:00.
+    expect(rangoDeGrilla([{ inicio: 690, duracion: 45 }])).toEqual({ desde: 0, hasta: 780 });
+  });
+
+  it("arranca antes de las 08:00 si hay una cita temprana", () => {
+    // 07:30 → la grilla arranca a las 07:00.
+    expect(rangoDeGrilla([{ inicio: -30, duracion: 30 }])).toEqual({ desde: -60, hasta: 720 });
+  });
+
+  it("nunca sale del día", () => {
+    expect(
+      rangoDeGrilla([
+        { inicio: -600, duracion: 30 },
+        { inicio: 960, duracion: 120 },
+      ]),
+    ).toEqual({
+      desde: -480,
+      hasta: 960,
+    });
   });
 });
 

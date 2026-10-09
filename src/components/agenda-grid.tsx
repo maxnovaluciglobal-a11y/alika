@@ -13,8 +13,6 @@ import { ArrowUpRight, Sparkles } from "lucide-react";
 import { AllergyAlertIcon } from "@/components/medical-history-card";
 import {
   etiquetaEstado,
-  HORAS_VISIBLES,
-  HORA_INICIO,
   PIXELES_POR_MINUTO,
   type Cita,
   type Profesional,
@@ -23,8 +21,8 @@ import { PatientConfirmedBadge } from "@/components/patient-confirmed-badge";
 import {
   etiquetaHueco,
   horaDeMinutos,
+  rangoDeGrilla,
   huecosLibres,
-  MINUTOS_VISIBLES,
   minutosAhoraEnZona,
   PASO_HUECO_MIN,
   semillaDeHueco,
@@ -43,10 +41,6 @@ import { cn } from "@/lib/utils";
 const estadoClases = Object.fromEntries(
   Object.entries(tonoDeEstadoCita).map(([estado, tono]) => [estado, claseBloque[tono]]),
 ) as Record<Cita["estado"], string>;
-
-function horaLabel(i: number) {
-  return `${String(HORA_INICIO + i).padStart(2, "0")}:00`;
-}
 
 const ALTO_HUECO = PASO_HUECO_MIN * PIXELES_POR_MINUTO;
 
@@ -103,7 +97,9 @@ export function AgendaGrid({
    * grilla siempre agrega "Ver ficha". */
   renderAcciones?: (cita: Cita, profesional: Profesional) => ReactNode;
 }) {
-  const alto = HORAS_VISIBLES * 60 * PIXELES_POR_MINUTO;
+  const { desde, hasta } = rangoDeGrilla(citas);
+  const horas = (hasta - desde) / 60;
+  const alto = (hasta - desde) * PIXELES_POR_MINUTO;
   // rendimiento 01-sep: antes .filter() por profesional adentro del .map()
   // de profesionales — O(profesionales × citas) en vez de agrupar una sola
   // vez. Se combina con que `citas` hoy llega sin acotar por fecha (ver
@@ -123,10 +119,10 @@ export function AgendaGrid({
     const map = new Map<string, number[]>();
     if (!huecosHabilitados) return map;
     for (const p of profesionales) {
-      map.set(p.id, huecosLibres(citasPorProfesional.get(p.id) ?? []));
+      map.set(p.id, huecosLibres(citasPorProfesional.get(p.id) ?? [], hasta, desde));
     }
     return map;
-  }, [huecosHabilitados, profesionales, citasPorProfesional]);
+  }, [huecosHabilitados, profesionales, citasPorProfesional, desde, hasta]);
 
   // Roving tabindex: toda la capa de huecos es UNA parada de Tab (si no,
   // serían ~28 por profesional antes de llegar al listado). Adentro se navega
@@ -184,8 +180,7 @@ export function AgendaGrid({
   }
 
   const minutosAhora = useMinutosAhora(esHoy, zonaHoraria);
-  const ahoraVisible =
-    minutosAhora !== null && minutosAhora >= 0 && minutosAhora <= MINUTOS_VISIBLES;
+  const ahoraVisible = minutosAhora !== null && minutosAhora >= desde && minutosAhora <= hasta;
 
   if (profesionales.length === 0) {
     return (
@@ -228,20 +223,20 @@ export function AgendaGrid({
           }}
         >
           <div className="sticky left-0 z-20 flex flex-col bg-card pr-2 pt-1 text-right text-[11px] text-muted-foreground">
-            {Array.from({ length: HORAS_VISIBLES }).map((_, i) => (
+            {Array.from({ length: horas }).map((_, i) => (
               <div
                 key={i}
                 style={{ height: 60 * PIXELES_POR_MINUTO }}
                 className="border-b border-hairline"
               >
-                {horaLabel(i)}
+                {horaDeMinutos(desde + i * 60)}
               </div>
             ))}
           </div>
 
           {profesionales.map((p, colIdx) => (
             <div key={p.id} className="relative border-l border-hairline">
-              {Array.from({ length: HORAS_VISIBLES }).map((_, i) => (
+              {Array.from({ length: horas }).map((_, i) => (
                 <div
                   key={i}
                   style={{ height: 60 * PIXELES_POR_MINUTO }}
@@ -265,7 +260,7 @@ export function AgendaGrid({
                     onKeyDown={(e) => moverFoco(e, colIdx, m)}
                     onClick={(e) => agendarEnHueco(e, p, m)}
                     className="group absolute inset-x-0 flex cursor-pointer items-center px-2 text-left text-[11px] leading-none text-brand-700 transition-colors hover:bg-brand/5 focus-visible:z-10 focus-visible:bg-brand/5 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
-                    style={{ top: m * PIXELES_POR_MINUTO, height: ALTO_HUECO }}
+                    style={{ top: (m - desde) * PIXELES_POR_MINUTO, height: ALTO_HUECO }}
                   >
                     <span
                       aria-hidden="true"
@@ -282,6 +277,7 @@ export function AgendaGrid({
                   key={c.id}
                   cita={c}
                   profesional={p}
+                  desde={desde}
                   allergies={allergyAlerts?.[c.pacienteId]}
                   renderAcciones={renderAcciones}
                 />
@@ -293,7 +289,7 @@ export function AgendaGrid({
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-x-0 z-20 flex items-center"
-              style={{ top: minutosAhora * PIXELES_POR_MINUTO }}
+              style={{ top: (minutosAhora - desde) * PIXELES_POR_MINUTO }}
             >
               <span className="w-[72px] -translate-y-px pr-1 text-right text-[11px] font-semibold tabular-nums text-destructive">
                 {horaDeMinutos(minutosAhora)}
@@ -321,11 +317,14 @@ export function AgendaGrid({
 function BloqueCita({
   cita: c,
   profesional: p,
+  desde,
   allergies,
   renderAcciones,
 }: {
   cita: Cita;
   profesional: Profesional;
+  /** Inicio de la grilla (minutos desde HORA_INICIO, ver `rangoDeGrilla`). */
+  desde: number;
   allergies: string[] | undefined;
   renderAcciones?: (cita: Cita, profesional: Profesional) => ReactNode;
 }) {
@@ -343,7 +342,7 @@ function BloqueCita({
             c.estado === "ausente" && "opacity-70",
           )}
           style={{
-            top: c.inicio * PIXELES_POR_MINUTO + 1,
+            top: (c.inicio - desde) * PIXELES_POR_MINUTO + 1,
             height: c.duracion * PIXELES_POR_MINUTO - 3,
           }}
         >

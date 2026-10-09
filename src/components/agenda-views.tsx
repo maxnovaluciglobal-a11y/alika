@@ -1,8 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
 import {
-  HORAS_VISIBLES,
-  HORA_INICIO,
   PIXELES_POR_MINUTO,
   etiquetaEstado,
   type Cita,
@@ -14,6 +12,7 @@ import {
   nroDiaISO,
   weekDaysISO,
 } from "@/lib/clinic-operations/agenda-fechas";
+import { horaDeMinutos, rangoDeGrilla } from "@/components/agenda-hueco";
 import { claseBloque, tonoDeEstadoCita } from "@/lib/clinic-operations/estado-cita-tono";
 import { cn } from "@/lib/utils";
 
@@ -24,10 +23,6 @@ const estadoClases = Object.fromEntries(
 ) as Record<Cita["estado"], string>;
 
 const DOW_CORTO = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
-
-function horaLabel(i: number) {
-  return `${String(HORA_INICIO + i).padStart(2, "0")}:00`;
-}
 
 /** id → color de profesional, para pintar el borde de cada cita. */
 type ColorPorProfesional = Map<string, string>;
@@ -51,7 +46,9 @@ export function AgendaWeek({
   profesionales: Pick<Profesional, "id" | "color">[];
 }) {
   const dias = weekDaysISO(fecha);
-  const alto = HORAS_VISIBLES * 60 * PIXELES_POR_MINUTO;
+  const { desde, hasta } = rangoDeGrilla(citas);
+  const horas = (hasta - desde) / 60;
+  const alto = (hasta - desde) * PIXELES_POR_MINUTO;
   const colores = colorPorProfesional(profesionales);
 
   return (
@@ -80,13 +77,13 @@ export function AgendaWeek({
           style={{ height: alto, gridTemplateColumns: `56px repeat(7, minmax(0, 1fr))` }}
         >
           <div className="flex flex-col pr-1 pt-1 text-right text-[11px] text-muted-foreground">
-            {Array.from({ length: HORAS_VISIBLES }).map((_, i) => (
+            {Array.from({ length: horas }).map((_, i) => (
               <div
                 key={i}
                 style={{ height: 60 * PIXELES_POR_MINUTO }}
                 className="border-b border-hairline"
               >
-                {horaLabel(i)}
+                {horaDeMinutos(desde + i * 60)}
               </div>
             ))}
           </div>
@@ -98,7 +95,7 @@ export function AgendaWeek({
                 key={d}
                 className={cn("relative border-l border-hairline", d === hoy && "bg-brand/5")}
               >
-                {Array.from({ length: HORAS_VISIBLES }).map((_, i) => (
+                {Array.from({ length: horas }).map((_, i) => (
                   <div
                     key={i}
                     style={{ height: 60 * PIXELES_POR_MINUTO }}
@@ -117,7 +114,7 @@ export function AgendaWeek({
                       c.estado === "ausente" && "opacity-70",
                     )}
                     style={{
-                      top: c.inicio * PIXELES_POR_MINUTO,
+                      top: (c.inicio - desde) * PIXELES_POR_MINUTO,
                       // 11px × 1.15 ≈ 13px: el piso deja ver al menos una línea entera.
                       height: Math.max(c.duracion * PIXELES_POR_MINUTO - 2, 14),
                       borderLeftColor: colores.get(c.profesionalId),
