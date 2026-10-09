@@ -23,6 +23,7 @@ import { captureException, initSentry } from "@/lib/sentry";
 import { attachOfflineCache, resetOfflineCache } from "@/lib/offline/offline-cache";
 import { registerServiceWorker } from "@/lib/offline/register-sw";
 import { Toaster } from "@/components/ui/sonner";
+import { debeDesviarANuevaClave, RUTA_NUEVA_CLAVE } from "@/lib/recuperar-clave";
 
 // Se ejecuta una sola vez al importar el módulo raíz. No-op (y sin descargar
 // @sentry/react) si no hay DSN — ver src/lib/sentry.ts.
@@ -211,6 +212,15 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+
+  // Si la Redirect URL de Supabase no incluye /auth/nueva-clave, el enlace de
+  // "Olvidé mi contraseña" cae en la Site URL con el token en el hash. Se
+  // desvía antes de que el cliente de Supabase lo consuma (ver recuperar-clave.ts).
+  useEffect(() => {
+    if (debeDesviarANuevaClave(window.location.pathname, window.location.hash)) {
+      window.location.replace(RUTA_NUEVA_CLAVE + window.location.hash);
+    }
+  }, []);
 
   // Persistencia del cache en disco. Vive en un efecto (y no en un provider)
   // porque solo puede correr en el browser: en SSR no hay IndexedDB, y
