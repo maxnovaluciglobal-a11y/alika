@@ -35,6 +35,13 @@ type EsmaliaLogoProps = {
   className?: string;
   /** `wordmark` (por defecto) o `icon` para el monograma solo. */
   variant?: "wordmark" | "icon";
+  /**
+   * `default`: tinta + ocre, sigue al tema. `mono`: todo en el color del texto
+   * (una sola tinta). `negative`: colores del modo oscuro aunque la página esté
+   * en claro, para apoyar el logo sobre una superficie de tinta.
+   * Guía de uso: docs/MARCA.md.
+   */
+  tone?: "default" | "mono" | "negative";
 };
 
 /**
@@ -42,7 +49,16 @@ type EsmaliaLogoProps = {
  * por defecto, así sigue al modo oscuro) y el arco usa el token `brand`. El
  * monograma usa `brand-700`, que en oscuro se aclara solo.
  */
-export function EsmaliaLogo({ size = 32, className, variant = "wordmark" }: EsmaliaLogoProps) {
+export function EsmaliaLogo({
+  size = 32,
+  className,
+  variant = "wordmark",
+  tone = "default",
+}: EsmaliaLogoProps) {
+  // `dark` redefine los tokens dentro del propio <svg> (styles.css, `.dark`),
+  // así el negativo usa los mismos colores que el modo oscuro, sin hex sueltos.
+  const toneClass = tone === "negative" ? "dark" : undefined;
+
   if (variant === "icon") {
     return (
       <svg
@@ -52,7 +68,12 @@ export function EsmaliaLogo({ size = 32, className, variant = "wordmark" }: Esma
         width={size}
         height={size}
         fill="currentColor"
-        className={cn("shrink-0 text-brand-700", className)}
+        className={cn(
+          "shrink-0",
+          tone === "mono" ? "text-foreground" : "text-brand-700",
+          toneClass,
+          className,
+        )}
       >
         {MONOGRAMA.map((d) => (
           <path key={d.slice(0, 16)} d={d} />
@@ -69,12 +90,12 @@ export function EsmaliaLogo({ size = 32, className, variant = "wordmark" }: Esma
       height={size}
       width={Math.round(size * WORDMARK_RATIO)}
       fill="currentColor"
-      className={cn("shrink-0 text-foreground", className)}
+      className={cn("shrink-0 text-foreground", toneClass, className)}
     >
       {WORDMARK_TINTA.map((d) => (
         <path key={d.slice(0, 16)} fillRule="evenodd" d={d} />
       ))}
-      <path className="fill-brand" d={WORDMARK_ARCO} />
+      <path className={tone === "mono" ? undefined : "fill-brand"} d={WORDMARK_ARCO} />
     </svg>
   );
 }
