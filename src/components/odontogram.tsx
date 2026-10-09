@@ -47,6 +47,7 @@ import {
   setOdontogramMark,
 } from "@/lib/clinical/odontogram.functions";
 import { piezasConHallazgos } from "@/components/odontograma-hallazgos";
+import { DienteAnatomico } from "@/components/diente-anatomico";
 import { cn } from "@/lib/utils";
 
 const TOOTH_SIZE = 40;
@@ -66,10 +67,15 @@ type ToothClick = { tooth: number; surface: ToothSurface };
 function ToothCell({
   tooth,
   surfaces,
+  inferior,
+  seleccionado,
   onClick,
 }: {
   tooth: number;
   surfaces: Partial<Record<ToothSurface, OdontogramMark>>;
+  /** Arcada inferior: el dibujo va debajo del esquema, espejado. */
+  inferior: boolean;
+  seleccionado: boolean;
   onClick: (click: ToothClick) => void;
 }) {
   const s = TOOTH_SIZE;
@@ -142,14 +148,31 @@ function ToothCell({
   // Clampeado a `s` (40px) para no salirse del viewBox del diente.
   const oclusalHitSize = Math.min(OCLUSAL_HIT_MIN, s);
 
+  const numero = (
+    <span
+      className={cn(
+        "tabular-nums text-[11px] text-muted-foreground",
+        seleccionado && "font-semibold text-brand-700",
+      )}
+      title={nombreComun ? `${tooth} · ${nombreComun}` : undefined}
+    >
+      {tooth}
+    </span>
+  );
+  const dibujo = (
+    <DienteAnatomico
+      tooth={tooth}
+      surfaces={surfaces}
+      inferior={inferior}
+      seleccionado={seleccionado}
+      onClick={(surface) => activate({ tooth, surface })}
+    />
+  );
+
   return (
-    <div className="flex flex-col items-center gap-1">
-      <span
-        className="tabular-nums text-[11px] text-muted-foreground"
-        title={nombreComun ? `${tooth} · ${nombreComun}` : undefined}
-      >
-        {tooth}
-      </span>
+    <div className={cn("flex items-center gap-1", inferior ? "flex-col-reverse" : "flex-col")}>
+      {numero}
+      {dibujo}
       <svg
         width={s}
         height={s}
@@ -336,18 +359,28 @@ function TablaOdontograma({
 function ToothRow({
   teeth,
   byTooth,
+  inferior = false,
+  seleccionada,
   onClick,
 }: {
   teeth: readonly number[];
   byTooth: Map<number, Partial<Record<ToothSurface, OdontogramMark>>>;
+  inferior?: boolean;
+  seleccionada: number | null;
   onClick: (click: ToothClick) => void;
 }) {
   return (
-    <div className="flex items-center" style={{ gap: TOOTH_GAP }}>
+    <div className="flex items-stretch" style={{ gap: TOOTH_GAP }}>
       {teeth.map((t, i) => (
         <Fragment key={t}>
-          <ToothCell tooth={t} surfaces={byTooth.get(t) ?? {}} onClick={onClick} />
-          {i === teeth.length / 2 - 1 && <div className="mx-1 h-10 w-px bg-border" />}
+          <ToothCell
+            tooth={t}
+            surfaces={byTooth.get(t) ?? {}}
+            inferior={inferior}
+            seleccionado={seleccionada === t}
+            onClick={onClick}
+          />
+          {i === teeth.length / 2 - 1 && <div className="mx-1 w-px self-stretch bg-border" />}
         </Fragment>
       ))}
     </div>
@@ -452,8 +485,8 @@ export function Odontogram({
         <div>
           <h3 className="font-display text-lg font-semibold">Odontograma</h3>
           <p className="text-xs text-muted-foreground">
-            Numeración FDI · click en una superficie o en el borde superior para marcar la pieza
-            entera.
+            Numeración FDI · toca una zona del diente o del esquema para marcar esa superficie; la
+            raíz o el borde superior del esquema marcan la pieza entera.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -538,17 +571,23 @@ export function Odontogram({
 
       {!isLoading && vista === "grafico" && (
         <div className="space-y-4 overflow-x-auto">
-          <div className="flex flex-col items-center gap-3">
+          {/* `w-max mx-auto` y no `items-center` en el contenedor con scroll:
+              centrar con flex deja lo que desborda por la izquierda fuera de
+              alcance (en el celular no se podía llegar a las piezas 18 o 55). */}
+          <div className="mx-auto flex w-max flex-col items-center gap-3">
             {denticion === "permanente" ? (
               <>
                 <ToothRow
                   teeth={[...FDI_UPPER_RIGHT, ...FDI_UPPER_LEFT]}
                   byTooth={byTooth}
+                  seleccionada={selection?.tooth ?? null}
                   onClick={setSelection}
                 />
                 <ToothRow
                   teeth={[...FDI_LOWER_RIGHT, ...FDI_LOWER_LEFT]}
                   byTooth={byTooth}
+                  inferior
+                  seleccionada={selection?.tooth ?? null}
                   onClick={setSelection}
                 />
               </>
@@ -557,11 +596,14 @@ export function Odontogram({
                 <ToothRow
                   teeth={[...FDI_UPPER_RIGHT_PRIMARY, ...FDI_UPPER_LEFT_PRIMARY]}
                   byTooth={byTooth}
+                  seleccionada={selection?.tooth ?? null}
                   onClick={setSelection}
                 />
                 <ToothRow
                   teeth={[...FDI_LOWER_RIGHT_PRIMARY, ...FDI_LOWER_LEFT_PRIMARY]}
                   byTooth={byTooth}
+                  inferior
+                  seleccionada={selection?.tooth ?? null}
                   onClick={setSelection}
                 />
               </>
