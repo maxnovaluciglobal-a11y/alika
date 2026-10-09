@@ -305,8 +305,9 @@ function Privacidad() {
           correo. No se usa para escribirle a pacientes.
         </LegalLi>
         <LegalLi>
-          <strong>Stripe</strong> — hoy Esmalia no cobra suscripciones, así que Stripe todavía no
-          procesa pagos de clínicas. Cuando la facturación esté activa, actualizamos esta sección.
+          <strong>Stripe</strong> — procesa el pago de la suscripción de la clínica a Esmalia. Los
+          datos de la tarjeta los recibe y guarda Stripe; Esmalia no los ve ni los almacena. No
+          procesa pagos de pacientes.
         </LegalLi>
       </LegalUl>
       <LegalP>
