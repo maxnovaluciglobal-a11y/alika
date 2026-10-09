@@ -156,7 +156,7 @@ function FilaKpis({ kpis, cargando }: { kpis: Kpi[]; cargando: boolean }) {
           <dt className="kicker truncate">{k.label}</dt>
           <dd
             className={cn(
-              "mt-1.5 truncate font-display text-[26px] font-semibold leading-none tabular-nums lg:text-[30px]",
+              "mt-1.5 whitespace-nowrap font-display text-[clamp(1.25rem,6vw,1.625rem)] font-semibold leading-none tabular-nums lg:text-[30px]",
               k.tono && claseTexto[k.tono],
             )}
           >
