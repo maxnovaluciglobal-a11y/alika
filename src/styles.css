@@ -13,6 +13,40 @@
 @source "../src";
 @import "tw-animate-css";
 
+/* Cifras en Manrope dentro de la app (decisión 09-oct-2026, comparación
+   Lora vs Manrope): solo los dígitos, $ % + y los dos puntos de las horas toman
+   Manrope por unicode-range; las letras siguen en Lora. Los montos, horas y
+   tablas se leen más limpios sin perder el carácter editorial. Va como
+   familia aparte, no como "Manrope", para que ningún componente la use para
+   texto por accidente. */
+@font-face {
+  font-family: "Esmalia Cifras";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../node_modules/@fontsource/manrope/files/manrope-latin-400-normal.woff2")
+    format("woff2");
+  unicode-range: U+0024-0025, U+002B, U+0030-003A;
+}
+@font-face {
+  font-family: "Esmalia Cifras";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../node_modules/@fontsource/manrope/files/manrope-latin-500-normal.woff2")
+    format("woff2");
+  unicode-range: U+0024-0025, U+002B, U+0030-003A;
+}
+@font-face {
+  font-family: "Esmalia Cifras";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../node_modules/@fontsource/manrope/files/manrope-latin-600-normal.woff2")
+    format("woff2");
+  unicode-range: U+0024-0025, U+002B, U+0030-003A;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -364,6 +398,14 @@
   [role="button"] {
     touch-action: manipulation;
   }
+}
+
+/* Solo en la app: la landing y las páginas públicas no tienen el shell.
+   `:has` sobre :root y no una clase en el shell porque los diálogos y
+   popovers (Radix) se montan en un portal fuera de él. */
+:root:has([data-app-shell]) {
+  --font-body: "Esmalia Cifras", "Lora", ui-serif, Georgia, serif;
+  --font-sans: var(--font-body);
 }
 
 /* Kicker: la única etiqueta en mayúsculas del sistema (fecha, sección). */

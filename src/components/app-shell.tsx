@@ -302,7 +302,7 @@ export function AppShell({
   }
 
   return (
-    <div className="flex min-h-dvh w-full bg-background text-foreground">
+    <div data-app-shell className="flex min-h-dvh w-full bg-background text-foreground">
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border bg-sidebar lg:flex">
         <div className="space-y-4 px-5 pt-6 pb-4">
           <Link to="/dashboard" className="flex items-center py-1">
