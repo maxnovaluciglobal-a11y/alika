@@ -7,7 +7,7 @@ import { checkRateLimit, clientIpFromRequest, rateLimitRuleFor } from "./lib/rat
 
 function tooManyRequests(retryAfterSeconds: number): Response {
   return new Response(
-    JSON.stringify({ error: "Demasiadas solicitudes. Reintentá en un momento." }),
+    JSON.stringify({ error: "Demasiadas solicitudes. Reintenta en un momento." }),
     {
       status: 429,
       headers: {

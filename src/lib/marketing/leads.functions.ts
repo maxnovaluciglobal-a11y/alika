@@ -158,7 +158,7 @@ function parsearLead(input: unknown) {
   } catch (err) {
     if (err instanceof z.ZodError) {
       const mensaje = err.issues[0]?.message;
-      throw new Error(mensaje || "Revisá los datos del formulario e intentá de nuevo.");
+      throw new Error(mensaje || "Revisa los datos del formulario e inténtalo de nuevo.");
     }
     throw err;
   }
@@ -273,7 +273,7 @@ export const escribirLeadEnBase = createServerOnlyFn(async function escribirLead
   // mismo umbral efectivo de siempre (5 por hora), ahora contando TODOS
   // los intentos (inserts y updates), no sólo los que crean fila nueva.
   if ((count ?? 0) > MAX_POR_IP_POR_HORA) {
-    throw new Error("Recibimos varios envíos desde tu conexión. Probá de nuevo en un rato.");
+    throw new Error("Recibimos varios envíos desde tu conexión. Prueba de nuevo en un rato.");
   }
 
   const email = data.email?.trim().toLowerCase() || null;
@@ -484,7 +484,7 @@ export const escribirLeadEnBase = createServerOnlyFn(async function escribirLead
     }
   }
 
-  if (dbError) throw new Error("No pudimos registrar tus datos. Probá de nuevo.");
+  if (dbError) throw new Error("No pudimos registrar tus datos. Prueba de nuevo.");
 
   // Antes de esto, un lead quedaba invisible salvo que alguien entrara a
   // `/admin/leads` por las suyas — ver notify-lead.server.ts. `await` a
