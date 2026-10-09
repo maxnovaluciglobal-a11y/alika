@@ -58,5 +58,194 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.esmalia.com"
+        }
+      ],
+      "destination": "https://esmalia.com/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/",
+      "permanent": true
+    },
+    {
+      "source": "/precios",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/precios",
+      "permanent": true
+    },
+    {
+      "source": "/software-dental-latam",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/software-dental-latam",
+      "permanent": true
+    },
+    {
+      "source": "/calculadora-rentabilidad-dental",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/calculadora-rentabilidad-dental",
+      "permanent": true
+    },
+    {
+      "source": "/recursos",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/recursos",
+      "permanent": true
+    },
+    {
+      "source": "/recursos/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/recursos/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/faq",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/faq",
+      "permanent": true
+    },
+    {
+      "source": "/nosotros",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/nosotros",
+      "permanent": true
+    },
+    {
+      "source": "/privacidad",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/privacidad",
+      "permanent": true
+    },
+    {
+      "source": "/terminos",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/terminos",
+      "permanent": true
+    },
+    {
+      "source": "/docs",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/docs",
+      "permanent": true
+    },
+    {
+      "source": "/docs/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/docs/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/demo",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/demo",
+      "permanent": true
+    },
+    {
+      "source": "/sitemap.xml",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/sitemap.xml",
+      "permanent": true
+    },
+    {
+      "source": "/robots.txt",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/robots.txt",
+      "permanent": true
+    },
+    {
+      "source": "/llms.txt",
+      "has": [
+        {
+          "type": "host",
+          "value": "alika-omega.vercel.app"
+        }
+      ],
+      "destination": "https://esmalia.com/llms.txt",
+      "permanent": true
+    }
   ]
 }

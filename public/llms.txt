@@ -30,14 +30,14 @@
 
 ## Páginas clave
 
-- [Inicio](https://alika-omega.vercel.app/)
-- [Precios](https://alika-omega.vercel.app/precios): planes, qué incluye cada uno y preguntas sobre el cobro.
-- [Software dental para Latinoamérica](https://alika-omega.vercel.app/software-dental-latam): países, monedas y lo que Esmalia no hace.
-- [Preguntas frecuentes](https://alika-omega.vercel.app/faq)
-- [Documentación](https://alika-omega.vercel.app/docs)
-- [Calculadora de rentabilidad dental](https://alika-omega.vercel.app/calculadora-rentabilidad-dental)
-- [Checklist: 15 fugas de dinero en una clínica dental](https://alika-omega.vercel.app/recursos/fugas-clinica-dental)
-- [Demo](https://alika-omega.vercel.app/demo): pide nombre y email, sin tarjeta ni contraseña.
+- [Inicio](https://esmalia.com/)
+- [Precios](https://esmalia.com/precios): planes, qué incluye cada uno y preguntas sobre el cobro.
+- [Software dental para Latinoamérica](https://esmalia.com/software-dental-latam): países, monedas y lo que Esmalia no hace.
+- [Preguntas frecuentes](https://esmalia.com/faq)
+- [Documentación](https://esmalia.com/docs)
+- [Calculadora de rentabilidad dental](https://esmalia.com/calculadora-rentabilidad-dental)
+- [Checklist: 15 fugas de dinero en una clínica dental](https://esmalia.com/recursos/fugas-clinica-dental)
+- [Demo](https://esmalia.com/demo): pide nombre y email, sin tarjeta ni contraseña.
 
 ## Contacto
 

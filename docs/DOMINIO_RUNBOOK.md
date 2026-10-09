@@ -1,5 +1,13 @@
 # Runbook — mover Alika a dominio propio
 
+> **Estado (09-oct-2026): hecho con `esmalia.com`** (la app vive en la raíz, no en `app.`).
+>
+> - Cloudflare (registrador y DNS): `A esmalia.com → 76.76.21.21` y `CNAME www → cname.vercel-dns.com`, ambos _DNS only_. Resend: `resend._domainkey` (TXT), `send` y `rsend` (CNAME, _DNS only_), región São Paulo. Email Routing de Cloudflare: MX `route1-3.mx.cloudflare.net`, SPF `include:_spf.mx.cloudflare.net`, catch-all `*@esmalia.com → maxnovaluciglobal@gmail.com`. DMARC `p=none` con reportes a Cloudflare.
+> - Vercel: dominios `esmalia.com` y `www.esmalia.com` en el proyecto `alika`; `PUBLIC_APP_URL=https://esmalia.com`, `EMAIL_FROM=Esmalia <hola@esmalia.com>`, `ALIKA_STAFF_EMAILS`, `LIFECYCLE_EMAIL_REDIRECT_TO`. GitHub: variable `APP_URL=https://esmalia.com`.
+> - Supabase Auth: Site URL `https://esmalia.com`; Redirect URLs `https://esmalia.com/**`, `https://alika-omega.vercel.app/**`, `http://localhost:8080/**` (más las dos `/auth` previas).
+> - Stripe: **sin cambios a propósito** (el webhook sigue en `alika-omega`, que no se redirige en `/api/*`).
+> - Pendiente de Walter: `RESEND_API_KEY`, `EMAIL_UNSUBSCRIBE_SECRET`, `VITE_SALES_WHATSAPP`; la pantalla de consentimiento de Google OAuth (el proyecto de Google Cloud no está en las cuentas de Chrome); SMTP propio en Supabase con Resend.
+
 Hoy todo vive en `https://alika-omega.vercel.app`. Este runbook lista **cada** lugar que hay que tocar el día que se elija el nombre y se compre el dominio, en el orden que evita cortes. Inventario hecho el 06-oct-2026 con `grep` sobre el repo; si se agrega una integración nueva, sumarla acá.
 
 En los ejemplos, `app.NUEVO.com` es la app y `NUEVO.com` el dominio raíz. Ajustar a lo que se decida.

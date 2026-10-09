@@ -1,11 +1,9 @@
 // URL pública del sitio: ÚNICO lugar del código con el dominio de fallback.
-// PUBLIC_APP_URL manda si está seteada; si no, se cae al dominio real de hoy
-// (el dominio propio de Esmalia todavía no está configurado, ver
-// docs/DEPLOY_PRODUCTION.md). Lo usan canonical, og:url, og:image y el JSON-LD;
+// PUBLIC_APP_URL manda si está seteada (en producción: https://esmalia.com,
+// desde el 09-oct-2026); el fallback es el mismo dominio propio. Lo usan canonical, og:url, og:image y el JSON-LD;
 // el sitemap deriva el host de la request cuando no hay PUBLIC_APP_URL.
 export const SITE_URL =
-  (typeof process !== "undefined" && process.env.PUBLIC_APP_URL) ||
-  "https://alika-omega.vercel.app";
+  (typeof process !== "undefined" && process.env.PUBLIC_APP_URL) || "https://esmalia.com";
 
 /** Link `rel=canonical` + `og:url` para una ruta pública. `path` incluye la barra inicial. */
 export function canonicalHead(path: string) {

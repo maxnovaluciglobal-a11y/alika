@@ -27,7 +27,7 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           # Variable de repo (Settings → Variables): cambiar de dominio no
           # requiere tocar este archivo. Ver docs/DOMINIO_RUNBOOK.md.
-          APP_URL: ${{ vars.APP_URL || 'https://alika-omega.vercel.app' }}
+          APP_URL: ${{ vars.APP_URL || 'https://esmalia.com' }}
         run: |
           if [ -z "$CRON_SECRET" ]; then echo "::error::Falta el secret CRON_SECRET"; exit 1; fi
           status=$(curl -sS -o respuesta.txt -w "%{http_code}" --retry 3 --retry-delay 20 --max-time 240 \

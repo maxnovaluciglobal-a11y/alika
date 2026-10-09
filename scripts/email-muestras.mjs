@@ -26,7 +26,7 @@ const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const salida = path.join(raiz, ".email-muestras");
 
 const i = process.argv.indexOf("--app-url");
-const appUrl = i > -1 ? process.argv[i + 1] : "https://alika-omega.vercel.app";
+const appUrl = i > -1 ? process.argv[i + 1] : "https://esmalia.com";
 
 const vite = await createServer({
   root: raiz,
