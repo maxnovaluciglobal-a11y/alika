@@ -29,7 +29,20 @@ describe("leerRetornoDeRecuperacion", () => {
     expect(leerRetornoDeRecuperacion("?token_hash=th&type=recovery", "")).toEqual({
       tipo: "token_hash",
       tokenHash: "th",
+      otp: "recovery",
     });
+  });
+
+  it("reconoce el enlace de invitación al equipo", () => {
+    expect(leerRetornoDeRecuperacion("?token_hash=th&type=invite", "")).toEqual({
+      tipo: "token_hash",
+      tokenHash: "th",
+      otp: "invite",
+    });
+  });
+
+  it("no acepta otros tipos de token en esta pantalla", () => {
+    expect(leerRetornoDeRecuperacion("?token_hash=th&type=signup", "")).toEqual({ tipo: "nada" });
   });
 
   it("detecta el enlace vencido, venga en el hash o en la query", () => {

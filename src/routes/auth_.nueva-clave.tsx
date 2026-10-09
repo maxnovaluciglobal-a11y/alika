@@ -30,6 +30,7 @@ function NuevaClavePage() {
   const navigate = useNavigate();
   const router = useRouter();
   const [estado, setEstado] = useState<Estado>("verificando");
+  const [esInvitacion, setEsInvitacion] = useState(false);
   const [clave, setClave] = useState("");
   const [repetida, setRepetida] = useState("");
   const [guardando, setGuardando] = useState(false);
@@ -63,8 +64,9 @@ function NuevaClavePage() {
         if (retorno.tipo === "token_hash") {
           const { error: e } = await supabase.auth.verifyOtp({
             token_hash: retorno.tokenHash,
-            type: "recovery",
+            type: retorno.otp,
           });
+          if (!cancelado) setEsInvitacion(retorno.otp === "invite");
           resolver(e ? "invalido" : "listo");
           return;
         }
@@ -178,10 +180,12 @@ function NuevaClavePage() {
                 tabIndex={-1}
                 className="font-display text-xl font-semibold outline-none"
               >
-                Crea tu contraseña nueva
+                {esInvitacion ? "Crea tu contraseña" : "Crea tu contraseña nueva"}
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Usa al menos {LARGO_MINIMO_CLAVE} caracteres. Con esta vas a entrar desde ahora.
+                {esInvitacion
+                  ? `Te invitaron al equipo de tu clínica en Esmalia. Elige una contraseña de al menos ${LARGO_MINIMO_CLAVE} caracteres para entrar.`
+                  : `Usa al menos ${LARGO_MINIMO_CLAVE} caracteres. Con esta vas a entrar desde ahora.`}
               </p>
 
               {/* noValidate: el largo y la coincidencia los valida `validarNuevaClave`,
