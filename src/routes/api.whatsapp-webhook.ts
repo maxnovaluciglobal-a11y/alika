@@ -9,6 +9,7 @@ import { notifyClinicStaff, ROLES_BANDEJA } from "@/lib/messaging/notifications.
 import { esConfirmacionDePaciente } from "@/lib/messaging/patient-confirmation";
 import { hoyEnLaClinica, interpretarMensajeDeAgenda } from "@/lib/messaging/intencion-de-agenda";
 import { interpretarConIA } from "@/lib/messaging/intencion-de-agenda-ia";
+import { avisoDeAgenda, type FuenteDeLectura } from "@/lib/messaging/aviso-de-agenda";
 import { captureException } from "@/lib/sentry";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -326,12 +327,6 @@ async function puedeAnotarOtraSolicitud(
   return (recientes ?? 0) < TOPE_SOLICITUDES_24H;
 }
 
-const ETIQUETA_DE_INTENCION = {
-  agendar: "pide una hora",
-  reagendar: "quiere mover su hora",
-  cancelar: "quiere cancelar su hora",
-} as const;
-
 /**
  * Anota lo que el paciente pidió sobre su agenda, si se puede leer con
  * reglas. Devuelve null cuando no — y ese null es a propósito el lugar donde
@@ -363,14 +358,13 @@ async function anotarSolicitudDeAgenda(
   // `intencion-de-agenda-ia.ts`. Sin GEMINI_API_KEY/OPENAI_API_KEY cargada,
   // `interpretarConIA` devuelve null de inmediato y el comportamiento es
   // idéntico al de antes de esta función existir.
-  const lectura =
-    interpretarMensajeDeAgenda(bodyText, hoyClinica) ??
-    (await interpretarConIA(bodyText, hoyClinica));
+  // La fuente viaja hasta el aviso: si leyó Patty (el modelo), el equipo lo
+  // ve escrito. No cambia nada más: la lectura de la IA sigue el mismo
+  // camino que la de las reglas y nunca confirma ni mueve una cita.
+  const porReglas = interpretarMensajeDeAgenda(bodyText, hoyClinica);
+  const fuente: FuenteDeLectura = porReglas ? "reglas" : "ia";
+  const lectura = porReglas ?? (await interpretarConIA(bodyText, hoyClinica));
   if (!lectura) return null;
-
-  const cuando = lectura.fecha
-    ? `para el ${lectura.fecha}${lectura.franja === "manana" ? " por la mañana" : lectura.franja === "tarde" ? " por la tarde" : ""}`
-    : "sin fecha indicada";
 
   if (lectura.intencion === "agendar" && lectura.fecha) {
     if (await puedeAnotarOtraSolicitud(supabaseAdmin, clinicId, patientId, lectura.fecha)) {
@@ -388,10 +382,7 @@ async function anotarSolicitudDeAgenda(
     }
   }
 
-  return {
-    titulo: ETIQUETA_DE_INTENCION[lectura.intencion],
-    detalle: `${ETIQUETA_DE_INTENCION[lectura.intencion]} ${cuando}`,
-  };
+  return avisoDeAgenda(lectura, fuente);
 }
 
 /** Ventana en la que un "sí" suelto se puede atribuir a una cita concreta. */

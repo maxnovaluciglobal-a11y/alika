@@ -687,7 +687,7 @@ function PacientesPage() {
                         p.estado === "activo"
                           ? "bg-success-soft text-success"
                           : p.estado === "nuevo"
-                            ? "bg-ai-soft text-ai"
+                            ? "bg-info-soft text-info"
                             : "bg-secondary text-muted-foreground",
                       )}
                     >

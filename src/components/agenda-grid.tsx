@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight, Flag } from "lucide-react";
 
 import { AllergyAlertIcon } from "@/components/medical-history-card";
 import {
@@ -365,8 +365,12 @@ function BloqueCita({
               <AllergyAlertIcon allergies={allergies} />
             </span>
             <span className="flex shrink-0 items-center gap-1">
+              {/* Prioridad es una marca manual del equipo (is_priority), no
+                  de la IA: va en siena con bandera, nunca en el violeta de Patty. */}
               {c.prioridad && c.duracion < 60 && (
-                <Sparkles className="size-3 text-ai" aria-label="Prioridad" />
+                <span className="rounded bg-card/70 p-0.5 text-warning">
+                  <Flag className="size-3" role="img" aria-label="Prioridad" />
+                </span>
               )}
               {c.pacienteConfirmo && <PatientConfirmedBadge soloIcono />}
               <span className="rounded bg-card/70 px-1 py-px text-[11px] font-medium">
@@ -378,8 +382,8 @@ function BloqueCita({
             <span className="mt-0.5 block truncate text-[11px] opacity-80">{c.tratamiento}</span>
           )}
           {c.prioridad && c.duracion >= 60 && (
-            <span className="mt-1 inline-flex items-center gap-1 rounded bg-ai/15 px-1.5 py-px text-[11px] text-ai">
-              <Sparkles className="size-3" /> Prioridad
+            <span className="mt-1 inline-flex items-center gap-1 rounded bg-card/70 px-1.5 py-px text-[11px] font-medium text-warning">
+              <Flag className="size-3" aria-hidden="true" /> Prioridad
             </span>
           )}
         </button>

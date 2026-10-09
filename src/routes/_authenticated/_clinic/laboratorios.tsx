@@ -74,7 +74,7 @@ const INPUT =
   "w-full rounded-lg border border-hairline bg-transparent px-3 py-2 text-sm outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 const TONO_ESTADO: Record<LabOrderStatus, string> = {
-  enviado: "bg-ai-soft text-ai",
+  enviado: "bg-info-soft text-info",
   en_proceso: "bg-warning-soft text-warning",
   recibido: "bg-success-soft text-success",
   reprocesar: "bg-destructive/10 text-destructive",

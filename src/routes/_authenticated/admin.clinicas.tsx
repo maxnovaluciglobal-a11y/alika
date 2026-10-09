@@ -88,7 +88,7 @@ function formatFechaHora(iso: string): string {
 const ESTADO_TONO: Record<SubscriptionStatus, string> = {
   incomplete: "bg-secondary text-muted-foreground",
   incomplete_expired: "bg-destructive/10 text-destructive",
-  trialing: "bg-ai-soft text-ai",
+  trialing: "bg-info-soft text-info",
   active: "bg-success-soft text-success",
   past_due: "bg-warning-soft text-warning",
   canceled: "bg-destructive/10 text-destructive",

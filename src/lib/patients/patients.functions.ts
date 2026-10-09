@@ -97,7 +97,7 @@ function mapPatientRow(
     convenioId: row.agreement_id ?? null,
     convenioAfiliado: row.agreement_member_id ?? null,
     foto: row.avatar_url ?? undefined,
-    resumenIA: row.ai_summary ?? "Aún no hay un resumen de IA para este paciente.",
+    resumenIA: row.ai_summary ?? "Aún no hay un resumen de Patty (IA) para este paciente.",
     timeline: [],
     waOptIn: row.wa_opt_in,
     referralCode: row.referral_code,

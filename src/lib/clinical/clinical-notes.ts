@@ -138,10 +138,10 @@ export const ENTITY_KIND_ORDER: ClinicalEntityKind[] = [
 export const AUDIT_LABELS: Record<string, string> = {
   create: "Creó la nota",
   update: "Guardó cambios",
-  ai_draft: "Redactó con IA",
-  ai_summary: "Resumió con IA",
-  ai_polish: "Pulió redacción con IA",
-  ai_structure: "Estructuró la nota con IA",
+  ai_draft: "Redactó con Patty (IA)",
+  ai_summary: "Resumió con Patty (IA)",
+  ai_polish: "Pulió la redacción con Patty (IA)",
+  ai_structure: "Estructuró la nota con Patty (IA)",
   entity_confirm: "Confirmó un campo estructurado",
   entity_delete: "Eliminó un campo estructurado",
   restore: "Restauró una versión",
@@ -157,9 +157,9 @@ export const AUDIT_LABELS: Record<string, string> = {
 };
 
 export const AI_ACTION_LABELS: Record<string, string> = {
-  draft: "Borrador IA",
-  summary: "Resumen IA",
-  polish: "Redacción IA",
+  draft: "Borrador de Patty (IA)",
+  summary: "Resumen de Patty (IA)",
+  polish: "Pulida por Patty (IA)",
 };
 
 export function formatoFechaHora(iso: string) {
