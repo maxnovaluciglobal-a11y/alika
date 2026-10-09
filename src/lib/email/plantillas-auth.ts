@@ -130,7 +130,7 @@ export function plantillasAuth(): Record<PlantillaAuth, CorreoRenderizado> {
         p("Escribe este código en Esmalia para confirmar que eres tú:"),
         { tipo: "cifra", etiqueta: "Código", valor: "{{ .Token }}" },
         pTenue("El código vence en pocos minutos."),
-        NO_FUISTE,
+        pTenue("Si no fuiste tú, ignora este correo y no compartas el código con nadie."),
       ],
     ),
   };
