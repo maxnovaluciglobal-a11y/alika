@@ -27,7 +27,7 @@ function Privacidad() {
     <LegalPage
       label="Legal"
       title="Política de privacidad"
-      updated="Versión 2 · 8 de septiembre de 2026 · MAXNOVA & LUCI Global LLC"
+      updated="Versión 3 · 9 de octubre de 2026 · MAXNOVA & LUCI Global LLC"
     >
       <LegalNotice>
         Tu clínica es la responsable de los datos de sus pacientes; Esmalia los procesa como
@@ -108,6 +108,15 @@ function Privacidad() {
         <LegalLi>
           <strong>Generar resúmenes o borradores con IA</strong> — por ejemplo de notas clínicas —
           sólo cuando el profesional lo pide de forma explícita, nunca en automático.
+        </LegalLi>
+        <LegalLi>
+          <strong>Enviarle correos de servicio a la clínica</strong>, solo a quienes administran la
+          cuenta (propietarios y administradores) y nunca a pacientes: la bienvenida al crear la
+          clínica, el aviso de que termina la prueba gratis, la confirmación de la suscripción, el
+          aviso de un pago que no se pudo cobrar y un resumen semanal opcional con los indicadores
+          de la clínica. El resumen semanal trae en cada envío un enlace para darte de baja con un
+          clic, y también se desactiva desde Preferencias; los avisos sobre la cuenta y los pagos
+          son parte del servicio y no se pueden desactivar.
         </LegalLi>
       </LegalUl>
       <LegalP>
@@ -215,10 +224,11 @@ function Privacidad() {
         así antes que prometer un botón que no está.
       </LegalP>
       <LegalP>
-        <strong>Hoy no hay envío automático de correos.</strong> Esmalia todavía no tiene activado
-        el envío de email, así que si dejas tu dirección queda guardada para que podamos escribirte
-        a mano, no para que un sistema te empiece a mandar cosas por su cuenta. Cuando lo activemos,
-        actualizamos esta sección.
+        <strong>A ti no te escribe ningún sistema automático.</strong> Los únicos correos
+        automáticos de Esmalia son los de servicio a clínicas que ya tienen cuenta (sección 2). Si
+        dejas tu dirección en la calculadora o al pedir un material, queda guardada para que podamos
+        escribirte a mano, no para que un sistema te empiece a mandar cosas por su cuenta. Si eso
+        cambia, lo vas a leer aquí antes.
       </LegalP>
 
       <LegalH2>4. Dónde se almacenan</LegalH2>
@@ -284,13 +294,20 @@ function Privacidad() {
           WhatsApp; procesa los mensajes que se envían y reciben por ese canal.
         </LegalLi>
         <LegalLi>
-          <strong>Proveedor de IA</strong> (Lovable AI Gateway, con Google Gemini u OpenAI como
-          respaldo) — solo cuando un profesional pide generar el resumen de una nota clínica
-          puntual; no se usa para ningún otro procesamiento automático de datos de pacientes.
+          <strong>Google (Gemini)</strong> — es el modelo detrás de Patty, el asistente de IA de
+          Esmalia, y solo procesa datos cuando un profesional se lo pide de forma explícita (por
+          ejemplo, resumir una nota clínica puntual); no se usa para ningún otro procesamiento
+          automático de datos de pacientes.
         </LegalLi>
         <LegalLi>
-          <strong>Stripe</strong> — hoy Esmalia no cobra suscripciones, así que Stripe todavía no
-          procesa pagos de clínicas. Cuando la facturación esté activa, actualizamos esta sección.
+          <strong>Resend</strong> — entrega los correos de servicio que Esmalia le envía a la
+          clínica (sección 2): procesa la dirección de quien lo recibe, el asunto y el contenido del
+          correo. No se usa para escribirle a pacientes.
+        </LegalLi>
+        <LegalLi>
+          <strong>Stripe</strong> — procesa el pago de la suscripción de la clínica a Esmalia. Los
+          datos de la tarjeta los recibe y guarda Stripe; Esmalia no los ve ni los almacena. No
+          procesa pagos de pacientes.
         </LegalLi>
       </LegalUl>
       <LegalP>

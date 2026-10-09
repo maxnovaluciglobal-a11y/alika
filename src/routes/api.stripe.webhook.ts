@@ -62,6 +62,61 @@ async function upsertSubscription(
   );
 }
 
+/**
+ * Correo "Tu suscripción está activa" (src/lib/email). Solo cuando la
+ * suscripción QUEDA activa en este evento — no en cada renovación — y una
+ * sola vez por suscripción (la clave de idempotencia es su id). Nunca lanza:
+ * un correo no puede hacer que Stripe reintente el webhook.
+ */
+async function avisarSuscripcionActiva(clinicId: string, sub: Stripe.Subscription) {
+  try {
+    const { enviarSuscripcionActiva, conTope } = await import("@/lib/email/ciclo-de-vida.server");
+    const item = sub.items.data[0];
+    const price = item?.price;
+    const unit = price?.unit_amount ?? null;
+    const intervalo =
+      price?.recurring?.interval === "month"
+        ? "mes"
+        : price?.recurring?.interval === "year"
+          ? "año"
+          : null;
+    await conTope(
+      enviarSuscripcionActiva({
+        clinicId,
+        subscriptionId: sub.id,
+        priceId: price?.id ?? null,
+        montoCents: unit === null ? null : unit * (item?.quantity ?? 1),
+        currency: price?.currency ? price.currency.toUpperCase() : null,
+        intervalo,
+        proximoCobroIso: extractCurrentPeriodEndIso(sub),
+      }),
+    );
+  } catch (err) {
+    console.warn("[lifecycle-email] suscripción activa", err instanceof Error ? err.message : err);
+  }
+}
+
+/** Correo "No pudimos cobrar": una vez por factura (clave: su id). Nunca lanza. */
+async function avisarPagoFallido(clinicId: string, invoiceId: string, invoice: Stripe.Invoice) {
+  try {
+    const { enviarPagoFallido, conTope } = await import("@/lib/email/ciclo-de-vida.server");
+    await conTope(
+      enviarPagoFallido({
+        clinicId,
+        invoiceId,
+        // Stripe habla en la unidad mínima de la moneda, igual que `formatMoney`.
+        montoCents: invoice.amount_due ?? null,
+        currency: invoice.currency ? invoice.currency.toUpperCase() : null,
+        proximoIntentoIso: invoice.next_payment_attempt
+          ? new Date(invoice.next_payment_attempt * 1000).toISOString()
+          : null,
+      }),
+    );
+  } catch (err) {
+    console.warn("[lifecycle-email] pago fallido", err instanceof Error ? err.message : err);
+  }
+}
+
 export const Route = createFileRoute("/api/stripe/webhook")({
   server: {
     handlers: {
@@ -109,6 +164,9 @@ export const Route = createFileRoute("/api/stripe/webhook")({
                     : session.subscription.id;
                 const sub = await stripe.subscriptions.retrieve(subId);
                 await upsertSubscription(supabaseAdmin, clinicId, sub);
+                // Con trial, el checkout deja la suscripción en `trialing`: el
+                // correo sale cuando pase a `active` (subscription.updated).
+                if (sub.status === "active") await avisarSuscripcionActiva(clinicId, sub);
               }
               break;
             }
@@ -126,7 +184,19 @@ export const Route = createFileRoute("/api/stripe/webhook")({
                   .maybeSingle();
                 clinicId = row?.clinic_id ?? null;
               }
-              if (clinicId) await upsertSubscription(supabaseAdmin, clinicId, sub);
+              if (clinicId) {
+                await upsertSubscription(supabaseAdmin, clinicId, sub);
+                const previo = (
+                  event.data as { previous_attributes?: Partial<Stripe.Subscription> }
+                ).previous_attributes?.status;
+                const recienActiva =
+                  sub.status === "active" &&
+                  (event.type === "customer.subscription.created" ||
+                    (event.type === "customer.subscription.updated" &&
+                      previo !== undefined &&
+                      previo !== "active"));
+                if (recienActiva) await avisarSuscripcionActiva(clinicId, sub);
+              }
               break;
             }
             case "invoice.payment_failed": {
@@ -145,6 +215,8 @@ export const Route = createFileRoute("/api/stripe/webhook")({
                     .from("subscriptions")
                     .update({ status: "past_due" })
                     .eq("clinic_id", clinicId);
+                  // Correo "No pudimos cobrar": una vez por factura. Nunca lanza.
+                  if (invoice.id) await avisarPagoFallido(clinicId, invoice.id, invoice);
                 }
               }
               break;

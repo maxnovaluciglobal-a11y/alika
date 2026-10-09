@@ -243,7 +243,8 @@ function PreferenciasPage() {
               <div>
                 <h2 className="font-heading text-base font-semibold">Avisos por email</h2>
                 <p className="text-sm text-muted-foreground">
-                  Recibe en tu correo los eventos del flujo de revisión clínica.
+                  Recibe en tu correo los eventos del flujo de revisión clínica y el resumen semanal
+                  de la clínica (si tu rol puede ver las finanzas).
                 </p>
               </div>
             </div>
@@ -312,13 +313,21 @@ function PreferenciasPage() {
               <h2 className="font-heading text-base font-semibold">Desuscripción total</h2>
               <p className="text-sm text-muted-foreground">
                 {desuscrito
-                  ? "Estás desuscrito: Esmalia no te enviará ningún email de avisos. Los avisos clínicos seguirán visibles dentro de la aplicación."
+                  ? "Estás desuscrito: Esmalia no te enviará emails de avisos ni el resumen semanal. Los avisos sobre la cuenta y los pagos siguen llegando, y los avisos clínicos seguirán visibles dentro de la aplicación."
                   : "Detiene todos los emails de avisos de Esmalia de una sola vez. Puedes revertirlo cuando quieras."}
               </p>
               <button
                 type="button"
                 disabled={bloqueado}
-                onClick={() => mutation.mutate({ unsubscribed: !desuscrito })}
+                // La baja desde el enlace del correo apaga también `email_enabled`:
+                // volver a suscribirse los reactiva juntos, en un solo clic.
+                onClick={() =>
+                  mutation.mutate(
+                    desuscrito
+                      ? { unsubscribed: false, emailEnabled: true }
+                      : { unsubscribed: true },
+                  )
+                }
                 className={cn(
                   "mt-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50",
                   desuscrito

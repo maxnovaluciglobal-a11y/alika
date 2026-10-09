@@ -1,0 +1,37 @@
+name: Correos de ciclo de vida (disparo horario)
+
+# Mismo patrón que daily-digest.yml: Vercel Hobby solo permite crons diarios.
+# El endpoint corre cada hora, actúa solo en la ventana local de 8:00 a 11:59
+# de cada clínica (aviso de fin de prueba; reporte semanal los lunes) y es
+# idempotente (tabla lifecycle_emails), así que un reintento o un disparo
+# manual no duplica correos. Mientras LIFECYCLE_EMAILS_ENABLED no sea "true"
+# en Vercel, responde {"habilitado":false} sin tocar nada.
+on:
+  schedule:
+    # Minuto 17 para no coincidir con el resumen diario (minuto 7).
+    - cron: "17 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: lifecycle-emails
+  cancel-in-progress: false
+
+jobs:
+  disparar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Llamar a /api/lifecycle-emails
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          # Variable de repo (Settings → Variables): cambiar de dominio no
+          # requiere tocar este archivo. Ver docs/DOMINIO_RUNBOOK.md.
+          APP_URL: ${{ vars.APP_URL || 'https://alika-omega.vercel.app' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "::error::Falta el secret CRON_SECRET"; exit 1; fi
+          status=$(curl -sS -o respuesta.txt -w "%{http_code}" --retry 3 --retry-delay 20 --max-time 240 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$APP_URL/api/lifecycle-emails")
+          echo "HTTP $status"; head -c 500 respuesta.txt; echo
+          [ "$status" = "200" ] || { echo "::error::lifecycle-emails respondió $status"; exit 1; }

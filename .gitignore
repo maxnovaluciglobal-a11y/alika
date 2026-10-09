@@ -55,3 +55,6 @@ supabase/.temp
 # Estado local de Impeccable (caché del hook y sesiones del modo live)
 .impeccable/hook.cache.json
 .impeccable/live/
+
+# Muestras de QA de los correos (scripts/email-muestras.mjs)
+.email-muestras/
