@@ -351,7 +351,7 @@ function ComisionesPage() {
               Esto congela los montos actuales de {search.desde} a {search.hasta} para todos los
               profesionales con producción o regla configurada. Una vez cerrado, editar la regla de
               comisión de un profesional ya NO afecta lo liquidado en este rango — solo se puede
-              revertir con una migración correctiva manual. ¿Confirmás el cierre?
+              revertir con una migración correctiva manual. ¿Confirmas el cierre?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

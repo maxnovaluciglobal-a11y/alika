@@ -315,7 +315,7 @@ export function PatientConsentsCard({
             <AlertDialogTitle>Revocar consentimiento</AlertDialogTitle>
             <AlertDialogDescription>
               El consentimiento queda marcado como revocado. La firma original y el texto que firmó
-              el paciente se conservan como historial, no se borran. ¿Confirmás revocarlo?
+              el paciente se conservan como historial, no se borran. ¿Confirmas revocarlo?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

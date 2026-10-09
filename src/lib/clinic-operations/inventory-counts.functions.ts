@@ -92,7 +92,7 @@ export const recordInventoryCount = createServerFn({ method: "POST" })
         // — una salida que dejaría el stock en negativo.
         if (movementError.code === "23514") {
           throw new Error(
-            "Ese conteo generaría una salida que deja el stock en negativo — revisá la cantidad contada.",
+            "Ese conteo generaría una salida que deja el stock en negativo — revisa la cantidad contada.",
           );
         }
         throw new Error(mensajeDb(movementError, "No pudimos registrar el ajuste del conteo."));

@@ -173,7 +173,7 @@ export const createProcedure = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar el catálogo.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda editar el catálogo.",
         ),
       );
     return { id: inserted.id };
@@ -200,7 +200,7 @@ export const updateProcedure = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar el catálogo.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda editar el catálogo.",
         ),
       );
     return { ok: true };
@@ -233,7 +233,7 @@ export const setProcedureActive = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar el catálogo.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda editar el catálogo.",
         ),
       );
     return { ok: true };
@@ -297,7 +297,7 @@ export const importProcedures = createServerFn({ method: "POST" })
         throw new Error(
           mensajeDb(
             error,
-            "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda importar al catálogo.",
+            "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda importar al catálogo.",
           ),
         );
     }
@@ -1425,7 +1425,7 @@ export const registerPayment = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda registrar pagos.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda registrar pagos.",
         ),
       );
     }

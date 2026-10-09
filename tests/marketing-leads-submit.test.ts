@@ -413,7 +413,7 @@ describe("escribirLeadEnBase — regresión real contra Supabase", () => {
     // El 6to intento con la MISMA ip supera el máximo (5) y se bloquea.
     await expect(
       escribirLeadEnBase(datosBase({ email, source: "calculadora" }), ipHash, "ua"),
-    ).rejects.toThrow("Recibimos varios envíos desde tu conexión. Probá de nuevo en un rato.");
+    ).rejects.toThrow("Recibimos varios envíos desde tu conexión. Prueba de nuevo en un rato.");
 
     // El nombre correcto del evento de intento es 'lead_intento' —
     // 'lead_enviado' es sólo la conversión que dispara el cliente al tener

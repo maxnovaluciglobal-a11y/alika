@@ -132,7 +132,7 @@ export const createPaymentMethod = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar los medios de pago.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda configurar los medios de pago.",
         ),
       );
     }
@@ -167,7 +167,7 @@ export const updatePaymentMethod = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar los medios de pago.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda configurar los medios de pago.",
         ),
       );
     }
@@ -200,7 +200,7 @@ export const setPaymentMethodActive = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar los medios de pago.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda configurar los medios de pago.",
         ),
       );
     return { ok: true };
@@ -338,7 +338,7 @@ export const createExpense = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda registrar gastos.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda registrar gastos.",
         ),
       );
     return { id: inserted.id };
@@ -374,7 +374,7 @@ export const updateExpense = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar gastos.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda editar gastos.",
         ),
       );
     return { ok: true };
@@ -400,7 +400,7 @@ export const deleteExpense = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda borrar gastos.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda borrar gastos.",
         ),
       );
     return { ok: true };
@@ -512,7 +512,7 @@ export const createAgreement = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar convenios.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda configurar convenios.",
         ),
       );
     }
@@ -541,7 +541,7 @@ export const updateAgreement = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar convenios.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda configurar convenios.",
         ),
       );
     }
@@ -569,7 +569,7 @@ export const setAgreementActive = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar convenios.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda configurar convenios.",
         ),
       );
     return { ok: true };
@@ -624,7 +624,7 @@ export const setAgreementCoverage = createServerFn({ method: "POST" })
             v.coverageFixedCents !== null &&
             v.coverageFixedCents !== undefined
           ),
-        "Elegí porcentaje o monto fijo, no las dos cosas.",
+        "Elige porcentaje o monto fijo, no las dos cosas.",
       )
       .parse(input),
   )
@@ -644,7 +644,7 @@ export const setAgreementCoverage = createServerFn({ method: "POST" })
         throw new Error(
           mensajeDb(
             error,
-            "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar la cobertura.",
+            "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda editar la cobertura.",
           ),
         );
       return { ok: true };
@@ -664,7 +664,7 @@ export const setAgreementCoverage = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar la cobertura.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda editar la cobertura.",
         ),
       );
     return { ok: true };
@@ -692,7 +692,7 @@ export const setPatientAgreement = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar el paciente.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda editar el paciente.",
         ),
       );
     return { ok: true };

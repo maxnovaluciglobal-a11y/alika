@@ -71,7 +71,7 @@ export const createLab = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar laboratorios.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda configurar laboratorios.",
         ),
       );
     }
@@ -95,7 +95,7 @@ export const setLabActive = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar laboratorios.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda configurar laboratorios.",
         ),
       );
     return { ok: true };
@@ -194,7 +194,7 @@ export const createLabOrder = createServerFn({ method: "POST" })
         labId: z.string().uuid().nullish(),
         treatmentItemId: z.string().uuid().nullish(),
         professionalId: z.string().uuid().nullish(),
-        description: z.string().trim().min(1, "Describí qué se manda al laboratorio.").max(300),
+        description: z.string().trim().min(1, "Describe qué se manda al laboratorio.").max(300),
         toothNumbers: z.array(z.number().int()).max(32).nullish(),
         sentOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
         dueOn: z
@@ -246,7 +246,7 @@ export const createLabOrder = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda registrar órdenes.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda registrar órdenes.",
         ),
       );
     return { id: inserted.id };
@@ -283,7 +283,7 @@ export const setLabOrderStatus = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda editar órdenes.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda editar órdenes.",
         ),
       );
     return { ok: true };
@@ -339,7 +339,7 @@ export const createWarehouse = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar bodegas.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda configurar bodegas.",
         ),
       );
     }
@@ -456,7 +456,7 @@ export const upsertAppointmentStatus = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar estados de cita.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda configurar estados de cita.",
         ),
       );
     }
@@ -484,7 +484,7 @@ export const setAppointmentStatusActive = createServerFn({ method: "POST" })
       throw new Error(
         mensajeDb(
           error,
-          "No pudimos guardar. Revisá los datos y volvé a intentar; si sigue igual, puede que tu rol no pueda configurar estados de cita.",
+          "No pudimos guardar. Revisa los datos y vuelve a intentarlo; si sigue igual, puede que tu rol no pueda configurar estados de cita.",
         ),
       );
     return { ok: true };
