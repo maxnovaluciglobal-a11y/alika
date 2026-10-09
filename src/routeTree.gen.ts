@@ -33,6 +33,7 @@ import { Route as ApiDemoResetRouteImport } from './routes/api.demo-reset'
 import { Route as ApiEvRouteImport } from './routes/api.ev'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api.whatsapp-webhook'
+import { Route as AuthNuevaClaveRouteImport } from './routes/auth_.nueva-clave'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as DocsDatosYSeguridadRouteImport } from './routes/docs.datos-y-seguridad'
 import { Route as DocsPortalPacientesRouteImport } from './routes/docs.portal-pacientes'
@@ -205,6 +206,11 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
 const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
   id: '/api/whatsapp-webhook',
   path: '/api/whatsapp-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthNuevaClaveRoute = AuthNuevaClaveRouteImport.update({
+  id: '/auth_/nueva-clave',
+  path: '/auth/nueva-clave',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsIndexRoute = DocsIndexRouteImport.update({
@@ -535,6 +541,7 @@ export interface FileRoutesByFullPath {
   '/api/ev': typeof ApiEvRoute
   '/api/health': typeof ApiHealthRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/auth/nueva-clave': typeof AuthNuevaClaveRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
   '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
@@ -610,6 +617,7 @@ export interface FileRoutesByTo {
   '/api/ev': typeof ApiEvRoute
   '/api/health': typeof ApiHealthRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/auth/nueva-clave': typeof AuthNuevaClaveRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
   '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
@@ -690,6 +698,7 @@ export interface FileRoutesById {
   '/api/ev': typeof ApiEvRoute
   '/api/health': typeof ApiHealthRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/auth_/nueva-clave': typeof AuthNuevaClaveRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
   '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
@@ -769,6 +778,7 @@ export interface FileRouteTypes {
     | '/api/ev'
     | '/api/health'
     | '/api/whatsapp-webhook'
+    | '/auth/nueva-clave'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
     | '/docs/primeros-pasos'
@@ -844,6 +854,7 @@ export interface FileRouteTypes {
     | '/api/ev'
     | '/api/health'
     | '/api/whatsapp-webhook'
+    | '/auth/nueva-clave'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
     | '/docs/primeros-pasos'
@@ -923,6 +934,7 @@ export interface FileRouteTypes {
     | '/api/ev'
     | '/api/health'
     | '/api/whatsapp-webhook'
+    | '/auth_/nueva-clave'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
     | '/docs/primeros-pasos'
@@ -1000,6 +1012,7 @@ export interface RootRouteChildren {
   ApiEvRoute: typeof ApiEvRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
+  AuthNuevaClaveRoute: typeof AuthNuevaClaveRoute
   RecursosFugasClinicaDentalRoute: typeof RecursosFugasClinicaDentalRoute
   RecursosIndexRoute: typeof RecursosIndexRoute
   ApiRecursoSlugRoute: typeof ApiRecursoSlugRoute
@@ -1174,6 +1187,13 @@ declare module '@tanstack/react-router' {
       path: '/api/whatsapp-webhook'
       fullPath: '/api/whatsapp-webhook'
       preLoaderRoute: typeof ApiWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth_/nueva-clave': {
+      id: '/auth_/nueva-clave'
+      path: '/auth/nueva-clave'
+      fullPath: '/auth/nueva-clave'
+      preLoaderRoute: typeof AuthNuevaClaveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs/': {
@@ -1731,6 +1751,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiEvRoute: ApiEvRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
+  AuthNuevaClaveRoute: AuthNuevaClaveRoute,
   RecursosFugasClinicaDentalRoute: RecursosFugasClinicaDentalRoute,
   RecursosIndexRoute: RecursosIndexRoute,
   ApiRecursoSlugRoute: ApiRecursoSlugRoute,

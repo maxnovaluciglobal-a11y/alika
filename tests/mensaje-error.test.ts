@@ -29,6 +29,16 @@ describe("mensajeDeError", () => {
     ).toMatch(/^Esta es la clínica demo, de solo lectura\. Crea tu clínica/);
   });
 
+  it("traduce los límites de envío de Supabase Auth", () => {
+    for (const m of [
+      "email rate limit exceeded",
+      "Request rate limit reached",
+      "For security purposes, you can only request this after 42 seconds.",
+    ]) {
+      expect(mensajeDeError(new Error(m))).toMatch(/^Hubo demasiados intentos seguidos/);
+    }
+  });
+
   it("usa el fallback cuando no hay mensaje", () => {
     expect(mensajeDeError(undefined, "No se pudo guardar")).toBe("No se pudo guardar");
   });
