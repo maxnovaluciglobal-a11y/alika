@@ -35,6 +35,7 @@ export const TABLES = [
   "inventory_stock",
   "lab_orders",
   "labs",
+  "lifecycle_emails",
   "marketing_events",
   "marketing_leads",
   "message_templates",

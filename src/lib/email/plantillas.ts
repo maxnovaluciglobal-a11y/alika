@@ -1,0 +1,418 @@
+/**
+ * Las cinco plantillas de correo de ciclo de vida, como funciones puras.
+ * Cada una devuelve `{ subject, html, text }` a partir de datos ya resueltos.
+ *
+ * Tono: español neutro con tuteo (sin voseo), sin signos de exclamación y sin
+ * emoji. Los números salen de los mismos cálculos que la app; cuando no hay
+ * dato se dice "Sin datos", nunca un cero inventado (regla 11).
+ *
+ * Las muestras de QA (`scripts/email-muestras.ts`) llaman a ESTAS funciones:
+ * no hay copias a mano que puedan quedar desincronizadas.
+ */
+import { formatMoney } from "@/lib/finance/finance";
+
+import {
+  elegirAccionSugerida,
+  fechaConDia,
+  fechaLarga,
+  variacion,
+  type DatosSemana,
+} from "./ciclo-de-vida";
+import { p, pTenue, renderCorreo, type Bloque, type CorreoRenderizado } from "./layout";
+
+const unir = (app: string, ruta: string) => `${app.replace(/\/+$/, "")}${ruta}`;
+const plural = (n: number, uno: string, varios: string) => (n === 1 ? uno : varios);
+const saludo = (nombre: string | null | undefined) => {
+  const primero = (nombre ?? "").trim().split(/\s+/)[0];
+  return primero ? `Hola, ${primero}.` : "Hola.";
+};
+
+/**
+ * Los planes de Esmalia se cobran en dólares y "$69.00" a secas se confunde
+ * con pesos: los montos de Stripe llevan el código de la moneda al lado.
+ */
+const montoConMoneda = (cents: number, currency: string) =>
+  `${formatMoney(cents, currency)} ${currency.toUpperCase()}`;
+
+/** Qué queda bloqueado cuando el trial vence sin tarjeta (`trialInformesBloqueados`). */
+const LO_QUE_SE_PAUSA = "finanzas, comisiones, inventario y panel de desempeño";
+
+// ─── a. Bienvenida ───────────────────────────────────────────────────────
+
+export interface DatosBienvenida {
+  appUrl: string;
+  clinicName: string;
+  nombre?: string | null;
+  /** Fecha local (YYYY-MM-DD) en que termina la prueba, si se conoce. */
+  finDePrueba?: string | null;
+  diasDePrueba: number;
+}
+
+export function correoBienvenida(d: DatosBienvenida): CorreoRenderizado {
+  const bloques: Bloque[] = [
+    p(saludo(d.nombre)),
+    p(
+      { negrita: d.clinicName },
+      ` ya tiene su espacio en Esmalia. Tienes ${d.diasDePrueba} días para usarlo completo, gratis y sin ingresar una tarjeta`,
+      d.finDePrueba ? `: la prueba termina el ${fechaLarga(d.finDePrueba)}.` : ".",
+    ),
+    { tipo: "boton", texto: "Entrar a Esmalia", href: unir(d.appUrl, "/dashboard") },
+    { tipo: "subtitulo", texto: "Primeros pasos" },
+    {
+      tipo: "pasos",
+      pasos: [
+        {
+          titulo: "Carga a tus profesionales y sus horarios",
+          detalle: "Así la agenda sabe quién atiende y en qué horario.",
+          href: unir(d.appUrl, "/profesionales"),
+        },
+        {
+          titulo: "Importa tus pacientes desde un CSV",
+          detalle: "En Pacientes puedes subir la planilla que ya usas, sin cargarlos uno por uno.",
+          href: unir(d.appUrl, "/pacientes"),
+        },
+        {
+          titulo: "Invita a tu equipo",
+          detalle: "Recepción, asistentes y doctores, cada uno con su rol y sus permisos.",
+          href: unir(d.appUrl, "/equipo"),
+        },
+        {
+          titulo: "Agenda la primera cita",
+          detalle: "Con eso la clínica ya está funcionando dentro de Esmalia.",
+          href: unir(d.appUrl, "/agenda"),
+        },
+      ],
+    },
+    p(
+      "Si algo no se entiende o necesitas ayuda para cargar tus datos, responde este correo. Lo lee una persona del equipo de Esmalia.",
+    ),
+  ];
+  return renderCorreo({
+    appUrl: d.appUrl,
+    asunto: "Tu clínica ya está en Esmalia",
+    preencabezado: `Tienes ${d.diasDePrueba} días gratis, sin tarjeta. Estos son los primeros pasos.`,
+    titulo: "Tu clínica ya está en Esmalia",
+    bloques,
+    pie: { motivo: `Recibes este correo porque creaste ${d.clinicName} en Esmalia.` },
+  });
+}
+
+// ─── b. Fin de la prueba (T-3 y T-0) ─────────────────────────────────────
+
+export interface DatosFinDePrueba {
+  appUrl: string;
+  clinicName: string;
+  nombre?: string | null;
+  cuando: "t3" | "t0";
+  /** Fecha local (YYYY-MM-DD) del último día de prueba. */
+  finDePrueba: string;
+  /** Citas agendadas (no canceladas) desde que se creó la clínica. */
+  citasAgendadas: number;
+  pacientesCargados: number;
+}
+
+/** La primera frase: un dato real de la prueba antes de pedir nada. */
+function fraseDeUso(d: DatosFinDePrueba): Bloque {
+  if (d.citasAgendadas > 0) {
+    return p(
+      "En estos días, ",
+      d.clinicName,
+      " agendó ",
+      { negrita: `${d.citasAgendadas} ${plural(d.citasAgendadas, "cita", "citas")}` },
+      d.pacientesCargados > 0
+        ? ` y ya tiene ${d.pacientesCargados} ${plural(d.pacientesCargados, "paciente cargado", "pacientes cargados")}.`
+        : ".",
+    );
+  }
+  if (d.pacientesCargados > 0) {
+    return p(
+      "En estos días cargaste ",
+      {
+        negrita: `${d.pacientesCargados} ${plural(d.pacientesCargados, "paciente", "pacientes")}`,
+      },
+      ` en ${d.clinicName}. Todavía no hay citas en la agenda: si te falta algo para empezar, responde este correo y te ayudamos.`,
+    );
+  }
+  return p(
+    `Todavía no hay citas ni pacientes en ${d.clinicName}. Si te falta algo para empezar, responde este correo y te ayudamos a cargar la agenda.`,
+  );
+}
+
+export function correoFinDePrueba(d: DatosFinDePrueba): CorreoRenderizado {
+  const esHoy = d.cuando === "t0";
+  const cta: Bloque = {
+    tipo: "boton",
+    texto: "Elegir un plan",
+    href: unir(d.appUrl, "/suscripcion"),
+  };
+  const bloques: Bloque[] = esHoy
+    ? [
+        p(saludo(d.nombre)),
+        fraseDeUso(d),
+        p(
+          "Hoy termina tu prueba gratis. Desde mañana la agenda, los pacientes y las fichas clínicas siguen funcionando igual; los informes (",
+          LO_QUE_SE_PAUSA,
+          ") quedan en pausa hasta que elijas un plan.",
+        ),
+        p(
+          "No cobramos nada sin que lo actives tú: el cobro empieza solo cuando eliges un plan y agregas una tarjeta.",
+        ),
+        cta,
+        pTenue("Si tienes dudas sobre los planes, responde este correo."),
+      ]
+    : [
+        p(saludo(d.nombre)),
+        fraseDeUso(d),
+        p(
+          "Tu prueba gratis termina el ",
+          { negrita: fechaConDia(d.finDePrueba) },
+          ". Para seguir con todo sin interrupciones, elige un plan y agrega una tarjeta. ",
+          { negrita: "No se cobra nada antes de esa fecha." },
+        ),
+        p(
+          "Si decides no suscribirte, la agenda, los pacientes y las fichas siguen disponibles; los informes (",
+          LO_QUE_SE_PAUSA,
+          ") quedan en pausa.",
+        ),
+        cta,
+        pTenue("Si tienes dudas sobre los planes, responde este correo."),
+      ];
+  const usoCorto =
+    d.citasAgendadas > 0
+      ? `${d.citasAgendadas} ${plural(d.citasAgendadas, "cita agendada", "citas agendadas")} hasta ahora.`
+      : "";
+  return renderCorreo({
+    appUrl: d.appUrl,
+    asunto: esHoy ? "Tu prueba de Esmalia termina hoy" : "Tu prueba de Esmalia termina en 3 días",
+    preencabezado: esHoy
+      ? `${usoCorto} La agenda y las fichas siguen disponibles; los informes quedan en pausa.`.trim()
+      : `${usoCorto} No se cobra nada antes del ${fechaLarga(d.finDePrueba)}.`.trim(),
+    titulo: esHoy ? "Hoy termina tu prueba" : "Quedan 3 días de prueba",
+    bloques,
+    pie: {
+      motivo: `Recibes este correo porque eres responsable de la cuenta de ${d.clinicName} en Esmalia.`,
+    },
+  });
+}
+
+// ─── c. Suscripción activa ───────────────────────────────────────────────
+
+export interface DatosSuscripcionActiva {
+  appUrl: string;
+  clinicName: string;
+  nombre?: string | null;
+  plan: string;
+  /** Monto por período en la unidad mínima de la moneda (como Stripe). */
+  montoCents: number | null;
+  currency: string | null;
+  intervalo?: "mes" | "año" | null;
+  /** Fecha local (YYYY-MM-DD) del próximo cobro. */
+  proximoCobro: string | null;
+}
+
+export function correoSuscripcionActiva(d: DatosSuscripcionActiva): CorreoRenderizado {
+  const monto =
+    d.montoCents !== null && d.currency
+      ? `${montoConMoneda(d.montoCents, d.currency)}${d.intervalo ? ` al ${d.intervalo}` : ""}`
+      : "Sin datos";
+  const bloques: Bloque[] = [
+    p(saludo(d.nombre)),
+    p(
+      "Gracias por confiar en Esmalia. La suscripción de ",
+      { negrita: d.clinicName },
+      " está activa.",
+    ),
+    {
+      tipo: "tabla",
+      filas: [
+        { etiqueta: "Plan", valor: d.plan },
+        { etiqueta: "Monto", valor: monto },
+        {
+          etiqueta: "Próximo cobro",
+          valor: d.proximoCobro ? fechaLarga(d.proximoCobro) : "Sin datos",
+        },
+      ],
+    },
+    p("Desde Suscripción puedes ver tus facturas, cambiar la tarjeta o cancelar cuando quieras."),
+    { tipo: "boton", texto: "Ver mi suscripción", href: unir(d.appUrl, "/suscripcion") },
+    pTenue("Si algo de este cobro no te cuadra, responde este correo."),
+  ];
+  return renderCorreo({
+    appUrl: d.appUrl,
+    asunto: "Tu suscripción a Esmalia está activa",
+    preencabezado:
+      `Plan ${d.plan}. ${d.proximoCobro ? `Próximo cobro: ${fechaLarga(d.proximoCobro)}.` : ""}`.trim(),
+    titulo: "Tu suscripción está activa",
+    bloques,
+    pie: {
+      motivo: `Recibes este correo porque eres responsable de la cuenta de ${d.clinicName} en Esmalia.`,
+    },
+  });
+}
+
+// ─── d. Pago fallido ─────────────────────────────────────────────────────
+
+export interface DatosPagoFallido {
+  appUrl: string;
+  clinicName: string;
+  nombre?: string | null;
+  montoCents: number | null;
+  currency: string | null;
+  /** Fecha local (YYYY-MM-DD) del próximo intento de Stripe, si lo informó. */
+  proximoIntento: string | null;
+}
+
+export function correoPagoFallido(d: DatosPagoFallido): CorreoRenderizado {
+  const monto =
+    d.montoCents !== null && d.currency ? montoConMoneda(d.montoCents, d.currency) : null;
+  const bloques: Bloque[] = [
+    p(saludo(d.nombre)),
+    monto
+      ? p(
+          "Intentamos cobrar ",
+          { negrita: monto },
+          ` de la suscripción de ${d.clinicName} y el pago no se pudo procesar.`,
+        )
+      : p(`Intentamos cobrar la suscripción de ${d.clinicName} y el pago no se pudo procesar.`),
+    p(
+      { negrita: "Qué pasa mientras tanto: " },
+      "tu equipo sigue usando la agenda, los pacientes y las fichas con normalidad. Al entrar con la cuenta de propietario, en cambio, Esmalia te lleva a la página de Suscripción hasta que actualices la forma de pago.",
+    ),
+    ...(d.proximoIntento
+      ? [p(`Stripe volverá a intentar el cobro el ${fechaLarga(d.proximoIntento)}.`)]
+      : []),
+    p(
+      "Para resolverlo, entra a Suscripción y usa ",
+      { negrita: "Gestionar facturación" },
+      " para cambiar la tarjeta.",
+    ),
+    { tipo: "boton", texto: "Actualizar la tarjeta", href: unir(d.appUrl, "/suscripcion") },
+    pTenue("Si crees que es un error, responde este correo y lo revisamos."),
+  ];
+  return renderCorreo({
+    appUrl: d.appUrl,
+    asunto: "No pudimos cobrar tu suscripción a Esmalia",
+    preencabezado: "Tu equipo sigue trabajando. Actualiza la tarjeta desde Suscripción.",
+    titulo: "No pudimos procesar el pago",
+    bloques,
+    pie: {
+      motivo: `Recibes este correo porque eres responsable de la cuenta de ${d.clinicName} en Esmalia.`,
+    },
+  });
+}
+
+// ─── e. Tu semana en la clínica ──────────────────────────────────────────
+
+export interface EntradaSemana {
+  appUrl: string;
+  datos: DatosSemana;
+  bajaUrl: string;
+}
+
+function detalleCobrado(d: DatosSemana): { texto: string; tono: "neutro" | "sube" | "baja" } {
+  if (d.cobradoCents === null || d.cobradoPrevioCents === null)
+    return { texto: "", tono: "neutro" };
+  const v = variacion(d.cobradoCents, d.cobradoPrevioCents);
+  const previo = formatMoney(d.cobradoPrevioCents, d.currency);
+  switch (v.sentido) {
+    case "igual":
+      return { texto: "Lo mismo que la semana anterior.", tono: "neutro" };
+    case "sin_base":
+      return { texto: "La semana anterior no hubo cobros registrados.", tono: "neutro" };
+    case "sube":
+      return { texto: `↑ ${v.porcentaje} % frente a la semana anterior (${previo})`, tono: "sube" };
+    case "baja":
+      return { texto: `↓ ${v.porcentaje} % frente a la semana anterior (${previo})`, tono: "baja" };
+  }
+}
+
+export function correoSemana(e: EntradaSemana): CorreoRenderizado {
+  const d = e.datos;
+  const app = e.appUrl;
+  const cobrado = d.cobradoCents === null ? "Sin datos" : formatMoney(d.cobradoCents, d.currency);
+  const det = detalleCobrado(d);
+  const accion = elegirAccionSugerida(d);
+
+  const filas = [
+    {
+      etiqueta: "Citas atendidas",
+      valor: String(d.citasAtendidas),
+      nota: d.citasAgendadas > 0 ? `de ${d.citasAgendadas} agendadas` : undefined,
+    },
+    {
+      etiqueta: "Asistencia",
+      valor: d.tasaAsistencia === null ? "Sin datos" : `${d.tasaAsistencia} %`,
+    },
+    { etiqueta: "Ausencias", valor: String(d.ausencias) },
+    { etiqueta: "Pacientes nuevos", valor: String(d.pacientesNuevos) },
+    {
+      etiqueta: "Presupuestos aceptados",
+      valor: String(d.presupuestosAceptados),
+      nota: d.conversion === null ? "conversión: sin datos" : `conversión del ${d.conversion} %`,
+    },
+    {
+      etiqueta: "Deudas de más de 90 días",
+      valor: d.morosidad90Pacientes > 0 ? formatMoney(d.morosidad90Cents, d.currency) : "Ninguna",
+      nota:
+        d.morosidad90Pacientes > 0
+          ? `${d.morosidad90Pacientes} ${plural(d.morosidad90Pacientes, "paciente", "pacientes")}`
+          : undefined,
+    },
+  ];
+
+  const bloques: Bloque[] = [
+    {
+      tipo: "cifra",
+      etiqueta: "Cobrado en la semana",
+      valor: cobrado,
+      detalle: det.texto || undefined,
+      tono: det.tono,
+    },
+  ];
+  if (d.cobradoCents === null) {
+    bloques.push({
+      tipo: "recuadro",
+      titulo: "Para ver tu caja aquí",
+      partes: [
+        "Todavía no registras pagos en Esmalia. Cuando cobres desde la ficha del paciente, este resumen te va a mostrar cuánto entró cada semana y cómo se compara con la anterior.",
+      ],
+      enlace: { texto: "Ver Finanzas", href: unir(app, "/finanzas") },
+    });
+  }
+  bloques.push({ tipo: "tabla", filas });
+  if (accion) {
+    bloques.push({
+      tipo: "recuadro",
+      titulo: "Acción sugerida",
+      partes: [{ negrita: accion.titulo }, ". ", accion.detalle],
+      enlace: { texto: accion.enlace, href: unir(app, accion.ruta) },
+    });
+  }
+  bloques.push({ tipo: "boton", texto: "Abrir Esmalia", href: unir(app, "/dashboard") });
+  bloques.push(
+    pTenue(
+      "Las cifras salen de los mismos cálculos que Finanzas y Reportes, con la semana de lunes a domingo.",
+    ),
+  );
+
+  const asunto =
+    d.cobradoCents !== null
+      ? `Tu semana en ${d.clinicName}: ${cobrado} cobrados`
+      : `Tu semana en ${d.clinicName}: ${d.citasAtendidas} ${plural(d.citasAtendidas, "cita atendida", "citas atendidas")}`;
+
+  return renderCorreo({
+    appUrl: app,
+    asunto,
+    preencabezado: accion
+      ? `${accion.titulo}.`
+      : `${d.citasAtendidas} ${plural(d.citasAtendidas, "cita atendida", "citas atendidas")} y ${d.pacientesNuevos} ${plural(d.pacientesNuevos, "paciente nuevo", "pacientes nuevos")}.`,
+    titulo: "Tu semana en la clínica",
+    bajada: `${d.clinicName} · del ${fechaConDia(d.semana.desde)} al ${fechaConDia(d.semana.hasta)}`,
+    bloques,
+    pie: {
+      motivo: `Recibes este resumen porque administras ${d.clinicName} en Esmalia y tu rol puede ver las finanzas.`,
+      bajaUrl: e.bajaUrl,
+      bajaTexto: "Dejar de recibir este resumen",
+    },
+  });
+}

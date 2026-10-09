@@ -1573,6 +1573,62 @@ export type Database = {
           },
         ];
       };
+      lifecycle_emails: {
+        Row: {
+          attempts: number;
+          clinic_id: string;
+          created_at: string;
+          error: string | null;
+          id: string;
+          kind: string;
+          period_key: string;
+          provider_id: string | null;
+          recipient: string;
+          redirected_to: string | null;
+          status: string;
+          updated_at: string;
+          user_id: string | null;
+        };
+        Insert: {
+          attempts?: number;
+          clinic_id: string;
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          kind: string;
+          period_key: string;
+          provider_id?: string | null;
+          recipient: string;
+          redirected_to?: string | null;
+          status: string;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Update: {
+          attempts?: number;
+          clinic_id?: string;
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          kind?: string;
+          period_key?: string;
+          provider_id?: string | null;
+          recipient?: string;
+          redirected_to?: string | null;
+          status?: string;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lifecycle_emails_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       marketing_events: {
         Row: {
           created_at: string;

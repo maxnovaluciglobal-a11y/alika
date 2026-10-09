@@ -32,7 +32,9 @@ import { Route as ApiDailyDigestRouteImport } from './routes/api.daily-digest'
 import { Route as ApiDemoResetRouteImport } from './routes/api.demo-reset'
 import { Route as ApiEvRouteImport } from './routes/api.ev'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
+import { Route as ApiLifecycleEmailsRouteImport } from './routes/api.lifecycle-emails'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api.whatsapp-webhook'
+import { Route as CorreosBajaRouteImport } from './routes/correos.baja'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as DocsDatosYSeguridadRouteImport } from './routes/docs.datos-y-seguridad'
 import { Route as DocsPortalPacientesRouteImport } from './routes/docs.portal-pacientes'
@@ -82,6 +84,7 @@ import { Route as AuthenticatedClinicTratamientosRouteImport } from './routes/_a
 import { Route as AuthenticatedClinicWhatsappRouteImport } from './routes/_authenticated/_clinic/whatsapp'
 import { Route as AuthenticatedAdminClinicasRouteImport } from './routes/_authenticated/admin.clinicas'
 import { Route as AuthenticatedAdminLeadsRouteImport } from './routes/_authenticated/admin.leads'
+import { Route as ApiCorreosBajaRouteImport } from './routes/api.correos.baja'
 import { Route as ApiRecursoSlugRouteImport } from './routes/api.recurso.$slug'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
 import { Route as AuthenticatedClinicPacientesIndexRouteImport } from './routes/_authenticated/_clinic/pacientes.index'
@@ -202,9 +205,19 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
   path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLifecycleEmailsRoute = ApiLifecycleEmailsRouteImport.update({
+  id: '/api/lifecycle-emails',
+  path: '/api/lifecycle-emails',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
   id: '/api/whatsapp-webhook',
   path: '/api/whatsapp-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CorreosBajaRoute = CorreosBajaRouteImport.update({
+  id: '/correos/baja',
+  path: '/correos/baja',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsIndexRoute = DocsIndexRouteImport.update({
@@ -489,6 +502,11 @@ const AuthenticatedAdminLeadsRoute = AuthenticatedAdminLeadsRouteImport.update({
   path: '/admin/leads',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiCorreosBajaRoute = ApiCorreosBajaRouteImport.update({
+  id: '/api/correos/baja',
+  path: '/api/correos/baja',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRecursoSlugRoute = ApiRecursoSlugRouteImport.update({
   id: '/api/recurso/$slug',
   path: '/api/recurso/$slug',
@@ -534,7 +552,9 @@ export interface FileRoutesByFullPath {
   '/api/demo-reset': typeof ApiDemoResetRoute
   '/api/ev': typeof ApiEvRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/lifecycle-emails': typeof ApiLifecycleEmailsRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/correos/baja': typeof CorreosBajaRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
   '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
@@ -584,6 +604,7 @@ export interface FileRoutesByFullPath {
   '/whatsapp': typeof AuthenticatedClinicWhatsappRoute
   '/admin/clinicas': typeof AuthenticatedAdminClinicasRoute
   '/admin/leads': typeof AuthenticatedAdminLeadsRoute
+  '/api/correos/baja': typeof ApiCorreosBajaRoute
   '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
@@ -609,7 +630,9 @@ export interface FileRoutesByTo {
   '/api/demo-reset': typeof ApiDemoResetRoute
   '/api/ev': typeof ApiEvRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/lifecycle-emails': typeof ApiLifecycleEmailsRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/correos/baja': typeof CorreosBajaRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
   '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
@@ -659,6 +682,7 @@ export interface FileRoutesByTo {
   '/whatsapp': typeof AuthenticatedClinicWhatsappRoute
   '/admin/clinicas': typeof AuthenticatedAdminClinicasRoute
   '/admin/leads': typeof AuthenticatedAdminLeadsRoute
+  '/api/correos/baja': typeof ApiCorreosBajaRoute
   '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
@@ -689,7 +713,9 @@ export interface FileRoutesById {
   '/api/demo-reset': typeof ApiDemoResetRoute
   '/api/ev': typeof ApiEvRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/lifecycle-emails': typeof ApiLifecycleEmailsRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/correos/baja': typeof CorreosBajaRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
   '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
@@ -739,6 +765,7 @@ export interface FileRoutesById {
   '/_authenticated/_clinic/whatsapp': typeof AuthenticatedClinicWhatsappRoute
   '/_authenticated/admin/clinicas': typeof AuthenticatedAdminClinicasRoute
   '/_authenticated/admin/leads': typeof AuthenticatedAdminLeadsRoute
+  '/api/correos/baja': typeof ApiCorreosBajaRoute
   '/api/recurso/$slug': typeof ApiRecursoSlugRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/_authenticated/_clinic/pacientes/$pacienteId': typeof AuthenticatedClinicPacientesPacienteIdRoute
@@ -768,7 +795,9 @@ export interface FileRouteTypes {
     | '/api/demo-reset'
     | '/api/ev'
     | '/api/health'
+    | '/api/lifecycle-emails'
     | '/api/whatsapp-webhook'
+    | '/correos/baja'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
     | '/docs/primeros-pasos'
@@ -818,6 +847,7 @@ export interface FileRouteTypes {
     | '/whatsapp'
     | '/admin/clinicas'
     | '/admin/leads'
+    | '/api/correos/baja'
     | '/api/recurso/$slug'
     | '/api/stripe/webhook'
     | '/pacientes/$pacienteId'
@@ -843,7 +873,9 @@ export interface FileRouteTypes {
     | '/api/demo-reset'
     | '/api/ev'
     | '/api/health'
+    | '/api/lifecycle-emails'
     | '/api/whatsapp-webhook'
+    | '/correos/baja'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
     | '/docs/primeros-pasos'
@@ -893,6 +925,7 @@ export interface FileRouteTypes {
     | '/whatsapp'
     | '/admin/clinicas'
     | '/admin/leads'
+    | '/api/correos/baja'
     | '/api/recurso/$slug'
     | '/api/stripe/webhook'
     | '/pacientes/$pacienteId'
@@ -922,7 +955,9 @@ export interface FileRouteTypes {
     | '/api/demo-reset'
     | '/api/ev'
     | '/api/health'
+    | '/api/lifecycle-emails'
     | '/api/whatsapp-webhook'
+    | '/correos/baja'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
     | '/docs/primeros-pasos'
@@ -972,6 +1007,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_clinic/whatsapp'
     | '/_authenticated/admin/clinicas'
     | '/_authenticated/admin/leads'
+    | '/api/correos/baja'
     | '/api/recurso/$slug'
     | '/api/stripe/webhook'
     | '/_authenticated/_clinic/pacientes/$pacienteId'
@@ -999,9 +1035,12 @@ export interface RootRouteChildren {
   ApiDemoResetRoute: typeof ApiDemoResetRoute
   ApiEvRoute: typeof ApiEvRoute
   ApiHealthRoute: typeof ApiHealthRoute
+  ApiLifecycleEmailsRoute: typeof ApiLifecycleEmailsRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
+  CorreosBajaRoute: typeof CorreosBajaRoute
   RecursosFugasClinicaDentalRoute: typeof RecursosFugasClinicaDentalRoute
   RecursosIndexRoute: typeof RecursosIndexRoute
+  ApiCorreosBajaRoute: typeof ApiCorreosBajaRoute
   ApiRecursoSlugRoute: typeof ApiRecursoSlugRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
@@ -1169,11 +1208,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/lifecycle-emails': {
+      id: '/api/lifecycle-emails'
+      path: '/api/lifecycle-emails'
+      fullPath: '/api/lifecycle-emails'
+      preLoaderRoute: typeof ApiLifecycleEmailsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/whatsapp-webhook': {
       id: '/api/whatsapp-webhook'
       path: '/api/whatsapp-webhook'
       fullPath: '/api/whatsapp-webhook'
       preLoaderRoute: typeof ApiWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/correos/baja': {
+      id: '/correos/baja'
+      path: '/correos/baja'
+      fullPath: '/correos/baja'
+      preLoaderRoute: typeof CorreosBajaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs/': {
@@ -1519,6 +1572,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminLeadsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/correos/baja': {
+      id: '/api/correos/baja'
+      path: '/api/correos/baja'
+      fullPath: '/api/correos/baja'
+      preLoaderRoute: typeof ApiCorreosBajaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/recurso/$slug': {
       id: '/api/recurso/$slug'
       path: '/api/recurso/$slug'
@@ -1730,9 +1790,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDemoResetRoute: ApiDemoResetRoute,
   ApiEvRoute: ApiEvRoute,
   ApiHealthRoute: ApiHealthRoute,
+  ApiLifecycleEmailsRoute: ApiLifecycleEmailsRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
+  CorreosBajaRoute: CorreosBajaRoute,
   RecursosFugasClinicaDentalRoute: RecursosFugasClinicaDentalRoute,
   RecursosIndexRoute: RecursosIndexRoute,
+  ApiCorreosBajaRoute: ApiCorreosBajaRoute,
   ApiRecursoSlugRoute: ApiRecursoSlugRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }

@@ -110,5 +110,15 @@ export const completeClinicSetup = createServerFn({ method: "POST" })
     if (doneError)
       throw new Error(mensajeDb(doneError, "No pudimos finalizar la configuración de la clínica."));
 
+    // Correo de bienvenida (src/lib/email). Nunca lanza y espera como mucho
+    // unos segundos: en serverless una promesa suelta puede congelarse al
+    // responder. Con LIFECYCLE_EMAILS_ENABLED apagado vuelve al instante.
+    try {
+      const { enviarBienvenida, conTope } = await import("@/lib/email/ciclo-de-vida.server");
+      await conTope(enviarBienvenida({ clinicId, userId }));
+    } catch (err) {
+      console.warn("[lifecycle-email] bienvenida", err instanceof Error ? err.message : err);
+    }
+
     return { clinicId, branchId: branch.id };
   });
