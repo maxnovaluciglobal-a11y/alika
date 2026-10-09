@@ -110,7 +110,7 @@ function BajaDeCorreos() {
               <Link to="/preferencias" className="text-primary underline underline-offset-2">
                 Preferencias
               </Link>{" "}
-              o escribirnos a maxnovaluciglobal@gmail.com y lo hacemos por ti.
+              o escribirnos a soporte@esmalia.com y lo hacemos por ti.
             </p>
           </>
         )}
@@ -122,7 +122,7 @@ function BajaDeCorreos() {
             </h1>
             <p className="mt-4 leading-relaxed text-muted-foreground">
               Intenta de nuevo en unos minutos. Si el problema sigue, escríbenos a
-              maxnovaluciglobal@gmail.com y lo hacemos por ti.
+              soporte@esmalia.com y lo hacemos por ti.
             </p>
           </>
         )}

@@ -140,11 +140,8 @@ function Terminos() {
       <LegalH2>12. Contacto</LegalH2>
       <LegalP>
         Para consultas sobre estos términos:{" "}
-        <a
-          href="mailto:maxnovaluciglobal@gmail.com"
-          className="text-brand-700 underline underline-offset-2"
-        >
-          maxnovaluciglobal@gmail.com
+        <a href="mailto:hola@esmalia.com" className="text-brand-700 underline underline-offset-2">
+          hola@esmalia.com
         </a>
         .
       </LegalP>
