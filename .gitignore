@@ -48,3 +48,10 @@ supabase/.temp
 # build ejecuta ese script, así que en producción el PDF simplemente no existe
 # y el UPDATE que quema el token de un solo uso corre igual, antes del intento
 # de lectura — el lead pierde el PDF para siempre. 263KB es chico: se versiona.
+
+# Sesión de la demo que guarda scripts/capturar-ficha-landing.mjs (token de auth)
+.playwright/
+
+# Estado local de Impeccable (caché del hook y sesiones del modo live)
+.impeccable/hook.cache.json
+.impeccable/live/

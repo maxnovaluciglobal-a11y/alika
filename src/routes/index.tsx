@@ -499,13 +499,16 @@ function Landing() {
 
         {/* Testimonio con permiso, o la nota clínica real del producto */}
         <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-16 lg:grid-cols-[0.9fr_1.1fr]">
+          {/* Captura real de la clínica demo (09-oct-2026), no foto de stock:
+              la ficha con la alerta de alergia y el odontograma. Se rehace
+              con scripts/capturar-ficha-landing.mjs cuando cambie la ficha. */}
           <img
-            src="/landing/dentist.jpg"
-            alt="Dentista atendiendo a un paciente en su consultorio"
-            width={1280}
-            height={853}
+            src="/landing/ficha-odontograma.jpg"
+            alt="Ficha de un paciente en Esmalia: datos de contacto, convenio, alerta de alergia y el odontograma con una corona y una obturación marcadas"
+            width={2240}
+            height={1680}
             loading="lazy"
-            className="plate aspect-[4/3] w-full rounded-sm object-cover"
+            className="plate aspect-[4/3] w-full rounded-sm border border-hairline object-cover object-top"
           />
           {TESTIMONIO ? (
             <blockquote>

@@ -1,4 +1,6 @@
-# Deploy a producción — Alika
+# Deploy a producción — Esmalia (ex Alika)
+
+> **Histórico (05-sep-2026).** Este checklist se escribió antes del rebrand y quedó en gran parte cumplido: Sentry con redacción de PII, robots/sitemap/llms, headers y CSP con nonce, webhook de Stripe live, backups diarios a B2 y `/api/health` ya están en producción. El nombre definitivo es **Esmalia** (no Alika) y el dominio a comprar es `esmalia.com`; la conexión del dominio sigue `docs/DOMINIO_RUNBOOK.md`. **La lista vigente de lo que falta para publicar vive en el tablero del proyecto:** `~/Documents/01 - Maxnova Luci Global/04 - Alika/00 - Gestion/PENDIENTES.md` (actualizado el 09-oct-2026). Lo que sigue abierto de este documento y quedó trasladado allá: registro de marca, monitoreo externo de `/api/health`, Stripe propio de la LLC y pilotos.
 
 Checklist paso a paso para el primer lanzamiento B2B con clínicas piloto. Cada sección lista **quién debe hacerlo** (Walter vs código) y **cómo verificar** que quedó.
 
