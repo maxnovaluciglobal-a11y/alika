@@ -17,14 +17,41 @@ export const PASO_HUECO_MIN = 15;
 /** Minutos que muestra la grilla (de HORA_INICIO a HORA_INICIO + HORAS_VISIBLES). */
 export const MINUTOS_VISIBLES = HORAS_VISIBLES * 60;
 
+/** Tramo que dibuja la grilla, en minutos desde HORA_INICIO y en horas en punto. */
+export interface RangoGrilla {
+  desde: number;
+  hasta: number;
+}
+
+/**
+ * La jornada base (HORA_INICIO a HORA_INICIO + HORAS_VISIBLES), estirada hasta
+ * la hora en punto que cubre la cita más temprana y la más tardía. Antes la
+ * grilla era fija de 08:00 a 15:00: las citas de la tarde quedaban colgando
+ * debajo de la última línea y las de antes de las 08:00 tapadas por el
+ * encabezado (revisión en producción, 08-oct-2026). Nunca sale del día.
+ */
+export function rangoDeGrilla(citas: { inicio: number; duracion: number }[]): RangoGrilla {
+  let desde = 0;
+  let hasta = HORAS_VISIBLES * 60;
+  for (const c of citas) {
+    desde = Math.min(desde, c.inicio);
+    hasta = Math.max(hasta, c.inicio + c.duracion);
+  }
+  return {
+    desde: Math.max(-HORA_INICIO * 60, Math.floor(desde / 60) * 60),
+    hasta: Math.min((24 - HORA_INICIO) * 60, Math.ceil(hasta / 60) * 60),
+  };
+}
+
 /**
  * Redondea hacia abajo al cuarto de hora: un clic en 10:38 agenda a las 10:30,
  * el inicio de la franja donde cayó el clic (nunca la siguiente, que podría
- * estar ocupada). Nunca devuelve negativos.
+ * estar ocupada). Puede ser negativo (antes de HORA_INICIO, si la grilla se
+ * estiró hacia arriba), pero nunca antes de las 00:00.
  */
 export function redondearACuarto(minutos: number): number {
-  if (!Number.isFinite(minutos) || minutos <= 0) return 0;
-  return Math.floor(minutos / PASO_HUECO_MIN) * PASO_HUECO_MIN;
+  if (!Number.isFinite(minutos)) return 0;
+  return Math.max(-HORA_INICIO * 60, Math.floor(minutos / PASO_HUECO_MIN) * PASO_HUECO_MIN);
 }
 
 /** Minutos desde HORA_INICIO → "HH:mm" (hora de pared). */
@@ -69,10 +96,11 @@ export function semillaDeHueco({
  */
 export function huecosLibres(
   citas: { inicio: number; duracion: number }[],
-  totalMinutos = MINUTOS_VISIBLES,
+  hasta = MINUTOS_VISIBLES,
+  desde = 0,
 ): number[] {
   const libres: number[] = [];
-  for (let s = 0; s + PASO_HUECO_MIN <= totalMinutos; s += PASO_HUECO_MIN) {
+  for (let s = desde; s + PASO_HUECO_MIN <= hasta; s += PASO_HUECO_MIN) {
     const fin = s + PASO_HUECO_MIN;
     const ocupado = citas.some((c) => c.inicio < fin && c.inicio + c.duracion > s);
     if (!ocupado) libres.push(s);
