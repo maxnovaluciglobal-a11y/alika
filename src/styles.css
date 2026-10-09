@@ -124,6 +124,7 @@
   --color-ai: var(--ai);
   --color-ai-foreground: var(--ai-foreground);
   --color-ai-soft: var(--ai-soft);
+  --color-ai-border: var(--ai-border);
   --color-surface: var(--surface);
   --color-hairline: var(--hairline);
   --color-divider: var(--divider);
@@ -200,10 +201,14 @@
   --brand-foreground: #201f1d;
   --brand-soft: #fff3e4;
 
-  /* IA: el segundo acento del sistema, en la misma familia cálida. */
-  --ai: #79561f;
+  /* IA (Patty): violeta ciruela, el único acento frío del sistema. Significa
+     una sola cosa: "esto lo hizo la IA". Nada manual (prioridad, estados,
+     enviados) lo usa. Texto 8,3:1 sobre la tarjeta y 7,5:1 sobre su fondo
+     suave; borde 3,2:1 sobre la tarjeta. */
+  --ai: #5b3a8c;
   --ai-foreground: #ffffff;
-  --ai-soft: #fff3e4;
+  --ai-soft: #f1ecf8;
+  --ai-border: #9a82c0;
 
   /* Semánticos shadcn re-mapeados: así cambian los 48 componentes de ui/. */
   --primary: #7d5411;
@@ -287,9 +292,12 @@
   --brand-foreground: #1d1c1b;
   --brand-soft: #3a270d;
 
-  --ai: #facb8d;
+  /* Lavanda sobre tinta: 8,5:1 sobre la tarjeta, 8,0:1 sobre su fondo
+     ciruela; borde 3,2:1. */
+  --ai: #c8b4ec;
   --ai-foreground: #1d1c1b;
-  --ai-soft: #3a270d;
+  --ai-soft: #2c2238;
+  --ai-border: #7a64a0;
 
   --primary: #facb8d;
   --primary-foreground: #1d1c1b;

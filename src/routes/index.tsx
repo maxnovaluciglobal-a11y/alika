@@ -3,7 +3,8 @@
 // Landing (rediseño 06-oct-2026, panel 1b del handoff en
 // docs/design_handoff_alika_rediseno/). Orden: hero con la pantalla "Hoy"
 // construida en HTML → clínicas piloto → calculadora de fugas → tres
-// resultados → nota clínica → seguridad de datos → precios → cierre.
+// resultados → nota clínica → Patty (la IA) → seguridad de datos → precios →
+// cierre.
 //
 // Reglas de veracidad que el mockup no podía saber:
 // - Las cifras del mockup (−40% ausencias, etc.) eran ilustrativas. Acá solo
@@ -26,6 +27,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, DatabaseBackup, Lock, MessageCircle, ShieldCheck, Users } from "lucide-react";
 
 import { PreciosPlanes } from "@/components/marketing/precios";
+import { PattyMark } from "@/components/patty";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -327,7 +329,7 @@ const resultados = [
     cifra: "Una ficha",
     titulo: "La historia, en un lugar",
     texto:
-      "Odontograma FDI versionado, notas clínicas con revisión y resumen con IA, consentimientos firmados.",
+      "Odontograma FDI versionado, notas clínicas con revisión y resumen de Patty (IA), consentimientos firmados.",
     cta: "Ver una ficha",
   },
 ] as const;
@@ -386,6 +388,55 @@ function FranjaSeguridad() {
             </li>
           ))}
         </ul>
+      </div>
+    </section>
+  );
+}
+
+// ── Patty, la IA de Esmalia ─────────────────────────────────────────
+// Solo lo que la IA hace hoy en el producto (notas: redactar, pulir,
+// resumir, estructurar; WhatsApp: leer el pedido de hora que las reglas no
+// entienden). Patty propone y el profesional decide: nunca firma, nunca le
+// escribe sola a un paciente, nunca toca la agenda.
+
+const capacidadesPatty = [
+  "Redacta y ordena la nota mientras atiendes: de tus apuntes a una nota SOAP.",
+  "Resume la nota clínica para que la próxima consulta empiece con contexto.",
+  "Lee los pedidos de hora por WhatsApp que no son obvios y te avisa.",
+] as const;
+
+function ConocePatty() {
+  return (
+    <section
+      id="patty"
+      aria-labelledby="patty-titulo"
+      className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16"
+    >
+      <div className="grid gap-10 border-t border-border pt-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+        <div className="min-w-0">
+          <PattyMark size={44} />
+          <h2
+            id="patty-titulo"
+            className="mt-5 font-display text-4xl font-normal leading-tight sm:text-5xl"
+          >
+            Conoce a <em className="text-ai">Patty</em>.
+          </h2>
+          <p className="mt-5 max-w-md leading-relaxed text-muted-foreground">
+            Patty es la IA que trabaja dentro de Esmalia. Propone, no decide: no firma notas, no le
+            escribe a tus pacientes por su cuenta y no mueve tu agenda.
+          </p>
+        </div>
+        <div className="min-w-0">
+          <ul className="divide-y divide-border border-y border-border">
+            {capacidadesPatty.map((c) => (
+              <li key={c} className="flex gap-4 py-4 leading-relaxed">
+                <span aria-hidden className="mt-[0.6em] size-1.5 shrink-0 rounded-full bg-ai" />
+                {c}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-6 font-display text-2xl italic">Tú revisas y firmas.</p>
+        </div>
       </div>
     </section>
   );
@@ -519,7 +570,7 @@ function Landing() {
             </blockquote>
           ) : (
             <figure>
-              <p className="kicker">Nota clínica · resumida con IA</p>
+              <p className="kicker">Nota clínica · resumida por Patty</p>
               <blockquote className="mt-4 font-display text-[30px] italic leading-snug">
                 “Control de ortodoncia. Ajuste de arco superior, sin molestias referidas. Próximo
                 control en 4 semanas.”
@@ -531,6 +582,8 @@ function Landing() {
             </figure>
           )}
         </section>
+
+        <ConocePatty />
 
         <FranjaSeguridad />
 
