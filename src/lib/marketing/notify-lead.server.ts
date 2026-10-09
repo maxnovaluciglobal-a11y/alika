@@ -24,8 +24,15 @@ type DatosNotificacion = {
   phone: string | null;
 };
 
-function destinatariosStaff(): string[] {
-  return (process.env.ALIKA_STAFF_EMAILS ?? "")
+/**
+ * A quién le llega el aviso. `LEADS_NOTIFY_EMAILS` existe porque
+ * `ALIKA_STAFF_EMAILS` también es la allowlist de `/admin`: Walter entra con
+ * su cuenta personal, pero los leads tienen que ir solo al correo de la
+ * empresa. Sin la variable propia, se cae a la allowlist de siempre.
+ */
+export function destinatariosStaff(env: NodeJS.ProcessEnv = process.env): string[] {
+  const lista = env.LEADS_NOTIFY_EMAILS?.trim() ? env.LEADS_NOTIFY_EMAILS : env.ALIKA_STAFF_EMAILS;
+  return (lista ?? "")
     .split(",")
     .map((e) => e.trim())
     .filter(Boolean);
@@ -43,7 +50,9 @@ export async function notificarNuevoLead(datos: DatosNotificacion): Promise<void
     const from = process.env.EMAIL_FROM;
     const staff = destinatariosStaff();
     if (!apiKey || !from || staff.length === 0) {
-      console.warn("[leads] Sin notificar: falta RESEND_API_KEY, EMAIL_FROM o ALIKA_STAFF_EMAILS.");
+      console.warn(
+        "[leads] Sin notificar: falta RESEND_API_KEY, EMAIL_FROM o LEADS_NOTIFY_EMAILS/ALIKA_STAFF_EMAILS.",
+      );
       return;
     }
 
