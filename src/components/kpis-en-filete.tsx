@@ -45,8 +45,13 @@ export function KpisEnFilete({
           <dt className="kicker">{k.label}</dt>
           <dd
             className={cn(
-              "mt-2 truncate font-display font-normal leading-none tabular-nums",
-              tamano === "lg" ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl",
+              // Un monto no se corta nunca ("$2.516…" no dice cuánto). En
+              // celular el tamaño baja con el ancho de la pantalla para que
+              // "-$2.169.836" entre en media columna; desde sm vuelve al fijo.
+              "mt-2 whitespace-nowrap font-display font-normal leading-none tabular-nums",
+              tamano === "lg"
+                ? "text-[clamp(1.375rem,6.4vw,1.875rem)] sm:text-4xl"
+                : "text-[clamp(1.25rem,5.6vw,1.5rem)] sm:text-3xl",
               k.tono && claseTexto[k.tono],
             )}
           >
