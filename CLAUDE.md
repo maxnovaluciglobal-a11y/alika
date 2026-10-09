@@ -1,12 +1,14 @@
-# CLAUDE.md — Alika
+# CLAUDE.md — Esmalia (ex Alika)
 
-Guía para Claude Code cuando trabaja en este repositorio. Es el complemento del workspace raíz `~/Documents/CLAUDE.md` — este archivo es la fuente de verdad para lo específico de Alika.
+Guía para Claude Code cuando trabaja en este repositorio. Es el complemento del workspace raíz `~/Documents/CLAUDE.md` — este archivo es la fuente de verdad para lo específico del producto.
 
-## Qué es Alika
+## Qué es Esmalia
 
-SaaS de gestión para clínicas dentales de LatAm (target CL/MX/CO/PE/AR). **Marca actual "Alika"** (rebrand tentativo desde "Oralia" tras auditoría de naming — `oralia.com` es ORALIA GmbH láser dental Alemania y `oralia.app` es SaaS francés). Nombre del proyecto en Lovable y del repo GitHub sigue siendo **"Aurora Dental OS"** por continuidad de sync — no renombrar ninguno de esos dos.
+SaaS de gestión para clínicas dentales de LatAm (target CL/MX/CO/PE/AR). **Marca definitiva "Esmalia"** desde el 08-oct-2026 (antes Alika → Oralia → Aurora Dental OS). El repo, la carpeta, el proyecto de Vercel, el de Supabase y varios nombres internos (`ALIKA_STAFF_EMAILS`, claves `alika:*` de `localStorage`, la cookie del portal, `demo@alika.app`) siguen como "alika": renombrarlos corta sesiones y preferencias de usuarios reales, así que no se tocan sin un plan. La interfaz y todo lo que ve el usuario dicen Esmalia.
 
-Importado de Lovable en ago-2026. Se sigue desarrollando desde este repo local; Lovable queda como editor visual secundario.
+- Sistema visual: tokens en `src/styles.css` (papel/tinta/ocre, modo oscuro), Cormorant (títulos) + Lora (texto) + Manrope solo en cifras dentro de la app. Guía del logo en `docs/MARCA.md`.
+- Brief de marca vigente para trabajos de diseño: `~/Documents/01 - Maxnova Luci Global/04 - Alika/04 - Marca y Diseno/2026-10-09-prompt-identidad-esmalia-saas.md`.
+- Desacoplado de Lovable el 31-ago-2026 (`docs/DESACOPLE_LOVABLE.md`): Lovable ya no es editor ni fuente de nada.
 
 ## Ubicaciones y accesos
 
