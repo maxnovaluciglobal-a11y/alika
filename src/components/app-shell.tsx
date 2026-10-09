@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 
 // Mismo destino de contacto que usan las páginas públicas (nosotros/privacidad/
 // términos/faq): no hay número de WhatsApp de soporte, solo este mailto.
-const SUPPORT_EMAIL = "maxnovaluciglobal@gmail.com";
+const SUPPORT_EMAIL = "soporte@esmalia.com";
 
 /**
  * Barra inferior del celular (<768px, rediseño fase 5): los cinco destinos

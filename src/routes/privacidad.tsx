@@ -48,10 +48,10 @@ function Privacidad() {
         Esmalia lo opera MAXNOVA &amp; LUCI Global LLC, una LLC constituida en Estados Unidos. Para
         cualquier consulta de privacidad, escríbenos a{" "}
         <a
-          href="mailto:maxnovaluciglobal@gmail.com"
+          href="mailto:privacidad@esmalia.com"
           className="text-brand-700 underline underline-offset-2"
         >
-          maxnovaluciglobal@gmail.com
+          privacidad@esmalia.com
         </a>
         . Ese correo lo lee el equipo que opera Esmalia, no un buzón automático.
       </LegalP>
@@ -212,10 +212,10 @@ function Privacidad() {
         <strong>Cómo te das de baja.</strong> Cuando quieras, gratis, sin explicar por qué y sin que
         intentemos convencerte de lo contrario. Hoy el camino es escribirnos a{" "}
         <a
-          href="mailto:maxnovaluciglobal@gmail.com"
+          href="mailto:privacidad@esmalia.com"
           className="text-brand-700 underline underline-offset-2"
         >
-          maxnovaluciglobal@gmail.com
+          privacidad@esmalia.com
         </a>{" "}
         diciendo que quieres la baja: dejamos de escribirte apenas lo leemos y borramos tu email y
         tu teléfono dentro de los 30 días.{" "}
@@ -446,10 +446,10 @@ function Privacidad() {
       <LegalP>
         Para consultas sobre privacidad:{" "}
         <a
-          href="mailto:maxnovaluciglobal@gmail.com"
+          href="mailto:privacidad@esmalia.com"
           className="text-brand-700 underline underline-offset-2"
         >
-          maxnovaluciglobal@gmail.com
+          privacidad@esmalia.com
         </a>
         .
       </LegalP>

@@ -142,11 +142,8 @@ function Faq() {
         </h1>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground">
           ¿No encuentras lo que buscas? Escríbenos a{" "}
-          <a
-            href="mailto:maxnovaluciglobal@gmail.com"
-            className="text-brand-700 underline underline-offset-2"
-          >
-            maxnovaluciglobal@gmail.com
+          <a href="mailto:hola@esmalia.com" className="text-brand-700 underline underline-offset-2">
+            hola@esmalia.com
           </a>
           .
         </p>

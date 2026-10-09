@@ -6,7 +6,7 @@
 // fingir un chat que no abre.
 import { buildWaMeUrl } from "@/lib/messaging/messaging";
 
-export const EMAIL_CONTACTO = "maxnovaluciglobal@gmail.com";
+export const EMAIL_CONTACTO = "hola@esmalia.com";
 
 const MENSAJE_INICIAL = "Hola, quiero conocer Esmalia para mi clínica.";
 

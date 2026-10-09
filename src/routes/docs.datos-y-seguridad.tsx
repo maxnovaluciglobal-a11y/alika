@@ -116,11 +116,8 @@ function DocsSeguridad() {
       <LegalH2>Algo no cuadra o encontraste un problema</LegalH2>
       <LegalP>
         Si detectas algo que te parece un problema de seguridad, escríbenos directamente a{" "}
-        <a
-          href="mailto:maxnovaluciglobal@gmail.com"
-          className="text-brand-700 underline underline-offset-2"
-        >
-          maxnovaluciglobal@gmail.com
+        <a href="mailto:hola@esmalia.com" className="text-brand-700 underline underline-offset-2">
+          hola@esmalia.com
         </a>{" "}
         — lo tratamos como prioridad.
       </LegalP>
