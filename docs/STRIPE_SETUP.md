@@ -77,7 +77,7 @@ VITE_STRIPE_PRICE_ID_CLINIC_MONTHLY=price_...    # mismo valor que arriba
 
 En el dashboard de Stripe → Developers → Webhooks (en el mismo modo, Test o Live, en el que creaste el producto):
 
-1. Add endpoint → URL: `https://alika-omega.vercel.app/api/stripe/webhook` (proyecto Vercel real, `prj_2qH7NKthOoML1ZsCKLbKDV8rzan2`) — no hace falta esperar al dominio `alika.com`, se puede migrar el endpoint el día que exista.
+1. Add endpoint → URL: `https://alika-omega.vercel.app/api/stripe/webhook` (se mantiene después del dominio propio `esmalia.com`: el alias no redirige `/api/*`) (proyecto Vercel real, `prj_2qH7NKthOoML1ZsCKLbKDV8rzan2`) — no hace falta esperar al dominio `alika.com`, se puede migrar el endpoint el día que exista.
 2. Eventos a escuchar:
    - `checkout.session.completed`
    - `customer.subscription.created`
