@@ -209,7 +209,7 @@ export const createInventoryItem = createServerFn({ method: "POST" })
     if (error) {
       if (isUndefinedColumnError(error)) {
         throw new Error(
-          "No pudimos guardar el ítem: falta aplicar una migración de inventario (sucursales o tipo de consumo). Avisale a Walter.",
+          "No pudimos guardar el ítem: falta aplicar una migración de inventario (sucursales o tipo de consumo). Avísale al soporte de Esmalia.",
         );
       }
       throw new Error(mensajeDb(error, "No pudimos crear el ítem de inventario."));
@@ -262,7 +262,7 @@ export const updateInventoryItem = createServerFn({ method: "POST" })
     if (error) {
       if (isUndefinedColumnError(error)) {
         throw new Error(
-          "No pudimos guardar el ítem: falta aplicar una migración de inventario (sucursales o tipo de consumo). Avisale a Walter.",
+          "No pudimos guardar el ítem: falta aplicar una migración de inventario (sucursales o tipo de consumo). Avísale al soporte de Esmalia.",
         );
       }
       throw new Error(mensajeDb(error, "No pudimos actualizar el ítem de inventario."));
