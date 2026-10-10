@@ -114,7 +114,7 @@ const SOCIAL_IMAGE_URL = `${SITE_URL}/landing/og-esmalia.png`;
  * AppShell (clave `alika:theme`, si no hay elección sigue al sistema) y
  * solo en la app: las páginas públicas siguen siempre en claro.
  */
-const SCRIPT_TEMA_SIN_DESTELLO = `(function(){try{var p=location.pathname.split("/")[1]||"";var pub=["","auth","demo","docs","faq","nosotros","portal","portal-laboratorio","precios","privacidad","recursos","software-dental-latam","terminos","calculadora-rentabilidad-dental"];if(pub.indexOf(p)>=0)return;var t=localStorage.getItem("alika:theme");if(t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}})();`;
+const SCRIPT_TEMA_SIN_DESTELLO = `(function(){try{var p=location.pathname.split("/")[1]||"";var pub=["","auth","demo","docs","dpa","faq","nosotros","portal","portal-laboratorio","precios","privacidad","recursos","software-dental-latam","terminos","calculadora-rentabilidad-dental"];if(pub.indexOf(p)>=0)return;var t=localStorage.getItem("alika:theme");if(t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}})();`;
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
