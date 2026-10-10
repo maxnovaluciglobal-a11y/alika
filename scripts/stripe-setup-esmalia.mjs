@@ -59,9 +59,14 @@ const PLANES = [
   },
 ];
 
-const key = process.env.STRIPE_SECRET_KEY ?? "";
+const key = (process.env.STRIPE_SECRET_KEY ?? "").trim().replace(/^["']|["']$/g, "");
 if (!/^(sk|rk)_(live|test)_/.test(key)) {
-  console.error("Falta STRIPE_SECRET_KEY (sk_live_… o sk_test_…) de la cuenta de Esmalia.");
+  const recibido = key ? `empieza con "${key.slice(0, 8)}…" (${key.length} caracteres)` : "vacía";
+  console.error(`La STRIPE_SECRET_KEY recibida está ${key ? "mal" : "vacía"}: ${recibido}.`);
+  console.error(
+    "Tiene que ser la secret key de la cuenta Esmalia: sk_live_… (Developers → API keys).",
+  );
+  if (key.startsWith("pk_")) console.error("Esa es la clave publicable (pk_), no la secreta.");
   process.exit(1);
 }
 const modo = key.includes("_live_") ? "LIVE" : "TEST";
