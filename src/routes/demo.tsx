@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 
 import { getSupabase } from "@/integrations/supabase/lazy";
 import { ensureDemoClinicFresh } from "@/lib/demo.functions";
+import { DEMO_EMAIL } from "@/lib/demo-cuenta";
 import { LeadForm } from "@/components/marketing/lead-form";
 import { EsmaliaLogo } from "@/components/esmalia-logo";
 import { PublicPageShell } from "@/components/site-chrome";
@@ -14,7 +15,6 @@ import type { PaisCaptacion } from "@/lib/marketing/leads";
 // Credenciales de la clínica demo pública, de solo lectura (bloqueo por
 // trigger, ver migración 20260815180000). No son un secreto: cualquiera
 // puede entrar a la demo, ese es el punto.
-const DEMO_EMAIL = "demo@alika.app";
 const DEMO_PASSWORD = "AlikaDemo2026!";
 
 export const Route = createFileRoute("/demo")({

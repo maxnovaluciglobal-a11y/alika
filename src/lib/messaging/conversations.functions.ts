@@ -12,6 +12,7 @@ import {
   type MessageDirection,
 } from "@/lib/messaging/conversations";
 import { sendMetaTextMessage } from "@/lib/messaging/whatsapp.functions";
+import { assertNotDemoClinic } from "@/lib/access/clinic-guards.server";
 
 /**
  * Cuántos mensajes se leen para armar la bandeja. La query NO puede hacer
@@ -240,6 +241,7 @@ export const replyToConversation = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<ReplyResult> => {
     const { supabase, userId } = context;
+    await assertNotDemoClinic(supabase, data.clinicId);
 
     const { data: paciente, error: errPac } = await supabase
       .from("patients")
