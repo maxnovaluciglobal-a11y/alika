@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { cronAutorizado } from "@/lib/cron-auth.server";
 
 /**
  * Reset periódico de la clínica demo pública. Disparado por Vercel Cron
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/api/demo-reset")({
         if (!secret) {
           return new Response("CRON_SECRET no configurado", { status: 500 });
         }
-        if (auth !== `Bearer ${secret}`) {
+        if (!cronAutorizado(auth, secret)) {
           return new Response("unauthorized", { status: 401 });
         }
 

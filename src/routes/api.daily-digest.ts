@@ -8,6 +8,7 @@ import {
   esHoraDelResumen,
 } from "@/lib/messaging/digest-diario";
 import { ROLES_BANDEJA, notifyClinicStaff } from "@/lib/messaging/notifications.functions";
+import { cronAutorizado } from "@/lib/cron-auth.server";
 
 /**
  * Resumen diario para el equipo de cada clínica (F3 del plan Clinera).
@@ -38,7 +39,7 @@ export const Route = createFileRoute("/api/daily-digest")({
       GET: async ({ request }) => {
         const secret = process.env.CRON_SECRET;
         if (!secret) return new Response("CRON_SECRET no configurado", { status: 500 });
-        if (request.headers.get("authorization") !== `Bearer ${secret}`) {
+        if (!cronAutorizado(request.headers.get("authorization"), secret)) {
           return new Response("unauthorized", { status: 401 });
         }
 
