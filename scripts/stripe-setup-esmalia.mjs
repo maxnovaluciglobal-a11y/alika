@@ -2,11 +2,11 @@
 /**
  * Configura la cuenta de Stripe propia de Esmalia (separada de DypOS).
  *
- *   STRIPE_SECRET_KEY=... node scripts/stripe-setup-esmalia.mjs            # revisa y crea
- *   STRIPE_SECRET_KEY=... node scripts/stripe-setup-esmalia.mjs --vercel   # además carga en Vercel
+ *   node scripts/stripe-setup-esmalia.mjs            # revisa y crea
+ *   node scripts/stripe-setup-esmalia.mjs --vercel   # además carga en Vercel
  *
- * Mejor sin dejar la clave en el historial del shell: `read -s STRIPE_SECRET_KEY`
- * (pegar, Enter), `export STRIPE_SECRET_KEY` y después el comando.
+ * Si `STRIPE_SECRET_KEY` no está en el entorno, la pide por la terminal sin
+ * mostrarla (y sin dejarla en el historial del shell).
  *
  * Idempotente: busca por `lookup_key` / metadata antes de crear, así que se
  * puede correr de nuevo sin duplicar nada. Crea:
@@ -59,7 +59,29 @@ const PLANES = [
   },
 ];
 
-const key = (process.env.STRIPE_SECRET_KEY ?? "").trim().replace(/^["']|["']$/g, "");
+/** Pide la clave por la terminal sin mostrarla (ignora líneas vacías). */
+async function pedirClaveOculta() {
+  const { createInterface } = await import("node:readline");
+  const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: true });
+  rl._writeToOutput = (t) => {
+    if (t.startsWith("Pega")) process.stdout.write(t);
+  };
+  try {
+    for (;;) {
+      const linea = await new Promise((r) =>
+        rl.question("Pega la secret key live de Esmalia (no se ve) y presiona Enter: ", r),
+      );
+      process.stdout.write("\n");
+      if (linea.trim()) return linea;
+    }
+  } finally {
+    rl.close();
+  }
+}
+
+const key = (process.env.STRIPE_SECRET_KEY?.trim() || (await pedirClaveOculta()))
+  .trim()
+  .replace(/^["']|["']$/g, "");
 if (!/^(sk|rk)_(live|test)_/.test(key)) {
   const recibido = key ? `empieza con "${key.slice(0, 8)}…" (${key.length} caracteres)` : "vacía";
   console.error(`La STRIPE_SECRET_KEY recibida está ${key ? "mal" : "vacía"}: ${recibido}.`);
