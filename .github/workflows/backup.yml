@@ -29,15 +29,26 @@ jobs:
       - name: Exportar datos + comprimir
         run: node scripts/backup-data.mjs > backup.json.gz
 
+      - name: Descargar archivos de Storage + empaquetar
+        # Todos los buckets (hoy: clinical-documents). Si falla un listado el
+        # step sale en rojo; un archivo suelto que no baja se saltea y queda
+        # en storage-backup/manifest.json → failed (ver el script).
+        run: |
+          node scripts/backup-storage.mjs storage-backup
+          tar -czf storage.tar.gz -C storage-backup .
+          rm -rf storage-backup
+
       - name: Cifrar con age
         # Clave pública de Alika — la privada vive fuera del repo, ver
         # docs/BACKUPS_ALIKA.md. Cifrar acá y no en backup-data.mjs separa
         # "exportar datos" (testeable sin age instalado) de "cifrar para
         # guardar" (solo importa en este job).
         run: |
-          age -r age1xrwep8wxudjt6zy0ygnqf5xzr5tmpeakmn55yt8q37lg23ewqu2q2tzvqv \
-            -o "backup.json.gz.age" backup.json.gz
-          rm backup.json.gz
+          for f in backup.json.gz storage.tar.gz; do
+            age -r age1xrwep8wxudjt6zy0ygnqf5xzr5tmpeakmn55yt8q37lg23ewqu2q2tzvqv \
+              -o "$f.age" "$f"
+            rm "$f"
+          done
 
       - name: Subir a Backblaze B2
         env:
@@ -47,6 +58,7 @@ jobs:
         run: |
           STAMP=$(date -u +%Y%m%d_%H%M%S)
           rclone copyto backup.json.gz.age "b2:alika-backups/db/alika_${STAMP}.json.gz.age"
+          rclone copyto storage.tar.gz.age "b2:alika-backups/storage/alika_storage_${STAMP}.tar.gz.age"
 
       # ops-5 (auditoría 360, 2026-08-21): las 4 corridas anteriores fallaron
       # sin que nadie se enterara — GitHub solo manda email al actor que
