@@ -384,6 +384,23 @@ function AuthPage() {
                   {loading && <Loader2 className="size-4 animate-spin" />}
                   {mode === "signin" ? "Ingresar" : "Crear cuenta"}
                 </button>
+                {mode === "signup" && (
+                  <p className="text-center text-xs text-muted-foreground">
+                    Al crear tu cuenta aceptas los{" "}
+                    <Link to="/terminos" className="font-medium text-brand-700 hover:underline">
+                      Términos
+                    </Link>
+                    , la{" "}
+                    <Link to="/privacidad" className="font-medium text-brand-700 hover:underline">
+                      Política de privacidad
+                    </Link>{" "}
+                    y el{" "}
+                    <Link to="/dpa" className="font-medium text-brand-700 hover:underline">
+                      Acuerdo de tratamiento de datos
+                    </Link>
+                    .
+                  </p>
+                )}
               </form>
             </>
           )}
