@@ -1,4 +1,32 @@
-# Setup de Stripe — Alika
+# Setup de Stripe — Esmalia (ex Alika)
+
+## Cuenta propia de Esmalia (decidido 10-oct-2026)
+
+Hasta oct-2026 Esmalia cobraba desde la cuenta de Stripe que comparte con DypOS (entidad legal MAXNOVA & LUCI Global LLC, nombre público "DypOS"), así que el Checkout de una clínica decía "DypOS". La separación:
+
+| Cuenta en la organización Stripe de la LLC          | Uso                                                              |
+| --------------------------------------------------- | ---------------------------------------------------------------- |
+| Cuenta actual (nombre público "DypOS", con Connect) | **Solo DypOS** (y el histórico de Invest/FinanceOS). No se toca. |
+| **Esmalia** (nueva)                                 | Suscripciones de Esmalia                                         |
+| MOY IQ (ya existía)                                 | MOY IQ                                                           |
+
+**Pasos (Walter, en el dashboard; ~20 min + la revisión de Stripe):**
+
+1. Selector de cuentas (arriba a la izquierda) → **New account** → nombre "Esmalia", país Estados Unidos, la misma LLC. Si ofrece copiar los datos de la cuenta actual, aceptar.
+2. Activar la cuenta: datos de la empresa (EIN de la LLC), representante, cuenta bancaria para los pagos. Datos públicos:
+   - Public business name: **Esmalia**; website `https://esmalia.com`; soporte `soporte@esmalia.com`, URL `https://esmalia.com/docs`.
+   - Statement descriptor: **ESMALIA** (shortened: ESMALIA).
+   - Branding (Settings → Branding): ícono y logo de `public/brand/` (monograma E), color principal `#7d5411`, color de acento `#f3f2f2`.
+3. Developers → API keys (modo live) → copiar la **secret key** y correr, desde el repo:
+   ```bash
+   read -s STRIPE_SECRET_KEY && export STRIPE_SECRET_KEY && node scripts/stripe-setup-esmalia.mjs --vercel
+   ```
+   Crea los productos (Solo US$29, Clínica US$69, mensuales), el portal de facturación y el webhook `https://esmalia.com/api/stripe/webhook`, y carga en Vercel los 4 IDs de precio y el signing secret (sin mostrarlo). Es idempotente.
+4. En Vercel (production) reemplazar a mano `STRIPE_SECRET_KEY` (la misma secret key) y `VITE_STRIPE_PUBLISHABLE_KEY` (pk_live de la cuenta nueva). Redeploy.
+5. Verificar: entrar a `/suscripcion` con una cuenta de prueba, abrir el Checkout (tiene que decir **Esmalia**), y en el dashboard → Webhooks ver el evento entregado. No completar un pago real si no hace falta: el trial de 14 días deja el checkout en $0.
+6. En la cuenta vieja (DypOS): archivar los productos "Alika"/"Esmalia" y **deshabilitar** (no borrar) el webhook `https://alika-omega.vercel.app/api/stripe/webhook`, después de confirmar que no hay suscripciones activas de Esmalia ahí. Si las hay, se dejan hasta que venzan o se migran con el soporte de Stripe.
+
+Los `stripe_customer_id` guardados en `subscriptions` son de la cuenta vieja: un cliente que ya pagó allá no existe en la nueva. Hoy no hay clínicas pagando, así que no hace falta migrar nada.
 
 ## ⚠️ Corrección 2026-09-01 (auditoría externa) — la línea de abajo estaba mal
 
