@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { TOPE_CLINICAS_POR_CORRIDA } from "@/lib/messaging/digest-diario";
+import { cronAutorizado } from "@/lib/cron-auth.server";
 
 /**
  * Correos programados a la clínica: aviso de fin de prueba (T-3 y T-0) y el
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/api/lifecycle-emails")({
       GET: async ({ request }) => {
         const secret = process.env.CRON_SECRET;
         if (!secret) return new Response("CRON_SECRET no configurado", { status: 500 });
-        if (request.headers.get("authorization") !== `Bearer ${secret}`) {
+        if (!cronAutorizado(request.headers.get("authorization"), secret)) {
           return new Response("unauthorized", { status: 401 });
         }
 

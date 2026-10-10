@@ -2,6 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { routeTree } from "./routeTree.gen";
+import { fuentesSupabaseParaCsp } from "@/lib/csp";
 
 /** Igual que el cache persistido en disco (ver `lib/offline-cache.ts`). */
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -31,14 +32,24 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
  * `inlineCss` de TanStack Start (el CSS real carga por `<link>` a un
  * archivo hasheado, nunca inline).
  */
+function leerSupabaseUrl(): string | undefined {
+  const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env;
+  return (
+    (typeof process !== "undefined" ? process.env?.SUPABASE_URL : undefined) ||
+    (typeof process !== "undefined" ? process.env?.VITE_SUPABASE_URL : undefined) ||
+    env?.VITE_SUPABASE_URL
+  );
+}
+
 function buildCsp(nonce: string): string {
+  const supabase = fuentesSupabaseParaCsp(leerSupabaseUrl());
   return [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}'`,
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
-    "img-src 'self' data: https://*.supabase.co",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io",
+    `img-src 'self' data: ${supabase.https}`,
+    `connect-src 'self' ${supabase.https} ${supabase.wss} https://*.sentry.io`,
     "worker-src 'self'",
     "manifest-src 'self'",
     "object-src 'none'",

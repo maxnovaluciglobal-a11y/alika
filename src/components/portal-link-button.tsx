@@ -38,7 +38,6 @@ export function PortalLinkButton({ clinicId, patientId, bloqueado }: Props) {
         data: {
           clinicId,
           patientId,
-          baseUrl: window.location.origin,
           ttlDays: 7,
         },
       }),

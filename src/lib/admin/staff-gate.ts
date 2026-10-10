@@ -31,8 +31,13 @@ export async function requireAlikaStaffEmail(
 
   const { data: usuario } = await supabaseAdmin.auth.admin.getUserById(userId);
   const email = usuario?.user?.email?.toLowerCase();
+  // Auditoría 10-oct-2026: el email solo prueba identidad si está
+  // confirmado. Con el alta abierta, alguien podía registrarse con la
+  // dirección de un integrante del equipo (sin poder confirmarla) y, si la
+  // confirmación de email se desactivaba en Auth, entrar directo al panel.
+  const confirmado = Boolean(usuario?.user?.email_confirmed_at);
 
-  if (!email || !permitidos.includes(email)) {
+  if (!email || !confirmado || !permitidos.includes(email)) {
     throw new Error("No tienes permisos.");
   }
   return email;

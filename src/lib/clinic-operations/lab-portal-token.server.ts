@@ -11,7 +11,10 @@ import { SignJWT, jwtVerify } from "jose";
  * el mismo `PORTAL_TOKEN_SECRET`.
  */
 
-const DEFAULT_TTL_DAYS = 90;
+// Auditoría 10-oct-2026: 90 días era demasiado para un link sin login que
+// deja escribir. 30 días + revocación por laboratorio
+// (`labs.portal_revoked_at`) + chequeo de `labs.is_active` en cada request.
+const DEFAULT_TTL_DAYS = 30;
 const ISSUER = "alika:lab-portal";
 const AUDIENCE = "alika:lab-portal:lab";
 
@@ -32,6 +35,11 @@ export interface LabTokenClaims {
   clinicId: string;
 }
 
+export interface VerifiedLabToken extends LabTokenClaims {
+  /** `iat` del token, para compararlo con `labs.portal_revoked_at`. */
+  issuedAt: Date;
+}
+
 export async function signLabToken(
   payload: LabTokenClaims,
   ttlDays = DEFAULT_TTL_DAYS,
@@ -45,12 +53,28 @@ export async function signLabToken(
     .sign(getSecret());
 }
 
-export async function verifyLabToken(token: string): Promise<LabTokenClaims> {
+export async function verifyLabToken(token: string): Promise<VerifiedLabToken> {
   const { payload } = await jwtVerify(token, getSecret(), { issuer: ISSUER, audience: AUDIENCE });
   const labId = payload.lab_id as string | undefined;
   const clinicId = payload.clinic_id as string | undefined;
-  if (!labId || !clinicId) throw new Error("Token de laboratorio inválido.");
-  return { labId, clinicId };
+  if (!labId || !clinicId || typeof payload.iat !== "number") {
+    throw new Error("Token de laboratorio inválido.");
+  }
+  return { labId, clinicId, issuedAt: new Date(payload.iat * 1000) };
+}
+
+/**
+ * true si el token ya no vale aunque la firma sea correcta: el laboratorio
+ * se desactivó, o la clínica revocó el portal después de emitirlo. Pura para
+ * poder testearla sin base.
+ */
+export function labTokenRevocado(
+  token: Pick<VerifiedLabToken, "issuedAt">,
+  lab: { is_active: boolean; portal_revoked_at?: string | null } | null,
+): boolean {
+  if (!lab || !lab.is_active) return true;
+  if (!lab.portal_revoked_at) return false;
+  return token.issuedAt.getTime() <= new Date(lab.portal_revoked_at).getTime();
 }
 
 export const LAB_PORTAL_COOKIE_NAME = "alika_lab_portal_session";

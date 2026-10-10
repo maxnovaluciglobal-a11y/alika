@@ -1,6 +1,6 @@
 import type * as SentryReact from "@sentry/react";
 
-import { redactPostgresLiterals } from "@/lib/sentry-redact";
+import { redactPostgresLiterals, scrubBreadcrumb, scrubTokensInEvent } from "@/lib/sentry-redact";
 
 /**
  * Init de Sentry seguro y lazy. Si no hay DSN configurado (ni en Vite env
@@ -103,7 +103,12 @@ export async function initSentry(): Promise<void> {
       if (event.request?.cookies) delete event.request.cookies;
       if (event.user) event.user = { id: event.user.id }; // solo id, no email/nombre
       redactPostgresLiterals(event);
+      // Tokens de los portales y de Auth en URLs, transacción y breadcrumbs.
+      scrubTokensInEvent(event);
       return event;
+    },
+    beforeBreadcrumb(breadcrumb) {
+      return scrubBreadcrumb(breadcrumb);
     },
   });
 

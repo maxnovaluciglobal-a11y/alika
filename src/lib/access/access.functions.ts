@@ -10,6 +10,7 @@ import {
   type ClinicMember,
   type ClinicRole,
 } from "@/lib/access/access";
+import { assertNotDemoClinic } from "@/lib/access/clinic-guards.server";
 import { mensajeDb } from "@/lib/db-errors";
 
 const ACTIVE_CLINIC_COOKIE_NAME = "alika_active_clinic";
@@ -206,6 +207,9 @@ export const updateMemberRole = createServerFn({ method: "POST" })
     if (member.role === "owner")
       throw new Error("El rol de propietario no se puede modificar aquí.");
     if (data.role === "owner") throw new Error("Solo puede existir un propietario por clínica.");
+    // `clinic_members` no tiene el trigger `block_demo_writes`: sin esto la
+    // demo pública podía reacomodar los roles de su propio equipo.
+    await assertNotDemoClinic(supabase, member.clinic_id);
 
     const { error } = await supabase
       .from("clinic_members")
@@ -264,6 +268,14 @@ export const inviteMember = createServerFn({ method: "POST" })
     if (!membership || (membership.role !== "owner" && membership.role !== "admin")) {
       throw new Error("No tienes permisos para invitar integrantes en esta clínica.");
     }
+
+    // Auditoría 10-oct-2026: la cuenta de la demo pública es owner de su
+    // clínica, así que pasaba el chequeo de arriba y `inviteUserByEmail`
+    // mandaba invitaciones de Supabase a cualquier dirección (spam con
+    // nuestro dominio y cuentas nuevas en auth.users). El trigger
+    // `block_demo_writes` no lo frenaba: la invitación sale antes del insert,
+    // y el insert lo hace service_role.
+    await assertNotDemoClinic(supabase, data.clinicId);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -330,7 +342,7 @@ export const removeMember = createServerFn({ method: "POST" })
 
     const { data: member, error: readError } = await supabase
       .from("clinic_members")
-      .select("id, user_id, role")
+      .select("id, user_id, role, clinic_id")
       .eq("id", data.memberId)
       .maybeSingle();
 
@@ -345,6 +357,7 @@ export const removeMember = createServerFn({ method: "POST" })
     if (member.user_id === userId) throw new Error("No puedes quitarte a ti mismo del equipo.");
     if (member.role === "owner")
       throw new Error("No se puede quitar al propietario de la clínica.");
+    await assertNotDemoClinic(supabase, member.clinic_id);
 
     const { error } = await supabase.from("clinic_members").delete().eq("id", data.memberId);
     if (error) throw new Error("No tienes permisos para quitar integrantes.");

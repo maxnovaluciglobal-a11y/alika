@@ -41,7 +41,15 @@ import {
   listLabs,
   setLabOrderStatus,
 } from "@/lib/clinic-operations/clinic-operations.functions";
-import { generateLabPortalLink } from "@/lib/clinic-operations/lab-portal.functions";
+import {
+  generateLabPortalLink,
+  revokeLabPortalAccess,
+} from "@/lib/clinic-operations/lab-portal.functions";
+import {
+  ROLES_EMITEN_LINK_LABORATORIO,
+  ROLES_REVOCAN_LINK_LABORATORIO,
+} from "@/lib/clinic-operations/lab-portal-roles";
+import type { ClinicRole } from "@/lib/access/access";
 import { listPatients } from "@/lib/patients/patients.functions";
 import { exportarCsv } from "@/lib/csv-export";
 import { str } from "@/lib/search";
@@ -338,10 +346,15 @@ function NuevaOrdenDialog({
  * staff en Esmalia. Self-contained (fetch propio de `listLabs`) para no
  * meterle otra query al estado de `LaboratoriosPage`.
  */
-function LabPortalSection({ clinicId }: { clinicId: string }) {
+function LabPortalSection({ clinicId, role }: { clinicId: string; role: ClinicRole | null }) {
   const fetchLabs = useServerFn(listLabs);
   const generateLink = useServerFn(generateLabPortalLink);
+  const revokeLink = useServerFn(revokeLabPortalAccess);
   const [generando, setGenerando] = useState<string | null>(null);
+  const [revocando, setRevocando] = useState<string | null>(null);
+  // Par de UI de los chequeos de rol de lab-portal.functions.ts (regla 15).
+  const puedeEmitir = role !== null && ROLES_EMITEN_LINK_LABORATORIO.includes(role);
+  const puedeRevocar = role !== null && ROLES_REVOCAN_LINK_LABORATORIO.includes(role);
 
   const { data: labs = [] } = useQuery({
     queryKey: ["labs", clinicId],
@@ -352,10 +365,10 @@ function LabPortalSection({ clinicId }: { clinicId: string }) {
     setGenerando(labId);
     try {
       const { url } = await generateLink({
-        data: { clinicId, labId, baseUrl: window.location.origin },
+        data: { clinicId, labId },
       });
       await navigator.clipboard.writeText(url);
-      toast.success("Link copiado. Compartilo con el laboratorio (WhatsApp, email).");
+      toast.success("Link copiado. Compártelo con el laboratorio (WhatsApp, email).");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No pudimos generar el link.");
     } finally {
@@ -363,7 +376,26 @@ function LabPortalSection({ clinicId }: { clinicId: string }) {
     }
   };
 
-  if (labs.length === 0) return null;
+  const revocar = async (labId: string, nombre: string) => {
+    if (
+      !window.confirm(
+        `¿Revocar el acceso de ${nombre} al portal? Los links que ya compartiste dejan de funcionar; puedes generar uno nuevo cuando quieras.`,
+      )
+    ) {
+      return;
+    }
+    setRevocando(labId);
+    try {
+      await revokeLink({ data: { clinicId, labId } });
+      toast.success(`Listo: los links anteriores de ${nombre} ya no funcionan.`);
+    } catch (e) {
+      toast.error(mensajeDeError(e));
+    } finally {
+      setRevocando(null);
+    }
+  };
+
+  if (labs.length === 0 || !puedeEmitir) return null;
 
   return (
     <section className="card-clinical space-y-2 p-4">
@@ -391,6 +423,23 @@ function LabPortalSection({ clinicId }: { clinicId: string }) {
           </Button>
         ))}
       </div>
+      {puedeRevocar && (
+        <div className="flex flex-wrap gap-2 pt-1">
+          {labs.map((l) => (
+            <Button
+              key={l.id}
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
+              disabled={revocando === l.id}
+              onClick={() => revocar(l.id, l.name)}
+            >
+              {revocando === l.id && <Loader2 className="size-3.5 animate-spin" />}
+              Revocar acceso al portal: {l.name}
+            </Button>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -479,7 +528,7 @@ function LaboratoriosPage() {
         <TrialDesbloqueo pantalla="Laboratorios" />
       ) : (
         <div className="space-y-5">
-          <LabPortalSection clinicId={clinicId!} />
+          <LabPortalSection clinicId={clinicId!} role={access.role} />
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">

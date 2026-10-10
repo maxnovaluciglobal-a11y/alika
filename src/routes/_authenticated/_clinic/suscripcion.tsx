@@ -16,11 +16,15 @@ import { SUBSCRIPTION_STATUS_LABELS, trialDaysLeft } from "@/lib/billing";
 import { approxLocalPricesLabel } from "@/lib/pricing-display";
 import { consumePlanIntent } from "@/lib/marketing/plan-intent";
 import { mensajeDeError } from "@/lib/mensaje-error";
+import { requirePermission } from "@/lib/access/route-guards";
 
 export const Route = createFileRoute("/_authenticated/_clinic/suscripcion")({
   head: () => ({
     meta: [{ title: "Suscripción | Esmalia" }, { name: "robots", content: "noindex" }],
   }),
+  // Par de UI de `requireClinicPermission(..., "settings:manage")` en
+  // billing.functions.ts: solo owner/admin gestionan la suscripción.
+  beforeLoad: requirePermission("settings:manage"),
   component: BillingPage,
 });
 
@@ -97,14 +101,9 @@ function BillingPage() {
     // llamar a `.mutate()`. El botón manual de abajo sigue llamando
     // `.mutate()` sin argumento, que cae al `plan` seleccionado en pantalla.
     mutationFn: async (planOverride?: PlanKey) => {
-      const origin = window.location.origin;
+      // Las URLs de retorno las arma el servidor (PUBLIC_APP_URL).
       const { url } = await checkout({
-        data: {
-          clinicId,
-          plan: planOverride ?? plan,
-          successUrl: `${origin}/suscripcion?checkout=success`,
-          cancelUrl: `${origin}/suscripcion?checkout=cancel`,
-        },
+        data: { clinicId, plan: planOverride ?? plan },
       });
       window.location.href = url;
     },
@@ -113,13 +112,7 @@ function BillingPage() {
 
   const openPortal = useMutation({
     mutationFn: async () => {
-      const origin = window.location.origin;
-      const { url } = await portal({
-        data: {
-          clinicId,
-          returnUrl: `${origin}/suscripcion`,
-        },
-      });
+      const { url } = await portal({ data: { clinicId } });
       window.location.href = url;
     },
     onError: (e: Error) => toast.error(mensajeDeError(e)),
