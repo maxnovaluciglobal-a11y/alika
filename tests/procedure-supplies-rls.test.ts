@@ -36,7 +36,7 @@ describe("procedure_supplies — RLS y constraints", () => {
     client = await conectar();
   });
   afterAll(async () => {
-    await client.end();
+    await client?.end();
   });
   beforeEach(async () => {
     await client.query("BEGIN");

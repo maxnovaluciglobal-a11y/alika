@@ -380,7 +380,7 @@ export const requestPortalAppointment = createServerFn({ method: "POST" })
       throw new Error(mensajeDb(countErr, "No pudimos verificar tus solicitudes anteriores."));
     if ((count ?? 0) >= 3) {
       throw new Error(
-        "Ya enviaste varias solicitudes hoy. La clínica te va a contactar pronto — evitá duplicarlas.",
+        "Ya enviaste varias solicitudes hoy. La clínica te va a contactar pronto — evita duplicarlas.",
       );
     }
 

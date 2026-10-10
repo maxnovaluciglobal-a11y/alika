@@ -36,7 +36,7 @@ describe("clinical_note_audit — la escribe la base, no el usuario", () => {
     client = await conectar();
   });
   afterAll(async () => {
-    await client.end();
+    await client?.end();
   });
 
   beforeEach(async () => {

@@ -51,7 +51,7 @@ describe("Aislamiento multi-clínica con 2 clínicas reales simultáneas", () =>
     client = await conectar();
   });
   afterAll(async () => {
-    await client.end();
+    await client?.end();
   });
   beforeEach(async () => {
     await client.query("BEGIN");

@@ -6,7 +6,15 @@ export const Route = createFileRoute("/docs/primeros-pasos")({
   head: () => {
     const canonical = canonicalHead("/docs/primeros-pasos");
     return {
-      meta: [{ title: "Primeros pasos · Documentación · Esmalia" }, ...canonical.meta],
+      meta: [
+        { title: "Primeros pasos · Documentación · Esmalia" },
+        {
+          name: "description",
+          content:
+            "Crea tu clínica en Esmalia, carga tus pacientes, suma a tu equipo y agenda tu primera cita. Guía paso a paso, sin tarjeta para empezar.",
+        },
+        ...canonical.meta,
+      ],
       links: canonical.links,
     };
   },

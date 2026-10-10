@@ -61,6 +61,17 @@
   ],
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.esmalia.com"
+        }
+      ],
+      "destination": "https://esmalia.com/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

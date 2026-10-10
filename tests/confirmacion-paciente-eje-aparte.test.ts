@@ -24,7 +24,7 @@ describe("patient_confirmed_at — el aviso del paciente no toca la agenda del p
     client = await conectar();
   });
   afterAll(async () => {
-    await client.end();
+    await client?.end();
   });
 
   beforeEach(async () => {

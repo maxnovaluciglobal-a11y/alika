@@ -1,4 +1,4 @@
-# Runbook — mover Alika a dominio propio
+# Runbook — dominio propio de Esmalia (`esmalia.com`)
 
 > **Estado (09-oct-2026): hecho con `esmalia.com`** (la app vive en la raíz, no en `app.`).
 >
@@ -7,10 +7,14 @@
 > - Supabase Auth: Site URL `https://esmalia.com`; Redirect URLs `https://esmalia.com/**`, `https://alika-omega.vercel.app/**`, `http://localhost:8080/**` (más las dos `/auth` previas).
 > - Stripe: **sin cambios a propósito** (el webhook sigue en `alika-omega`, que no se redirige en `/api/*`).
 > - Vercel también tiene `RESEND_API_KEY` (clave `esmalia-prod`), `EMAIL_UNSUBSCRIBE_SECRET`, `VITE_SALES_WHATSAPP` y `LIFECYCLE_EMAILS_ENABLED=true` (en modo de prueba: todo va a `LIFECYCLE_EMAIL_REDIRECT_TO`).
-> - Supabase Auth: las 6 plantillas de correo con la marca Esmalia, generadas con `node scripts/plantillas-auth-supabase.mjs` (salen de `src/lib/email/plantillas-auth.ts`). Recuperar contraseña e invitación apuntan a `/auth/nueva-clave` con `token_hash`. SMTP propio (`smtp.resend.com:465`, usuario `resend`, remitente `hola@esmalia.com`): completo salvo la contraseña, que pega Walter.
-> - Pendiente: la pantalla de consentimiento de Google OAuth (el proyecto de Google Cloud no está en las cuentas de Chrome); sacar `LIFECYCLE_EMAIL_REDIRECT_TO` cuando Walter apruebe cómo se ven los correos.
+> - Supabase Auth: las 6 plantillas de correo con la marca Esmalia, generadas con `node scripts/plantillas-auth-supabase.mjs` (salen de `src/lib/email/plantillas-auth.ts`). Recuperar contraseña e invitación apuntan a `/auth/nueva-clave` con `token_hash`. SMTP propio (`smtp.resend.com:465`, usuario `resend`, remitente `hola@esmalia.com`): **activo y verificado** (correo de prueba con estado _Delivered_ en Resend el 09-oct).
+> - Google OAuth: pantalla de consentimiento **publicada en producción** el 09-oct con nombre y logo de Esmalia. Pendiente: volver a pedir la verificación de marca (_brand verification_) en Google Cloud.
+> - Search Console: `esmalia.com` verificado con un registro TXT `google-site-verification` en Cloudflare. **No borrar ese TXT**: sin él se pierde la propiedad verificada.
+> - Gmail "Enviar como": `hola@`, `soporte@` y `ventas@esmalia.com` configurados en `maxnovaluciglobal@gmail.com` vía `smtp.resend.com:465`.
+> - Avisos de leads: `LEADS_NOTIFY_EMAILS=maxnovaluciglobal@gmail.com` (separado de `ALIKA_STAFF_EMAILS`, que es la allowlist de `/admin`).
+> - Correos de ciclo de vida: `LIFECYCLE_EMAIL_REDIRECT_TO=maxnovaluciglobal@gmail.com` (modo de prueba). Pendiente: sacarla cuando Walter apruebe cómo se ven los correos.
 
-Hoy todo vive en `https://alika-omega.vercel.app`. Este runbook lista **cada** lugar que hay que tocar el día que se elija el nombre y se compre el dominio, en el orden que evita cortes. Inventario hecho el 06-oct-2026 con `grep` sobre el repo; si se agrega una integración nueva, sumarla acá.
+Lo que sigue es el runbook original (escrito antes de elegir el nombre, cuando todo vivía en `https://alika-omega.vercel.app`): queda como referencia de **cada** lugar que se tocó, en el orden que evita cortes. Inventario hecho el 06-oct-2026 con `grep` sobre el repo; si se agrega una integración nueva, sumarla acá.
 
 En los ejemplos, `app.NUEVO.com` es la app y `NUEVO.com` el dominio raíz. Ajustar a lo que se decida.
 

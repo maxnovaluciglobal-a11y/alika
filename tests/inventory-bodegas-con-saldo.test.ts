@@ -34,7 +34,7 @@ describe("bodegas con saldo — no se borran ni se desactivan", () => {
     client = await conectar();
   });
   afterAll(async () => {
-    await client.end();
+    await client?.end();
   });
 
   beforeEach(async () => {
