@@ -320,9 +320,15 @@ function detalleCobrado(d: DatosSemana): { texto: string; tono: "neutro" | "sube
     case "sin_base":
       return { texto: "La semana anterior no hubo cobros registrados.", tono: "neutro" };
     case "sube":
-      return { texto: `↑ ${v.porcentaje} % frente a la semana anterior (${previo})`, tono: "sube" };
+      return {
+        texto: `↑ ${v.porcentaje}\u00a0% frente a la semana anterior (${previo})`,
+        tono: "sube",
+      };
     case "baja":
-      return { texto: `↓ ${v.porcentaje} % frente a la semana anterior (${previo})`, tono: "baja" };
+      return {
+        texto: `↓ ${v.porcentaje}\u00a0% frente a la semana anterior (${previo})`,
+        tono: "baja",
+      };
   }
 }
 
@@ -341,14 +347,15 @@ export function correoSemana(e: EntradaSemana): CorreoRenderizado {
     },
     {
       etiqueta: "Asistencia",
-      valor: d.tasaAsistencia === null ? "Sin datos" : `${d.tasaAsistencia} %`,
+      valor: d.tasaAsistencia === null ? "Sin datos" : `${d.tasaAsistencia}\u00a0%`,
     },
     { etiqueta: "Ausencias", valor: String(d.ausencias) },
     { etiqueta: "Pacientes nuevos", valor: String(d.pacientesNuevos) },
     {
       etiqueta: "Presupuestos aceptados",
       valor: String(d.presupuestosAceptados),
-      nota: d.conversion === null ? "conversión: sin datos" : `conversión del ${d.conversion} %`,
+      nota:
+        d.conversion === null ? "conversión: sin datos" : `conversión del ${d.conversion}\u00a0%`,
     },
     {
       etiqueta: "Deudas de más de 90 días",

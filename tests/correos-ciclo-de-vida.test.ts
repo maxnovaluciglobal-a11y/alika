@@ -312,7 +312,7 @@ describe("plantillas", () => {
       bajaUrl: `${APP}/correos/baja?token=abc`,
     });
     expect(c.subject).toBe("Tu semana en Clínica Sonrisa: $1.250.000 cobrados");
-    expect(c.text).toContain("↑ 25 % frente a la semana anterior ($1.000.000)");
+    expect(c.text).toContain("↑ 25\u00a0% frente a la semana anterior ($1.000.000)");
     expect(c.text).toContain("lunes 28 de septiembre al domingo 4 de octubre");
     expect(c.text).toContain("2 presupuestos esperan seguimiento");
     expect(c.html).toContain(`${APP}/recordatorios`);
