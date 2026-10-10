@@ -1,4 +1,4 @@
-# Backups de Alika
+# Backups de Esmalia (ex Alika)
 
 ## Qué respalda y qué no
 
@@ -16,19 +16,9 @@
 
 También se puede disparar a mano desde GitHub → Actions → "Backup diario" → Run workflow.
 
-## Setup pendiente (una sola vez)
+## Setup (hecho)
 
-1. **Crear el bucket en Backblaze B2**: `alika-backups`, privado. Sugerido: regla de lifecycle que borre objetos de más de 90 días (retención automática, sin script aparte).
-2. **Crear una Application Key** de B2 restringida a ese bucket (no la master key de la cuenta).
-3. **Cargar 4 secrets** en GitHub → Settings → Secrets and variables → Actions del repo `alika` (los valores de Supabase ya los tenés en tu `.env` local, cópialos de ahí):
-   ```
-   gh secret set SUPABASE_URL
-   gh secret set SUPABASE_SERVICE_ROLE_KEY
-   gh secret set B2_ACCOUNT_ID
-   gh secret set B2_APPLICATION_KEY
-   ```
-
-Hasta que estén los 4 secrets, el workflow programado va a fallar (o podés dejarlo sin correr) — no rompe nada más, es un job aislado.
+Bucket privado `alika-backups` en Backblaze B2 con una Application Key restringida a ese bucket, y los 4 secrets del workflow (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `B2_ACCOUNT_ID`, `B2_APPLICATION_KEY`) cargados en GitHub el 01-sep-2026. Desde entonces las corridas diarias están en verde (verificado el 06-oct-2026). Si hubiera que rehacerlo: `gh secret set <NOMBRE>` para cada uno, tomando los valores de Supabase del `.env` local.
 
 ## La clave privada de cifrado
 
@@ -56,6 +46,10 @@ age -d -i ~/Library/"Mobile Documents"/com~apple~CloudDocs/alika-backups/.alika-
 #    el momento que haga falta un restore real — no se armó de antemano para
 #    no mantener código de restore sin probar contra una restauración real.
 ```
+
+## Ensayo de restauración
+
+Pendiente — se completa en el ensayo del 10-oct-2026 (tiempo real de punta a punta, backup usado, proyecto Supabase descartable, problemas encontrados). Hasta entonces el RTO de `docs/DISASTER_RECOVERY.md` sigue "sin validar".
 
 ## Bitácora
 

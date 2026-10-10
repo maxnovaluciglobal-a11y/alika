@@ -30,7 +30,7 @@ describe("inventario multi-bodega — total del ítem == suma de las bodegas", (
     client = await conectar();
   });
   afterAll(async () => {
-    await client.end();
+    await client?.end();
   });
 
   beforeEach(async () => {

@@ -1,4 +1,4 @@
-# Disaster Recovery — Alika
+# Disaster Recovery — Esmalia (ex Alika)
 
 Runbook para escenarios de falla operacional. Autoridad: Walter (`walterlamadriz@gmail.com`).
 
@@ -42,10 +42,10 @@ Runbook para escenarios de falla operacional. Autoridad: Walter (`walterlamadriz
 
 **Recuperación:**
 
-1. Rotar las keys desde el dashboard de Supabase (via Lovable si aplica). Esto invalida todas las sesiones activas — los usuarios tendrán que re-loguear.
+1. Rotar las keys desde el dashboard de Supabase. Esto invalida todas las sesiones activas — los usuarios tendrán que re-loguear.
 2. Actualizar `.env` local + Vercel env vars con las keys nuevas.
 3. Auditar `pg_stat_activity` y las tablas sensibles (`clinical_notes`, `payments`, `patients`) por accesos anómalos en las últimas 24-48 hrs.
-4. Notificar a las clínicas afectadas — si hubo lectura de PHI, hay obligación de reporte según país (GDPR-like en LatAm varía).
+4. Si hubo lectura de datos de pacientes, seguir el escenario 8 (brecha de datos de salud).
 
 **Prevención:** `.env` ya está gitignoreado. `SERVICE_ROLE_KEY` no está en el repo (solo `PUBLISHABLE_KEY` que es pública por diseño). Revisar `git log --all --full-history -- .env` periódicamente por accidentes históricos.
 
@@ -72,7 +72,7 @@ Runbook para escenarios de falla operacional. Autoridad: Walter (`walterlamadriz
 **Recuperación temporal (mismo día):**
 
 1. Desplegar en emergencia a otro provider: Cloudflare Pages, Netlify, o self-hosted en el VPS `91.99.204.162` (ver `~/.claude/projects/-Users-walterlamadriz-Documents/memory/user_business_context.md`).
-2. Apuntar el dominio (una vez comprado — pendiente) al backup vía cambio de DNS. Propagación 5-60 min.
+2. Apuntar `esmalia.com` (y `www`) al host de respaldo cambiando los registros en Cloudflare (DNS de `esmalia.com` desde el 09-oct-2026). Propagación 5-60 min.
 3. Verificar que las env vars de producción estén replicadas en el nuevo host.
 
 **Prevención:** mantener `Dockerfile` funcional (ya existe) para deploy en cualquier docker host como fallback siempre disponible.
@@ -101,11 +101,30 @@ Runbook para escenarios de falla operacional. Autoridad: Walter (`walterlamadriz
 
 **Recuperación:**
 
-1. Cloudflare frente a Vercel (mover DNS a Cloudflare, activar proxy) — mitigación inmediata.
+1. El DNS de `esmalia.com` ya está en Cloudflare (09-oct-2026, registros en modo _DNS only_): la mitigación inmediata es activar el proxy de Cloudflare en esos registros. `alika-omega.vercel.app` queda fuera de esa protección.
 2. Bloquear IPs en el firewall del Supabase (via Lovable soporte).
 3. ✅ Actualizado 2026-09-05: `_serverFn/*` y `/api/*` (excepto los webhooks de Stripe/Meta, protegidos por firma) tienen un rate-limit por IP desde `src/server.ts` (`src/lib/rate-limit.server.ts`) — 180 req/min por IP en server functions, 60 req/min en API pública. **Limitación conocida:** es en memoria por instancia de función serverless, no compartido entre instancias — bajo un ataque distribuido en escala (muchas IPs, o mucho tráfico repartido entre instancias de Vercel) no alcanza. Un store compartido (Upstash Redis / Vercel KV) daría un tope real y exacto — no implementado, requiere decisión de infraestructura nueva.
 
 **Prevención pendiente:** si el rate-limit en memoria no alcanza bajo un ataque real, migrar a un store compartido (Upstash Redis/Vercel KV). Ver también el hallazgo #12 de la auditoría (listAppointments sin paginación).
+
+---
+
+### 8. Brecha de datos de salud (Ley 21.719)
+
+**Qué cuenta como brecha:** cualquier acceso, lectura, copia, alteración o pérdida no autorizada de datos de pacientes (fichas, notas clínicas, odontogramas, pagos, teléfonos), sea por credenciales filtradas, un fallo de RLS entre clínicas, un backup expuesto o un error humano.
+
+**Rol de cada uno:** cada clínica es **responsable** de los datos de sus pacientes; Esmalia es **encargado** del tratamiento. Esmalia avisa a la clínica; la clínica decide y hace la notificación a la autoridad (Agencia de Protección de Datos Personales en Chile, o la de su país) y a los pacientes.
+
+**Respuesta:**
+
+1. **Contener**: cortar el acceso (rotar la clave expuesta, revocar sesiones, desactivar el endpoint o la policy rota, sacar el backup expuesto). Si hace falta, poner la app en mantenimiento.
+2. **Evaluar**: qué datos, de qué clínicas, cuántos pacientes, desde cuándo y si hubo lectura efectiva (logs de Supabase, `pg_stat_activity`, logs de Vercel, Sentry). Cruce entre clínicas: verificar con las pruebas de aislamiento (`tests/multi-clinic-isolation.test.ts`).
+3. **Notificar a los dueños de las clínicas afectadas sin dilación indebida (meta: 72 h desde que se detecta)**, por escrito: qué pasó, qué datos, qué se hizo y qué se recomienda. No esperar a tener el análisis completo para el primer aviso.
+4. **Apoyar a la clínica** con la información que necesite para notificar a la autoridad y a los pacientes como responsable.
+5. **Registro del incidente** en `docs/post-mortems/YYYY-MM-DD-<slug>.md` (sin datos de pacientes): cronología, alcance, decisiones, avisos enviados y a quién. Se guarda aunque se concluya que no hubo acceso real.
+6. **Rotar secretos** relacionados aunque no se hayan confirmado como expuestos (`SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`, `PORTAL_TOKEN_SECRET`, claves de Resend/Stripe/Meta según el caso).
+
+**Responsable:** Walter.
 
 ---
 
@@ -118,7 +137,7 @@ Sin SLA firmado con ninguna clínica todavía; estos son los objetivos internos 
 | DB corrupta/borrada (#1)            | 24 h                     | 24 h (backup diario 07:15 UTC) | 4 h          | **Sin validar** — nunca se ejecutó un restore real end-to-end |
 | Deploy Vercel roto (#2)             | 0 (sin pérdida de datos) | 0                              | 15 min       | ~15 min (rollback a deploy anterior vía dashboard)            |
 | Credenciales comprometidas (#3)     | 0                        | 0                              | 1 h          | Sin validar                                                   |
-| Vercel caído/cuenta suspendida (#5) | 0                        | 0                              | 4 h          | Sin validar — depende de comprar el dominio (pendiente)       |
+| Vercel caído/cuenta suspendida (#5) | 0                        | 0                              | 4 h          | Sin validar — `esmalia.com` en Cloudflare: repuntar DNS       |
 | Ataque de rate limit/DDoS (#7)      | 0 (sin pérdida de datos) | 0                              | 30 min       | Sin validar — nunca se probó bajo tráfico real de ataque      |
 
 Los escenarios #4 (sync con Lovable) y #6 (cierre de Lovable Cloud) quedan fuera de esta tabla a propósito: no son escenarios de pérdida de datos ni de caída del sitio — Lovable hoy es un editor visual secundario desacoplado (`docs/DESACOPLE_LOVABLE.md`), no el runtime de producción, así que no tienen un RTO/RPO comparable al resto.
@@ -151,6 +170,6 @@ Ver también `docs/DEPLOY_PRODUCTION.md`.
 
 1. ✅ Backup diario propio (API REST de Supabase → B2), corrigiendo 2026-09-05.
 2. ✅ Rate-limit en server functions y API pública — con la limitación de memoria-por-instancia documentada arriba.
-3. Monitoreo activo (Sentry/Vercel logs alertas + healthcheck externo) — Sentry sigue no-op sin `VITE_SENTRY_DSN`.
+3. Monitoreo activo — Sentry **activo** en producción (`VITE_SENTRY_DSN` cargado); falta un healthcheck externo sobre `/api/health` con alerta.
 4. Ejecutar un ensayo de restore desde backup — nunca se ha probado. Sigue siendo el mayor hueco real de este runbook.
 5. Documento formal de RTO/RPO firmado con clientes — la tabla de arriba son objetivos internos, no un SLA firmado; falta eso cuando haya clínicas piloto con contrato.

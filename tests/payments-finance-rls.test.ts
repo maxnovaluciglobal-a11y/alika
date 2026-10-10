@@ -44,7 +44,7 @@ describe("Payments, finanzas y saldo del paciente", () => {
     client = await conectar();
   });
   afterAll(async () => {
-    await client.end();
+    await client?.end();
   });
   beforeEach(async () => {
     await client.query("BEGIN");

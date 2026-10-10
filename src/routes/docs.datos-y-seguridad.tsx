@@ -6,7 +6,15 @@ export const Route = createFileRoute("/docs/datos-y-seguridad")({
   head: () => {
     const canonical = canonicalHead("/docs/datos-y-seguridad");
     return {
-      meta: [{ title: "Datos y seguridad · Documentación · Esmalia" }, ...canonical.meta],
+      meta: [
+        { title: "Datos y seguridad · Documentación · Esmalia" },
+        {
+          name: "description",
+          content:
+            "Cómo protege Esmalia los datos de tu clínica: aislamiento entre clínicas, permisos por rol, historial versionado, respaldos y trabajo sin conexión.",
+        },
+        ...canonical.meta,
+      ],
       links: canonical.links,
     };
   },
