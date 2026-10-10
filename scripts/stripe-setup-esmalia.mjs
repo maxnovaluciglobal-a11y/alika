@@ -145,7 +145,9 @@ for (const p of PLANES) {
 // 3. Portal de facturación.
 paso("Portal de facturación");
 const portales = await stripe.billingPortal.configurations.list({ limit: 20 });
-const yaPortal = portales.data.find((c) => c.metadata?.app === "esmalia" && c.active);
+const yaPortal =
+  portales.data.find((c) => c.is_default) ??
+  portales.data.find((c) => c.metadata?.app === "esmalia" && c.active);
 const configPortal = {
   business_profile: {
     headline: "Esmalia: administra tu suscripción",
@@ -168,10 +170,17 @@ const configPortal = {
   },
   metadata: { app: "esmalia" },
 };
-const portal = yaPortal
-  ? await stripe.billingPortal.configurations.update(yaPortal.id, configPortal)
-  : await stripe.billingPortal.configurations.create({ ...configPortal, is_default: true });
-console.log(`  ${yaPortal ? "actualizado" : "creado"}: ${portal.id}`);
+// Se actualiza la configuración por defecto (la que usa la app al abrir el
+// portal sin pasar `configuration`); solo se crea si la cuenta no tiene
+// ninguna. `is_default` no se acepta al crear. Si falla, sigue el webhook.
+try {
+  const portal = yaPortal
+    ? await stripe.billingPortal.configurations.update(yaPortal.id, configPortal)
+    : await stripe.billingPortal.configurations.create(configPortal);
+  console.log(`  ${yaPortal ? "actualizado" : "creado"}: ${portal.id}`);
+} catch (e) {
+  console.warn(`  No se pudo configurar el portal (${e.message}). Se sigue con el webhook.`);
+}
 
 // 4. Webhook.
 paso("Webhook");
