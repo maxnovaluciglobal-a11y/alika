@@ -133,7 +133,7 @@ const FUGAS: Fuga[] = [
     numero: 7,
     titulo: "El insumo que se usa y no se descuenta",
     descripcion:
-      "Cada procedimiento consume una cantidad conocida de insumos — guantes, anestesia, materiales de obturación. Si ese consumo no se descuenta al momento de usarlo, el stock que creés tener y el que hay realmente en la bodega empiezan a divergir desde el primer día.",
+      "Cada procedimiento consume una cantidad conocida de insumos — guantes, anestesia, materiales de obturación. Si ese consumo no se descuenta al momento de usarlo, el stock que crees tener y el que hay realmente en la bodega empiezan a divergir desde el primer día.",
     pregunta:
       "¿El stock que muestra tu planilla o sistema hoy coincide con lo que hay físicamente en la bodega, o hace tiempo que dejaste de confiar en ese número?",
   },
@@ -235,7 +235,7 @@ function FilaFuga({ fuga }: { fuga: Fuga }) {
             <span className="text-sm text-muted-foreground">Se aplica a mi clínica</span>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            <span className="font-semibold text-brand-700">Detectala:</span> {fuga.pregunta}
+            <span className="font-semibold text-brand-700">Detéctala:</span> {fuga.pregunta}
           </p>
         </div>
       </div>

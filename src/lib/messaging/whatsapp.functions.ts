@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
+import { assertNotDemoClinic } from "@/lib/access/clinic-guards.server";
 import { throwIfRequiresLlamadaOSuscripcion } from "@/lib/billing.functions";
 import { mensajeDb } from "@/lib/db-errors";
 import { normalizeToWaMe } from "@/lib/messaging/messaging";
@@ -108,6 +109,7 @@ export const completeWhatsAppEmbeddedSignup = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<WhatsAppAccount> => {
+    await assertNotDemoClinic(context.supabase, data.clinicId);
     await throwIfRequiresLlamadaOSuscripcion(context.supabase, data.clinicId, SIN_PERMISOS_LLAMADA);
     const { appId, appSecret, systemUserToken } = requireMetaAppConfig();
     const version = metaApiVersion();

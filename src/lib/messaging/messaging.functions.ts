@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { mensajeDb } from "@/lib/db-errors";
+import { assertNotDemoClinic } from "@/lib/access/clinic-guards.server";
 import { fetchPatientBalances } from "@/lib/patients/patients.functions";
 import {
   MESSAGE_CHANNELS,
@@ -185,6 +186,9 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
       viaApi: boolean;
     }> => {
       const { supabase, userId } = context;
+      // La demo no habla con Meta (y el insert en `messages` lo frena igual
+      // el trigger `block_demo_writes`): cortar antes del envío real.
+      await assertNotDemoClinic(supabase, data.clinicId);
 
       // Traer paciente para número y nombre
       const { data: patient, error: patientErr } = await supabase

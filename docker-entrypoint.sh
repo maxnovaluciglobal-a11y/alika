@@ -22,7 +22,7 @@ if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
   echo "[alika] AVISO: SUPABASE_SERVICE_ROLE_KEY no definida; las operaciones administrativas del servidor fallarán." >&2
 fi
 
-if [ -z "$LOVABLE_API_KEY" ] && [ -z "$GEMINI_API_KEY" ] && [ -z "$OPENAI_API_KEY" ]; then
+if [ -z "$GEMINI_API_KEY" ] && [ -z "$OPENAI_API_KEY" ]; then
   echo "[alika] AVISO: sin clave de IA (GEMINI_API_KEY / OPENAI_API_KEY); el asistente clínico quedará inactivo." >&2
 fi
 

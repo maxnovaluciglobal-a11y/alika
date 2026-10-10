@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { EsmaliaLogo } from "@/components/esmalia-logo";
 import { getSupabase } from "@/integrations/supabase/lazy";
 import { mensajeDeError } from "@/lib/mensaje-error";
+import { esCuentaDemo, MENSAJE_CUENTA_DEMO } from "@/lib/demo-cuenta";
 import {
   LARGO_MINIMO_CLAVE,
   leerRetornoDeRecuperacion,
@@ -107,6 +108,16 @@ function NuevaClavePage() {
     setError(null);
     try {
       const supabase = await getSupabase();
+      // La cuenta de la demo es pública: si alguien le cambia la clave, el
+      // siguiente visitante queda afuera. Esto es solo la UI — la llamada a
+      // GoTrue se puede hacer igual con la clave pública (ver PR: la guarda
+      // autoritativa va en la base / un hook de Auth).
+      const { data: actual } = await supabase.auth.getUser();
+      if (esCuentaDemo(actual.user?.email)) {
+        setError(MENSAJE_CUENTA_DEMO);
+        setGuardando(false);
+        return;
+      }
       const { error: e } = await supabase.auth.updateUser({ password: clave });
       if (e) {
         setError(mensajeDeErrorDeClave(e) ?? mensajeDeError(e));

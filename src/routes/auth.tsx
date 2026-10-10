@@ -8,6 +8,7 @@ import { EsmaliaLogo } from "@/components/esmalia-logo";
 import { getSupabase } from "@/integrations/supabase/lazy";
 import { peekPlanIntent } from "@/lib/marketing/plan-intent";
 import { mensajeDeError } from "@/lib/mensaje-error";
+import { esCuentaDemo, MENSAJE_CUENTA_DEMO } from "@/lib/demo-cuenta";
 import {
   esLimitePorCuenta,
   LARGO_MINIMO_CLAVE,
@@ -41,6 +42,17 @@ function GoogleIcon() {
 // El router ya parsea `?x=1` como el número 1 (JSON), no como el texto "1".
 function esVerdadero(valor: unknown): true | undefined {
   return valor === "1" || valor === 1 || valor === true || undefined;
+}
+
+const MENSAJE_ALTA_NEUTRO =
+  "Si el correo no tenía cuenta, te enviamos un enlace para confirmarla. Si ya tenías una, inicia sesión o recupera tu contraseña.";
+
+function esUsuarioYaRegistrado(error: { message?: string; code?: string }): boolean {
+  return (
+    error.code === "user_already_exists" ||
+    error.code === "email_exists" ||
+    /already (been )?registered/i.test(error.message ?? "")
+  );
 }
 
 export const Route = createFileRoute("/auth")({
@@ -110,6 +122,11 @@ function AuthPage() {
     setLoading(true);
     setError(null);
     setMessage(null);
+    if (esCuentaDemo(email)) {
+      setError(MENSAJE_CUENTA_DEMO);
+      setLoading(false);
+      return;
+    }
     try {
       const supabase = await getSupabase();
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
@@ -204,12 +221,17 @@ function AuthPage() {
           data: { full_name: fullName },
         },
       });
-      if (signUpError) {
-        setError(signUpError.message);
+      if (signUpError && esUsuarioYaRegistrado(signUpError)) {
+        // Auditoría 10-oct-2026: "User already registered" confirmaba que el
+        // correo tenía cuenta. Mismo mensaje que el alta que queda pendiente
+        // de confirmar: desde afuera no se distingue un caso del otro.
+        setMessage(MENSAJE_ALTA_NEUTRO);
+      } else if (signUpError) {
+        setError(mensajeDeError(signUpError));
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) {
-          setMessage("Cuenta creada. Revisa tu correo para confirmarla y luego inicia sesión.");
+          setMessage(MENSAJE_ALTA_NEUTRO);
         } else {
           await router.invalidate();
           navigate({ to: peekPlanIntent() ? "/suscripcion" : "/dashboard" });
@@ -384,6 +406,23 @@ function AuthPage() {
                   {loading && <Loader2 className="size-4 animate-spin" />}
                   {mode === "signin" ? "Ingresar" : "Crear cuenta"}
                 </button>
+                {mode === "signup" && (
+                  <p className="text-center text-xs text-muted-foreground">
+                    Al crear tu cuenta aceptas los{" "}
+                    <Link to="/terminos" className="font-medium text-brand-700 hover:underline">
+                      Términos
+                    </Link>
+                    , la{" "}
+                    <Link to="/privacidad" className="font-medium text-brand-700 hover:underline">
+                      Política de privacidad
+                    </Link>{" "}
+                    y el{" "}
+                    <Link to="/dpa" className="font-medium text-brand-700 hover:underline">
+                      Acuerdo de tratamiento de datos
+                    </Link>
+                    .
+                  </p>
+                )}
               </form>
             </>
           )}

@@ -26,7 +26,7 @@ describe("freno de solicitudes repetidas por WhatsApp", () => {
     client = await conectar();
   });
   afterAll(async () => {
-    await client.end();
+    await client?.end();
   });
 
   beforeEach(async () => {

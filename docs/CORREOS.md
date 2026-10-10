@@ -2,7 +2,7 @@
 
 Esmalia le escribe a la **clínica** (propietarios y administradores) en cinco momentos. **Ningún proceso automático le escribe a pacientes**: los destinatarios salen de `clinic_members`, nunca de `patients`. Spec aprobada: `07 - Clientes y Ventas/2026-10-09-correos-ciclo-de-vida.md` (fuera del repo).
 
-Están construidos y **apagados** hasta que exista el dominio propio. Activación paso a paso: `docs/DOMINIO_RUNBOOK.md`, paso 6b.
+Están construidos y **encendidos en modo de prueba desde el 09-oct-2026** (`LIFECYCLE_EMAILS_ENABLED=true` + `LIFECYCLE_EMAIL_REDIRECT_TO`: todo llega a `maxnovaluciglobal@gmail.com` con el asunto `[PRUEBA → destinatario real]`). Activación y apagado paso a paso: `docs/DOMINIO_RUNBOOK.md`, paso 6b.
 
 ## Los cinco correos
 

@@ -16,6 +16,7 @@ import { Route as CajaRouteImport } from './routes/caja'
 import { Route as CalculadoraRentabilidadDentalRouteImport } from './routes/calculadora-rentabilidad-dental'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DocsRouteImport } from './routes/docs'
+import { Route as DpaRouteImport } from './routes/dpa'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as NosotrosRouteImport } from './routes/nosotros'
 import { Route as PortalRouteImport } from './routes/portal'
@@ -124,6 +125,11 @@ const DemoRoute = DemoRouteImport.update({
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DpaRoute = DpaRouteImport.update({
+  id: '/dpa',
+  path: '/dpa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -543,6 +549,7 @@ export interface FileRoutesByFullPath {
   '/calculadora-rentabilidad-dental': typeof CalculadoraRentabilidadDentalRoute
   '/demo': typeof DemoRoute
   '/docs': typeof DocsRouteWithChildren
+  '/dpa': typeof DpaRoute
   '/faq': typeof FaqRoute
   '/nosotros': typeof NosotrosRoute
   '/portal': typeof PortalRouteWithChildren
@@ -623,6 +630,7 @@ export interface FileRoutesByTo {
   '/caja': typeof CajaRoute
   '/calculadora-rentabilidad-dental': typeof CalculadoraRentabilidadDentalRoute
   '/demo': typeof DemoRoute
+  '/dpa': typeof DpaRoute
   '/faq': typeof FaqRoute
   '/nosotros': typeof NosotrosRoute
   '/portal-laboratorio': typeof PortalLaboratorioRouteWithChildren
@@ -705,6 +713,7 @@ export interface FileRoutesById {
   '/calculadora-rentabilidad-dental': typeof CalculadoraRentabilidadDentalRoute
   '/demo': typeof DemoRoute
   '/docs': typeof DocsRouteWithChildren
+  '/dpa': typeof DpaRoute
   '/faq': typeof FaqRoute
   '/nosotros': typeof NosotrosRoute
   '/portal': typeof PortalRouteWithChildren
@@ -789,6 +798,7 @@ export interface FileRouteTypes {
     | '/calculadora-rentabilidad-dental'
     | '/demo'
     | '/docs'
+    | '/dpa'
     | '/faq'
     | '/nosotros'
     | '/portal'
@@ -869,6 +879,7 @@ export interface FileRouteTypes {
     | '/caja'
     | '/calculadora-rentabilidad-dental'
     | '/demo'
+    | '/dpa'
     | '/faq'
     | '/nosotros'
     | '/portal-laboratorio'
@@ -950,6 +961,7 @@ export interface FileRouteTypes {
     | '/calculadora-rentabilidad-dental'
     | '/demo'
     | '/docs'
+    | '/dpa'
     | '/faq'
     | '/nosotros'
     | '/portal'
@@ -1034,6 +1046,7 @@ export interface RootRouteChildren {
   CalculadoraRentabilidadDentalRoute: typeof CalculadoraRentabilidadDentalRoute
   DemoRoute: typeof DemoRoute
   DocsRoute: typeof DocsRouteWithChildren
+  DpaRoute: typeof DpaRoute
   FaqRoute: typeof FaqRoute
   NosotrosRoute: typeof NosotrosRoute
   PortalRoute: typeof PortalRouteWithChildren
@@ -1107,6 +1120,13 @@ declare module '@tanstack/react-router' {
       path: '/docs'
       fullPath: '/docs'
       preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dpa': {
+      id: '/dpa'
+      path: '/dpa'
+      fullPath: '/dpa'
+      preLoaderRoute: typeof DpaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -1797,6 +1817,7 @@ const rootRouteChildren: RootRouteChildren = {
   CalculadoraRentabilidadDentalRoute: CalculadoraRentabilidadDentalRoute,
   DemoRoute: DemoRoute,
   DocsRoute: DocsRouteWithChildren,
+  DpaRoute: DpaRoute,
   FaqRoute: FaqRoute,
   NosotrosRoute: NosotrosRoute,
   PortalRoute: PortalRouteWithChildren,

@@ -79,6 +79,7 @@ type FooterLink =
         | "/nosotros"
         | "/terminos"
         | "/privacidad"
+        | "/dpa"
         | "/calculadora-rentabilidad-dental"
         | "/recursos/fugas-clinica-dental"
         | "/software-dental-latam";
@@ -133,6 +134,7 @@ const footerColumns: { t: string; links: FooterLink[] }[] = [
     links: [
       { label: "Términos de servicio", kind: "route", to: "/terminos" },
       { label: "Política de privacidad", kind: "route", to: "/privacidad" },
+      { label: "Tratamiento de datos (DPA)", kind: "route", to: "/dpa" },
     ],
   },
 ];

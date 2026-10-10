@@ -1,6 +1,6 @@
 # Deploy a producción — Esmalia (ex Alika)
 
-> **Histórico (05-sep-2026).** Este checklist se escribió antes del rebrand y quedó en gran parte cumplido: Sentry con redacción de PII, robots/sitemap/llms, headers y CSP con nonce, webhook de Stripe live, backups diarios a B2 y `/api/health` ya están en producción. El nombre definitivo es **Esmalia** (no Alika) y el dominio a comprar es `esmalia.com`; la conexión del dominio sigue `docs/DOMINIO_RUNBOOK.md`. **La lista vigente de lo que falta para publicar vive en el tablero del proyecto:** `~/Documents/01 - Maxnova Luci Global/04 - Alika/00 - Gestion/PENDIENTES.md` (actualizado el 09-oct-2026). Lo que sigue abierto de este documento y quedó trasladado allá: registro de marca, monitoreo externo de `/api/health`, Stripe propio de la LLC y pilotos.
+> **Histórico (ago-2026). Estado vigente: `docs/DOMINIO_RUNBOOK.md` y `00 - Gestion/ESTADO.md`** (tablero del proyecto, fuera del repo). Desde que se escribió: la marca es **Esmalia**, producción vive en `https://esmalia.com` (09-oct-2026), Vercel sigue en **Hobby** (Pro descartado), Supabase está en plan **Pro**, y Sentry, `/api/health`, el webhook de Stripe y los backups diarios a B2 ya están en producción. Los ítems de abajo se dejaron como registro; las correcciones obvias van marcadas "(actualizado oct-2026)".
 
 Checklist paso a paso para el primer lanzamiento B2B con clínicas piloto. Cada sección lista **quién debe hacerlo** (Walter vs código) y **cómo verificar** que quedó.
 
@@ -12,8 +12,8 @@ Estas cosas requieren decisión y firma de Walter antes de tocar código product
 
 - [ ] **Confirmar el nombre "Alika"** o retomar la búsqueda. Ver `~/.claude/projects/-Users-walterlamadriz-Documents/memory/oralia_audit_fase6.md` para la investigación. Recomendación: seguir con Alika si el trademark check da libre.
 - [ ] **Trademark check formal** en INAPI (CL) + IMPI (MX) + INPI (AR) + USPTO clase 9 y 42. ~US$150 con abogado, 2-3 días. Sin este OK, no comprar dominio ni imprimir marketing.
-- [ ] **Comprar `alika.com`**. El dominio aparece en HugeDomains/similar como premium; probable rango US$1-3k. Alternativa `alika.app` (~US$20/año) si el .com sale caro.
-- [ ] **Modelo de precios** definido: ¿por seat/profesional/mes? ¿flat por clínica? ¿free trial 14 días? Requerido antes de configurar Stripe.
+- [x] **Dominio** (actualizado oct-2026): se compró `esmalia.com` el 09-oct-2026.
+- [x] **Modelo de precios** (actualizado oct-2026: publicado en `/precios`, Solo US$29 / Clínica US$69 / Red a medida, trial 14 días) definido: ¿por seat/profesional/mes? ¿flat por clínica? ¿free trial 14 días? Requerido antes de configurar Stripe.
 - [ ] **Piloto**: identificar 3-5 clínicas amigas dispuestas a usar la beta. Sin piloto no vale la pena ir a producción.
 
 ---
@@ -35,35 +35,35 @@ Estas cosas requieren decisión y firma de Walter antes de tocar código product
 
 ### 2.1 Dominio
 
-- [ ] Comprar `alika.com` (o `alika.app`). Registrar con contacto profesional (no personal).
-- [ ] Activar Cloudflare en frente del dominio (DNS + proxy).
+- [x] (actualizado oct-2026) `esmalia.com` comprado en Cloudflare (registrador).
+- [x] (actualizado oct-2026) DNS en Cloudflare, registros en modo _DNS only_ (sin proxy).
 - [ ] Configurar SSL automático (Vercel + Cloudflare lo hacen solos si el dominio apunta bien).
 
 ### 2.2 Vercel
 
-- [ ] Cuenta Vercel Pro (~US$20/mes) — necesario para custom domain productivo y multiples envs.
-- [ ] Conectar el repo `walterlamadriz-ai/alika` al proyecto Vercel.
-- [ ] Configurar dominio productivo → apuntar `alika.com` a Vercel (CNAME o A record).
+- [x] (actualizado oct-2026) **Vercel Pro descartado**: el proyecto sigue en Hobby, que alcanza para el dominio propio. Los crons horarios corren en GitHub Actions.
+- [x] Repo `maxnovaluciglobal-a11y/alika` conectado al proyecto Vercel `alika` (team `maxnovaluci-global`).
+- [x] (actualizado oct-2026) `esmalia.com` → Vercel (A `76.76.21.21`, CNAME `www`).
 - [ ] Environment Variables en Vercel (copiar de `.env.example`):
   - `SUPABASE_URL`
   - `SUPABASE_PUBLISHABLE_KEY`
   - `SUPABASE_SERVICE_ROLE_KEY` (⚠️ solo en el env de producción, NO en preview)
   - `GEMINI_API_KEY` u `OPENAI_API_KEY`
   - `SENTRY_DSN` (cuando se cree en 2.4)
-  - `PUBLIC_APP_URL=https://alika.com`
+  - `PUBLIC_APP_URL=https://esmalia.com`
 - [ ] Configurar branch protection: solo `main` deploya a producción; PRs deploy a preview.
 
 ### 2.3 Supabase
 
 - [x] **Resuelto** — se migró de Lovable Cloud al Supabase propio (`hvfkygoguxvpmwslrccb`, sa-east-1) el 2026-08-14. Ver `docs/SUPABASE_MIGRATION.md`. Prod corre contra el propio, verificado.
-- [ ] Verificar que el plan actual (Free tier) alcanza el volumen esperado a medida que entren clínicas piloto reales — upgrade si hace falta.
-- [ ] Setear backup diario propio via pg_dump + rclone a B2 (`~/.claude/projects/-Users-walterlamadriz-Documents/memory/gastrocore360_b2_offsite.md` tiene el patrón usado en GastroCore).
+- [x] (actualizado oct-2026) Supabase en plan **Pro** (org MaxnovaLuci).
+- [x] Backup diario propio a B2 (`docs/BACKUPS_ALIKA.md`), activo desde el 01-sep-2026.
 
 ### 2.4 Monitoreo
 
-- [ ] **Sentry** — cuenta gratis (5k events/mes), crear proyecto React, copiar el DSN a `SENTRY_DSN`. El código ya está preparado para leerlo (ver Wave 1).
+- [x] (actualizado oct-2026: activo en producción) **Sentry** — cuenta gratis (5k events/mes), crear proyecto React, copiar el DSN a `SENTRY_DSN`. El código ya está preparado para leerlo (ver Wave 1).
 - [ ] **Antes de setear `VITE_SENTRY_DSN`**: revisar el `beforeSend` en `src/lib/sentry.ts` — hoy trunca cookies, redacta `user` a solo `id`, y redacta el patrón `(columna)=(valor)` de mensajes tipo Postgres (`Key (email)=(x) already exists`). Confirmar contra errores reales del proyecto que ese redactado alcanza antes de habilitar el DSN en prod (checklist detallado en el comentario del `beforeSend`).
-- [ ] **Healthcheck externo** — UptimeRobot (gratis, 5 min interval) apuntando a `https://alika.com/api/health` (endpoint pendiente de crear).
+- [ ] **Healthcheck externo** — UptimeRobot (gratis, 5 min interval) apuntando a `https://esmalia.com/api/health` (el endpoint ya existe; falta el monitor externo).
 - [ ] **Alertas Slack/Email** — desde Sentry cuando hay errores nuevos, y desde UptimeRobot cuando el sitio cae.
 
 ### 2.5 Billing (Stripe)
@@ -73,7 +73,7 @@ Estas cosas requieren decisión y firma de Walter antes de tocar código product
   - `Alika Clínica` con precio por seat (o flat) según decisión de pricing.
   - Trial 14 días.
 - [ ] Copiar `STRIPE_SECRET_KEY` y `STRIPE_PUBLISHABLE_KEY` a Vercel env vars.
-- [ ] Crear webhook endpoint en `https://alika.com/api/stripe/webhook` (pendiente de código).
+- [x] (actualizado oct-2026) Webhook `/api/stripe/webhook` en producción; el endpoint LIVE sigue en `alika-omega.vercel.app` a propósito (`/api/*` no se redirige).
 - [ ] Copiar `STRIPE_WEBHOOK_SECRET`.
 
 ---
@@ -105,7 +105,7 @@ Loguearse como owner y ejecutar el golden path:
 
 - [ ] Ejecutar la auditoría de RLS: como user con rol `reception`, intentar leer `clinical_notes` por REST directo (debería devolver vacío o 401).
 - [ ] Verificar que ningún endpoint `_serverFn/*` responde sin JWT válido.
-- [ ] Confirmar CSP + headers en `curl -I https://alika.com`.
+- [ ] Confirmar CSP + headers en `curl -I https://esmalia.com`.
 
 ### 3.3 Performance
 

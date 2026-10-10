@@ -4,6 +4,8 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
+import { assertNotDemoClinic, requireClinicPermission } from "@/lib/access/clinic-guards.server";
+import { urlDeLaApp } from "@/lib/app-origin.server";
 import {
   requiereLlamadaOSuscripcion,
   SUBSCRIPTION_STATUSES,
@@ -38,6 +40,8 @@ function mapSubscription(row: SubscriptionRow): Subscription {
     cancelAtPeriodEnd: row.cancel_at_period_end,
   };
 }
+
+const SIN_PERMISOS_FACTURACION = "No tienes permisos para gestionar la suscripción de la clínica.";
 
 /** Suscripción de la clínica activa. `null` si aún no se creó ninguna. */
 export const getMySubscription = createServerFn({ method: "GET" })
@@ -104,16 +108,24 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       .object({
         clinicId: z.string().uuid(),
         plan: z.enum(["solo", "clinica"]).default("clinica"),
-        // URLs a las que Stripe redirige tras completar/cancelar.
-        successUrl: z.string().url(),
-        cancelUrl: z.string().url(),
       })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<{ url: string }> => {
+    const { supabase, userId } = context;
+    // Auditoría 10-oct-2026: la pantalla /suscripcion exige `settings:manage`,
+    // pero el server fn no — cualquier miembro (recepción, asistente) podía
+    // abrir un checkout a nombre de la clínica. Regla 15.
+    await requireClinicPermission(
+      supabase,
+      data.clinicId,
+      userId,
+      "settings:manage",
+      SIN_PERMISOS_FACTURACION,
+    );
+    await assertNotDemoClinic(supabase, data.clinicId);
     const stripe = getStripe();
     const priceId = planPriceId(data.plan as BillingPlan);
-    const { supabase, userId } = context;
 
     // Traer datos de la clínica + email del owner para pre-poblar Stripe.
     const { data: clinic, error: clinicErr } = await supabase
@@ -161,8 +173,10 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         trial_period_days: 14,
         metadata: { clinic_id: data.clinicId },
       },
-      success_url: data.successUrl,
-      cancel_url: data.cancelUrl,
+      // El origen lo arma el servidor (PUBLIC_APP_URL): antes venía del
+      // cliente y se podía mandar el retorno de Stripe a cualquier dominio.
+      success_url: urlDeLaApp("/suscripcion?checkout=success"),
+      cancel_url: urlDeLaApp("/suscripcion?checkout=cancel"),
     });
 
     if (!session.url) throw new Error("Stripe no devolvió URL de checkout.");
@@ -179,11 +193,18 @@ export const createBillingPortalSession = createServerFn({ method: "POST" })
     z
       .object({
         clinicId: z.string().uuid(),
-        returnUrl: z.string().url(),
       })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<{ url: string }> => {
+    await requireClinicPermission(
+      context.supabase,
+      data.clinicId,
+      context.userId,
+      "settings:manage",
+      SIN_PERMISOS_FACTURACION,
+    );
+    await assertNotDemoClinic(context.supabase, data.clinicId);
     const stripe = getStripe();
     const { data: sub, error } = await context.supabase
       .from("subscriptions")
@@ -199,7 +220,7 @@ export const createBillingPortalSession = createServerFn({ method: "POST" })
     }
     const portal = await stripe.billingPortal.sessions.create({
       customer: sub.stripe_customer_id,
-      return_url: data.returnUrl,
+      return_url: urlDeLaApp("/suscripcion"),
     });
     return { url: portal.url };
   });

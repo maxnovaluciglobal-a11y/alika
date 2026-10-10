@@ -6,7 +6,15 @@ export const Route = createFileRoute("/docs/portal-pacientes")({
   head: () => {
     const canonical = canonicalHead("/docs/portal-pacientes");
     return {
-      meta: [{ title: "Portal de pacientes · Documentación · Esmalia" }, ...canonical.meta],
+      meta: [
+        { title: "Portal de pacientes · Documentación · Esmalia" },
+        {
+          name: "description",
+          content:
+            "El portal de pacientes de Esmalia: un link para que tus pacientes pidan o consulten su cita sin crear cuenta ni descargar nada.",
+        },
+        ...canonical.meta,
+      ],
       links: canonical.links,
     };
   },

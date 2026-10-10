@@ -11,11 +11,10 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        // El dominio propio todavía no está configurado (ver docs/DEPLOY_PRODUCTION.md) — hardcodearlo
-        // acá generaba URLs a un dominio que no resuelve a la app. PUBLIC_APP_URL manda
-        // cuando está seteada (preview/staging/prod con dominio propio ya definido); si no,
-        // se deriva del host real de la request (hoy `alika-omega.vercel.app`), así el
-        // sitemap siempre queda correcto sin volver a tocar este archivo cuando cambie el dominio.
+        // Dominio de producción: https://esmalia.com desde el 09-oct-2026 (ver
+        // docs/DOMINIO_RUNBOOK.md). PUBLIC_APP_URL manda cuando está seteada; si no, se
+        // deriva del host real de la request (previews, local), así el sitemap queda
+        // correcto en cada entorno sin hardcodear el dominio acá.
         const BASE_URL =
           (typeof process !== "undefined" && process.env.PUBLIC_APP_URL) ||
           new URL(request.url).origin;
@@ -37,6 +36,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/docs/datos-y-seguridad", changefreq: "monthly", priority: "0.4" },
           { path: "/privacidad", changefreq: "yearly", priority: "0.3" },
           { path: "/terminos", changefreq: "yearly", priority: "0.3" },
+          { path: "/dpa", changefreq: "yearly", priority: "0.3" },
         ];
 
         const urls = entries.map((e) =>

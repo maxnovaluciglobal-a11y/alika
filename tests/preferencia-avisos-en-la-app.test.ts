@@ -23,7 +23,7 @@ describe("preferencia de avisos en la app", () => {
     client = await conectar();
   });
   afterAll(async () => {
-    await client.end();
+    await client?.end();
   });
 
   beforeEach(async () => {

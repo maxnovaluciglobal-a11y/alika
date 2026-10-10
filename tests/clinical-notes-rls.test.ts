@@ -54,7 +54,7 @@ describe("RLS y transiciones de notas clínicas", () => {
     client = await conectar();
   });
   afterAll(async () => {
-    await client.end();
+    await client?.end();
   });
   beforeEach(async () => {
     await client.query("BEGIN");

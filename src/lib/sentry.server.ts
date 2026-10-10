@@ -1,6 +1,11 @@
 import type * as SentryNode from "@sentry/node";
 
-import { redactPostgresLiterals } from "@/lib/sentry-redact";
+import {
+  redactPostgresLiterals,
+  scrubBreadcrumb,
+  scrubTokensInEvent,
+  scrubTokensInString,
+} from "@/lib/sentry-redact";
 
 /**
  * Sentry del lado del servidor (SSR y server functions en Vercel).
@@ -39,7 +44,11 @@ function cargar(): Promise<typeof SentryNode> | null {
         }
         if (event.user) event.user = { id: event.user.id };
         redactPostgresLiterals(event);
+        scrubTokensInEvent(event);
         return event;
+      },
+      beforeBreadcrumb(breadcrumb) {
+        return scrubBreadcrumb(breadcrumb);
       },
     });
     return Sentry;
@@ -56,7 +65,8 @@ export async function capturarErrorDelServidor(
   try {
     const Sentry = await pendiente;
     Sentry.withScope((scope) => {
-      if (contexto.ruta) scope.setTag("ruta", contexto.ruta);
+      // La ruta de /portal/<jwt> trae el token: se etiqueta ya limpia.
+      if (contexto.ruta) scope.setTag("ruta", scrubTokensInString(contexto.ruta));
       if (contexto.metodo) scope.setTag("metodo", contexto.metodo);
       Sentry.captureException(error);
     });

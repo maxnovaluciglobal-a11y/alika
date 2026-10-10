@@ -6,7 +6,15 @@ export const Route = createFileRoute("/docs/whatsapp")({
   head: () => {
     const canonical = canonicalHead("/docs/whatsapp");
     return {
-      meta: [{ title: "Conectar WhatsApp · Documentación · Esmalia" }, ...canonical.meta],
+      meta: [
+        { title: "Conectar WhatsApp · Documentación · Esmalia" },
+        {
+          name: "description",
+          content:
+            "Cómo Esmalia envía recordatorios por WhatsApp: modo manual con wa.me desde el primer día o el número real de tu clínica conectado a Meta.",
+        },
+        ...canonical.meta,
+      ],
       links: canonical.links,
     };
   },

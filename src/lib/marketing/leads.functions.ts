@@ -112,17 +112,26 @@ async function buscarExistente(
 ): Promise<LeadExistente | null> {
   if (!email && !phone) return null;
 
-  let query = supabaseAdmin.from("marketing_leads").select("id, submissions_count, email, phone");
-  if (email && phone) {
-    query = query.or(`email.eq.${email},phone.eq.${phone}`);
-  } else if (email) {
-    query = query.eq("email", email);
-  } else {
-    query = query.eq("phone", phone as string);
-  }
-
-  const { data } = await query;
-  if (!data || data.length === 0) return null;
+  // Dos consultas con `.eq()` en vez de `.or(\`email.eq.${email},…\`)`:
+  // interpolar en el filtro de PostgREST dejaba que un email con comas o
+  // paréntesis (válido para RFC 5322, o colado por quien llama al server fn
+  // directo) agregara condiciones propias al OR — auditoría 10-oct-2026.
+  const columnas = "id, submissions_count, email, phone";
+  const [porEmail, porTelefono] = await Promise.all([
+    email
+      ? supabaseAdmin.from("marketing_leads").select(columnas).eq("email", email)
+      : Promise.resolve({ data: [] as LeadExistente[] }),
+    phone
+      ? supabaseAdmin.from("marketing_leads").select(columnas).eq("phone", phone)
+      : Promise.resolve({ data: [] as LeadExistente[] }),
+  ]);
+  const vistos = new Set<string>();
+  const data = [...(porEmail.data ?? []), ...(porTelefono.data ?? [])].filter((d) => {
+    if (vistos.has(d.id)) return false;
+    vistos.add(d.id);
+    return true;
+  });
+  if (data.length === 0) return null;
   if (data.length === 1) return data[0];
 
   // Dos filas distintas matchearon (una por email, otra por phone). Ver

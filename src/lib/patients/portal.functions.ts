@@ -3,6 +3,8 @@ import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertNotDemoClinic } from "@/lib/access/clinic-guards.server";
+import { appOrigin } from "@/lib/app-origin.server";
 import { throwIfRequiresLlamadaOSuscripcion } from "@/lib/billing.functions";
 import { mensajeDb } from "@/lib/db-errors";
 import { buildWaMeUrl } from "@/lib/messaging/messaging";
@@ -31,7 +33,6 @@ export const generatePortalLink = createServerFn({ method: "POST" })
       .object({
         clinicId: z.string().uuid(),
         patientId: z.string().uuid(),
-        baseUrl: z.string().url(),
         // Tope bajado de 90 a 14 días — el trade-off del link sin login es
         // que quien lo abra ve PHI del paciente; una ventana de exposición
         // más corta limita el daño si el link se reenvía o se filtra.
@@ -62,12 +63,16 @@ export const generatePortalLink = createServerFn({ method: "POST" })
       if (!patient) throw new Error("Paciente no encontrado o sin permisos.");
 
       await throwIfRequiresLlamadaOSuscripcion(supabase, data.clinicId, SIN_PERMISOS_PORTAL);
+      await assertNotDemoClinic(supabase, data.clinicId);
 
       const token = await signPortalToken(
         { patientId: patient.id, clinicId: data.clinicId },
         data.ttlDays,
       );
-      const url = `${data.baseUrl.replace(/\/$/, "")}/portal/${token}`;
+      // Origen armado en el servidor (auditoría 10-oct-2026): con `baseUrl`
+      // del cliente se podía firmar un link válido que apuntara a otro
+      // dominio y quedarse con el token cuando el paciente lo abría.
+      const url = `${appOrigin()}/portal/${token}`;
 
       const message =
         `Hola ${patient.full_name.split(" ")[0]}, este es tu acceso al portal de tu clínica. ` +
@@ -380,7 +385,7 @@ export const requestPortalAppointment = createServerFn({ method: "POST" })
       throw new Error(mensajeDb(countErr, "No pudimos verificar tus solicitudes anteriores."));
     if ((count ?? 0) >= 3) {
       throw new Error(
-        "Ya enviaste varias solicitudes hoy. La clínica te va a contactar pronto — evitá duplicarlas.",
+        "Ya enviaste varias solicitudes hoy. La clínica te va a contactar pronto — evita duplicarlas.",
       );
     }
 
