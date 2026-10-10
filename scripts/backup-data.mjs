@@ -3,6 +3,10 @@
 // en supabase/migrations/ — lo que este script respalda es la DATA, que no
 // está en git.
 //
+// Además de las tablas de `public`, exporta `auth_users` (vía
+// auth.admin.listUsers, sin hashes de contraseña: la API no los devuelve).
+// Los archivos de Storage van aparte, en scripts/backup-storage.mjs.
+//
 // Deliberadamente usa la API REST de Supabase (service role, bypassa RLS) en
 // vez de pg_dump: no depende de la contraseña directa de Postgres (rota sin
 // aviso, ver alika_backups_offsite en memoria), corre desde cualquier lado
@@ -13,6 +17,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { gzipSync } from "node:zlib";
 import { TABLES } from "./backup-tables.mjs";
+import { dumpAuthUsers } from "./backup-lib.mjs";
 
 const PAGE_SIZE = 1000;
 
@@ -40,7 +45,7 @@ async function main() {
   }
 
   const admin = createClient(url, key, { auth: { persistSession: false } });
-  const dump = { exportedAt: new Date().toISOString(), tables: {} };
+  const dump = { exportedAt: new Date().toISOString(), tables: {}, auth_users: [] };
   let totalRows = 0;
 
   for (const table of TABLES) {
@@ -48,7 +53,14 @@ async function main() {
     totalRows += dump.tables[table].length;
   }
 
-  process.stderr.write(`Respaldadas ${TABLES.length} tablas, ${totalRows} filas totales.\n`);
+  // Los profiles/clinic_members apuntan a auth.users por user_id: sin estos
+  // usuarios, restaurar las tablas deja a todos sin poder entrar.
+  dump.auth_users = await dumpAuthUsers(admin);
+
+  process.stderr.write(
+    `Respaldadas ${TABLES.length} tablas, ${totalRows} filas totales, ` +
+      `${dump.auth_users.length} usuarios de auth.\n`,
+  );
   process.stdout.write(gzipSync(Buffer.from(JSON.stringify(dump))));
 }
 
