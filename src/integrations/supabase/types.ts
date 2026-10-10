@@ -1535,6 +1535,7 @@ export type Database = {
           is_active: boolean;
           name: string;
           notes: string | null;
+          portal_revoked_at: string | null;
           updated_at: string;
         };
         Insert: {
@@ -1548,6 +1549,7 @@ export type Database = {
           is_active?: boolean;
           name: string;
           notes?: string | null;
+          portal_revoked_at?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -1561,6 +1563,7 @@ export type Database = {
           is_active?: boolean;
           name?: string;
           notes?: string | null;
+          portal_revoked_at?: string | null;
           updated_at?: string;
         };
         Relationships: [
