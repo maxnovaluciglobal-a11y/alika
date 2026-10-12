@@ -133,6 +133,14 @@ export const doThing = createServerFn({ method: "POST" })
 - **`birthday_greeting`**: match de mes/día contra `patients.birth_date`, cooldown 300 días (no repetir en el mismo año). **`treatment_followup`**: `treatment_items.status='completed'` hace 2-10 días, un candidato por paciente (el más reciente). **`referral_invite`**: solo a pacientes con al menos una cita `finalizada` (mismo gate que `hygiene_recall`), cooldown 90 días.
 - **Verificado E2E contra Supabase real**: cumpleaños vía `birth_date` temporal (revertido), referidos vía una cita temporalmente marcada `finalizada` (revertida) — ambos con datos reales de "clinica Patricia", no fabricados desde cero. Envío de `referral_invite` confirmado con `{codigo}` renderizado en el mensaje real. Webhook simulado con el código real de una paciente resolvió `referred_by_patient_id` correctamente en un lead nuevo. Todo dato sintético borrado después.
 
+## Contenido editorial (SEO/GEO)
+
+- Páginas públicas de contenido en `src/content/paginas/*.ts` (tipo en `src/content/tipos.ts`). Agregar una página = crear el archivo: rutas, índices (`/funciones`, `/comparar`, `/recursos`), sitemap y `/llms.txt` la toman solas. Convención de nombre: `/funciones/x` ↔ `funciones-x.ts`, `/software-dental-pais` ↔ `pais-pais.ts`.
+- Texto fijo de `/llms.txt` en `src/content/llms-base.md`. El schema (`src/lib/seo.ts`), `llms-base.md` y las páginas no pueden contradecirse.
+- Reglas: cada afirmación del producto respaldada por el código; cada dato de un competidor con fuente oficial y fecha; guías normativas (ley, impuestos) con `borrador: true` hasta tener revisor profesional. `tests/contenido-editorial.test.ts` y `tests/marca-unica.test.ts` lo vigilan.
+- Estado real a respetar en todo texto: WhatsApp en modo manual; el número conectado vía Meta y la lectura de WhatsApp de Patty están en habilitación. No emite factura electrónica.
+- Después de publicar páginas nuevas: `node scripts/indexnow.mjs` (avisa a Bing/ChatGPT Search).
+
 ## Herramientas críticas
 
 - **SQL directo a producción**: `psql` contra el pooler (ver regla 5). El Lovable MCP `query_database` (`{ project_id: "9f5bde21-...", sql: "..." }`) solo llega al proyecto huérfano de Lovable Cloud: legado, para rollback, no recomendado.
