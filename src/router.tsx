@@ -45,11 +45,16 @@ function buildCsp(nonce: string): string {
   const supabase = fuentesSupabaseParaCsp(leerSupabaseUrl());
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}'`,
+    // connect.facebook.net / *.facebook.com: SDK de Facebook para conectar el
+    // WhatsApp de la clínica (Embedded Signup en /whatsapp). La CSP es la del
+    // primer documento que se carga y /whatsapp se abre navegando dentro de
+    // la app, así que tiene que ir en la política general.
+    `script-src 'self' 'nonce-${nonce}' https://connect.facebook.net`,
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
-    `img-src 'self' data: ${supabase.https}`,
-    `connect-src 'self' ${supabase.https} ${supabase.wss} https://*.sentry.io`,
+    `img-src 'self' data: ${supabase.https} https://*.facebook.com https://*.fbcdn.net`,
+    `connect-src 'self' ${supabase.https} ${supabase.wss} https://*.sentry.io https://*.facebook.com https://graph.facebook.com`,
+    "frame-src 'self' https://*.facebook.com",
     "worker-src 'self'",
     "manifest-src 'self'",
     "object-src 'none'",

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
+import { estadoPlantillaDesdeMeta } from "@/lib/messaging/meta-plantillas";
 import { normalizeToWaMe } from "@/lib/messaging/messaging";
 import { isClinicOpenNow } from "@/lib/messaging/whatsapp";
 import { sendMetaTextMessage } from "@/lib/messaging/whatsapp.functions";
@@ -80,6 +81,14 @@ export const Route = createFileRoute("/api/whatsapp-webhook")({
           for (const change of entry.changes ?? []) {
             const value = change.value;
             if (!value) continue;
+            if (change.field === "message_template_status_update") {
+              try {
+                await applyTemplateStatus(supabaseAdmin, entry.id, value);
+              } catch (err) {
+                console.error("[whatsapp-webhook] estado de plantilla:", (err as Error).message);
+              }
+              continue;
+            }
             const phoneNumberId = value.metadata?.phone_number_id;
             if (!phoneNumberId) continue;
 
@@ -153,10 +162,43 @@ interface WhatsAppWebhookPayload {
         statuses?: WhatsAppStatusEvent[];
         messages?: WhatsAppInboundMessage[];
         contacts?: WhatsAppContact[];
+        // field = "message_template_status_update"
+        event?: string;
+        message_template_name?: string;
+        message_template_language?: string;
+        reason?: string | null;
       };
       field?: string;
     }>;
   }>;
+}
+
+/**
+ * Meta avisa cuando aprueba, rechaza o pausa una plantilla. El entry.id es
+ * el WABA: se actualizan las plantillas con ese nombre de las clínicas que
+ * tienen ese WABA conectado. Solo "approved" habilita el envío por la API.
+ */
+async function applyTemplateStatus(
+  supabaseAdmin: SupabaseAdminClient,
+  wabaId: string | undefined,
+  value: { event?: string; message_template_name?: string; message_template_language?: string },
+): Promise<void> {
+  if (!wabaId || !value.message_template_name || !value.event) return;
+  const { data: cuentas } = await supabaseAdmin
+    .from("whatsapp_accounts")
+    .select("clinic_id")
+    .eq("waba_id", wabaId);
+  const clinicIds = (cuentas ?? []).map((c) => c.clinic_id);
+  if (clinicIds.length === 0) return;
+  let query = supabaseAdmin
+    .from("message_templates")
+    .update({ meta_status: estadoPlantillaDesdeMeta(value.event) })
+    .in("clinic_id", clinicIds)
+    .eq("meta_template_name", value.message_template_name);
+  if (value.message_template_language) {
+    query = query.eq("meta_language", value.message_template_language);
+  }
+  await query;
 }
 
 /** Status callback: delivered/read/failed → actualiza la fila por external_id (wamid). */
@@ -561,6 +603,7 @@ async function handleUnknownSender(
       : `¡Hola! Gracias por escribirnos a ${clinicaNombre}. Ahora mismo estamos fuera de horario de atención — déjanos tu consulta y te contactamos a primera hora.`;
 
     await sendMetaTextMessage({
+      clinicId,
       phoneNumberId: account.phone_number_id,
       to: fromNormalized,
       body: texto,

@@ -14,6 +14,16 @@ import {
   type WhatsAppAccount,
   type WhatsAppAccountStatus,
 } from "@/lib/messaging/whatsapp";
+import { cifrarCredencial, nuevoPinWhatsApp } from "@/lib/messaging/credenciales-whatsapp.server";
+import {
+  cuerpoConVariables,
+  estadoPlantillaDesdeMeta,
+  IDIOMA_META,
+  payloadPlantillaMeta,
+  PLANTILLAS_META,
+  type KindConPlantillaMeta,
+} from "@/lib/messaging/meta-plantillas";
+import { tokenWhatsAppDeClinica } from "@/lib/messaging/token-whatsapp.server";
 
 type WhatsAppAccountRow = {
   id: string;
@@ -43,26 +53,124 @@ function mapAccount(row: WhatsAppAccountRow): WhatsAppAccount {
 }
 
 function metaApiVersion(): string {
-  return process.env.WHATSAPP_API_VERSION || "v21.0";
+  return process.env.WHATSAPP_API_VERSION || "v25.0";
 }
 
 /**
- * Config de plataforma requerida para hablar con la Cloud API. Ninguna de
- * estas es por-clínica: como Tech Provider, un solo System User token manda
- * en nombre de cualquier WABA compartido con la app (ver spec Fase 1).
- * Si falta algo, las funciones que la necesitan tiran un error legible en
- * vez de fallar con un 401 críptico de Meta.
+ * Config de plataforma para el Embedded Signup. El envío usa el token de
+ * negocio de cada clínica (ver token-whatsapp.server.ts); acá solo hacen
+ * falta el App ID y el App Secret para canjear el código de Meta. Si falta
+ * algo, error legible en vez de un 401 críptico de Meta.
  */
 function requireMetaAppConfig() {
   const appId = process.env.WHATSAPP_APP_ID;
   const appSecret = process.env.WHATSAPP_APP_SECRET;
-  const systemUserToken = process.env.WHATSAPP_SYSTEM_USER_TOKEN;
-  if (!appId || !appSecret || !systemUserToken) {
+  if (!appId || !appSecret || !process.env.WHATSAPP_CREDENTIALS_KEY) {
     throw new Error(
       "WhatsApp no está configurado a nivel de plataforma todavía (falta enrolarse como Tech Provider en Meta). Contacta al equipo de Esmalia.",
     );
   }
-  return { appId, appSecret, systemUserToken };
+  return { appId, appSecret };
+}
+
+/** Error de la Graph API en texto legible, sin volcar el JSON entero. */
+async function errorDeMeta(res: Response): Promise<string> {
+  const texto = await res.text();
+  try {
+    const { error } = JSON.parse(texto) as {
+      error?: { message?: string; error_user_msg?: string; code?: number };
+    };
+    return error?.error_user_msg || error?.message || texto;
+  } catch {
+    return texto;
+  }
+}
+
+/**
+ * Crea en la cuenta de WhatsApp de la clínica las plantillas que usa Esmalia
+ * (meta-plantillas.ts) y deja anotado nombre y estado en message_templates.
+ * Una plantilla que ya existe en Meta no es error: se toma su estado actual.
+ * Nunca tira: devuelve cuántas quedaron registradas, para mostrarlo.
+ */
+export async function sincronizarPlantillasMeta(params: {
+  clinicId: string;
+  wabaId: string;
+  token: string;
+  userId: string;
+}): Promise<{ registradas: number; fallidas: string[] }> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const version = metaApiVersion();
+  const fallidas: string[] = [];
+  let registradas = 0;
+
+  for (const kind of Object.keys(PLANTILLAS_META) as KindConPlantillaMeta[]) {
+    const plantilla = PLANTILLAS_META[kind];
+    let estado = "pending";
+    try {
+      const res = await fetch(
+        `https://graph.facebook.com/${version}/${params.wabaId}/message_templates`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${params.token}`, "Content-Type": "application/json" },
+          body: JSON.stringify(payloadPlantillaMeta(kind)),
+        },
+      );
+      if (res.ok) {
+        const json = (await res.json()) as { status?: string };
+        estado = estadoPlantillaDesdeMeta(json.status ?? "PENDING");
+      } else {
+        // ¿Ya existía? Se consulta su estado en vez de darla por fallida.
+        const consulta = await fetch(
+          `https://graph.facebook.com/${version}/${params.wabaId}/message_templates?name=${plantilla.nombre}&fields=name,status,language`,
+          { headers: { Authorization: `Bearer ${params.token}` } },
+        );
+        const lista = consulta.ok
+          ? ((await consulta.json()) as {
+              data?: Array<{ name: string; status: string; language: string }>;
+            })
+          : { data: [] };
+        const existente = lista.data?.find(
+          (t) => t.name === plantilla.nombre && t.language === IDIOMA_META,
+        );
+        if (!existente) {
+          fallidas.push(`${plantilla.nombre}: ${await errorDeMeta(res)}`);
+          continue;
+        }
+        estado = estadoPlantillaDesdeMeta(existente.status);
+      }
+
+      const meta = {
+        meta_template_name: plantilla.nombre,
+        meta_language: IDIOMA_META,
+        meta_status: estado,
+        meta_category: plantilla.categoria.toLowerCase(),
+      };
+      const { data: filas } = await supabaseAdmin
+        .from("message_templates")
+        .update(meta)
+        .eq("clinic_id", params.clinicId)
+        .eq("kind", kind)
+        .eq("channel", "whatsapp")
+        .select("id");
+      if (!filas?.length) {
+        // La clínica no tenía plantilla de WhatsApp para este caso: se crea
+        // con el mismo texto (sirve también para el envío manual).
+        await supabaseAdmin.from("message_templates").insert({
+          clinic_id: params.clinicId,
+          kind,
+          channel: "whatsapp",
+          name: plantilla.nombre,
+          body: cuerpoConVariables(kind),
+          created_by: params.userId,
+          ...meta,
+        });
+      }
+      registradas += 1;
+    } catch (err) {
+      fallidas.push(`${plantilla.nombre}: ${(err as Error).message}`);
+    }
+  }
+  return { registradas, fallidas };
 }
 
 const SIN_PERMISOS_LLAMADA =
@@ -93,7 +201,7 @@ export const getWhatsAppAccountStatus = createServerFn({ method: "GET" })
  *   3. Suscribe la app al WABA para recibir webhooks
  *      (`POST /{waba_id}/subscribed_apps`).
  *   4. Upsert en whatsapp_accounts.
- * Todo con el System User token — nunca se guarda un token por clínica.
+ * El token de negocio de la clínica queda cifrado en whatsapp_credentials.
  */
 export const completeWhatsAppEmbeddedSignup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -111,47 +219,61 @@ export const completeWhatsAppEmbeddedSignup = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<WhatsAppAccount> => {
     await assertNotDemoClinic(context.supabase, data.clinicId);
     await throwIfRequiresLlamadaOSuscripcion(context.supabase, data.clinicId, SIN_PERMISOS_LLAMADA);
-    const { appId, appSecret, systemUserToken } = requireMetaAppConfig();
+    const { appId, appSecret } = requireMetaAppConfig();
     const version = metaApiVersion();
 
-    // 1) Intercambio de code -> token de negocio. Solo se usa para verificar
-    // que el code es válido; el envío real usa el System User token.
+    // 1) Canje del código por el token de negocio de la clínica (vive 30 s:
+    // por eso el canje es lo primero). Con ese token se hace todo lo demás.
     const tokenUrl = new URL(`https://graph.facebook.com/${version}/oauth/access_token`);
     tokenUrl.searchParams.set("client_id", appId);
     tokenUrl.searchParams.set("client_secret", appSecret);
     tokenUrl.searchParams.set("code", data.code);
     const tokenRes = await fetch(tokenUrl);
     if (!tokenRes.ok) {
-      const body = await tokenRes.text();
-      throw new Error(`No pudimos verificar la conexión con Meta. ${body}`);
+      throw new Error(`No pudimos verificar la conexión con Meta. ${await errorDeMeta(tokenRes)}`);
+    }
+    const { access_token: businessToken } = (await tokenRes.json()) as { access_token?: string };
+    if (!businessToken) throw new Error("Meta no devolvió el acceso a tu cuenta de WhatsApp.");
+
+    // 2) Suscribir la app al WABA para recibir estados y mensajes entrantes.
+    const subscribeRes = await fetch(
+      `https://graph.facebook.com/${version}/${data.wabaId}/subscribed_apps`,
+      { method: "POST", headers: { Authorization: `Bearer ${businessToken}` } },
+    );
+    if (!subscribeRes.ok) {
+      throw new Error(
+        `No pudimos suscribir el webhook de tu cuenta. ${await errorDeMeta(subscribeRes)}`,
+      );
     }
 
-    // 2) Registrar el número para Cloud API.
+    // 3) Registrar el número para Cloud API con un PIN propio de la clínica.
+    const pin = nuevoPinWhatsApp();
     const registerRes = await fetch(
       `https://graph.facebook.com/${version}/${data.phoneNumberId}/register`,
       {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${systemUserToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ messaging_product: "whatsapp", pin: "000000" }),
+        headers: { Authorization: `Bearer ${businessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ messaging_product: "whatsapp", pin }),
       },
     );
     if (!registerRes.ok) {
-      const body = await registerRes.text();
-      throw new Error(`No pudimos registrar el número en WhatsApp. ${body}`);
+      throw new Error(
+        `No pudimos registrar el número en WhatsApp. ${await errorDeMeta(registerRes)}`,
+      );
     }
 
-    // 3) Suscribir la app al WABA para recibir estados y mensajes entrantes.
-    const subscribeRes = await fetch(
-      `https://graph.facebook.com/${version}/${data.wabaId}/subscribed_apps`,
-      { method: "POST", headers: { Authorization: `Bearer ${systemUserToken}` } },
+    // 3b) Credenciales cifradas, solo legibles por el servidor.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: credErr } = await supabaseAdmin.from("whatsapp_credentials").upsert(
+      {
+        clinic_id: data.clinicId,
+        waba_id: data.wabaId,
+        business_token_enc: cifrarCredencial(businessToken),
+        registration_pin_enc: cifrarCredencial(pin),
+      },
+      { onConflict: "clinic_id" },
     );
-    if (!subscribeRes.ok) {
-      const body = await subscribeRes.text();
-      throw new Error(`El número se registró pero no pudimos suscribir el webhook. ${body}`);
-    }
+    if (credErr) throw new Error("No pudimos guardar el acceso a WhatsApp. " + credErr.message);
 
     // 4) Upsert. UNIQUE(clinic_id) hace que una reconexión reemplace la fila
     // anterior en vez de duplicar.
@@ -171,7 +293,41 @@ export const completeWhatsAppEmbeddedSignup = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error("No pudimos guardar la conexión. " + error.message);
 
+    // 5) Plantillas en la cuenta de la clínica. Si alguna falla, la conexión
+    // igual queda hecha: se reintenta desde /whatsapp.
+    await sincronizarPlantillasMeta({
+      clinicId: data.clinicId,
+      wabaId: data.wabaId,
+      token: businessToken,
+      userId: context.userId,
+    });
+
     return mapAccount(row as WhatsAppAccountRow);
+  });
+
+/** Vuelve a crear o consultar las plantillas en Meta (botón en /whatsapp). */
+export const resincronizarPlantillasWhatsApp = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertNotDemoClinic(context.supabase, data.clinicId);
+    // Solo quien puede ver la conexión (RLS de whatsapp_accounts) llega acá.
+    const { data: account, error } = await context.supabase
+      .from("whatsapp_accounts")
+      .select("waba_id, status")
+      .eq("clinic_id", data.clinicId)
+      .maybeSingle();
+    if (error) throw new Error(mensajeDb(error, "No pudimos consultar tu conexión de WhatsApp."));
+    if (!account || account.status !== "connected") {
+      throw new Error("Primero conecta el número de WhatsApp de tu clínica.");
+    }
+    const token = await tokenWhatsAppDeClinica(data.clinicId);
+    return sincronizarPlantillasMeta({
+      clinicId: data.clinicId,
+      wabaId: account.waba_id,
+      token,
+      userId: context.userId,
+    });
   });
 
 /** Desconecta el número (soft: status='disabled', no borra la fila — mantiene auditoría). */
@@ -198,13 +354,14 @@ export interface MetaSendResult {
  * el caller decide caer a wa.me — esta función solo sabe hablar con Meta.
  */
 export async function sendMetaTemplateMessage(params: {
+  clinicId: string;
   phoneNumberId: string;
   to: string;
   templateName: string;
   templateLanguage: string;
   bodyParams: string[];
 }): Promise<MetaSendResult> {
-  const { systemUserToken } = requireMetaAppConfig();
+  const token = await tokenWhatsAppDeClinica(params.clinicId);
   const version = metaApiVersion();
 
   const res = await fetch(
@@ -212,7 +369,7 @@ export async function sendMetaTemplateMessage(params: {
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${systemUserToken}`,
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -280,6 +437,7 @@ export async function tryMetaTemplateSend(params: {
 
     const bodyParams = buildMetaTemplateParams(params.templateKind, params.variables);
     const sent = await sendMetaTemplateMessage({
+      clinicId: params.clinicId,
       phoneNumberId: account.phone_number_id,
       to,
       templateName: params.metaTemplate.name,
@@ -302,11 +460,12 @@ export async function tryMetaTemplateSend(params: {
  * abrir una conversación de la nada, eso siempre necesita plantilla.
  */
 export async function sendMetaTextMessage(params: {
+  clinicId: string;
   phoneNumberId: string;
   to: string;
   body: string;
 }): Promise<MetaSendResult> {
-  const { systemUserToken } = requireMetaAppConfig();
+  const token = await tokenWhatsAppDeClinica(params.clinicId);
   const version = metaApiVersion();
 
   const res = await fetch(
@@ -314,7 +473,7 @@ export async function sendMetaTextMessage(params: {
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${systemUserToken}`,
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

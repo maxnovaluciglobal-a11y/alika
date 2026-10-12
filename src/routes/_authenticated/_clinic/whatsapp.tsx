@@ -36,6 +36,7 @@ import { normalizeToWaMe } from "@/lib/messaging/messaging";
 import {
   completeWhatsAppEmbeddedSignup,
   disconnectWhatsAppAccount,
+  resincronizarPlantillasWhatsApp,
   getWhatsAppAccountStatus,
   listWhatsAppLeads,
   updateWhatsAppLeadStatus,
@@ -65,11 +66,10 @@ export const Route = createFileRoute("/_authenticated/_clinic/whatsapp")({
 // la página muestra el estado "todavía no habilitado" en vez de un botón roto.
 const WHATSAPP_APP_ID = import.meta.env.VITE_WHATSAPP_APP_ID as string | undefined;
 const WHATSAPP_CONFIG_ID = import.meta.env.VITE_WHATSAPP_CONFIG_ID as string | undefined;
-// Meta da ~2 años de vida a cada versión mayor del Graph API antes de
-// deprecarla — v21.0 salió en oct-2024, así que conviene revisar este
-// default (o setear VITE_WHATSAPP_API_VERSION) antes de fines de 2026.
+// Meta da ~2 años de vida a cada versión del Graph API. v25.0 es la vigente
+// en oct-2026; revisar este default (o VITE_WHATSAPP_API_VERSION) a fines de 2027.
 const WHATSAPP_API_VERSION =
-  (import.meta.env.VITE_WHATSAPP_API_VERSION as string | undefined) || "v21.0";
+  (import.meta.env.VITE_WHATSAPP_API_VERSION as string | undefined) || "v25.0";
 
 declare global {
   interface Window {
@@ -86,7 +86,7 @@ declare global {
           config_id: string;
           response_type: string;
           override_default_response_type: boolean;
-          extras: { setup: Record<string, never>; sessionInfoVersion: string };
+          extras: { setup: Record<string, never> };
         },
       ) => void;
     };
@@ -131,19 +131,28 @@ interface EmbeddedSignupPayload {
   displayPhone?: string;
 }
 
-/** Escucha el postMessage que manda Meta con el waba_id/phone_number_id conectado. */
+/**
+ * Escucha el postMessage que manda Meta con el waba_id/phone_number_id
+ * conectado. Embedded Signup v4: "FINISH" es el flujo de Cloud API y
+ * "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING" cuando la clínica conecta el
+ * número que ya usa en la app WhatsApp Business.
+ */
 function useEmbeddedSignupResult(onResult: (payload: EmbeddedSignupPayload) => void) {
   useEffect(() => {
     function handler(event: MessageEvent) {
-      if (
-        event.origin !== "https://www.facebook.com" &&
-        event.origin !== "https://web.facebook.com"
-      ) {
+      let origen: URL;
+      try {
+        origen = new URL(event.origin);
+      } catch {
         return;
       }
+      if (origen.protocol !== "https:" || !/(^|\.)facebook\.com$/.test(origen.hostname)) return;
       try {
         const parsed = JSON.parse(event.data);
-        if (parsed.type === "WA_EMBEDDED_SIGNUP" && parsed.event === "FINISH") {
+        if (
+          parsed.type === "WA_EMBEDDED_SIGNUP" &&
+          (parsed.event === "FINISH" || parsed.event === "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING")
+        ) {
           const d = parsed.data ?? {};
           if (d.waba_id && d.phone_number_id) {
             onResult({
@@ -218,6 +227,23 @@ function WhatsAppPage() {
     onError: (e: Error) => toast.error(mensajeDeError(e)),
   });
 
+  const resincronizar = useServerFn(resincronizarPlantillasWhatsApp);
+  const plantillasMutation = useMutation({
+    mutationFn: () => resincronizar({ data: { clinicId: clinicId! } }),
+    onSuccess: (r) => {
+      if (r.fallidas.length === 0) {
+        toast.success(
+          `Plantillas enviadas a Meta (${r.registradas}). Se usan apenas Meta las aprueba.`,
+        );
+      } else {
+        toast.error(
+          `Meta no aceptó ${r.fallidas.length} plantilla(s). Revisa tu cuenta en WhatsApp Manager.`,
+        );
+      }
+    },
+    onError: (e: Error) => toast.error(mensajeDeError(e)),
+  });
+
   const disconnectMutation = useMutation({
     mutationFn: () => disconnect({ data: { clinicId: clinicId! } }),
     onSuccess: () => {
@@ -229,14 +255,24 @@ function WhatsAppPage() {
 
   const sdkReady = useFacebookSdk();
   const [pendingCode, setPendingCode] = useState<string | null>(null);
+  const [pendingPayload, setPendingPayload] = useState<EmbeddedSignupPayload | null>(null);
   const [isOpeningPopup, setIsOpeningPopup] = useState(false);
 
-  useEmbeddedSignupResult((payload) => {
-    if (!pendingCode) return;
+  // Meta manda dos cosas por canales distintos y en cualquier orden: los IDs
+  // de la cuenta (postMessage) y el código de autorización (callback de
+  // FB.login). Se guardan las dos y se completa cuando están ambas; antes,
+  // si los IDs llegaban primero, se descartaban y la conexión quedaba a medias.
+  useEmbeddedSignupResult(setPendingPayload);
+
+  useEffect(() => {
+    if (!pendingCode || !pendingPayload) return;
     setIsOpeningPopup(false);
-    completeMutation.mutate({ ...payload, code: pendingCode });
+    completeMutation.mutate({ ...pendingPayload, code: pendingCode });
     setPendingCode(null);
-  });
+    setPendingPayload(null);
+    // completeMutation cambia de identidad en cada render; el disparo depende solo de los datos.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingCode, pendingPayload]);
 
   // Si el usuario cierra la ventana de Meta sin terminar, o el postMessage
   // nunca llega, el botón quedaba colgado sin ningún aviso — 2 minutos es
@@ -247,6 +283,7 @@ function WhatsAppPage() {
     const timeout = window.setTimeout(() => {
       setIsOpeningPopup(false);
       setPendingCode(null);
+      setPendingPayload(null);
       toast.error(
         "No llegó respuesta de Meta. Si cerraste la ventana o no la viste, revisa que el navegador no bloquee popups e intenta de nuevo.",
       );
@@ -273,7 +310,7 @@ function WhatsAppPage() {
         config_id: WHATSAPP_CONFIG_ID,
         response_type: "code",
         override_default_response_type: true,
-        extras: { setup: {}, sessionInfoVersion: "3" },
+        extras: { setup: {} },
       },
     );
   }
@@ -362,6 +399,19 @@ function WhatsAppPage() {
                 </AlertDialogContent>
               </AlertDialog>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Al conectar, Esmalia crea en tu cuenta las plantillas de recordatorios y avisos. Meta
+              las revisa (suele tardar minutos u horas) y, mientras tanto, los envíos siguen por
+              wa.me.{" "}
+              <button
+                type="button"
+                onClick={() => plantillasMutation.mutate()}
+                disabled={plantillasMutation.isPending}
+                className="text-brand-700 underline underline-offset-2 disabled:opacity-60"
+              >
+                {plantillasMutation.isPending ? "Enviando…" : "Volver a enviar las plantillas"}
+              </button>
+            </p>
             {account.qualityRating === "RED" && (
               <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
                 <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />

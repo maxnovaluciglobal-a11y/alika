@@ -225,6 +225,7 @@ export const sendWhatsAppFromTemplate = createServerFn({ method: "POST" })
           .from("message_templates")
           .select("id, kind, body, meta_template_name, meta_language, meta_status")
           .eq("clinic_id", data.clinicId)
+          .eq("channel", "whatsapp")
           .eq("is_active", true)
           .limit(1);
         if (data.templateId) {

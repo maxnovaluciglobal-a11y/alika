@@ -3902,6 +3902,41 @@ export type Database = {
           },
         ];
       };
+      whatsapp_credentials: {
+        Row: {
+          business_token_enc: string;
+          clinic_id: string;
+          created_at: string;
+          registration_pin_enc: string;
+          updated_at: string;
+          waba_id: string;
+        };
+        Insert: {
+          business_token_enc: string;
+          clinic_id: string;
+          created_at?: string;
+          registration_pin_enc: string;
+          updated_at?: string;
+          waba_id: string;
+        };
+        Update: {
+          business_token_enc?: string;
+          clinic_id?: string;
+          created_at?: string;
+          registration_pin_enc?: string;
+          updated_at?: string;
+          waba_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_credentials_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: true;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       whatsapp_accounts: {
         Row: {
           clinic_id: string;
