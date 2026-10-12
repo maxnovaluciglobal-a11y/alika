@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
+import { paginasPublicadas } from "@/content";
+
 interface SitemapEntry {
   path: string;
   /** Fecha del último cambio de CONTENIDO (AAAA-MM-DD), a mano: la fecha del
@@ -71,6 +73,35 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/terminos", lastmod: "2026-10-10", changefreq: "yearly", priority: "0.3" },
           { path: "/dpa", lastmod: "2026-10-10", changefreq: "yearly", priority: "0.3" },
         ];
+
+        // Páginas editoriales (src/content/paginas/) y sus índices: se suman
+        // solas al publicarse; los borradores no aparecen.
+        const paginas = await paginasPublicadas();
+        const masReciente = (fechas: string[]) => fechas.sort().at(-1) ?? "2026-10-11";
+        const indices: [string, string[]][] = [
+          ["/funciones", ["funciones", "para"]],
+          ["/comparar", ["comparar", "alternativas"]],
+          ["/recursos", ["guias", "plantillas"]],
+        ];
+        for (const [path, colecciones] of indices) {
+          const de = paginas.filter((p) => colecciones.includes(p.coleccion));
+          if (de.length) {
+            entries.push({
+              path,
+              lastmod: masReciente(de.map((p) => p.actualizado)),
+              changefreq: "weekly",
+              priority: "0.7",
+            });
+          }
+        }
+        for (const p of paginas) {
+          entries.push({
+            path: p.path,
+            lastmod: p.actualizado,
+            changefreq: "monthly",
+            priority: p.coleccion === "pais" || p.coleccion === "funciones" ? "0.8" : "0.6",
+          });
+        }
 
         const urls = entries.map((e) =>
           [

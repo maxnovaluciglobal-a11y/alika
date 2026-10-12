@@ -28,7 +28,7 @@ const ORGANIZATION_ID = `${SITE_URL}/#organization`;
 // existan: un sameAs a una URL inexistente confunde más de lo que ayuda.
 export const SAME_AS: string[] = [];
 
-// Lo mismo que dice public/llms.txt: el schema y el llms.txt no pueden
+// Lo mismo que dice src/content/llms-base.md (/llms.txt): el schema y el llms.txt no pueden
 // contradecirse (los motores de IA los contrastan).
 const FEATURE_LIST = [
   "Agenda por sucursal en hora local",
@@ -150,4 +150,83 @@ export function faqJsonLdScript(items: { q: string; a: string }[]) {
       })),
     }),
   ];
+}
+
+/** BreadcrumbList Inicio → colección → página. */
+function breadcrumbJsonLd(items: { name: string; path: string }[]) {
+  return ldJsonScript({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((it, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: it.name,
+      item: `${SITE_URL}${it.path}`,
+    })),
+  });
+}
+
+/** head() completo de una página editorial de src/content. */
+export function contenidoHead(pagina: {
+  path: string;
+  titulo: string;
+  descripcion: string;
+  h1: string;
+  publicado: string;
+  actualizado: string;
+  autor: { nombre: string; rol: string };
+  revisor?: { nombre: string; credencial: string };
+  faq?: { q: string; a: string }[];
+  coleccionNombre: string;
+  coleccionPath?: string;
+}) {
+  const canonical = canonicalHead(pagina.path);
+  const url = `${SITE_URL}${pagina.path}`;
+  const sinMarcas = (t: string) => t.replace(/\*\*/g, "").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+  const migas = [
+    { name: "Inicio", path: "/" },
+    ...(pagina.coleccionPath ? [{ name: pagina.coleccionNombre, path: pagina.coleccionPath }] : []),
+    { name: pagina.h1, path: pagina.path },
+  ];
+  return {
+    meta: [
+      { title: pagina.titulo },
+      { name: "description", content: pagina.descripcion },
+      { property: "og:title", content: pagina.titulo },
+      { property: "og:description", content: pagina.descripcion },
+      { property: "og:type", content: "article" },
+      { name: "twitter:card", content: "summary_large_image" },
+      ...canonical.meta,
+    ],
+    links: canonical.links,
+    scripts: [
+      ldJsonScript({
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: pagina.h1,
+        description: pagina.descripcion,
+        url,
+        mainEntityOfPage: url,
+        inLanguage: "es",
+        datePublished: pagina.publicado,
+        dateModified: pagina.actualizado,
+        author: { "@type": "Person", name: pagina.autor.nombre, jobTitle: pagina.autor.rol },
+        ...(pagina.revisor
+          ? {
+              reviewedBy: {
+                "@type": "Person",
+                name: pagina.revisor.nombre,
+                description: pagina.revisor.credencial,
+              },
+            }
+          : {}),
+        publisher: { "@id": ORGANIZATION_ID },
+        image: `${SITE_URL}/landing/og-esmalia.png`,
+      }),
+      breadcrumbJsonLd(migas),
+      ...(pagina.faq?.length
+        ? faqJsonLdScript(pagina.faq.map((f) => ({ q: f.q, a: sinMarcas(f.a) })))
+        : []),
+    ],
+  };
 }

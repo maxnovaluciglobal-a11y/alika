@@ -10,13 +10,13 @@
 ## Qué hace
 
 - Agenda por sucursal en hora local, con lista diaria de citas por confirmar.
-- Recordatorios por WhatsApp 48 h y 3 h antes de cada cita. Ningún mensaje a pacientes sale solo: Esmalia arma la lista y alguien de la clínica los envía.
+- Recordatorios por WhatsApp 48 h y 3 h antes de cada cita. Ningún mensaje a pacientes sale solo: Esmalia arma la lista y alguien de la clínica los envía desde su WhatsApp con un toque. Conectar el número propio de la clínica a WhatsApp Business (Meta) está en habilitación.
 - Ficha clínica, odontograma FDI versionado, notas clínicas con revisión y consentimientos.
 - Presupuestos que se convierten en plan de tratamiento; cada pago descuenta el saldo del paciente.
 - Importación de pacientes desde una planilla (CSV) en todos los planes.
 - Sigue funcionando sin internet y sincroniza cuando vuelve la conexión.
 - Comisiones por profesional, caja diaria, laboratorios, inventario y portal de pacientes (según el plan).
-- Patty, la IA de Esmalia: pasa los apuntes del profesional a una nota SOAP, resume la nota clínica para la próxima consulta y lee los pedidos de hora por WhatsApp que no son obvios. Propone, no decide: no firma notas, no le escribe sola a ningún paciente y no mueve la agenda.
+- Patty, la IA de Esmalia: pasa los apuntes del profesional a una nota SOAP, resume la nota clínica para la próxima consulta. Cuando la clínica pueda conectar su número de WhatsApp (en habilitación con Meta), también leerá los pedidos de hora que no son obvios. Propone, no decide: no firma notas, no le escribe sola a ningún paciente y no mueve la agenda.
 
 ## Qué no hace (todavía)
 

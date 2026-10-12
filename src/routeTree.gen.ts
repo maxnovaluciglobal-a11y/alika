@@ -18,17 +18,21 @@ import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DpaRouteImport } from './routes/dpa'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as NosotrosRouteImport } from './routes/nosotros'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as PortalLaboratorioRouteImport } from './routes/portal-laboratorio'
 import { Route as PreciosRouteImport } from './routes/precios'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SoftwareDentalArgentinaRouteImport } from './routes/software-dental-argentina'
+import { Route as SoftwareDentalChileRouteImport } from './routes/software-dental-chile'
 import { Route as SoftwareDentalLatamRouteImport } from './routes/software-dental-latam'
 import { Route as TerminosRouteImport } from './routes/terminos'
 import { Route as AuthenticatedClinicRouteRouteImport } from './routes/_authenticated/_clinic/route'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedSinAccesoRouteImport } from './routes/_authenticated/sin-acceso'
+import { Route as AlternativasSlugRouteImport } from './routes/alternativas.$slug'
 import { Route as ApiDailyDigestRouteImport } from './routes/api.daily-digest'
 import { Route as ApiDemoResetRouteImport } from './routes/api.demo-reset'
 import { Route as ApiEvRouteImport } from './routes/api.ev'
@@ -36,12 +40,19 @@ import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiLifecycleEmailsRouteImport } from './routes/api.lifecycle-emails'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api.whatsapp-webhook'
 import { Route as AuthNuevaClaveRouteImport } from './routes/auth_.nueva-clave'
+import { Route as CompararIndexRouteImport } from './routes/comparar.index'
+import { Route as CompararSlugRouteImport } from './routes/comparar.$slug'
 import { Route as CorreosBajaRouteImport } from './routes/correos.baja'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as DocsDatosYSeguridadRouteImport } from './routes/docs.datos-y-seguridad'
 import { Route as DocsPortalPacientesRouteImport } from './routes/docs.portal-pacientes'
 import { Route as DocsPrimerosPasosRouteImport } from './routes/docs.primeros-pasos'
 import { Route as DocsWhatsappRouteImport } from './routes/docs.whatsapp'
+import { Route as FuncionesIndexRouteImport } from './routes/funciones.index'
+import { Route as FuncionesSlugRouteImport } from './routes/funciones.$slug'
+import { Route as GuiasSlugRouteImport } from './routes/guias.$slug'
+import { Route as ParaSlugRouteImport } from './routes/para.$slug'
+import { Route as PlantillasSlugRouteImport } from './routes/plantillas.$slug'
 import { Route as PortalLaboratorioTokenRouteImport } from './routes/portal-laboratorio.$token'
 import { Route as PortalLaboratorioInicioRouteImport } from './routes/portal-laboratorio.inicio'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
@@ -137,6 +148,11 @@ const FaqRoute = FaqRouteImport.update({
   path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NosotrosRoute = NosotrosRouteImport.update({
   id: '/nosotros',
   path: '/nosotros',
@@ -167,6 +183,16 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SoftwareDentalArgentinaRoute = SoftwareDentalArgentinaRouteImport.update({
+  id: '/software-dental-argentina',
+  path: '/software-dental-argentina',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SoftwareDentalChileRoute = SoftwareDentalChileRouteImport.update({
+  id: '/software-dental-chile',
+  path: '/software-dental-chile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SoftwareDentalLatamRoute = SoftwareDentalLatamRouteImport.update({
   id: '/software-dental-latam',
   path: '/software-dental-latam',
@@ -191,6 +217,11 @@ const AuthenticatedSinAccesoRoute = AuthenticatedSinAccesoRouteImport.update({
   id: '/sin-acceso',
   path: '/sin-acceso',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AlternativasSlugRoute = AlternativasSlugRouteImport.update({
+  id: '/alternativas/$slug',
+  path: '/alternativas/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiDailyDigestRoute = ApiDailyDigestRouteImport.update({
   id: '/api/daily-digest',
@@ -227,6 +258,16 @@ const AuthNuevaClaveRoute = AuthNuevaClaveRouteImport.update({
   path: '/auth/nueva-clave',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompararIndexRoute = CompararIndexRouteImport.update({
+  id: '/comparar/',
+  path: '/comparar/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompararSlugRoute = CompararSlugRouteImport.update({
+  id: '/comparar/$slug',
+  path: '/comparar/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CorreosBajaRoute = CorreosBajaRouteImport.update({
   id: '/correos/baja',
   path: '/correos/baja',
@@ -256,6 +297,31 @@ const DocsWhatsappRoute = DocsWhatsappRouteImport.update({
   id: '/whatsapp',
   path: '/whatsapp',
   getParentRoute: () => DocsRoute,
+} as any)
+const FuncionesIndexRoute = FuncionesIndexRouteImport.update({
+  id: '/funciones/',
+  path: '/funciones/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FuncionesSlugRoute = FuncionesSlugRouteImport.update({
+  id: '/funciones/$slug',
+  path: '/funciones/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuiasSlugRoute = GuiasSlugRouteImport.update({
+  id: '/guias/$slug',
+  path: '/guias/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParaSlugRoute = ParaSlugRouteImport.update({
+  id: '/para/$slug',
+  path: '/para/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlantillasSlugRoute = PlantillasSlugRouteImport.update({
+  id: '/plantillas/$slug',
+  path: '/plantillas/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PortalLaboratorioTokenRoute = PortalLaboratorioTokenRouteImport.update({
   id: '/$token',
@@ -551,16 +617,20 @@ export interface FileRoutesByFullPath {
   '/docs': typeof DocsRouteWithChildren
   '/dpa': typeof DpaRoute
   '/faq': typeof FaqRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/nosotros': typeof NosotrosRoute
   '/portal': typeof PortalRouteWithChildren
   '/portal-laboratorio': typeof PortalLaboratorioRouteWithChildren
   '/precios': typeof PreciosRoute
   '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/software-dental-argentina': typeof SoftwareDentalArgentinaRoute
+  '/software-dental-chile': typeof SoftwareDentalChileRoute
   '/software-dental-latam': typeof SoftwareDentalLatamRoute
   '/terminos': typeof TerminosRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
+  '/alternativas/$slug': typeof AlternativasSlugRoute
   '/api/daily-digest': typeof ApiDailyDigestRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
   '/api/ev': typeof ApiEvRoute
@@ -568,17 +638,24 @@ export interface FileRoutesByFullPath {
   '/api/lifecycle-emails': typeof ApiLifecycleEmailsRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/auth/nueva-clave': typeof AuthNuevaClaveRoute
+  '/comparar/$slug': typeof CompararSlugRoute
   '/correos/baja': typeof CorreosBajaRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
   '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
   '/docs/whatsapp': typeof DocsWhatsappRoute
+  '/funciones/$slug': typeof FuncionesSlugRoute
+  '/guias/$slug': typeof GuiasSlugRoute
+  '/para/$slug': typeof ParaSlugRoute
+  '/plantillas/$slug': typeof PlantillasSlugRoute
   '/portal-laboratorio/$token': typeof PortalLaboratorioTokenRoute
   '/portal-laboratorio/inicio': typeof PortalLaboratorioInicioRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
   '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
+  '/comparar/': typeof CompararIndexRoute
   '/docs/': typeof DocsIndexRoute
+  '/funciones/': typeof FuncionesIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/recursos/': typeof RecursosIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
@@ -632,15 +709,19 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/dpa': typeof DpaRoute
   '/faq': typeof FaqRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/nosotros': typeof NosotrosRoute
   '/portal-laboratorio': typeof PortalLaboratorioRouteWithChildren
   '/precios': typeof PreciosRoute
   '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/software-dental-argentina': typeof SoftwareDentalArgentinaRoute
+  '/software-dental-chile': typeof SoftwareDentalChileRoute
   '/software-dental-latam': typeof SoftwareDentalLatamRoute
   '/terminos': typeof TerminosRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
+  '/alternativas/$slug': typeof AlternativasSlugRoute
   '/api/daily-digest': typeof ApiDailyDigestRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
   '/api/ev': typeof ApiEvRoute
@@ -648,17 +729,24 @@ export interface FileRoutesByTo {
   '/api/lifecycle-emails': typeof ApiLifecycleEmailsRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/auth/nueva-clave': typeof AuthNuevaClaveRoute
+  '/comparar/$slug': typeof CompararSlugRoute
   '/correos/baja': typeof CorreosBajaRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
   '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
   '/docs/whatsapp': typeof DocsWhatsappRoute
+  '/funciones/$slug': typeof FuncionesSlugRoute
+  '/guias/$slug': typeof GuiasSlugRoute
+  '/para/$slug': typeof ParaSlugRoute
+  '/plantillas/$slug': typeof PlantillasSlugRoute
   '/portal-laboratorio/$token': typeof PortalLaboratorioTokenRoute
   '/portal-laboratorio/inicio': typeof PortalLaboratorioInicioRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
   '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
+  '/comparar': typeof CompararIndexRoute
   '/docs': typeof DocsIndexRoute
+  '/funciones': typeof FuncionesIndexRoute
   '/portal': typeof PortalIndexRoute
   '/recursos': typeof RecursosIndexRoute
   '/agenda': typeof AuthenticatedClinicAgendaRoute
@@ -715,17 +803,21 @@ export interface FileRoutesById {
   '/docs': typeof DocsRouteWithChildren
   '/dpa': typeof DpaRoute
   '/faq': typeof FaqRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/nosotros': typeof NosotrosRoute
   '/portal': typeof PortalRouteWithChildren
   '/portal-laboratorio': typeof PortalLaboratorioRouteWithChildren
   '/precios': typeof PreciosRoute
   '/privacidad': typeof PrivacidadRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/software-dental-argentina': typeof SoftwareDentalArgentinaRoute
+  '/software-dental-chile': typeof SoftwareDentalChileRoute
   '/software-dental-latam': typeof SoftwareDentalLatamRoute
   '/terminos': typeof TerminosRoute
   '/_authenticated/_clinic': typeof AuthenticatedClinicRouteRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/sin-acceso': typeof AuthenticatedSinAccesoRoute
+  '/alternativas/$slug': typeof AlternativasSlugRoute
   '/api/daily-digest': typeof ApiDailyDigestRoute
   '/api/demo-reset': typeof ApiDemoResetRoute
   '/api/ev': typeof ApiEvRoute
@@ -733,17 +825,24 @@ export interface FileRoutesById {
   '/api/lifecycle-emails': typeof ApiLifecycleEmailsRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/auth_/nueva-clave': typeof AuthNuevaClaveRoute
+  '/comparar/$slug': typeof CompararSlugRoute
   '/correos/baja': typeof CorreosBajaRoute
   '/docs/datos-y-seguridad': typeof DocsDatosYSeguridadRoute
   '/docs/portal-pacientes': typeof DocsPortalPacientesRoute
   '/docs/primeros-pasos': typeof DocsPrimerosPasosRoute
   '/docs/whatsapp': typeof DocsWhatsappRoute
+  '/funciones/$slug': typeof FuncionesSlugRoute
+  '/guias/$slug': typeof GuiasSlugRoute
+  '/para/$slug': typeof ParaSlugRoute
+  '/plantillas/$slug': typeof PlantillasSlugRoute
   '/portal-laboratorio/$token': typeof PortalLaboratorioTokenRoute
   '/portal-laboratorio/inicio': typeof PortalLaboratorioInicioRoute
   '/portal/$token': typeof PortalTokenRoute
   '/portal/inicio': typeof PortalInicioRoute
   '/recursos/fugas-clinica-dental': typeof RecursosFugasClinicaDentalRoute
+  '/comparar/': typeof CompararIndexRoute
   '/docs/': typeof DocsIndexRoute
+  '/funciones/': typeof FuncionesIndexRoute
   '/portal/': typeof PortalIndexRoute
   '/recursos/': typeof RecursosIndexRoute
   '/_authenticated/_clinic/agenda': typeof AuthenticatedClinicAgendaRoute
@@ -800,16 +899,20 @@ export interface FileRouteTypes {
     | '/docs'
     | '/dpa'
     | '/faq'
+    | '/llms.txt'
     | '/nosotros'
     | '/portal'
     | '/portal-laboratorio'
     | '/precios'
     | '/privacidad'
     | '/sitemap.xml'
+    | '/software-dental-argentina'
+    | '/software-dental-chile'
     | '/software-dental-latam'
     | '/terminos'
     | '/onboarding'
     | '/sin-acceso'
+    | '/alternativas/$slug'
     | '/api/daily-digest'
     | '/api/demo-reset'
     | '/api/ev'
@@ -817,17 +920,24 @@ export interface FileRouteTypes {
     | '/api/lifecycle-emails'
     | '/api/whatsapp-webhook'
     | '/auth/nueva-clave'
+    | '/comparar/$slug'
     | '/correos/baja'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
     | '/docs/primeros-pasos'
     | '/docs/whatsapp'
+    | '/funciones/$slug'
+    | '/guias/$slug'
+    | '/para/$slug'
+    | '/plantillas/$slug'
     | '/portal-laboratorio/$token'
     | '/portal-laboratorio/inicio'
     | '/portal/$token'
     | '/portal/inicio'
     | '/recursos/fugas-clinica-dental'
+    | '/comparar/'
     | '/docs/'
+    | '/funciones/'
     | '/portal/'
     | '/recursos/'
     | '/agenda'
@@ -881,15 +991,19 @@ export interface FileRouteTypes {
     | '/demo'
     | '/dpa'
     | '/faq'
+    | '/llms.txt'
     | '/nosotros'
     | '/portal-laboratorio'
     | '/precios'
     | '/privacidad'
     | '/sitemap.xml'
+    | '/software-dental-argentina'
+    | '/software-dental-chile'
     | '/software-dental-latam'
     | '/terminos'
     | '/onboarding'
     | '/sin-acceso'
+    | '/alternativas/$slug'
     | '/api/daily-digest'
     | '/api/demo-reset'
     | '/api/ev'
@@ -897,17 +1011,24 @@ export interface FileRouteTypes {
     | '/api/lifecycle-emails'
     | '/api/whatsapp-webhook'
     | '/auth/nueva-clave'
+    | '/comparar/$slug'
     | '/correos/baja'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
     | '/docs/primeros-pasos'
     | '/docs/whatsapp'
+    | '/funciones/$slug'
+    | '/guias/$slug'
+    | '/para/$slug'
+    | '/plantillas/$slug'
     | '/portal-laboratorio/$token'
     | '/portal-laboratorio/inicio'
     | '/portal/$token'
     | '/portal/inicio'
     | '/recursos/fugas-clinica-dental'
+    | '/comparar'
     | '/docs'
+    | '/funciones'
     | '/portal'
     | '/recursos'
     | '/agenda'
@@ -963,17 +1084,21 @@ export interface FileRouteTypes {
     | '/docs'
     | '/dpa'
     | '/faq'
+    | '/llms.txt'
     | '/nosotros'
     | '/portal'
     | '/portal-laboratorio'
     | '/precios'
     | '/privacidad'
     | '/sitemap.xml'
+    | '/software-dental-argentina'
+    | '/software-dental-chile'
     | '/software-dental-latam'
     | '/terminos'
     | '/_authenticated/_clinic'
     | '/_authenticated/onboarding'
     | '/_authenticated/sin-acceso'
+    | '/alternativas/$slug'
     | '/api/daily-digest'
     | '/api/demo-reset'
     | '/api/ev'
@@ -981,17 +1106,24 @@ export interface FileRouteTypes {
     | '/api/lifecycle-emails'
     | '/api/whatsapp-webhook'
     | '/auth_/nueva-clave'
+    | '/comparar/$slug'
     | '/correos/baja'
     | '/docs/datos-y-seguridad'
     | '/docs/portal-pacientes'
     | '/docs/primeros-pasos'
     | '/docs/whatsapp'
+    | '/funciones/$slug'
+    | '/guias/$slug'
+    | '/para/$slug'
+    | '/plantillas/$slug'
     | '/portal-laboratorio/$token'
     | '/portal-laboratorio/inicio'
     | '/portal/$token'
     | '/portal/inicio'
     | '/recursos/fugas-clinica-dental'
+    | '/comparar/'
     | '/docs/'
+    | '/funciones/'
     | '/portal/'
     | '/recursos/'
     | '/_authenticated/_clinic/agenda'
@@ -1048,14 +1180,18 @@ export interface RootRouteChildren {
   DocsRoute: typeof DocsRouteWithChildren
   DpaRoute: typeof DpaRoute
   FaqRoute: typeof FaqRoute
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
   NosotrosRoute: typeof NosotrosRoute
   PortalRoute: typeof PortalRouteWithChildren
   PortalLaboratorioRoute: typeof PortalLaboratorioRouteWithChildren
   PreciosRoute: typeof PreciosRoute
   PrivacidadRoute: typeof PrivacidadRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SoftwareDentalArgentinaRoute: typeof SoftwareDentalArgentinaRoute
+  SoftwareDentalChileRoute: typeof SoftwareDentalChileRoute
   SoftwareDentalLatamRoute: typeof SoftwareDentalLatamRoute
   TerminosRoute: typeof TerminosRoute
+  AlternativasSlugRoute: typeof AlternativasSlugRoute
   ApiDailyDigestRoute: typeof ApiDailyDigestRoute
   ApiDemoResetRoute: typeof ApiDemoResetRoute
   ApiEvRoute: typeof ApiEvRoute
@@ -1063,8 +1199,15 @@ export interface RootRouteChildren {
   ApiLifecycleEmailsRoute: typeof ApiLifecycleEmailsRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
   AuthNuevaClaveRoute: typeof AuthNuevaClaveRoute
+  CompararSlugRoute: typeof CompararSlugRoute
   CorreosBajaRoute: typeof CorreosBajaRoute
+  FuncionesSlugRoute: typeof FuncionesSlugRoute
+  GuiasSlugRoute: typeof GuiasSlugRoute
+  ParaSlugRoute: typeof ParaSlugRoute
+  PlantillasSlugRoute: typeof PlantillasSlugRoute
   RecursosFugasClinicaDentalRoute: typeof RecursosFugasClinicaDentalRoute
+  CompararIndexRoute: typeof CompararIndexRoute
+  FuncionesIndexRoute: typeof FuncionesIndexRoute
   RecursosIndexRoute: typeof RecursosIndexRoute
   ApiCorreosBajaRoute: typeof ApiCorreosBajaRoute
   ApiRecursoSlugRoute: typeof ApiRecursoSlugRoute
@@ -1136,6 +1279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/nosotros': {
       id: '/nosotros'
       path: '/nosotros'
@@ -1178,6 +1328,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/software-dental-argentina': {
+      id: '/software-dental-argentina'
+      path: '/software-dental-argentina'
+      fullPath: '/software-dental-argentina'
+      preLoaderRoute: typeof SoftwareDentalArgentinaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/software-dental-chile': {
+      id: '/software-dental-chile'
+      path: '/software-dental-chile'
+      fullPath: '/software-dental-chile'
+      preLoaderRoute: typeof SoftwareDentalChileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/software-dental-latam': {
       id: '/software-dental-latam'
       path: '/software-dental-latam'
@@ -1212,6 +1376,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sin-acceso'
       preLoaderRoute: typeof AuthenticatedSinAccesoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/alternativas/$slug': {
+      id: '/alternativas/$slug'
+      path: '/alternativas/$slug'
+      fullPath: '/alternativas/$slug'
+      preLoaderRoute: typeof AlternativasSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/daily-digest': {
       id: '/api/daily-digest'
@@ -1262,6 +1433,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthNuevaClaveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/comparar/': {
+      id: '/comparar/'
+      path: '/comparar'
+      fullPath: '/comparar/'
+      preLoaderRoute: typeof CompararIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/comparar/$slug': {
+      id: '/comparar/$slug'
+      path: '/comparar/$slug'
+      fullPath: '/comparar/$slug'
+      preLoaderRoute: typeof CompararSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/correos/baja': {
       id: '/correos/baja'
       path: '/correos/baja'
@@ -1303,6 +1488,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/docs/whatsapp'
       preLoaderRoute: typeof DocsWhatsappRouteImport
       parentRoute: typeof DocsRoute
+    }
+    '/funciones/': {
+      id: '/funciones/'
+      path: '/funciones'
+      fullPath: '/funciones/'
+      preLoaderRoute: typeof FuncionesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/funciones/$slug': {
+      id: '/funciones/$slug'
+      path: '/funciones/$slug'
+      fullPath: '/funciones/$slug'
+      preLoaderRoute: typeof FuncionesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guias/$slug': {
+      id: '/guias/$slug'
+      path: '/guias/$slug'
+      fullPath: '/guias/$slug'
+      preLoaderRoute: typeof GuiasSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/para/$slug': {
+      id: '/para/$slug'
+      path: '/para/$slug'
+      fullPath: '/para/$slug'
+      preLoaderRoute: typeof ParaSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plantillas/$slug': {
+      id: '/plantillas/$slug'
+      path: '/plantillas/$slug'
+      fullPath: '/plantillas/$slug'
+      preLoaderRoute: typeof PlantillasSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/portal-laboratorio/$token': {
       id: '/portal-laboratorio/$token'
@@ -1819,14 +2039,18 @@ const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRouteWithChildren,
   DpaRoute: DpaRoute,
   FaqRoute: FaqRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
   NosotrosRoute: NosotrosRoute,
   PortalRoute: PortalRouteWithChildren,
   PortalLaboratorioRoute: PortalLaboratorioRouteWithChildren,
   PreciosRoute: PreciosRoute,
   PrivacidadRoute: PrivacidadRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SoftwareDentalArgentinaRoute: SoftwareDentalArgentinaRoute,
+  SoftwareDentalChileRoute: SoftwareDentalChileRoute,
   SoftwareDentalLatamRoute: SoftwareDentalLatamRoute,
   TerminosRoute: TerminosRoute,
+  AlternativasSlugRoute: AlternativasSlugRoute,
   ApiDailyDigestRoute: ApiDailyDigestRoute,
   ApiDemoResetRoute: ApiDemoResetRoute,
   ApiEvRoute: ApiEvRoute,
@@ -1834,8 +2058,15 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLifecycleEmailsRoute: ApiLifecycleEmailsRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
   AuthNuevaClaveRoute: AuthNuevaClaveRoute,
+  CompararSlugRoute: CompararSlugRoute,
   CorreosBajaRoute: CorreosBajaRoute,
+  FuncionesSlugRoute: FuncionesSlugRoute,
+  GuiasSlugRoute: GuiasSlugRoute,
+  ParaSlugRoute: ParaSlugRoute,
+  PlantillasSlugRoute: PlantillasSlugRoute,
   RecursosFugasClinicaDentalRoute: RecursosFugasClinicaDentalRoute,
+  CompararIndexRoute: CompararIndexRoute,
+  FuncionesIndexRoute: FuncionesIndexRoute,
   RecursosIndexRoute: RecursosIndexRoute,
   ApiCorreosBajaRoute: ApiCorreosBajaRoute,
   ApiRecursoSlugRoute: ApiRecursoSlugRoute,

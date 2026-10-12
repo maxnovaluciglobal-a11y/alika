@@ -64,7 +64,7 @@ const navLinks = [
   { label: "Producto", href: "/#producto" },
   { label: "Precios", href: "/precios" },
   { label: "Calculadora", href: "/#calculadora" },
-  { label: "Recursos", href: "/recursos/fugas-clinica-dental" },
+  { label: "Recursos", href: "/recursos" },
 ] as const;
 
 type FooterLink =
@@ -82,7 +82,12 @@ type FooterLink =
         | "/dpa"
         | "/calculadora-rentabilidad-dental"
         | "/recursos/fugas-clinica-dental"
-        | "/software-dental-latam";
+        | "/software-dental-latam"
+        | "/software-dental-chile"
+        | "/software-dental-argentina"
+        | "/funciones"
+        | "/comparar"
+        | "/recursos";
     }
   | { label: string; kind: "external"; href: string };
 
@@ -91,19 +96,24 @@ const footerColumns: { t: string; links: FooterLink[] }[] = [
     t: "Producto",
     links: [
       { label: "Ver demo", kind: "external", href: "/demo" },
+      { label: "Funciones", kind: "route", to: "/funciones" },
       { label: "Precios", kind: "route", to: "/precios" },
+      { label: "Comparativas", kind: "route", to: "/comparar" },
       { label: "Empieza gratis", kind: "route", to: "/auth" },
     ],
   },
   {
     t: "Recursos",
     links: [
+      { label: "Todos los recursos", kind: "route", to: "/recursos" },
       { label: "Preguntas frecuentes", kind: "route", to: "/faq" },
       {
         label: "Software dental en Latinoamérica",
         kind: "route",
         to: "/software-dental-latam",
       },
+      { label: "Software dental en Chile", kind: "route", to: "/software-dental-chile" },
+      { label: "Software dental en Argentina", kind: "route", to: "/software-dental-argentina" },
       { label: "Documentación", kind: "route", to: "/docs" },
       {
         label: "Calculadora de rentabilidad",

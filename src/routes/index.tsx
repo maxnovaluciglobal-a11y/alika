@@ -402,7 +402,7 @@ function FranjaSeguridad() {
 const capacidadesPatty = [
   "Redacta y ordena la nota mientras atiendes: de tus apuntes a una nota SOAP.",
   "Resume la nota clínica para que la próxima consulta empiece con contexto.",
-  "Lee los pedidos de hora por WhatsApp que no son obvios y te avisa.",
+  "Pronto: con tu número de WhatsApp conectado, leerá los pedidos de hora que no son obvios.",
 ] as const;
 
 function ConocePatty() {
