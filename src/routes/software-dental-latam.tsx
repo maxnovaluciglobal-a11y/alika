@@ -57,7 +57,7 @@ const PREGUNTAS = [
 export const Route = createFileRoute("/software-dental-latam")({
   head: () => {
     const canonical = canonicalHead("/software-dental-latam");
-    const titulo = "Software dental para Latinoamérica · Esmalia";
+    const titulo = "Software dental por país: moneda, huso y facturación | Esmalia";
     const descripcion =
       "Software de gestión para clínicas dentales en Chile, México, Colombia, Perú y Argentina: moneda y zona horaria de tu país, agenda, ficha clínica, odontograma, cobranza y WhatsApp.";
     return {

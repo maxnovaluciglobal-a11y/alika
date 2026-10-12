@@ -15,16 +15,20 @@
 - Presupuestos que se convierten en plan de tratamiento; cada pago descuenta el saldo del paciente.
 - Importación de pacientes desde una planilla (CSV) en todos los planes.
 - Sigue funcionando sin internet y sincroniza cuando vuelve la conexión.
+- Comisiones por profesional, caja diaria, laboratorios, inventario y portal de pacientes (según el plan).
+- Patty, la IA de Esmalia: pasa los apuntes del profesional a una nota SOAP, resume la nota clínica para la próxima consulta y lee los pedidos de hora por WhatsApp que no son obvios. Propone, no decide: no firma notas, no le escribe sola a ningún paciente y no mueve la agenda.
 
 ## Qué no hace (todavía)
 
 - No emite factura electrónica ni documentos tributarios (DTE, CFDI, etc.) en ningún país. Está en el roadmap, sin fecha comprometida.
+- No envía mensajes de WhatsApp automáticos: los envía alguien de la clínica.
+- No toma decisiones clínicas: la IA sugiere y el profesional decide.
 
 ## Precios
 
 - Solo (1 profesional): US$29 al mes.
 - Clínica (hasta 3 profesionales): US$69 al mes.
-- Red (varias sedes): a medida.
+- Red (varias sedes): a medida, se cotiza por WhatsApp.
 - 14 días gratis, sin tarjeta. El cobro es en dólares (USD) vía Stripe; el precio en moneda local que muestra la web es solo una referencia.
 - Se cancela cuando quieras desde el portal de pagos de Stripe, dentro de la app.
 
@@ -39,6 +43,22 @@
 - [Checklist: 15 fugas de dinero en una clínica dental](https://esmalia.com/recursos/fugas-clinica-dental)
 - [Demo](https://esmalia.com/demo): pide nombre y email, sin tarjeta ni contraseña.
 
+## Documentación
+
+- [Primeros pasos](https://esmalia.com/docs/primeros-pasos): cómo crear la clínica y empezar a usarla.
+- [Conectar WhatsApp](https://esmalia.com/docs/whatsapp): modo manual desde el primer día o número propio conectado a Meta.
+- [Portal de pacientes](https://esmalia.com/docs/portal-pacientes)
+- [Datos y seguridad](https://esmalia.com/docs/datos-y-seguridad): cómo se guardan y protegen los datos de la clínica.
+
+## Empresa y legal
+
+- [Quiénes somos](https://esmalia.com/nosotros): Esmalia la fundó Walter La Madriz y la opera MAXNOVA & LUCI Global LLC (Estados Unidos). Está en etapa piloto.
+- [Política de privacidad](https://esmalia.com/privacidad)
+- [Términos de servicio](https://esmalia.com/terminos)
+- [Acuerdo de tratamiento de datos (DPA)](https://esmalia.com/dpa)
+
 ## Contacto
 
-- Email: hola@esmalia.com
+- General: hola@esmalia.com
+- Soporte: soporte@esmalia.com
+- Ventas: ventas@esmalia.com

@@ -44,7 +44,7 @@ export const Route = createFileRoute("/")({
     const canonical = canonicalHead("/");
     return {
       meta: [
-        { title: "Esmalia · Software de gestión dental para LatAm" },
+        { title: "Software para clínicas dentales en Chile y LatAm | Esmalia" },
         {
           name: "description",
           content:
@@ -455,16 +455,22 @@ function Landing() {
         {/* Hero */}
         <section className="mx-auto grid max-w-6xl items-center gap-14 px-6 pt-14 pb-20 sm:pt-20 lg:grid-cols-[1fr_1.05fr]">
           <div className="min-w-0">
-            <p className="kicker">
+            {/* El H1 lleva la categoría ("software para clínicas dentales") además
+                de la frase de marca: sin ella, el título principal no le dice a
+                Google ni a los LLM qué es el producto. */}
+            <h1>
+              <span className="kicker block">Software para clínicas dentales</span>
+              <span className="mt-5 block font-display text-[2.9rem] font-normal leading-[0.98] tracking-[-0.02em] sm:text-6xl lg:text-[68px]">
+                Cada silla vacía
+                <br />
+                <em className="text-brand-700">es plata que no vuelve.</em>
+              </span>
+            </h1>
+            <p className="mt-3 text-sm text-muted-foreground">
               <Link to="/software-dental-latam" className="hover:underline">
-                Software para clínicas dentales · Chile, Perú, México, Colombia, Argentina
+                Chile, Perú, México, Colombia y Argentina
               </Link>
             </p>
-            <h1 className="mt-5 font-display text-[2.9rem] font-normal leading-[0.98] tracking-[-0.02em] sm:text-6xl lg:text-[68px]">
-              Cada silla vacía
-              <br />
-              <em className="text-brand-700">es plata que no vuelve.</em>
-            </h1>
             <p className="mt-7 max-w-lg text-lg leading-relaxed text-foreground/80">
               Esmalia te arma la lista de citas por confirmar y las mandas por WhatsApp con un
               toque. La ficha y el odontograma quedan en el mismo lugar, y en la pantalla Hoy ves
