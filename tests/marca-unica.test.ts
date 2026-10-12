@@ -11,7 +11,10 @@ const ANTERIOR = new RegExp(["al", "ika"].join(""), "i");
 const PERMITIDOS = new Set(["lib/compat/nombres-anteriores.ts"]);
 
 function archivos(dir: string): string[] {
+  // Las carpetas ocultas (.impeccable, etc.) son cachés locales de herramientas,
+  // fuera de git.
   return readdirSync(dir).flatMap((nombre) => {
+    if (nombre.startsWith(".")) return [];
     const ruta = path.join(dir, nombre);
     return statSync(ruta).isDirectory() ? archivos(ruta) : [ruta];
   });
