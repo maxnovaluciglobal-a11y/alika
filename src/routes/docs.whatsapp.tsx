@@ -40,7 +40,11 @@ function DocsWhatsapp() {
         queda disponible como respaldo, incluso si conectas tu número.
       </LegalP>
 
-      <LegalH2>Modo conectado (número real de tu clínica)</LegalH2>
+      <LegalH2>Modo conectado (número real de tu clínica): en habilitación</LegalH2>
+      <LegalNotice>
+        Este modo todavía no está activo: el código está listo y falta la aprobación de Meta. Hoy
+        todos los mensajes salen en modo manual.
+      </LegalNotice>
       <LegalP>
         Desde "Conectar número" en la sección de WhatsApp puedes vincular el WhatsApp Business de tu
         clínica. Con el número conectado, los mensajes salen desde tu propio número (no desde uno

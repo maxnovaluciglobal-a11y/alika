@@ -19,6 +19,15 @@ import { COUNTRIES } from "@/lib/onboarding-types";
 /** Monedas que no usan decimales — mismo criterio que finance.ts. */
 const SIN_DECIMALES = new Set(["CLP", "COP", "PYG"]);
 
+// Página propia de cada país (src/content/paginas/pais-*.ts).
+const PAGINA_POR_PAIS: Record<string, string> = {
+  CL: "/software-dental-chile",
+  AR: "/software-dental-argentina",
+  MX: "/software-dental-mexico",
+  CO: "/software-dental-colombia",
+  PE: "/software-dental-peru",
+};
+
 const NOTA_POR_PAIS: Record<string, string> = {
   CL: "El peso chileno no usa decimales: $45.000 se escribe y se cobra como 45.000.",
   MX: "El peso mexicano sí lleva centavos, y Esmalia los trata como centavos de verdad en toda la cadena de cobro.",
@@ -108,6 +117,14 @@ function SoftwareDentalLatam() {
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {NOTA_POR_PAIS[pais.code]}
                 </p>
+                {PAGINA_POR_PAIS[pais.code] ? (
+                  <a
+                    href={PAGINA_POR_PAIS[pais.code]}
+                    className="mt-2 inline-block text-sm text-brand-700 underline-offset-4 hover:underline"
+                  >
+                    Esmalia en {pais.label}
+                  </a>
+                ) : null}
               </div>
             ))}
           </div>
