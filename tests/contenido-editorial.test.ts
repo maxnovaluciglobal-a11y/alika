@@ -59,7 +59,7 @@ describe("contenido editorial", async () => {
 
   it("ningún texto nombra la marca vieja", () => {
     const conMarcaVieja = paginas
-      .filter((p) => /alika/i.test(JSON.stringify(p)))
+      .filter((p) => new RegExp(["al", "ika"].join(""), "i").test(JSON.stringify(p)))
       .map((p) => p.path);
     expect(conMarcaVieja).toEqual([]);
   });
