@@ -44,7 +44,7 @@ export const Route = createFileRoute("/")({
     const canonical = canonicalHead("/");
     return {
       meta: [
-        { title: "Software para clínicas dentales en Chile y LatAm | Esmalia" },
+        { title: "Software para clínicas dentales en Latinoamérica | Esmalia" },
         {
           name: "description",
           content:

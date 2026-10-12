@@ -85,6 +85,9 @@ type FooterLink =
         | "/software-dental-latam"
         | "/software-dental-chile"
         | "/software-dental-argentina"
+        | "/software-dental-mexico"
+        | "/software-dental-colombia"
+        | "/software-dental-peru"
         | "/funciones"
         | "/comparar"
         | "/recursos";
@@ -112,7 +115,10 @@ const footerColumns: { t: string; links: FooterLink[] }[] = [
         kind: "route",
         to: "/software-dental-latam",
       },
+      { label: "Software dental en México", kind: "route", to: "/software-dental-mexico" },
+      { label: "Software dental en Colombia", kind: "route", to: "/software-dental-colombia" },
       { label: "Software dental en Chile", kind: "route", to: "/software-dental-chile" },
+      { label: "Software dental en Perú", kind: "route", to: "/software-dental-peru" },
       { label: "Software dental en Argentina", kind: "route", to: "/software-dental-argentina" },
       { label: "Documentación", kind: "route", to: "/docs" },
       {

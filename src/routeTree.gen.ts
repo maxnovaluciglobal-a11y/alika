@@ -27,7 +27,10 @@ import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SoftwareDentalArgentinaRouteImport } from './routes/software-dental-argentina'
 import { Route as SoftwareDentalChileRouteImport } from './routes/software-dental-chile'
+import { Route as SoftwareDentalColombiaRouteImport } from './routes/software-dental-colombia'
 import { Route as SoftwareDentalLatamRouteImport } from './routes/software-dental-latam'
+import { Route as SoftwareDentalMexicoRouteImport } from './routes/software-dental-mexico'
+import { Route as SoftwareDentalPeruRouteImport } from './routes/software-dental-peru'
 import { Route as TerminosRouteImport } from './routes/terminos'
 import { Route as AuthenticatedClinicRouteRouteImport } from './routes/_authenticated/_clinic/route'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -193,9 +196,24 @@ const SoftwareDentalChileRoute = SoftwareDentalChileRouteImport.update({
   path: '/software-dental-chile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SoftwareDentalColombiaRoute = SoftwareDentalColombiaRouteImport.update({
+  id: '/software-dental-colombia',
+  path: '/software-dental-colombia',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SoftwareDentalLatamRoute = SoftwareDentalLatamRouteImport.update({
   id: '/software-dental-latam',
   path: '/software-dental-latam',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SoftwareDentalMexicoRoute = SoftwareDentalMexicoRouteImport.update({
+  id: '/software-dental-mexico',
+  path: '/software-dental-mexico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SoftwareDentalPeruRoute = SoftwareDentalPeruRouteImport.update({
+  id: '/software-dental-peru',
+  path: '/software-dental-peru',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TerminosRoute = TerminosRouteImport.update({
@@ -626,7 +644,10 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/software-dental-argentina': typeof SoftwareDentalArgentinaRoute
   '/software-dental-chile': typeof SoftwareDentalChileRoute
+  '/software-dental-colombia': typeof SoftwareDentalColombiaRoute
   '/software-dental-latam': typeof SoftwareDentalLatamRoute
+  '/software-dental-mexico': typeof SoftwareDentalMexicoRoute
+  '/software-dental-peru': typeof SoftwareDentalPeruRoute
   '/terminos': typeof TerminosRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
@@ -717,7 +738,10 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/software-dental-argentina': typeof SoftwareDentalArgentinaRoute
   '/software-dental-chile': typeof SoftwareDentalChileRoute
+  '/software-dental-colombia': typeof SoftwareDentalColombiaRoute
   '/software-dental-latam': typeof SoftwareDentalLatamRoute
+  '/software-dental-mexico': typeof SoftwareDentalMexicoRoute
+  '/software-dental-peru': typeof SoftwareDentalPeruRoute
   '/terminos': typeof TerminosRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/sin-acceso': typeof AuthenticatedSinAccesoRoute
@@ -812,7 +836,10 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/software-dental-argentina': typeof SoftwareDentalArgentinaRoute
   '/software-dental-chile': typeof SoftwareDentalChileRoute
+  '/software-dental-colombia': typeof SoftwareDentalColombiaRoute
   '/software-dental-latam': typeof SoftwareDentalLatamRoute
+  '/software-dental-mexico': typeof SoftwareDentalMexicoRoute
+  '/software-dental-peru': typeof SoftwareDentalPeruRoute
   '/terminos': typeof TerminosRoute
   '/_authenticated/_clinic': typeof AuthenticatedClinicRouteRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
@@ -908,7 +935,10 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/software-dental-argentina'
     | '/software-dental-chile'
+    | '/software-dental-colombia'
     | '/software-dental-latam'
+    | '/software-dental-mexico'
+    | '/software-dental-peru'
     | '/terminos'
     | '/onboarding'
     | '/sin-acceso'
@@ -999,7 +1029,10 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/software-dental-argentina'
     | '/software-dental-chile'
+    | '/software-dental-colombia'
     | '/software-dental-latam'
+    | '/software-dental-mexico'
+    | '/software-dental-peru'
     | '/terminos'
     | '/onboarding'
     | '/sin-acceso'
@@ -1093,7 +1126,10 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/software-dental-argentina'
     | '/software-dental-chile'
+    | '/software-dental-colombia'
     | '/software-dental-latam'
+    | '/software-dental-mexico'
+    | '/software-dental-peru'
     | '/terminos'
     | '/_authenticated/_clinic'
     | '/_authenticated/onboarding'
@@ -1189,7 +1225,10 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SoftwareDentalArgentinaRoute: typeof SoftwareDentalArgentinaRoute
   SoftwareDentalChileRoute: typeof SoftwareDentalChileRoute
+  SoftwareDentalColombiaRoute: typeof SoftwareDentalColombiaRoute
   SoftwareDentalLatamRoute: typeof SoftwareDentalLatamRoute
+  SoftwareDentalMexicoRoute: typeof SoftwareDentalMexicoRoute
+  SoftwareDentalPeruRoute: typeof SoftwareDentalPeruRoute
   TerminosRoute: typeof TerminosRoute
   AlternativasSlugRoute: typeof AlternativasSlugRoute
   ApiDailyDigestRoute: typeof ApiDailyDigestRoute
@@ -1342,11 +1381,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SoftwareDentalChileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/software-dental-colombia': {
+      id: '/software-dental-colombia'
+      path: '/software-dental-colombia'
+      fullPath: '/software-dental-colombia'
+      preLoaderRoute: typeof SoftwareDentalColombiaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/software-dental-latam': {
       id: '/software-dental-latam'
       path: '/software-dental-latam'
       fullPath: '/software-dental-latam'
       preLoaderRoute: typeof SoftwareDentalLatamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/software-dental-mexico': {
+      id: '/software-dental-mexico'
+      path: '/software-dental-mexico'
+      fullPath: '/software-dental-mexico'
+      preLoaderRoute: typeof SoftwareDentalMexicoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/software-dental-peru': {
+      id: '/software-dental-peru'
+      path: '/software-dental-peru'
+      fullPath: '/software-dental-peru'
+      preLoaderRoute: typeof SoftwareDentalPeruRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terminos': {
@@ -2048,7 +2108,10 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SoftwareDentalArgentinaRoute: SoftwareDentalArgentinaRoute,
   SoftwareDentalChileRoute: SoftwareDentalChileRoute,
+  SoftwareDentalColombiaRoute: SoftwareDentalColombiaRoute,
   SoftwareDentalLatamRoute: SoftwareDentalLatamRoute,
+  SoftwareDentalMexicoRoute: SoftwareDentalMexicoRoute,
+  SoftwareDentalPeruRoute: SoftwareDentalPeruRoute,
   TerminosRoute: TerminosRoute,
   AlternativasSlugRoute: AlternativasSlugRoute,
   ApiDailyDigestRoute: ApiDailyDigestRoute,

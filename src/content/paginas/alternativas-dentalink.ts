@@ -25,14 +25,14 @@ export const pagina: PaginaContenido = {
         {
           tipo: "p",
           texto:
-            "Dentalink es un buen software y el más grande del rubro en Chile según sus propias cifras. Aun así, hay razones concretas por las que una clínica mira otras opciones. Estas son las que aparecen en su propia web:",
+            "Según su web, Dentalink tiene más de 15.000 clínicas en más de 20 países. Aun así, una clínica puede tener razones para mirar otras opciones. Estos son puntos que se ven en su propia web:",
         },
         {
           tipo: "lista",
           items: [
             "**No publica precios.** Su página de planes dice que varían según tus necesidades y pide cotizar con ventas.",
-            "**No publica una prueba gratis abierta.** Ofrece coordinar una demo o un acceso de prueba con su equipo comercial.",
-            "**Requiere internet.** Su FAQ dice que funciona en la nube y recomienda una conexión estable de al menos 2 Mbps.",
+            "**No publica una prueba gratis de registro directo.** Su FAQ dice que puedes coordinar una demo o un acceso de prueba con el equipo de ventas.",
+            "**Funciona en la nube.** Su web dice que funciona 100 % en la nube y su FAQ, que una conexión estable de 2 Mbps es suficiente. No menciona un modo sin conexión (revisado el 11-oct-2026).",
             "**El envío por WhatsApp pasa por WhatsApp Web.** Según su centro de ayuda, el sistema arma el mensaje y lo envías desde WhatsApp Web con el número de la clínica. Para automatizarlo ofrece su contact center con IA.",
           ],
         },
@@ -57,8 +57,8 @@ export const pagina: PaginaContenido = {
             "Emite **boleta electrónica** si tu plan incluye el servicio de facturación.",
             "Tiene **odontograma y periodontograma**.",
             "Se conecta en línea con **aseguradoras**.",
-            "Ofrece un set amplio de **IA**: notas clínicas por voz, resumen clínico, simulador de sonrisas, análisis de rayos X, reportes y un contact center que atiende WhatsApp y teléfono.",
-            "Su plan Pro suma **comisiones, multicentro, gastos e inventario**, y el Titanium un **módulo de ortodoncia**.",
+            "Publica ocho herramientas de **IA**, entre ellas notas clínicas por voz, resumen clínico, simulador de sonrisas, análisis de rayos X, reportes y un contact center que atiende WhatsApp y teléfono.",
+            "Su plan Pro suma **comisiones, multicentro, gastos e inventario**, y el Titanium un **módulo de ortodoncia**, según su página de planes.",
           ],
         },
       ],
@@ -86,16 +86,16 @@ export const pagina: PaginaContenido = {
             [
               "Doctocliq",
               "Gratis, US$19, US$29 y US$49 al mes",
-              "No en Chile (sí en Perú, México, Ecuador y Colombia)",
+              "Su web no menciona Chile (complemento en Perú, México, Ecuador, Colombia y República Dominicana)",
               "7 días del plan Avanzado sin tarjeta, y plan gratis",
-              "Precio bajo y público, recordatorios automáticos por WhatsApp",
+              "Precio público y plan gratis; recordatorios automáticos por WhatsApp",
             ],
             [
               "AgendaPro",
               "Desde $15.900/mes + IVA; ficha clínica desde $54.900 + IVA",
               "Sí, en plan Pro o como complemento desde 2 UF/mes + IVA",
               "7 días",
-              "Agenda, pagos y facturación para clínicas con varios rubros",
+              "Agenda, pagos y facturación; se ofrece para varios rubros",
             ],
             [
               "Dentidesk",
@@ -107,7 +107,7 @@ export const pagina: PaginaContenido = {
             [
               "Clinera",
               "Desde US$223/mes en plan anual + US$450 de instalación",
-              "DTE anunciado como novedad",
+              "DTE con Open Factura anunciado como novedad en su web",
               "No indica",
               "Agentes de IA que agendan por WhatsApp y redes",
             ],
@@ -127,7 +127,7 @@ export const pagina: PaginaContenido = {
         {
           tipo: "lista",
           items: [
-            "**Doctocliq** tiene un plan gratis con 30 pacientes o citas al mes y planes pagos de US$19, US$29 y US$49, cada uno con un doctor. La facturación electrónica y su IA se venden aparte.",
+            "**Doctocliq** tiene un plan gratis con 30 pacientes o citas al mes y planes pagos de US$19, US$29 y US$49, cada uno con un doctor. La facturación electrónica y Soyla IA son complementos con costo adicional.",
             "**AgendaPro** parte en $15.900 + IVA, pero ese plan no trae ficha clínica. La ficha aparece desde Premium, a $54.900 + IVA.",
             "**Esmalia** cuesta US$29 al mes para un profesional y US$69 para hasta tres, con ficha clínica y odontograma desde el plan Solo. El cobro es en dólares por Stripe.",
           ],
@@ -149,7 +149,7 @@ export const pagina: PaginaContenido = {
         {
           tipo: "aviso",
           texto:
-            "Esmalia no emite boleta ni factura electrónica. Si hoy emites boletas desde Dentalink y no quieres hacerlo aparte, quédate con Dentalink o mira Dentidesk. Esmalia, además, está en etapa piloto.",
+            "Esmalia no emite boleta ni factura electrónica. Si hoy emites boletas desde Dentalink y no quieres hacerlo aparte, Dentalink o Dentidesk te sirven mejor en ese punto. Esmalia, además, está en etapa piloto.",
         },
       ],
     },
@@ -210,6 +210,10 @@ export const pagina: PaginaContenido = {
     { titulo: "Doctocliq: inicio y preguntas frecuentes", url: "https://doctocliq.com" },
     { titulo: "Doctocliq: planes y precios", url: "https://www.doctocliq.com/planes-y-precios" },
     { titulo: "AgendaPro: planes Chile", url: "https://agendapro.com/cl/planes" },
+    {
+      titulo: "AgendaPro: software dental Chile",
+      url: "https://agendapro.com/cl/dental/software-odontologico",
+    },
     {
       titulo: "AgendaPro: crear cuenta (prueba de 7 días)",
       url: "https://agendapro.com/es/signup",

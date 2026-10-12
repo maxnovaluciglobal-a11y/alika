@@ -9,7 +9,7 @@ export const pagina: PaginaContenido = {
   kicker: "Comparativa",
   h1: "Esmalia vs Doctocliq: ¿qué te llevas por lo que pagas?",
   resumen:
-    "Doctocliq parte más barato y tiene plan gratis: US$19, US$29 o US$49 al mes, con recordatorios automáticos y factura electrónica como complemento en Perú, México, Ecuador y Colombia. Esmalia cuesta US$29 para un profesional y US$69 para hasta tres, funciona sin internet y deja que tu equipo revise cada WhatsApp. No factura.",
+    "Doctocliq parte más barato y tiene plan gratis: US$19, US$29 o US$49 al mes, con recordatorios automáticos y, según su web, factura electrónica como complemento en Perú, México, Ecuador y Colombia. Esmalia cuesta US$29 para un profesional y US$69 para hasta tres, funciona sin internet y deja que tu equipo revise cada WhatsApp. No factura.",
   publicado: "2026-10-11",
   actualizado: "2026-10-11",
   autor: { nombre: "Walter La Madriz", rol: "Fundador de Esmalia" },
@@ -25,7 +25,7 @@ export const pagina: PaginaContenido = {
         {
           tipo: "p",
           texto:
-            "Si solo miras el precio de entrada, Doctocliq gana: tiene un plan gratis y su primer plan pago cuesta US$19. No vamos a competir en eso. Lo útil es mirar qué trae cada plan y qué se cobra aparte.",
+            "Si solo miras el precio de entrada, Doctocliq cuesta menos: tiene un plan gratis y su primer plan pago cuesta US$19. No vamos a competir en eso. Lo útil es mirar qué trae cada plan y qué se cobra aparte.",
         },
         {
           tipo: "tabla",
@@ -74,7 +74,7 @@ export const pagina: PaginaContenido = {
               "Multisede, inventario, reportes por sede, migración acompañada",
             ],
           ],
-          nota: "Doctocliq: todos los planes permiten 8 usuarios gratis (administrativos o doctores temporales). No encontramos publicado el costo de sumar un doctor fijo. Precios de Doctocliq con impuestos incluidos solo en Perú y México, según su web.",
+          nota: 'Doctocliq, según su web al 11-oct-2026: todos los planes permiten 8 usuarios gratis (administrativos o temporales); el costo de un doctor adicional figura como "según contratación"; los recordatorios de WhatsApp gratis aplican a planes semestrales y anuales; los precios incluyen impuestos solo en Perú y México.',
         },
       ],
     },
@@ -88,7 +88,7 @@ export const pagina: PaginaContenido = {
             ["Odontograma", "Sí, con periodontograma", "Sí, FDI versionado"],
             [
               "WhatsApp",
-              "Recordatorios automáticos con cupo mensual, también por correo y SMS",
+              "Recordatorios automáticos con cupo mensual (gratis en planes semestrales y anuales); su inicio menciona también correo y SMS",
               "Recordatorios 48 h y 3 h que despacha tu equipo en modo manual; número propio vía Meta en habilitación",
             ],
             [
@@ -98,12 +98,12 @@ export const pagina: PaginaContenido = {
             ],
             [
               "Sin internet",
-              "No: su FAQ dice que requiere conexión",
+              "Su FAQ dice que funciona en la nube y requiere conexión a internet",
               "Sí, sincroniza al volver la conexión",
             ],
             [
               "Factura electrónica",
-              "Complemento en Perú, México, Ecuador y Colombia",
+              "Complemento en Perú, México, Ecuador y Colombia (su tabla suma República Dominicana)",
               "No, en ningún país",
             ],
             ["App móvil", "App para iOS y Android", "Se instala desde el navegador"],
@@ -112,7 +112,11 @@ export const pagina: PaginaContenido = {
               "7 días del plan Avanzado, sin tarjeta, y plan gratis",
               "14 días sin tarjeta",
             ],
-            ["Alcance", "Más de 4.000 doctores, más de 20 países", "Etapa piloto; 5 países"],
+            [
+              "Alcance",
+              "Según su web: más de 4.000 doctores, más de 20 países",
+              "Etapa piloto; 5 países",
+            ],
           ],
         },
       ],
@@ -124,11 +128,11 @@ export const pagina: PaginaContenido = {
           tipo: "lista",
           items: [
             "**Precio de entrada y plan gratis.** Para empezar sin pagar o con US$19, no hay nada igual en Esmalia.",
-            "**Factura electrónica en Perú, México, Ecuador y Colombia.** Como complemento, pero existe. Esmalia no factura en ningún país.",
-            "**Recordatorios que salen solos.** Si quieres que el sistema envíe sin que nadie toque nada, Doctocliq lo hace dentro de su cupo mensual.",
+            "**Factura electrónica en Perú, México, Ecuador y Colombia.** Como complemento, según su web. Esmalia no factura en ningún país.",
+            "**Recordatorios automáticos.** Si quieres que el sistema envíe sin que nadie toque nada, Doctocliq los ofrece dentro de su cupo mensual.",
             "**App en las tiendas.** Tiene app para iOS y Android.",
             "**Usuarios administrativos gratis.** Ocho por cuenta, en todos los planes.",
-            "**Más usuarios y países.** Más de 4.000 doctores en más de 20 países, según su web.",
+            "**Base de usuarios.** Más de 4.000 doctores en más de 20 países, según su web.",
           ],
         },
       ],
@@ -140,7 +144,7 @@ export const pagina: PaginaContenido = {
           tipo: "lista",
           items: [
             "**Son 2 o 3 profesionales.** El plan Clínica cubre hasta tres por US$69 al mes, con comisiones por profesional, roles y portal de pacientes. Ver [comisiones](/funciones/comisiones).",
-            "**Se te corta internet.** Esmalia sigue funcionando: agenda, fichas, cobros y odontograma se guardan en el equipo y se sincronizan solos. Doctocliq dice en su FAQ que requiere conexión. Ver [sin internet](/funciones/sin-internet).",
+            "**Se te corta internet.** Esmalia sigue funcionando: agenda, fichas, cobros y odontograma se guardan en el equipo y se sincronizan solos. Doctocliq dice en su FAQ que requiere conexión a internet. Ver [sin internet](/funciones/sin-internet).",
             "**Prefieres revisar antes de que un mensaje salga.** En Esmalia ningún WhatsApp a pacientes sale solo, y no hay cupo de recordatorios por plan. Ver [recordatorios por WhatsApp](/funciones/recordatorios-whatsapp).",
             "**Quieres IA para la parte clínica.** Patty pasa tus apuntes a una nota SOAP y resume la nota anterior para la próxima consulta. No firma notas ni le escribe a pacientes. Ver [Patty IA](/funciones/patty-ia).",
             "**Quieres probar más tiempo.** Son 14 días sin tarjeta, y si después no te suscribes, la agenda, los pacientes y la ficha siguen abiertos.",
@@ -149,7 +153,7 @@ export const pagina: PaginaContenido = {
         {
           tipo: "aviso",
           texto:
-            "Si estás en Perú, México, Ecuador o Colombia y necesitas emitir factura electrónica desde el software, Doctocliq te la ofrece como complemento y Esmalia no. En Chile, ninguno de los dos emite boleta ni factura según sus webs.",
+            "Si estás en Perú, México, Ecuador o Colombia y necesitas emitir factura electrónica desde el software, Doctocliq te la ofrece como complemento y Esmalia no. Para Chile, la web de Doctocliq no menciona facturación electrónica y Esmalia no la ofrece.",
         },
       ],
     },
@@ -176,7 +180,7 @@ export const pagina: PaginaContenido = {
     },
     {
       q: "¿Es mejor Doctocliq o Esmalia?",
-      a: "Doctocliq es mejor si quieres el precio más bajo, un plan gratis o factura electrónica en Perú, México, Ecuador o Colombia. Esmalia conviene si son hasta 3 profesionales, si tu internet falla o si prefieres revisar cada WhatsApp antes de enviarlo.",
+      a: "Doctocliq encaja mejor si quieres el precio más bajo, un plan gratis o factura electrónica en Perú, México, Ecuador o Colombia. Esmalia conviene si son hasta 3 profesionales, si tu internet falla o si prefieres revisar cada WhatsApp antes de enviarlo.",
     },
     {
       q: "¿Doctocliq funciona sin internet?",
@@ -184,7 +188,7 @@ export const pagina: PaginaContenido = {
     },
     {
       q: "¿Doctocliq emite factura electrónica en Chile?",
-      a: "Su web indica facturación electrónica según la normativa de Perú, México, Ecuador y Colombia, no de Chile. Esmalia no emite factura en ningún país.",
+      a: "Su web indica facturación electrónica según la normativa de Perú, México, Ecuador y Colombia; no menciona Chile (revisado el 11-oct-2026). Esmalia no emite factura en ningún país.",
     },
   ],
   fuentes: [

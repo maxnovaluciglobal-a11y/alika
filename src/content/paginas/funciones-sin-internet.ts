@@ -121,7 +121,7 @@ export const pagina: PaginaContenido = {
         {
           tipo: "p",
           texto:
-            "Un corte de internet en plena jornada deja a recepción sin agenda y al profesional sin la ficha. Un programa instalado en un solo computador sigue funcionando, pero los datos viven en esa máquina. Un sistema en la nube tiene los datos disponibles desde cualquier equipo, pero suele necesitar conexión: Dentalink, por ejemplo, se presenta como 100 % en la nube y pide una conexión estable de al menos 2 Mbps en su página de planes. Para una clínica con buena conexión eso no es un problema. Esmalia apuesta por las dos cosas: los datos en la nube y la jornada sin cortes.",
+            "Un corte de internet en plena jornada deja a recepción sin agenda y al profesional sin la ficha. Un programa instalado en un solo computador sigue funcionando, pero los datos viven en esa máquina. Un sistema en la nube tiene los datos disponibles desde cualquier equipo, pero suele necesitar conexión: Dentalink, por ejemplo, dice en su web que funciona 100 % en la nube y, en su página de planes, que una conexión estable de 2 Mbps es suficiente (revisado el 11-oct-2026). Para una clínica con buena conexión eso no es un problema. Esmalia apuesta por las dos cosas: los datos en la nube y la jornada sin cortes.",
         },
       ],
     },
@@ -169,9 +169,10 @@ export const pagina: PaginaContenido = {
     },
   ],
   fuentes: [
+    { titulo: "Dentalink: inicio", url: "https://www.softwaredentalink.com/" },
     {
-      titulo: "Dentalink: planes y requisitos (página oficial)",
-      url: "https://web-es.softwaredentalink.com/en/planes",
+      titulo: "Dentalink: planes y preguntas frecuentes",
+      url: "https://www.softwaredentalink.com/planes",
     },
   ],
   relacionados: [

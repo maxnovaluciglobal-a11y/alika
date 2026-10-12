@@ -9,7 +9,7 @@ export const pagina: PaginaContenido = {
   kicker: "Comparativa",
   h1: "Esmalia vs AgendaPro: agenda multi-rubro o software dental",
   resumen:
-    "AgendaPro es una agenda multi-rubro con pagos y facturación; en Chile la ficha clínica viene desde el plan Premium ($54.900 + IVA) y la factura electrónica en Pro o como complemento. Esmalia es solo dental: ficha, odontograma FDI y WhatsApp desde US$29 al mes, funciona sin internet, pero no emite factura.",
+    "AgendaPro es un sistema de agenda y gestión que se ofrece para varios rubros, con pagos y facturación; en Chile la ficha clínica viene desde el plan Premium ($54.900 + IVA) y la factura electrónica en Pro o como complemento. Esmalia es solo dental: ficha, odontograma FDI y WhatsApp desde US$29 al mes, funciona sin internet, pero no emite factura.",
   publicado: "2026-10-11",
   actualizado: "2026-10-11",
   autor: { nombre: "Walter La Madriz", rol: "Fundador de Esmalia" },
@@ -25,7 +25,7 @@ export const pagina: PaginaContenido = {
         {
           tipo: "p",
           texto:
-            "AgendaPro nació como agenda y sistema de gestión para negocios de servicios: salud, estética, belleza, deporte. Según su página de planes para Chile, la usan más de 30.000 negocios en Latinoamérica. Tiene páginas específicas para clínicas dentales, pero el producto es el mismo para todos los rubros, y lo clínico se suma por plan.",
+            "AgendaPro se presenta en su web como sistema de agenda y gestión para salones de belleza, barberías, spas, centros de estética, fisioterapia, psicología, nutrición, podología y clínicas dentales. Según su página de planes para Chile, más de 30.000 negocios en Latinoamérica lo usan. Tiene una página específica para clínicas dentales; su página de planes de Chile no distingue por rubro y la ficha clínica aparece desde el plan Premium.",
         },
         {
           tipo: "p",
@@ -74,7 +74,11 @@ export const pagina: PaginaContenido = {
           tipo: "tabla",
           columnas: ["", "AgendaPro", "Esmalia"],
           filas: [
-            ["Para quién", "Negocios de servicios de muchos rubros", "Solo clínicas dentales"],
+            [
+              "Para quién",
+              "Según su web, varios rubros: belleza, estética, salud y dental",
+              "Solo clínicas dentales",
+            ],
             [
               "Precio con ficha clínica",
               "Desde $54.900 + IVA al mes (Premium)",
@@ -88,10 +92,14 @@ export const pagina: PaginaContenido = {
             ],
             [
               "IA",
-              "Charly, asistente de marketing, desde $149.900/mes + IVA",
+              'Su web no lo presenta como IA; ofrece Charly, "experto en marketing inteligente", desde $149.900/mes + IVA',
               "Patty: notas SOAP y resumen de la nota (la lectura de pedidos de hora llega con el número conectado, en habilitación)",
             ],
-            ["Sin internet", "No indica", "Sí, sincroniza al volver la conexión"],
+            [
+              "Sin internet",
+              "Su web no menciona modo sin conexión",
+              "Sí, sincroniza al volver la conexión",
+            ],
             ["Factura electrónica", "Sí, en Pro o como complemento", "No"],
             ["Prueba gratis", "7 días", "14 días sin tarjeta"],
           ],
@@ -106,9 +114,9 @@ export const pagina: PaginaContenido = {
           items: [
             "**Facturación integrada.** Emite factura electrónica en el plan Pro o como complemento, y boleta de honorarios desde 1 UF al mes + IVA. Esmalia no factura.",
             "**Equipos grandes.** Sus planes Básico, Premium y Pro cubren de 2 a 20 profesionales. Esmalia Clínica llega hasta 3; más allá es el plan Red, a medida.",
-            "**Varios rubros en un mismo sistema.** Si tu centro combina odontología con estética o kinesiología, una sola agenda para todo es una ventaja real.",
-            "**Escala y certificaciones.** Más de 30.000 negocios según su web, y su página dental de Chile destaca certificaciones CENS y FONASA.",
-            "**Precios en pesos.** Publica todo en CLP, sin depender del tipo de cambio.",
+            "**Varios rubros en un mismo sistema.** Si tu centro combina odontología con estética o fisioterapia, una sola agenda para todo puede servirte.",
+            "**Escala y certificaciones.** Más de 30.000 negocios según su web, y su página dental de Chile indica certificación CENS e integración con FONASA.",
+            "**Precios en pesos.** Publica sus planes de Chile en CLP; algunos complementos, como la facturación, se cobran en UF.",
           ],
         },
       ],
@@ -139,8 +147,8 @@ export const pagina: PaginaContenido = {
           tipo: "lista",
           ordenada: true,
           items: [
-            "Si atiendes más rubros que el dental, empieza por AgendaPro.",
-            "Si tienes más de 3 profesionales y buscas precio publicado, AgendaPro es más simple de cotizar.",
+            "Si atiendes más rubros que el dental, AgendaPro se ofrece para varios de ellos.",
+            "Si tienes más de 3 profesionales y buscas precio publicado, AgendaPro publica planes de 2 a 20 profesionales.",
             "Si necesitas factura electrónica dentro del software, AgendaPro Pro o su complemento.",
             "Si eres solo dental, de 1 a 3 profesionales, y quieres ficha y odontograma desde el plan más barato, prueba Esmalia 14 días sin tarjeta o entra a la [demo](/demo).",
           ],
@@ -155,7 +163,7 @@ export const pagina: PaginaContenido = {
     },
     {
       q: "¿Qué es mejor para un dentista, AgendaPro o Esmalia?",
-      a: "Si atiendes solo odontología con 1 a 3 profesionales, Esmalia trae ficha, odontograma y WhatsApp desde US$29 al mes y funciona sin internet. Si necesitas factura electrónica, varios rubros o más de 3 profesionales con precio publicado, AgendaPro encaja mejor.",
+      a: "Si atiendes solo odontología con 1 a 3 profesionales, Esmalia trae ficha, odontograma y WhatsApp desde US$29 al mes y funciona sin internet. Si necesitas factura electrónica, varios rubros o más de 3 profesionales con precio publicado, AgendaPro puede encajar mejor.",
     },
     {
       q: "¿AgendaPro tiene odontograma?",
@@ -172,6 +180,7 @@ export const pagina: PaginaContenido = {
       titulo: "AgendaPro: software dental Chile",
       url: "https://agendapro.com/cl/dental/software-odontologico",
     },
+    { titulo: "AgendaPro: Charly", url: "https://agendapro.com/cl/charly" },
     {
       titulo: "AgendaPro: software dental México (odontograma)",
       url: "https://agendapro.com/mx/dental/software-odontologico",

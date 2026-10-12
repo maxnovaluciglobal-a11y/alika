@@ -9,7 +9,7 @@ export const pagina: PaginaContenido = {
   kicker: "Comparativa",
   h1: "Mejores software dentales en Chile (2026)",
   resumen:
-    "No hay un software dental que sea el mejor para todas las clínicas de Chile. Dentalink declara más de 15.000 clínicas y emite boleta electrónica si tu plan la incluye. AgendaPro sirve si atiendes varios rubros. Doctocliq tiene plan gratis. Esmalia conviene si quieres WhatsApp revisado por tu equipo, IA para notas y trabajar sin internet.",
+    "No hay un software dental que sea el mejor para todas las clínicas de Chile. Según su web, Dentalink tiene más de 15.000 clínicas y emite boleta electrónica si tu plan incluye el servicio. AgendaPro se ofrece para varios rubros, no solo dental. Doctocliq tiene plan gratis. Esmalia conviene si quieres WhatsApp revisado por tu equipo, IA para notas y trabajar sin internet.",
   publicado: "2026-10-11",
   actualizado: "2026-10-11",
   autor: { nombre: "Walter La Madriz", rol: "Fundador de Esmalia" },
@@ -30,7 +30,7 @@ export const pagina: PaginaContenido = {
         {
           tipo: "p",
           texto:
-            "Dejamos fuera a Medilink: su web lo presenta como software para todo tipo de centros de salud y no menciona odontograma. Si tu consulta es solo dental, en esta lista hay opciones más específicas.",
+            "Dejamos fuera a Medilink: su web lo presenta como software para todo tipo de centros de salud y su página de inicio no menciona odontograma. Si tu consulta es solo dental, en esta lista hay opciones más específicas.",
         },
       ],
     },
@@ -56,7 +56,7 @@ export const pagina: PaginaContenido = {
               "Sí, con periodontograma",
               "Sí: mensaje armado que se envía desde WhatsApp Web",
               "Sí: notas por voz, resumen clínico, rayos X, contact center",
-              "No: su FAQ dice que funciona en la nube con conexión",
+              "No indica modo sin conexión; su web dice que funciona 100 % en la nube",
               "Sí, boleta electrónica si tu plan incluye el servicio",
               "No publica; demo o acceso de prueba con ventas",
             ],
@@ -65,7 +65,7 @@ export const pagina: PaginaContenido = {
               "Desde $15.900/mes + IVA; ficha clínica desde Premium ($54.900 + IVA)",
               "Sí, como anexo de la ficha (página de México)",
               "Sí: 50 a 200 confirmaciones al mes según plan",
-              "Sí: Charly, asistente de marketing, desde $149.900/mes + IVA",
+              'No indica como IA; ofrece Charly, "experto en marketing inteligente", desde $149.900/mes + IVA',
               "No indica",
               "Sí en plan Pro; como complemento desde 2 UF/mes + IVA",
               "Sí, 7 días",
@@ -74,10 +74,10 @@ export const pagina: PaginaContenido = {
               "Doctocliq",
               "Gratis, US$19, US$29 y US$49 al mes (1 doctor por plan)",
               "Sí, con periodontograma",
-              "Sí: recordatorios automáticos, 50 a 150 al mes según plan",
+              "Sí: recordatorios automáticos, 50 a 150 al mes según plan; gratis en planes semestrales y anuales",
               "Sí: Soyla IA, como complemento",
-              "No: su FAQ dice que requiere conexión",
-              "Solo en Perú, México, Ecuador y Colombia",
+              "No indica modo sin conexión; su FAQ dice que requiere conexión a internet",
+              "Complemento en Perú, México, Colombia, Ecuador y República Dominicana; no menciona Chile",
               "Sí, 7 días del plan Avanzado sin tarjeta, y plan gratis",
             ],
             [
@@ -85,7 +85,7 @@ export const pagina: PaginaContenido = {
               "No publica",
               "Sí",
               "WhatsApp automático anunciado como próximo",
-              "No indica (tiene dictado por voz en la ficha)",
+              "No indica (tiene dictado por voz en el historial)",
               "No indica",
               "Sí: boletas y facturas integradas con el SII",
               "Sí, 15 días",
@@ -93,16 +93,16 @@ export const pagina: PaginaContenido = {
             [
               "Clinera",
               "Desde US$223/mes en plan anual + US$450 de instalación",
-              "Anunciado como novedad",
+              "Anunciado como novedad en su web",
               "Sí, con la API oficial de WhatsApp Business",
               "Sí: agentes que agendan por WhatsApp y llaman",
               "No indica",
-              "DTE con Open Factura anunciado como novedad",
+              "DTE con Open Factura en Chile, anunciado como novedad en su web",
               "No indica; demo agendada",
             ],
             [
               "Reservo",
-              "No publica (plan único según tamaño)",
+              "No publica (plan único según tamaño del centro)",
               "No indica",
               "No indica",
               "No indica",
@@ -118,7 +118,7 @@ export const pagina: PaginaContenido = {
               "No indica",
               "No indica",
               "No indica",
-              "No; demos por Google Meet",
+              "No indica; ofrece demos por Google Meet",
             ],
             [
               "Esmalia",
@@ -143,9 +143,9 @@ export const pagina: PaginaContenido = {
           items: [
             "**Necesitas emitir boleta o factura desde el mismo sistema:** Dentalink (si tu plan lo incluye), Dentidesk o AgendaPro Pro. Esmalia no lo hace.",
             "**Quieres probar sin pagar ni hablar con ventas:** Doctocliq tiene plan gratis; Esmalia da 14 días sin tarjeta; Dentidesk, 15 días; AgendaPro, 7.",
-            "**Atiendes varios rubros (dental, estética, kinesiología):** AgendaPro, que trabaja con más de 30.000 negocios de distintos tipos según su web.",
+            "**Atiendes varios rubros (dental, estética, fisioterapia):** AgendaPro, que según su web ofrece el sistema a esos rubros y declara más de 30.000 negocios en Latinoamérica.",
             "**Quieres un asistente de IA que agende solo por WhatsApp:** Clinera o el contact center de Dentalink. Esmalia, a propósito, no le escribe solo a ningún paciente.",
-            "**Se te corta internet en la clínica:** Esmalia sigue funcionando y sincroniza después. Dentalink y Doctocliq dicen en su web que requieren conexión.",
+            "**Se te corta internet en la clínica:** Esmalia sigue funcionando y sincroniza después. Doctocliq dice en su FAQ que requiere conexión a internet y Dentalink, que funciona 100 % en la nube. Las demás webs no mencionan un modo sin conexión; consúltalo con cada proveedor.",
           ],
         },
       ],
@@ -156,13 +156,13 @@ export const pagina: PaginaContenido = {
         {
           tipo: "lista",
           items: [
-            "**Dentalink:** trayectoria. Su web dice más de 16 años, más de 15.000 clínicas y más de 20 países. Tiene periodontograma, módulo de ortodoncia en su plan Titanium, conexión con aseguradoras y un set amplio de IA.",
-            "**AgendaPro:** precios publicados en pesos, ficha clínica, pagos y facturación en un mismo lugar, y una base muy grande de clientes.",
-            "**Doctocliq:** el plan gratis y los precios públicos en dólares. Emite factura electrónica en Perú, México, Ecuador y Colombia.",
+            "**Dentalink:** según su web, más de 16 años, más de 15.000 clínicas y más de 20 países. Publica periodontograma, software para ortodoncia en su plan Titanium, conexión en línea con aseguradoras y ocho herramientas de IA.",
+            "**AgendaPro:** precios de planes publicados en pesos, ficha clínica, pagos y facturación en un mismo lugar, y más de 30.000 negocios en Latinoamérica según su web.",
+            "**Doctocliq:** el plan gratis y los precios públicos en dólares. Ofrece facturación electrónica como complemento en Perú, México, Ecuador y Colombia.",
             "**Dentidesk:** boletas y facturas integradas con el SII y 15 días de prueba.",
-            "**Clinera:** está construido alrededor de agentes de IA que atienden WhatsApp, Instagram y Facebook.",
+            "**Clinera:** agentes de IA que agendan por WhatsApp y, según el plan, Instagram, Facebook y llamadas.",
             "**Reservo:** plan único con todas las funciones y usuarios ilimitados.",
-            "**Dentalsoft:** su web muestra 2005 como año de inicio. Es de los más antiguos de la lista.",
+            "**Dentalsoft:** odontograma en su plan DS Standard y demos guiadas por Google Meet.",
           ],
         },
       ],
@@ -183,7 +183,7 @@ export const pagina: PaginaContenido = {
         {
           tipo: "aviso",
           texto:
-            "Esmalia no emite boleta ni factura electrónica (DTE) en ningún país. Si eso es obligatorio para ti dentro del software, hoy te sirve más otra opción de esta tabla. Además, Esmalia está en etapa piloto: tiene menos trayectoria que Dentalink o AgendaPro.",
+            "Esmalia no emite boleta ni factura electrónica (DTE) en ningún país. Si eso es obligatorio para ti dentro del software, hoy te sirve más otra opción de esta tabla. Además, Esmalia está en etapa piloto: tiene menos trayectoria que Dentalink o AgendaPro. Esta tabla es solo de Chile, pero Esmalia también funciona en Perú, México, Colombia y Argentina.",
         },
       ],
     },
@@ -207,7 +207,7 @@ export const pagina: PaginaContenido = {
   faq: [
     {
       q: "¿Cuál es el mejor software dental en Chile?",
-      a: "Depende de tu clínica. Dentalink es el que declara más clínicas y emite boleta electrónica si tu plan la incluye. AgendaPro conviene si atiendes varios rubros. Doctocliq tiene plan gratis. Esmalia conviene a consultorios de 1 a 3 profesionales que quieren precio publicado, trabajo sin internet y WhatsApp revisado por su equipo.",
+      a: "Depende de tu clínica. Dentalink declara más de 15.000 clínicas en su web y emite boleta electrónica si tu plan incluye el servicio. AgendaPro encaja si atiendes varios rubros. Doctocliq tiene plan gratis. Esmalia conviene a consultorios de 1 a 3 profesionales que quieren precio publicado, trabajo sin internet y WhatsApp revisado por su equipo.",
     },
     {
       q: "¿Qué software dental emite boleta electrónica en Chile?",
@@ -219,7 +219,7 @@ export const pagina: PaginaContenido = {
     },
     {
       q: "¿Qué software dental funciona sin internet?",
-      a: "Esmalia sigue funcionando sin conexión y sincroniza cuando vuelve. Dentalink y Doctocliq dicen en su web que requieren internet. Los demás no lo indican.",
+      a: "Esmalia sigue funcionando sin conexión y sincroniza cuando vuelve. Doctocliq dice en su FAQ que requiere conexión a internet; Dentalink dice que funciona 100 % en la nube. Las demás webs no mencionan un modo sin conexión (revisado el 11-oct-2026).",
     },
     {
       q: "¿Esmalia emite factura electrónica?",
@@ -242,6 +242,11 @@ export const pagina: PaginaContenido = {
       url: "https://intercom.help/softwaredentalink/es/articles/9493137-como-notificar-cita-por-whatsapp",
     },
     { titulo: "AgendaPro: planes Chile", url: "https://agendapro.com/cl/planes" },
+    {
+      titulo: "AgendaPro: software dental Chile",
+      url: "https://agendapro.com/cl/dental/software-odontologico",
+    },
+    { titulo: "AgendaPro: Charly", url: "https://agendapro.com/cl/charly" },
     {
       titulo: "AgendaPro: software dental México (odontograma)",
       url: "https://agendapro.com/mx/dental/software-odontologico",

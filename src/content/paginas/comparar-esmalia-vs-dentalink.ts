@@ -9,7 +9,7 @@ export const pagina: PaginaContenido = {
   kicker: "Comparativa",
   h1: "Esmalia vs Dentalink: ¿cuál conviene a tu clínica?",
   resumen:
-    "Dentalink tiene más trayectoria, más clínicas y emite boleta electrónica si tu plan la incluye; su precio se cotiza. Esmalia publica su precio (US$29 o US$69 al mes), da 14 días sin tarjeta, sigue funcionando sin internet y no envía WhatsApp sin que tu equipo lo revise. No emite boleta ni factura.",
+    "Según su web, Dentalink tiene más de 16 años y más de 15.000 clínicas, y emite boleta electrónica si tu plan incluye el servicio; su precio se cotiza. Esmalia publica su precio (US$29 o US$69 al mes), da 14 días sin tarjeta, sigue funcionando sin internet y no envía WhatsApp sin que tu equipo lo revise. No emite boleta ni factura.",
   publicado: "2026-10-11",
   actualizado: "2026-10-11",
   autor: { nombre: "Walter La Madriz", rol: "Fundador de Esmalia" },
@@ -25,7 +25,7 @@ export const pagina: PaginaContenido = {
         {
           tipo: "p",
           texto:
-            "Los dos son software dentales en la web, con agenda, ficha clínica, odontograma y presupuestos. La diferencia está en el tamaño, en cómo cobran y en algunas decisiones de producto. Dentalink es una plataforma grande y madura. Esmalia es más chica, está en etapa piloto y apunta a consultorios de 1 a 3 profesionales.",
+            "Los dos son software dentales en la web, con agenda, ficha clínica, odontograma y presupuestos. La diferencia está en el tamaño, en cómo cobran y en algunas decisiones de producto. Dentalink declara más de 16 años y más de 15.000 clínicas. Esmalia es más chica, está en etapa piloto y apunta a consultorios de 1 a 3 profesionales.",
         },
         {
           tipo: "tabla",
@@ -54,7 +54,7 @@ export const pagina: PaginaContenido = {
             ],
             [
               "Sin internet",
-              "No: funciona en la nube y pide conexión estable",
+              "Su web dice que funciona 100 % en la nube; no menciona modo sin conexión",
               "Sí, sincroniza al volver la conexión",
             ],
             [
@@ -69,7 +69,7 @@ export const pagina: PaginaContenido = {
             ],
             [
               "Trayectoria",
-              "Más de 16 años, más de 15.000 clínicas, más de 20 países",
+              "Según su web: más de 16 años, más de 15.000 clínicas, más de 20 países",
               "Etapa piloto; Chile, Perú, México, Colombia y Argentina",
             ],
           ],
@@ -84,9 +84,9 @@ export const pagina: PaginaContenido = {
           tipo: "lista",
           items: [
             "**Facturación.** Emite boleta electrónica desde el sistema, siempre que tu plan incluya el servicio. Si tu contador te pide que salga todo del mismo software, este punto pesa mucho.",
-            "**Trayectoria y escala.** Más de 16 años y más de 15.000 clínicas según su web. Hay muchos colegas que ya lo usan y pueden contarte cómo les va.",
-            "**Amplitud de IA.** Análisis de rayos X, simulador de sonrisas, reportes que responden preguntas y un contact center que atiende WhatsApp y teléfono.",
-            "**Módulos para clínicas grandes.** Multicentro, comisiones, gastos e inventario en el plan Pro; ortodoncia, encuestas y campañas por email en Titanium.",
+            "**Trayectoria y escala.** Más de 16 años y más de 15.000 clínicas, según su web.",
+            "**Herramientas de IA.** Su web publica ocho, entre ellas análisis de rayos X, simulador de sonrisas, reportes que responden preguntas y un contact center que atiende WhatsApp y teléfono.",
+            "**Módulos de gestión.** Multicentro, comisiones, gastos e inventario en el plan Pro; ortodoncia, encuestas y campañas por email en Titanium.",
             "**Periodontograma y aseguradoras.** Los dos aparecen en su web; en Esmalia no los ofrecemos como función publicada.",
           ],
         },
@@ -152,7 +152,7 @@ export const pagina: PaginaContenido = {
   faq: [
     {
       q: "¿Es mejor Esmalia o Dentalink?",
-      a: "Depende de tu clínica. Dentalink gana en trayectoria, boleta electrónica y amplitud de IA. Esmalia conviene a consultorios de 1 a 3 profesionales que quieren precio publicado, trabajar sin internet y WhatsApp revisado por su equipo.",
+      a: "Depende de tu clínica. Dentalink tiene más trayectoria según su web, emite boleta electrónica si tu plan la incluye y publica ocho herramientas de IA. Esmalia conviene a consultorios de 1 a 3 profesionales que quieren precio publicado, trabajar sin internet y WhatsApp revisado por su equipo.",
     },
     {
       q: "¿Cuánto cuesta Dentalink?",
@@ -164,7 +164,7 @@ export const pagina: PaginaContenido = {
     },
     {
       q: "¿Dentalink funciona sin internet?",
-      a: "Según su web, Dentalink funciona en la nube y necesita una conexión estable. Esmalia sigue funcionando sin internet y sincroniza cuando vuelve la conexión; WhatsApp sí necesita conexión.",
+      a: "Su web dice que funciona 100 % en la nube y que una conexión estable de 2 Mbps es suficiente; no menciona un modo sin conexión (revisado el 11-oct-2026). Esmalia sigue funcionando sin internet y sincroniza cuando vuelve la conexión; WhatsApp sí necesita conexión.",
     },
   ],
   fuentes: [
