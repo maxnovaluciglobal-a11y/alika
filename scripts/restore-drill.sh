@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Ensayo de restauración LOCAL de un backup de Esmalia (ex Alika).
+# Ensayo de restauración LOCAL de un backup de Esmalia.
 #
 # Levanta un Postgres 16 descartable, le pone los objetos mínimos de
 # Supabase que las migraciones esperan (roles, auth, storage, vault,
@@ -156,15 +156,15 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- Usuario de la clínica demo (demo@alika.app): reset_demo_clinic() lo usa como
+-- Usuario de la clínica demo (demo@esmalia.com): reset_demo_clinic() lo usa como
 -- owner/counted_by, y 20261011000000 llama al reset → sin él la migración falla por FK.
 INSERT INTO auth.users (id, email, aud, role, raw_app_meta_data, raw_user_meta_data)
-VALUES ('139dd209-8495-415c-b6cd-6bbc63367bad', 'demo@alika.app', 'authenticated', 'authenticated',
+VALUES ('139dd209-8495-415c-b6cd-6bbc63367bad', 'demo@esmalia.com', 'authenticated', 'authenticated',
         '{"restore_stub": true}', '{}')
 ON CONFLICT (id) DO NOTHING;
 
--- vault: clave alika_document_id_key (20260822150000 y siguientes). Stub VACÍO a propósito:
--- la clave real no está en el backup (ver docs/BACKUPS_ALIKA.md).
+-- vault: clave esmalia_document_id_key (20260822150000 y siguientes). Stub VACÍO a propósito:
+-- la clave real no está en el backup (ver docs/BACKUPS.md).
 CREATE TABLE IF NOT EXISTS vault.secrets (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text UNIQUE, secret text,
   created_at timestamptz DEFAULT now()
@@ -174,6 +174,18 @@ CREATE OR REPLACE VIEW vault.decrypted_secrets AS
 CREATE OR REPLACE FUNCTION vault.create_secret(new_secret text, new_name text DEFAULT NULL)
   RETURNS uuid LANGUAGE sql AS
   $$ INSERT INTO vault.secrets (name, secret) VALUES (new_name, new_secret) RETURNING id $$;
+CREATE OR REPLACE FUNCTION vault.update_secret(secret_id uuid, new_secret text DEFAULT NULL,
+  new_name text DEFAULT NULL, new_description text DEFAULT NULL, new_key_id uuid DEFAULT NULL)
+  RETURNS void LANGUAGE sql AS
+  $$ UPDATE vault.secrets SET secret = coalesce(new_secret, secret), name = coalesce(new_name, name)
+     WHERE id = secret_id $$;
+
+-- auth.identities: 20261014000000 actualiza el correo de la cuenta demo.
+CREATE TABLE IF NOT EXISTS auth.identities (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL, provider text NOT NULL,
+  provider_id text, identity_data jsonb NOT NULL DEFAULT '{}', last_sign_in_at timestamptz,
+  created_at timestamptz DEFAULT now(), updated_at timestamptz DEFAULT now()
+);
 SQL
 
 MIG_OK=0; MIG_FAIL=0; MIG_NOTX=0

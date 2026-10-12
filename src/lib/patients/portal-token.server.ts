@@ -1,5 +1,7 @@
 import { SignJWT, jwtVerify, errors } from "jose";
 
+import { conNombreAnterior } from "@/lib/compat/nombres-anteriores";
+
 /**
  * Tokens del portal del paciente (Opción C: URL firmada por wa.me, sin
  * login). El paciente recibe `<dominio>/portal/[token]` por
@@ -14,8 +16,8 @@ import { SignJWT, jwtVerify, errors } from "jose";
  */
 
 const DEFAULT_TTL_DAYS = 7;
-const ISSUER = "alika:portal";
-const AUDIENCE = "alika:portal:patient";
+const ISSUER = "esmalia:portal";
+const AUDIENCE = "esmalia:portal:patient";
 
 // Generado una vez por proceso — nunca hardcodeado ni committeado. Un valor
 // fijo en el repo (como el que había antes) sería un secret público conocido
@@ -79,8 +81,8 @@ export async function signPortalToken(
 
 export async function verifyPortalToken(token: string): Promise<PortalTokenPayload> {
   const { payload } = await jwtVerify(token, getSecret(), {
-    issuer: ISSUER,
-    audience: AUDIENCE,
+    issuer: conNombreAnterior(ISSUER),
+    audience: conNombreAnterior(AUDIENCE),
   });
   const patientId = payload.patient_id as string | undefined;
   const clinicId = payload.clinic_id as string | undefined;
@@ -104,7 +106,10 @@ export async function verifyPortalToken(token: string): Promise<PortalTokenPaylo
  */
 export async function clinicIdFromExpiredToken(token: string): Promise<string | null> {
   try {
-    await jwtVerify(token, getSecret(), { issuer: ISSUER, audience: AUDIENCE });
+    await jwtVerify(token, getSecret(), {
+      issuer: conNombreAnterior(ISSUER),
+      audience: conNombreAnterior(AUDIENCE),
+    });
     return null; // no estaba vencido — no es el caso que cubre esta función
   } catch (err) {
     if (err instanceof errors.JWTExpired) {
@@ -115,5 +120,5 @@ export async function clinicIdFromExpiredToken(token: string): Promise<string | 
   }
 }
 
-export const PORTAL_COOKIE_NAME = "alika_portal_session";
+export const PORTAL_COOKIE_NAME = "esmalia_portal_session";
 export const PORTAL_COOKIE_MAX_AGE_SECONDS = DEFAULT_TTL_DAYS * 24 * 60 * 60;

@@ -5,9 +5,9 @@
 // paciente y /efectividad (ver `requiereLlamadaOSuscripcion` en billing.ts).
 //
 // Mismo criterio que `admin.leads.tsx`: NO vive bajo `_authenticated/_clinic/`
-// (el gate real es la allowlist `ALIKA_STAFF_EMAILS`, no un rol de clínica —
+// (el gate real es la allowlist `ESMALIA_STAFF_EMAILS`, no un rol de clínica —
 // `listClinicsForStaff`/`marcarLlamadaHecha` lo resuelven del lado del
-// servidor vía `requireAlikaStaffEmail`), y por eso tampoco usa `AppShell` ni
+// servidor vía `requireEsmaliaStaffEmail`), y por eso tampoco usa `AppShell` ni
 // `sin-acceso.tsx` (ambos piden un `ClinicAccess` con rol de clínica que esta
 // ruta no tiene en su contexto).
 

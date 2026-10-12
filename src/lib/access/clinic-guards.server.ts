@@ -14,7 +14,7 @@ export const MENSAJE_CLINICA_DEMO =
   "Esta es la clínica demo: es de solo lectura. Crea tu clínica para usar esta función.";
 
 /**
- * Auditoría 10-oct-2026: la demo pública (`demo@alika.app`, credenciales en el
+ * Auditoría 10-oct-2026: la demo pública (`demo@esmalia.com`, credenciales en el
  * código a propósito) es owner de su clínica. El trigger `block_demo_writes`
  * frena las escrituras en la base, pero NO lo que pasa antes de escribir:
  * `inviteUserByEmail` mandaba correos de invitación a cualquier dirección,

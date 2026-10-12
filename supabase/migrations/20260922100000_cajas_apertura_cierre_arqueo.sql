@@ -1,7 +1,7 @@
 -- Módulo de Cajas: apertura, cierre y arqueo por turno.
 --
 -- Gap identificado en la auditoría comparativa vs. SuperClini (22-sep-2026):
--- Alika no tenía forma de saber cuánto debería haber en caja en un momento
+-- Esmalia no tenía forma de saber cuánto debería haber en caja en un momento
 -- dado, ni de dejar registro de quién abrió/cerró un turno y si cuadró. El
 -- reporte de "Caja del período" en Finanzas ya existía (desglose de pagos
 -- por método), pero es un informe, no un control operativo de turno.

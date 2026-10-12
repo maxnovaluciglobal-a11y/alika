@@ -7,7 +7,7 @@
 -- así la migración 20260901130000, a pedido explícito de una clienta:
 -- "una vez alguien toma la agenda, el dentista debe aceptarla".
 --
--- Que el paciente diga "ahí voy" es un hecho DIFERENTE, y hasta ahora Alika
+-- Que el paciente diga "ahí voy" es un hecho DIFERENTE, y hasta ahora Esmalia
 -- no tenía dónde anotarlo. Por eso la confirmación por WhatsApp se removió
 -- en `505eb7d`: reusaba `confirmed_at`, o sea le daba al paciente permiso de
 -- escritura sobre la agenda del profesional. El problema nunca fue la

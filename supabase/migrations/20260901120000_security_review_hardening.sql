@@ -64,9 +64,9 @@ BEGIN
     RAISE EXCEPTION 'No tienes permisos para modificar este paciente.';
   END IF;
 
-  SELECT decrypted_secret INTO v_key FROM vault.decrypted_secrets WHERE name = 'alika_document_id_key';
+  SELECT decrypted_secret INTO v_key FROM vault.decrypted_secrets WHERE name = 'esmalia_document_id_key';
   IF v_key IS NULL THEN
-    RAISE EXCEPTION 'Falta la clave alika_document_id_key en Vault — generarla antes de usar esta función (ver comentario al inicio de supabase/migrations/20260822150000_security6_fase1_document_id_encryption.sql).';
+    RAISE EXCEPTION 'Falta la clave esmalia_document_id_key en Vault — generarla antes de usar esta función (ver comentario al inicio de supabase/migrations/20260822150000_security6_fase1_document_id_encryption.sql).';
   END IF;
 
   UPDATE public.patients

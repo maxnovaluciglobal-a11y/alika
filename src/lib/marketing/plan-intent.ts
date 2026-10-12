@@ -11,7 +11,7 @@
 // sessionStorage y no un query param: sobrevive el hash de la vuelta de
 // Google OAuth a `/auth` (que sí perdería cualquier `?plan=` propio) y no
 // hace falta threadearlo a mano por cada redirect intermedio.
-const KEY = "alika_plan_intent";
+const KEY = "esmalia_plan_intent";
 
 export type PlanIntent = "solo" | "clinica";
 

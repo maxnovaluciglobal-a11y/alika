@@ -1,6 +1,6 @@
-# Alika — Guía de self-hosting (VPS propia)
+# Esmalia — Guía de self-hosting (VPS propia)
 
-Alika es una app **TanStack Start + Vite**. En producción se construye con **Nitro**,
+Esmalia es una app **TanStack Start + Vite**. En producción se construye con **Nitro**,
 que genera un servidor Node autónomo en `.output/server/index.mjs`.
 
 ---
@@ -17,15 +17,15 @@ que genera un servidor Node autónomo en `.output/server/index.mjs`.
 
 Copia `.env.example` a `.env` y complétalo.
 
-| Variable | Momento | Notas |
-|---|---|---|
-| `VITE_SUPABASE_URL` | **build** | Se incrusta en el bundle del navegador |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | **build** | Clave pública, puede viajar al cliente |
-| `VITE_SUPABASE_PROJECT_ID` | **build** | Referencia del proyecto |
-| `SUPABASE_SERVICE_ROLE_KEY` | runtime | **Solo servidor.** Nunca al navegador |
-| `GEMINI_API_KEY` / `OPENAI_API_KEY` | runtime | Reemplazan a `LOVABLE_API_KEY`, que solo existe dentro de Lovable |
-| `EMAIL_*`, `RESEND_API_KEY` | runtime | Notificaciones del flujo de revisión |
-| `PORT`, `HOST` | runtime | Por defecto `3000` y `0.0.0.0` |
+| Variable                            | Momento   | Notas                                                             |
+| ----------------------------------- | --------- | ----------------------------------------------------------------- |
+| `VITE_SUPABASE_URL`                 | **build** | Se incrusta en el bundle del navegador                            |
+| `VITE_SUPABASE_PUBLISHABLE_KEY`     | **build** | Clave pública, puede viajar al cliente                            |
+| `VITE_SUPABASE_PROJECT_ID`          | **build** | Referencia del proyecto                                           |
+| `SUPABASE_SERVICE_ROLE_KEY`         | runtime   | **Solo servidor.** Nunca al navegador                             |
+| `GEMINI_API_KEY` / `OPENAI_API_KEY` | runtime   | Reemplazan a `LOVABLE_API_KEY`, que solo existe dentro de Lovable |
+| `EMAIL_*`, `RESEND_API_KEY`         | runtime   | Notificaciones del flujo de revisión                              |
+| `PORT`, `HOST`                      | runtime   | Por defecto `3000` y `0.0.0.0`                                    |
 
 > Las variables `VITE_*` se resuelven **en build-time**: si las cambias hay que reconstruir la imagen.
 
@@ -34,11 +34,11 @@ Copia `.env.example` a `.env` y complétalo.
 ## 3. Despliegue con Docker (recomendado)
 
 ```bash
-git clone <tu-repo> alika && cd alika
+git clone <tu-repo> esmalia && cd esmalia
 cp .env.example .env && nano .env
 
 docker compose up -d --build
-docker compose logs -f alika
+docker compose logs -f esmalia
 ```
 
 La app queda en `http://TU_IP:3000`.
@@ -63,27 +63,27 @@ bun run build
 NODE_ENV=production PORT=3000 HOST=0.0.0.0 node .output/server/index.mjs
 ```
 
-Servicio systemd (`/etc/systemd/system/alika.service`):
+Servicio systemd (`/etc/systemd/system/esmalia.service`):
 
 ```ini
 [Unit]
-Description=Alika
+Description=Esmalia
 After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/opt/alika
-EnvironmentFile=/opt/alika/.env
-ExecStart=/usr/bin/node /opt/alika/.output/server/index.mjs
+WorkingDirectory=/opt/esmalia
+EnvironmentFile=/opt/esmalia/.env
+ExecStart=/usr/bin/node /opt/esmalia/.output/server/index.mjs
 Restart=always
-User=alika
+User=esmalia
 
 [Install]
 WantedBy=multi-user.target
 ```
 
 ```bash
-sudo systemctl daemon-reload && sudo systemctl enable --now alika
+sudo systemctl daemon-reload && sudo systemctl enable --now esmalia
 ```
 
 ---
@@ -91,7 +91,7 @@ sudo systemctl daemon-reload && sudo systemctl enable --now alika
 ## 5. Reverse proxy con TLS (Caddy)
 
 ```caddyfile
-alika.tuclinica.com {
+clinica.ejemplo.com {
     reverse_proxy 127.0.0.1:3000
 }
 ```

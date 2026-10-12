@@ -3,6 +3,7 @@ import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { leerCookieConAnterior } from "@/lib/compat/nombres-anteriores";
 import { assertNotDemoClinic, requireClinicRole } from "@/lib/access/clinic-guards.server";
 import { appOrigin } from "@/lib/app-origin.server";
 import { mensajeDb } from "@/lib/db-errors";
@@ -106,8 +107,7 @@ export const revokeLabPortalAccess = createServerFn({ method: "POST" })
 function readLabPortalCookie(): string | null {
   const req = getRequest();
   const cookieHeader = req?.headers.get("cookie") ?? "";
-  const match = cookieHeader.match(new RegExp(`${LAB_PORTAL_COOKIE_NAME}=([^;]+)`));
-  return match ? decodeURIComponent(match[1]!) : null;
+  return leerCookieConAnterior(cookieHeader, LAB_PORTAL_COOKIE_NAME);
 }
 
 const PORTAL_LAB_SIN_ACCESO =

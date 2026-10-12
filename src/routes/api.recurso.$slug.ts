@@ -51,7 +51,7 @@
 //
 // ✅ Confirmado además contra un preview deploy real de Vercel (no sólo
 // inspección de build): formulario enviado de verdad en
-// alika-git-worktree-captacion-lead-magnets-*.vercel.app, token de descarga
+// esmalia-git-worktree-captacion-lead-magnets-*.vercel.app, token de descarga
 // real, `GET /api/recurso/fugas-clinica-dental?token=...` devolvió 200 +
 // `application/pdf` + 157.853 bytes (PDF válido de 5 páginas, magic
 // `%PDF-1.4` — mismo tamaño exacto que la versión local post-fix de

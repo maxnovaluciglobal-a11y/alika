@@ -3,7 +3,7 @@
 -- Contexto: análisis competitivo contra Dentalink (03-sep-2026). Su plan de
 -- tratamiento agrupa las prestaciones en bloques ("Sección sin nombre",
 -- "Fase 1", "Fase 2") con subtotal por bloque, y negocia los descuentos en
--- porcentaje, no en pesos. Alika tenía lista plana y descuento absoluto.
+-- porcentaje, no en pesos. Esmalia tenía lista plana y descuento absoluto.
 --
 -- ── Por qué `phase_label` es text libre y no una tabla de fases ───────────
 -- Obligar a la clínica a configurar un catálogo de fases antes de poder

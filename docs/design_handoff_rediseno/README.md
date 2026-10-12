@@ -1,17 +1,17 @@
-# Handoff: Alika — rediseño de landing y app
+# Handoff: Esmalia — rediseño de landing y app
 
 ## Cómo usar esto con Claude Code (lo más sencillo)
 
-1. Descomprime esta carpeta **dentro del repo de Alika**, en `docs/design_handoff_alika_rediseno/`.
+1. Descomprime esta carpeta **dentro del repo de Esmalia**, en `docs/design_handoff_rediseno/`.
 2. Abre Claude Code en la raíz del repo y pega, una fase por vez:
-   > Lee `docs/design_handoff_alika_rediseno/README.md` y abre el HTML de referencia. Implementa **solo la Fase 1** en una rama `redesign/fase-1`. Respeta los patrones del repo (TanStack Router, Tailwind v4, componentes en `src/components/ui`). Al terminar corre typecheck, lint y tests, y muéstrame el diff antes de hacer commit.
+   > Lee `docs/design_handoff_rediseno/README.md` y abre el HTML de referencia. Implementa **solo la Fase 1** en una rama `redesign/fase-1`. Respeta los patrones del repo (TanStack Router, Tailwind v4, componentes en `src/components/ui`). Al terminar corre typecheck, lint y tests, y muéstrame el diff antes de hacer commit.
 3. Revisa el preview de Vercel de esa rama, haz merge y pasa a la fase siguiente.
 
 No pidas todo de una vez: cada fase es un PR que se puede desplegar por sí solo.
 
 ## Sobre los archivos de diseño
 
-`alika-rediseno.dc.html` es una **referencia de diseño en HTML**, no código de producción. Ábrelo en el navegador: es un lienzo con 6 paneles (1a–1f). La tarea es **recrear estas pantallas en el código existente** (React 19 + TanStack Start + Tailwind v4 + Supabase), reutilizando sus componentes y rutas.
+`esmalia-rediseno.dc.html` es una **referencia de diseño en HTML**, no código de producción. Ábrelo en el navegador: es un lienzo con 6 paneles (1a–1f). La tarea es **recrear estas pantallas en el código existente** (React 19 + TanStack Start + Tailwind v4 + Supabase), reutilizando sus componentes y rutas.
 
 ## Fidelidad
 
@@ -24,7 +24,7 @@ No pidas todo de una vez: cada fase es un PR que se puede desplegar por sí solo
 - Cerrar el naming y el dominio; migrar a la vez OAuth de Google, el webhook de Stripe, `PUBLIC_APP_URL` y `EMAIL_FROM`.
 - Cuenta de Stripe propia (hoy Checkout muestra “DypOS”).
 - Hacer push de los commits pendientes de `main` antes de abrir ramas.
-- **Listo cuando:** el checkout y los emails salen con la marca y el dominio de Alika.
+- **Listo cuando:** el checkout y los emails salen con la marca y el dominio de Esmalia.
 
 ### Fase 1 — Sistema visual único (semanas 1–2)
 
@@ -39,11 +39,11 @@ No pidas todo de una vez: cada fase es un PR que se puede desplegar por sí solo
 Archivos: `src/routes/index.tsx`, `src/components/site-chrome.tsx`, `src/lib/pricing-display.ts`.
 Secciones, en orden:
 
-1. **Nav:** Alika · Producto · Precios · Calculadora · Recursos · Ingresar · [Ver la demo].
+1. **Nav:** Esmalia · Producto · Precios · Calculadora · Recursos · Ingresar · [Ver la demo].
 2. **Hero** en 2 columnas (1fr / 1.05fr, gap de 56px):
    - Kicker: “Gestión dental · Chile, Perú, México, Colombia”.
    - Título H1 de 68px, peso 400, line-height .98: “Cada silla vacía / _es plata que no vuelve._”
-   - Subtítulo: “Alika confirma tus citas por WhatsApp, lleva la ficha y el odontograma, y te dice cada noche cuánto entró y cuánto te deben. Sin instalar nada.”
+   - Subtítulo: “Esmalia confirma tus citas por WhatsApp, lleva la ficha y el odontograma, y te dice cada noche cuánto entró y cuánto te deben. Sin instalar nada.”
    - CTA primario “Entrar a la demo, sin registro” → `/demo`; CTA ghost “o crea tu clínica gratis →” → `/signup`.
    - Microcopy: 14 días gratis · Sin tarjeta · Exportas tus datos cuando quieras.
    - A la derecha va la **pantalla “Hoy” construida en HTML** (no una imagen): 3 KPIs, 4 filas de agenda con etiqueta de estado y una línea de WhatsApp.
@@ -136,5 +136,5 @@ El archivo completo de tokens y clases está en `_ds/.../styles.css` (incluido).
 
 ## Archivos
 
-- `alika-rediseno.dc.html`: lienzo de referencia. En el panel de Tweaks puedes alternar el rol (Recepción/Dueño) y las anotaciones.
+- `esmalia-rediseno.dc.html`: lienzo de referencia. En el panel de Tweaks puedes alternar el rol (Recepción/Dueño) y las anotaciones.
 - `support.js`, `_ds/`, `assets/`: necesarios para abrir el HTML.

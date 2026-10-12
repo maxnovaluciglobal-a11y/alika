@@ -1,6 +1,6 @@
 import { CLINIC_ROLES, type ClinicRole } from "@/lib/access/access";
 
-const STORAGE_KEY = "alika:sim-role";
+const STORAGE_KEY = "esmalia:sim-role";
 
 /** Roles reales que pueden activar el modo de simulación. */
 export const SIMULATION_ALLOWED_ROLES: ClinicRole[] = ["owner", "admin"];

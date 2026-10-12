@@ -22,9 +22,9 @@ BEGIN
     RAISE EXCEPTION 'No tienes permisos para modificar este paciente.';
   END IF;
 
-  SELECT decrypted_secret INTO v_key FROM vault.decrypted_secrets WHERE name = 'alika_document_id_key';
+  SELECT decrypted_secret INTO v_key FROM vault.decrypted_secrets WHERE name = 'esmalia_document_id_key';
   IF v_key IS NULL THEN
-    RAISE EXCEPTION 'Falta la clave alika_document_id_key en Vault — generarla antes de usar esta función.';
+    RAISE EXCEPTION 'Falta la clave esmalia_document_id_key en Vault — generarla antes de usar esta función.';
   END IF;
 
   UPDATE public.patients
@@ -56,7 +56,7 @@ BEGIN
     RETURN NULL;
   END IF;
 
-  SELECT decrypted_secret INTO v_key FROM vault.decrypted_secrets WHERE name = 'alika_document_id_key';
+  SELECT decrypted_secret INTO v_key FROM vault.decrypted_secrets WHERE name = 'esmalia_document_id_key';
   RETURN pgp_sym_decrypt(v_enc, v_key);
 END;
 $$;

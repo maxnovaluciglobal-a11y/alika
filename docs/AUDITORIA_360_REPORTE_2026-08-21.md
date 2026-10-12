@@ -1,4 +1,4 @@
-# Auditoría 360° — Alika / Aurora Dental OS
+# Auditoría 360° — Esmalia / Aurora Dental OS
 
 **Fecha**: 2026-08-21 · **Alcance**: código y producto al día de hoy · **Metodología**: 6 áreas → investigación → contraauditoría → defensa. 41 hallazgos, los 41 sobrevivieron el proceso (algunos con impacto/esfuerzo/evidencia corregidos en la contraauditoría).
 
@@ -67,7 +67,7 @@ Veredicto general: no hay que parar ni re-arquitecturar nada. Hay una lista cort
 
 **Sobrevivieron (6/6):**
 
-- **security-1** (sacar el DELETE de historia clínica) — el hallazgo más serio de toda la auditoría: contradice el propio versionado inmutable que Alika construyó, viola la Ley 20.584 (retención mínima 15 años, ya vigente), y el propio founder opera la cuenta owner de la clínica piloto real, con riesgo concreto de borrado accidental durante su propio uso diario.
+- **security-1** (sacar el DELETE de historia clínica) — el hallazgo más serio de toda la auditoría: contradice el propio versionado inmutable que Esmalia construyó, viola la Ley 20.584 (retención mínima 15 años, ya vigente), y el propio founder opera la cuenta owner de la clínica piloto real, con riesgo concreto de borrado accidental durante su propio uso diario.
 - **security-2** (token del portal en texto plano) — sobrevivió pero con impacto bajado de medio a bajo: el contraauditor demostró que el portal no expone historia clínica/odontograma, y que recepción tiene permiso de escritura sobre `messages` por diseño (probablemente ya ve el link al despacharlo). Sigue siendo mala práctica de higiene de secretos, fix barato.
 - **security-3** (Sentry sin declarar + errores Postgres sin sanitizar) — confirmado con evidencia reforzada (patrón repetido 7+ veces). Condicionado a que se active el DSN en prod, cosa que no está confirmada — tarea de checklist obligatoria antes de ese momento.
 - **security-4** (webhook WhatsApp con HMAC correcto) — mantener sin cambios, el contraauditor no encontró nada que corregir tras releer el archivo completo.
@@ -140,7 +140,7 @@ No hubo hallazgos descartados en esta área — los 6 originales sobrevivieron, 
 
 ## 4. Comparación competitiva resumida
 
-| Feature                                        | Alika                                        | Dentalink                                        | Dentiqa                         | Dentipilot                       | Dentum                                | Open Dental / Curve / tab32                                                                    |
+| Feature                                        | Esmalia                                      | Dentalink                                        | Dentiqa                         | Dentipilot                       | Dentum                                | Open Dental / Curve / tab32                                                                    |
 | ---------------------------------------------- | -------------------------------------------- | ------------------------------------------------ | ------------------------------- | -------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Precio de entrada                              | US$49/mes flat (founder-pricing de piloto)   | No verificado en esta ronda                      | US$89-249/mes según tier        | No verificado                    | $749-1.349 MXN según tier (≈US$44-79) | tab32 US$125-225/mes; Curve US$99/usuario-$350/mes base (cifras inconsistentes entre fuentes)  |
 | Escalón por sillón/usuario                     | No (quantity:1 fijo)                         | —                                                | —                               | —                                | Sí, por tier                          | Sí, per-seat                                                                                   |
@@ -166,5 +166,5 @@ Esto es diagnóstico, no implementación. Quedan afuera de este documento:
 2. Decidir quién ejecuta cada fix — con un solo founder, hay que ser explícito sobre qué se hace antes de sumar la clínica piloto #2 y qué puede esperar.
 3. Definir la fecha límite dura para security-6 (cifrado de columna, antes de nov-2026) y agendarla en el roadmap con gatillo explícito, no como "later" difuso.
 4. Definir el precio de self-service (pricing-1) antes de que se ejecute el punto de `DEPLOY_PRODUCTION.md:118` (self-service en 4-6 semanas).
-5. Revisar el naming de marca (Alika vs Alik) sigue pausado y fuera de esta auditoría, tal como se indicó al arrancar.
+5. Revisar el naming de marca (Esmalia vs Alik) sigue pausado y fuera de esta auditoría, tal como se indicó al arrancar.
 6. No se tocó código, no se hizo commit ni deploy — todo lo de arriba es evaluación, la ejecución queda para después.

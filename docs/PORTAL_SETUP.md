@@ -7,8 +7,8 @@ Portal wireado como **Opción C** (URL firmada por WhatsApp, sin login, sin Twil
 1. Staff clínico entra a la ficha del paciente en `/pacientes/:id`.
 2. Sección "Portal del paciente" tiene un botón "Generar link del portal" → genera un JWT válido 7 días con `patient_id` + `clinic_id`.
 3. Se puede copiar el link o abrir directo WhatsApp con mensaje pre-armado (usa el teléfono del paciente).
-4. El paciente recibe `alika.com/portal/<jwt>` por WhatsApp.
-5. Al abrirlo, `portal.$token.tsx` llama `openPortalSession` que valida el JWT y setea cookie HttpOnly `alika_portal_session` (Path=/, 7 días).
+4. El paciente recibe `esmalia.com/portal/<jwt>` por WhatsApp.
+5. Al abrirlo, `portal.$token.tsx` llama `openPortalSession` que valida el JWT y setea cookie HttpOnly `esmalia_portal_session` (Path=/, 7 días).
 6. Redirect a `/portal/inicio` que muestra: próximas citas + planes activos + form para solicitar hora.
 7. Al solicitar hora, se crea fila en `appointment_requests` con `source='portal'` y `status='pending'`. La clínica confirma manualmente desde su app.
 

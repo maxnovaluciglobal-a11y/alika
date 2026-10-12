@@ -56,7 +56,7 @@ describe("portal de laboratorio", () => {
 
 describe("cuenta demo", () => {
   it("se reconoce sin importar mayúsculas ni espacios", () => {
-    expect(esCuentaDemo(" Demo@Alika.app ")).toBe(true);
+    expect(esCuentaDemo(" demo@esmalia.com ")).toBe(true);
     expect(esCuentaDemo("otra@clinica.cl")).toBe(false);
     expect(esCuentaDemo(null)).toBe(false);
   });

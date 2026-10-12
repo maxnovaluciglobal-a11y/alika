@@ -11,9 +11,10 @@ import {
   type ClinicRole,
 } from "@/lib/access/access";
 import { assertNotDemoClinic } from "@/lib/access/clinic-guards.server";
+import { leerCookieConAnterior } from "@/lib/compat/nombres-anteriores";
 import { mensajeDb } from "@/lib/db-errors";
 
-const ACTIVE_CLINIC_COOKIE_NAME = "alika_active_clinic";
+const ACTIVE_CLINIC_COOKIE_NAME = "esmalia_active_clinic";
 const ACTIVE_CLINIC_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
 /** Selector de clínica activa (progresivo #7, plan Carlos 05-sep-2026): cuál
@@ -26,11 +27,10 @@ const ACTIVE_CLINIC_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 function readActiveClinicCookie(): string | null {
   const req = getRequest();
   const cookieHeader = req?.headers.get("cookie") ?? "";
-  // Ancla el nombre a inicio de string o justo después de "; " — sin esto,
-  // una cookie hipotética que solo TERMINE en "alika_active_clinic" (ej.
-  // "x_alika_active_clinic") matchearía igual (revisión de código, 06-sep-2026).
-  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${ACTIVE_CLINIC_COOKIE_NAME}=([^;]+)`));
-  return match ? decodeURIComponent(match[1]!) : null;
+  // El nombre va anclado a inicio de string o justo después de "; " (ver
+  // leerCookieConAnterior): sin eso, una cookie que solo TERMINE en el nombre
+  // (ej. "x_esmalia_active_clinic") matchearía igual (revisión 06-sep-2026).
+  return leerCookieConAnterior(cookieHeader, ACTIVE_CLINIC_COOKIE_NAME);
 }
 
 /** Pura y exportada para poder testearla sin una conexión real a Supabase:

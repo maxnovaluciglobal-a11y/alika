@@ -1,4 +1,4 @@
--- El interruptor "Avisos dentro de Alika" pasa a hacer algo.
+-- El interruptor "Avisos dentro de Esmalia" pasa a hacer algo.
 --
 -- Hallazgo: `notification_preferences.inapp_enabled` sólo lo leía y escribía
 -- su propia pantalla de preferencias. **Ningún camino lo consultaba antes de

@@ -2,7 +2,7 @@
   "reviews": [
     {
       "stage": "approved",
-      "name": "Alika — sistema de marca vigente",
+      "name": "Esmalia — sistema de marca vigente",
       "premise": "Dos paletas, una app: teal clínico (\"Precision clinical mint\") para todo lo autenticado, arcilla/terracota como acento real de marketing (implementado 19-sep-2026 tras encontrar que el marketing corría con el mismo verde de la app — cero diferenciación entre \"te vendemos\" y \"ya sos cliente\"). Fuente de verdad: src/styles.css, tokens en oklch.",
       "keywords": ["clínico", "confiable", "acento cálido solo en marketing"],
       "palette_app": [
@@ -24,7 +24,7 @@
       "logo": {
         "name": "Cúspide",
         "description": "Isotipo triangular de un solo trazo — la cúspide de una muela vista de perfil, sobre fondo ink. Elegido tras 2 rondas + auditoría multi-agente (distintividad + técnica), commit 28ce6dd (19-ago-2026).",
-        "component": "src/components/alika-logo.tsx"
+        "component": "src/components/esmalia-logo.tsx"
       },
       "background_color": "#ffffff",
       "text_color": "#142a41"

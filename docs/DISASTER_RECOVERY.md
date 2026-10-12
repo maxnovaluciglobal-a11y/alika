@@ -1,4 +1,4 @@
-# Disaster Recovery — Esmalia (ex Alika)
+# Disaster Recovery — Esmalia
 
 Runbook para escenarios de falla operacional. Autoridad: Walter (`walterlamadriz@gmail.com`).
 
@@ -12,8 +12,8 @@ Runbook para escenarios de falla operacional. Autoridad: Walter (`walterlamadriz
 
 **Recuperación:**
 
-1. ✅ **Actualizado 2026-09-05 — esto ya NO describe la situación real.** Desde el 2026-09-01 corre un backup diario propio (`.github/workflows/backup.yml`, 07:15 UTC): exporta todas las tablas de negocio vía API REST de Supabase (`service_role`), cifra con `age` y sube a Backblaze B2 (`b2:alika-backups/db/`). La lista de tablas del script (`scripts/backup-data.mjs`) estaba desactualizada desde el 22-ago (excluía 22 tablas nuevas, incluidas `patient_medical_history`/`patient_consents`/`patient_documents`) — corregido hoy mismo. `pitr_enabled` sigue en `false` (Supabase plan actual no lo incluye) — el backup diario es la única cobertura, no hay recuperación a un punto intermedio del día.
-2. Restauración: manual, documentada paso a paso en `docs/BACKUPS_ALIKA.md` (recrear schema con las migraciones + reinsertar cada tabla del JSON descifrado). **Nunca se ejecutó un restore real end-to-end** — ver checklist post-incidente.
+1. ✅ **Actualizado 2026-09-05 — esto ya NO describe la situación real.** Desde el 2026-09-01 corre un backup diario propio (`.github/workflows/backup.yml`, 07:15 UTC): exporta todas las tablas de negocio vía API REST de Supabase (`service_role`), cifra con `age` y sube a Backblaze B2 (`b2:<B2_BUCKET>/db/`). La lista de tablas del script (`scripts/backup-data.mjs`) estaba desactualizada desde el 22-ago (excluía 22 tablas nuevas, incluidas `patient_medical_history`/`patient_consents`/`patient_documents`) — corregido hoy mismo. `pitr_enabled` sigue en `false` (Supabase plan actual no lo incluye) — el backup diario es la única cobertura, no hay recuperación a un punto intermedio del día.
+2. Restauración: manual, documentada paso a paso en `docs/BACKUPS.md` (recrear schema con las migraciones + reinsertar cada tabla del JSON descifrado). **Nunca se ejecutó un restore real end-to-end** — ver checklist post-incidente.
 3. Si el backup del día también fallara (o el bucket B2 no fuera accesible), la única recuperación posible es reconstruir desde las migraciones versionadas en `supabase/migrations/` (ver `CLAUDE.md` regla 5) — esto reconstruye el **schema**, no los **datos**.
 4. Los seeds iniciales se recuperan solos al re-ejecutar las migraciones: el trigger `on_clinic_created` → `handle_new_clinic()` (definido en `20260726145220`, última redefinición en `20260816170100`) siembra automáticamente los `procedures` default y las 14 `message_templates` de WhatsApp en **cualquier clínica nueva** que se cree.
 5. El proyecto huérfano de Lovable Cloud (`9f5bde21-...`) es un snapshot congelado al 2026-08-14 — cada vez más desactualizado, no reemplaza al backup diario.
@@ -101,7 +101,7 @@ Runbook para escenarios de falla operacional. Autoridad: Walter (`walterlamadriz
 
 **Recuperación:**
 
-1. El DNS de `esmalia.com` ya está en Cloudflare (09-oct-2026, registros en modo _DNS only_): la mitigación inmediata es activar el proxy de Cloudflare en esos registros. `alika-omega.vercel.app` queda fuera de esa protección.
+1. El DNS de `esmalia.com` ya está en Cloudflare (09-oct-2026, registros en modo _DNS only_): la mitigación inmediata es activar el proxy de Cloudflare en esos registros. el dominio `.vercel.app` original queda fuera de esa protección.
 2. Bloquear IPs en el firewall del Supabase (via Lovable soporte).
 3. ✅ Actualizado 2026-09-05: `_serverFn/*` y `/api/*` (excepto los webhooks de Stripe/Meta, protegidos por firma) tienen un rate-limit por IP desde `src/server.ts` (`src/lib/rate-limit.server.ts`) — 180 req/min por IP en server functions, 60 req/min en API pública. **Limitación conocida:** es en memoria por instancia de función serverless, no compartido entre instancias — bajo un ataque distribuido en escala (muchas IPs, o mucho tráfico repartido entre instancias de Vercel) no alcanza. Un store compartido (Upstash Redis / Vercel KV) daría un tope real y exacto — no implementado, requiere decisión de infraestructura nueva.
 
@@ -144,7 +144,7 @@ Los escenarios #4 (sync con Lovable) y #6 (cierre de Lovable Cloud) quedan fuera
 
 **Por qué el RTO de DB no está validado:** el backup existe y se verificó por round-trip (descifrar + descomprimir + confirmar filas), pero eso no es lo mismo que reconstruir una base desde cero y confirmar que la app vuelve a andar — ese ensayo nunca se hizo. Hasta que se haga, "4 horas" es una meta, no un número con el que se pueda comprometer una clínica piloto.
 
-**Próximo paso concreto:** ensayar un restore real contra un proyecto Supabase descartable (no el de producción) usando el backup de hoy + `docs/BACKUPS_ALIKA.md`, cronometrarlo, y reemplazar "Sin validar" por el tiempo real. Recién ahí este RTO deja de ser una suposición.
+**Próximo paso concreto:** ensayar un restore real contra un proyecto Supabase descartable (no el de producción) usando el backup de hoy + `docs/BACKUPS.md`, cronometrarlo, y reemplazar "Sin validar" por el tiempo real. Recién ahí este RTO deja de ser una suposición.
 
 ---
 
@@ -152,7 +152,7 @@ Los escenarios #4 (sync con Lovable) y #6 (cierre de Lovable Cloud) quedan fuera
 
 - **Owner del proyecto:** Walter — `walterlamadriz@gmail.com`
 - **Lovable:** editor `https://lovable.dev/projects/9f5bde21-41b4-43c0-bc81-ea2215cab660`
-- **GitHub:** `maxnovaluciglobal-a11y/alika` (rama `main`) — migrado desde `walterlamadriz-ai/alika` el 2026-08-31, la URL vieja redirige
+- **GitHub:** `maxnovaluciglobal-a11y/esmalia` (rama `main`) — migrado desde `walterlamadriz-ai/esmalia` el 2026-08-31, la URL vieja redirige
 - **Supabase propio (producción real):** proyecto `hvfkygoguxvpmwslrccb`, `sa-east-1`, org MaxnovaLuci. El proyecto Lovable Cloud `9f5bde21-...` es un huérfano congelado al 14-ago, no producción.
 - **Login owner de la clínica "clinica Patricia":** `walterlamadriz@gmail.com` / password reseteada via SQL directo en Fase 1
 - **VPS fallback:** `91.99.204.162` (mismo host que GastroCore, ver memoria de proyectos)

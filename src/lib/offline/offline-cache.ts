@@ -6,7 +6,9 @@ import {
 import type { Query, QueryClient } from "@tanstack/react-query";
 import { clear, createStore, get, set } from "idb-keyval";
 
-const DB_NAME = "alika-offline";
+import { descartarCacheOfflineAnterior } from "@/lib/compat/nombres-anteriores";
+
+const DB_NAME = "esmalia-offline";
 const STORE_NAME = "react-query";
 const CACHE_KEY = "cache";
 const OWNER_KEY = "owner";
@@ -44,7 +46,13 @@ const PERSISTIBLE_KEY_PREFIXES = new Set([
   "public-holidays",
 ]);
 
+let anteriorDescartado = false;
+
 function idbStore() {
+  if (!anteriorDescartado) {
+    anteriorDescartado = true;
+    descartarCacheOfflineAnterior();
+  }
   return createStore(DB_NAME, STORE_NAME);
 }
 

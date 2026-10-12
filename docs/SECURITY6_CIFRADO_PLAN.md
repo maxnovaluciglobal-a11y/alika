@@ -14,7 +14,7 @@ ejecutado o no.
 funciones `set_patient_document_id`/`get_patient_document_id` existen. Pero
 **el 100% de los pacientes con `document_id` tienen ambas columnas en NULL** —
 la Fase 1 nunca llegó a poblar nada. Causa más probable: la clave
-`alika_document_id_key` nunca se creó en Supabase Vault (`set_patient_document_id`
+`esmalia_document_id_key` nunca se creó en Supabase Vault (`set_patient_document_id`
 tira `RAISE EXCEPTION` si falta, y las 3 llamadas del código son "no
 bloqueantes" — el error queda en un `console.error` que nadie mira).
 
@@ -24,13 +24,13 @@ de Supabase; no hay forma de crearlo vía la `service_role` key ni por
 PostgREST, el schema `vault` no está expuesto en la API REST):
 
 ```sql
-select vault.create_secret(encode(gen_random_bytes(32),'hex'), 'alika_document_id_key');
+select vault.create_secret(encode(gen_random_bytes(32),'hex'), 'esmalia_document_id_key');
 ```
 
 Y confirmar que quedó (mismo SQL Editor):
 
 ```sql
-select name from vault.decrypted_secrets where name = 'alika_document_id_key';
+select name from vault.decrypted_secrets where name = 'esmalia_document_id_key';
 ```
 
 **Con eso, la Fase 1 empieza a andar sola** para pacientes nuevos o editados —

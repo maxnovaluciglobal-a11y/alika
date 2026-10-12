@@ -1,6 +1,6 @@
 # Migración Lovable Cloud → Supabase propio
 
-Ejecutada 2026-08-14. Alika ahora corre contra la cuenta Supabase propia de Walter, aislada del proyecto FinanceOSpro (que vive en la misma cuenta pero es otro project).
+Ejecutada 2026-08-14. Esmalia ahora corre contra la cuenta Supabase propia de Walter, aislada del proyecto FinanceOSpro (que vive en la misma cuenta pero es otro project).
 
 ## Proyecto nuevo
 
@@ -13,7 +13,7 @@ Ejecutada 2026-08-14. Alika ahora corre contra la cuenta Supabase propia de Walt
 
 - **Schema**: las 23 migraciones de `supabase/migrations/*.sql` → 30 tablas + RLS + triggers + RPCs.
 - **Data**: `clinica Patricia` completa (1 clínica, 1 sucursal, 4 boxes, 2 profesionales, 8 especialidades, 3 procedures, 1 paciente María Fernanda Torres con odontograma + presupuesto P-2026-0001 + plan + pago + mensaje WA).
-- **auth.users**: 3 users recreados con Admin API preservando IDs (`walterlamadriz@gmail.com`, `qa.fase1.oralia@mailinator.com`, `ana.rivas.demo@oralia.test`). Passwords rotadas el 2026-08-15 — viven en memoria privada, no en este repo público. Ver `alika_auditoria_multiagente_2026_08_15.md`.
+- **auth.users**: 3 users recreados con Admin API preservando IDs (`walterlamadriz@gmail.com`, `qa.fase1.oralia@mailinator.com`, `ana.rivas.demo@oralia.test`). Passwords rotadas el 2026-08-15 — viven en memoria privada, no en este repo público. Ver `esmalia_auditoria_multiagente_2026_08_15.md`.
 
 ## Env vars actualizadas
 
@@ -26,7 +26,7 @@ VITE_SUPABASE_PROJECT_ID=hvfkygoguxvpmwslrccb
 SUPABASE_SERVICE_ROLE_KEY=sb_secret_...   (⚠️ nunca commitear)
 ```
 
-**Vercel Env Vars: rotadas.** Prod corre contra el Supabase propio desde antes del 2026-08-25 (verificado en el bundle servido de `alika-omega.vercel.app`, que resuelve contra `hvfkygoguxvpmwslrccb.supabase.co`).
+**Vercel Env Vars: rotadas.** Prod corre contra el Supabase propio desde antes del 2026-08-25 (verificado en el bundle servido del dominio `.vercel.app` original, que resuelve contra `hvfkygoguxvpmwslrccb.supabase.co`).
 
 ## Verificado end-to-end en dev
 

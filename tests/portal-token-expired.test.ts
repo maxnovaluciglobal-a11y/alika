@@ -10,8 +10,8 @@ import { SignJWT } from "jose";
  * inválida o manipulado, solo de uno que Esmalia firmó de verdad y expiró.
  */
 const SECRET = "test-only-portal-secret-32-bytes-minimum-aaaaaaaa";
-const ISSUER = "alika:portal";
-const AUDIENCE = "alika:portal:patient";
+const ISSUER = "esmalia:portal";
+const AUDIENCE = "esmalia:portal:patient";
 
 beforeAll(() => {
   process.env.PORTAL_TOKEN_SECRET = SECRET;

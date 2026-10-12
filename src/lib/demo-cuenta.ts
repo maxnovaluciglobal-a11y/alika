@@ -2,7 +2,7 @@
 // demo, ese es el punto (ver `routes/demo.tsx`). Justamente por eso nadie
 // puede cambiarle la contraseña ni el email: el siguiente visitante quedaría
 // afuera y el que la cambió se quedaría con la cuenta.
-export const DEMO_EMAIL = "demo@alika.app";
+export const DEMO_EMAIL = "demo@esmalia.com";
 
 export const MENSAJE_CUENTA_DEMO =
   "La cuenta de la demo es compartida: no se le puede cambiar la contraseña ni el email. Crea tu propia cuenta para eso.";

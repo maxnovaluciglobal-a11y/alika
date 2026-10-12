@@ -7,7 +7,7 @@
 //
 // Deliberadamente NO vive bajo `_authenticated/_clinic/`: el gate real no es
 // un rol de clínica (`ClinicAccess`/`hasPermission`), es una allowlist de
-// emails del equipo de Esmalia (`ALIKA_STAFF_EMAILS`) que ya resuelve
+// emails del equipo de Esmalia (`ESMALIA_STAFF_EMAILS`) que ya resuelve
 // `listMarketingLeads` del lado del servidor. Cualquier usuario logueado
 // puede navegar a la URL; el server function decide si tiene permiso real.
 // Por eso tampoco usa `AppShell` (pide un `ClinicAccess` con rol de clínica

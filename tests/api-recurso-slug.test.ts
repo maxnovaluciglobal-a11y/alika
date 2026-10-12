@@ -100,7 +100,7 @@ async function crearLead(source: "calculadora" | "checklist", tag: string) {
       countryCode: "CL",
       source,
       consent: true,
-      consentText: "Autorizo a Alika a usar estos datos de prueba automatizada — texto base.",
+      consentText: "Autorizo a Esmalia a usar estos datos de prueba automatizada — texto base.",
       consentWhatsapp: false,
     },
     ipHash,

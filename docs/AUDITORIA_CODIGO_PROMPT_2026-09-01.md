@@ -1,6 +1,6 @@
-# Prompt maestro: Auditoría de código y arquitectura de Alika (nivel ingeniería senior)
+# Prompt maestro: Auditoría de código y arquitectura de Esmalia (nivel ingeniería senior)
 
-> Uso: brief para una auditoría técnica multi-agente, en paralelo, sobre el código real de Alika. A diferencia de `AUDITORIA_360_PROMPT_2026-08-21.md` (producto vs. competencia) y de la auditoría externa del 01-sep-2026 (seguridad de infraestructura, dinero/fiscal, growth, operación humana — ver `alika_auditoria_externa_20260901` en memoria), **esta es una auditoría de código e ingeniería**: arquitectura, rendimiento, calidad, deuda técnica y mejores prácticas del stack. No repetir lo que esas dos ya cubrieron. No implementar nada sin que Walter lo pida explícitamente después de leer el reporte.
+> Uso: brief para una auditoría técnica multi-agente, en paralelo, sobre el código real de Esmalia. A diferencia de `AUDITORIA_360_PROMPT_2026-08-21.md` (producto vs. competencia) y de la auditoría externa del 01-sep-2026 (seguridad de infraestructura, dinero/fiscal, growth, operación humana — ver `esmalia_auditoria_externa_20260901` en memoria), **esta es una auditoría de código e ingeniería**: arquitectura, rendimiento, calidad, deuda técnica y mejores prácticas del stack. No repetir lo que esas dos ya cubrieron. No implementar nada sin que Walter lo pida explícitamente después de leer el reporte.
 
 ## Rol
 
@@ -8,7 +8,7 @@ Sos un panel de ingenieros de software senior/principal haciendo due diligence t
 
 ## Contexto del proyecto
 
-**Qué es Alika**: SaaS de gestión para clínicas dentales LatAm. Stack: TanStack Start (SSR) + React 19 + Vite 8 + TypeScript + Tailwind 4 + shadcn/ui (48 componentes vendored) + Supabase (Postgres + RLS + Vault + Realtime + Storage) + Stripe + Meta Cloud API (WhatsApp). Repo: `05 - Alika/` (ver `CLAUDE.md` del repo para las 11 reglas obligatorias del proyecto — RLS en toda tabla, `bigint` cents, `hoyISO(timezone)`, correlativos vía RPC atómica, nunca UPDATE de eventos versionados, etc. — cualquier hallazgo que contradiga esas reglas es automáticamente P0/P1, no una sugerencia de estilo).
+**Qué es Esmalia**: SaaS de gestión para clínicas dentales LatAm. Stack: TanStack Start (SSR) + React 19 + Vite 8 + TypeScript + Tailwind 4 + shadcn/ui (48 componentes vendored) + Supabase (Postgres + RLS + Vault + Realtime + Storage) + Stripe + Meta Cloud API (WhatsApp). Repo: `05 - Esmalia/` (ver `CLAUDE.md` del repo para las 11 reglas obligatorias del proyecto — RLS en toda tabla, `bigint` cents, `hoyISO(timezone)`, correlativos vía RPC atómica, nunca UPDATE de eventos versionados, etc. — cualquier hallazgo que contradiga esas reglas es automáticamente P0/P1, no una sugerencia de estilo).
 
 **Por qué esta auditoría, y por qué ahora**: el codebase creció muy rápido (de 0 a producto con piloto real en ~3 semanas) a través de **muchísimas sesiones de agente distintas, varias corriendo en paralelo o directamente concurrentes** (hay incidentes documentados de un `git stash` que pisó cambios de otros agentes en la misma working tree, y de secretos de Supabase rotándose solos por tocar otra cosa en el dashboard). Ese modo de construcción es exactamente el que genera un tipo de deuda técnica que un review normal no ve: **inconsistencia entre módulos que resuelven el mismo problema de formas distintas**, porque cada sesión reinventó el patrón sin ver cómo lo había resuelto la sesión anterior. Buscar eso específicamente, no solo bugs aislados.
 
@@ -16,7 +16,7 @@ Sos un panel de ingenieros de software senior/principal haciendo due diligence t
 
 - Seguridad de infraestructura (backups, Vault/cifrado de PII, secrets de CI/Vercel) — ver auditoría externa 01-sep.
 - Dinero/fiscal (Stripe, SII, gate de billing) — ver auditoría externa 01-sep.
-- Naming, dominio, trademark, growth — ver auditoría externa 01-sep + `alika_naming_finalistas`.
+- Naming, dominio, trademark, growth — ver auditoría externa 01-sep + `esmalia_naming_finalistas`.
 - Gap de producto vs. competencia — ver `AUDITORIA_360_PROMPT_2026-08-21.md` y su reporte.
 - RLS multi-clínica ya probado (`tests/multi-clinic-isolation.test.ts`, 6 tests pasando contra Supabase real) — no reprobar el aislamiento básico, sí auditar RLS de tablas **nuevas** desde la última pasada de seguridad (26-ago) que no hayan tenido un ojo dedicado.
 
@@ -49,7 +49,7 @@ Sos un panel de ingenieros de software senior/principal haciendo due diligence t
 - Distinguir "esto va a romper con más volumen/clínicas reales" de "esto ya está roto hoy".
 - Español rioplatense, directo, sin relleno. Sin genéricos de linter.
 - No tocar código — solo lectura, greps, builds locales sin commitear, tests que no escriban en Supabase real sin confirmarlo antes.
-- No salir de `05 - Alika/`.
+- No salir de `05 - Esmalia/`.
 
 ## Entregable
 

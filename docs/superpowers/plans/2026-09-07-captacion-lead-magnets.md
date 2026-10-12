@@ -4,13 +4,13 @@
 > (recomendado) o `superpowers:executing-plans` para implementar tarea por tarea. Los pasos usan
 > checkbox (`- [ ]`) para seguimiento.
 
-**Goal:** Que Alika pueda captar el contacto de un dueño de clínica dental que todavía no es
+**Goal:** Que Esmalia pueda captar el contacto de un dueño de clínica dental que todavía no es
 cliente, dándole una herramienta gratuita útil, y que el trial de 14 días que la landing ya promete
 exista de verdad.
 
 **Architecture:** Tres piezas independientes. (1) Cimientos: una tabla `marketing_leads` que no
 cuelga de ninguna clínica —la primera del schema— escrita por una server function pública con el
-patrón que Alika ya usa en el portal y el webhook de WhatsApp. (2) Una calculadora pública cuyo
+patrón que Esmalia ya usa en el portal y el webhook de WhatsApp. (2) Una calculadora pública cuyo
 cálculo vive en un módulo puro con tests y transcribe fórmulas reales del producto. (3) El trial de
 14 días, que se enciende creando la fila en `subscriptions` que hoy nadie crea.
 
@@ -64,7 +64,7 @@ Estas reglas aplican a **todas** las tareas. Salen de `CLAUDE.md` del repo y del
 - **Nunca gatear**: `clinical:*`, `agenda:*`, `patients:*`, `/consentimientos`, `/compliance`,
   `/tratamientos`, `/aranceles`, exportación de datos, `/suscripcion`.
 - **Comandos:** `npm test` (vitest run) · `npm run typecheck` · `npm run lint` ·
-  `npm run types:check` · `preview_start({name: "alika"})` para el dev server (puerto 8080).
+  `npm run types:check` · `preview_start({name: "esmalia"})` para el dev server (puerto 8080).
 - **Commits en español**, formato `tipo(alcance): descripción`, terminando con
   `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
 
@@ -227,7 +227,7 @@ Expected: al menos un resultado. Si el nombre real difiere, ajustar el trigger d
 - [ ] **Step 3: Aplicar la migración a Supabase**
 
 ```bash
-cd "/Users/walterlamadriz/Documents/05 - Alika"
+cd "/Users/walterlamadriz/Documents/05 - Esmalia"
 set -a; source .env; set +a
 PGPASSWORD="$SUPABASE_DB_PASSWORD" psql "postgresql://postgres.hvfkygoguxvpmwslrccb@aws-0-sa-east-1.pooler.supabase.com:5432/postgres" -f supabase/migrations/<TIMESTAMP>_captacion_marketing_leads.sql
 ```
@@ -394,7 +394,7 @@ export async function hashIp(ip: string, salt: string): Promise<string> {
 }
 
 export const TEXTO_CONSENTIMIENTO =
-  "Autorizo a Alika a usar estos datos para enviarme el material solicitado y " +
+  "Autorizo a Esmalia a usar estos datos para enviarme el material solicitado y " +
   "comunicarse conmigo. Puedo pedir la baja en cualquier momento.";
 
 export type MetaLead = {
@@ -559,13 +559,13 @@ export const submitMarketingLead = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
-/** Lectura de leads para el equipo de Alika. No existe un rol "staff de la
+/** Lectura de leads para el equipo de Esmalia. No existe un rol "staff de la
  *  empresa" en el schema (todos los roles son de clínica), así que el gate es
  *  una allowlist de emails por env var. */
 export const listMarketingLeads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const permitidos = (process.env.ALIKA_STAFF_EMAILS ?? "")
+    const permitidos = (process.env.ESMALIA_STAFF_EMAILS ?? "")
       .split(",")
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean);
@@ -598,12 +598,12 @@ copiar la forma real de leer headers del webhook de WhatsApp y ajustar.
 Verificar también el nombre del campo de usuario en el contexto del middleware
 (`grep -n "userId" src/lib/auth-middleware.ts`).
 
-- [ ] **Step 3: Agregar `ALIKA_STAFF_EMAILS` a `.env.example`**
+- [ ] **Step 3: Agregar `ESMALIA_STAFF_EMAILS` a `.env.example`**
 
 ```
-# Emails del equipo de Alika habilitados a leer los leads de marketing.
+# Emails del equipo de Esmalia habilitados a leer los leads de marketing.
 # Separados por coma. Sin esta variable, nadie puede leerlos desde la app.
-ALIKA_STAFF_EMAILS=
+ESMALIA_STAFF_EMAILS=
 ```
 
 - [ ] **Step 4: Verificar tipos y lint**
@@ -613,7 +613,7 @@ Expected: sin errores.
 
 - [ ] **Step 5: Probar el endpoint contra el dev server**
 
-Levantar con `preview_start({name: "alika"})`. Después, cada caso con curl contra
+Levantar con `preview_start({name: "esmalia"})`. Después, cada caso con curl contra
 `http://localhost:8080/_serverFn/...` (la ruta exacta se ve en la pestaña Red del navegador al
 disparar la función una vez desde la UI; anotarla antes de correr esto):
 
@@ -1043,7 +1043,7 @@ Expected: FAIL — módulo inexistente.
 // Las fórmulas son las del producto, no inventadas:
 //   - la retención del medio de pago usa netAfterRetention (finance.ts:77)
 //   - el resultado del período replica getFinanceSummary: neto − gastos
-// Si acá dijéramos algo distinto de lo que Alika muestra adentro, el lead
+// Si acá dijéramos algo distinto de lo que Esmalia muestra adentro, el lead
 // magnet estaría prometiendo una pantalla que no existe.
 
 import { netAfterRetention } from "@/lib/finance/finance";
@@ -1428,7 +1428,7 @@ Requisitos que el código de arriba materializa y que **no** se pueden cambiar (
 - Enlace a `/privacidad`.
 - Al menos uno de email o WhatsApp; el mensaje de error lo dice con claridad.
 - **Nunca decir "te lo mandamos"**: el estado de éxito muestra el recurso en pantalla y describe el
-  envío como algo adicional. Hoy Alika no puede enviar emails (falta `RESEND_API_KEY`).
+  envío como algo adicional. Hoy Esmalia no puede enviar emails (falta `RESEND_API_KEY`).
 - UTM leídos de `window.location.search` (`utm_source`, `utm_medium`, `utm_campaign`, `utm_term`,
   `utm_content`) + `document.referrer`, recortados a 100 caracteres.
 - `registrarEvento("lead_enviado", { source, pais })` sólo tras respuesta OK.
@@ -1442,7 +1442,7 @@ Expected: sin errores.
 
 - [ ] **Step 3: Verificar accesibilidad y honeypot en el navegador**
 
-Con `preview_start({name: "alika"})`, en la página que lo monte (Task 7):
+Con `preview_start({name: "esmalia"})`, en la página que lo monte (Task 7):
 
 - Navegar el formulario **sólo con teclado**: el foco nunca debe caer en `company`.
 - Enviar sin marcar el consentimiento → el envío se bloquea con mensaje visible.
@@ -1522,7 +1522,7 @@ Expected: todo verde.
 
 - [ ] **Step 3: Verificar en el navegador con datos reales**
 
-Con `preview_start({name: "alika"})` en `/calculadora-rentabilidad-dental`:
+Con `preview_start({name: "esmalia"})` en `/calculadora-rentabilidad-dental`:
 
 1. Cargar el caso CLP del test (12.000.000 de ingresos, etc.) → utilidad 1.400.000, margen ~11,7%.
 2. Cambiar el país a **México** → los mismos números deben mostrarse con formato MXN correcto
@@ -1927,7 +1927,7 @@ Requisitos:
   desempeño, inventario, laboratorios, convenios). Nunca esconder qué hay del otro lado.
 - Título que nombra la pantalla que se intentó abrir.
 - CTA a `/suscripcion`.
-- Salida sin fricción: "Seguir usando Alika" → `/agenda`.
+- Salida sin fricción: "Seguir usando Esmalia" → `/agenda`.
 - **No ofrecer ninguna vía que no funcione de punta a punta.** En particular, no agregar "agendar
   una llamada" salvo que exista el mecanismo que efectivamente desbloquea — DypOS tiene hoy ese
   botón como CTA principal y no desbloquea nada (`onboarding_call_at` se lee en 3 lugares y no se
@@ -2001,7 +2001,7 @@ EOF
 - [ ] **Step 1: Escribir el contenido y la página**
 
 15 fugas, cada una: número → título → 1-2 frases con un dato concreto → casilla → una línea
-_"Detectala: ¿pregunta?"_. Cada fuga es un problema del dueño que Alika resuelve, **escrito sin
+_"Detectala: ¿pregunta?"_. Cada fuga es un problema del dueño que Esmalia resuelve, **escrito sin
 nombrar la feature**.
 
 Candidatas (todas ancladas en módulos que existen): sillón vacío por ausencias · presupuestos
@@ -2093,7 +2093,7 @@ EOF
 ## Task 14: Entrega por email
 
 > 🔴 **Bloqueada por Walter.** Verificado con `vercel env ls production` el 2026-09-07: no existe
-> `RESEND_API_KEY` ni `EMAIL_FROM`. Y sin dominio propio (producción es `alika-omega.vercel.app`)
+> `RESEND_API_KEY` ni `EMAIL_FROM`. Y sin dominio propio (producción es el dominio `.vercel.app` original)
 > los correos van a spam de forma sistemática.
 >
 > **Cadena a destrabar:** comprar dominio → verificarlo en Resend → cargar `RESEND_API_KEY` y

@@ -3,6 +3,7 @@ import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { leerCookieConAnterior } from "@/lib/compat/nombres-anteriores";
 import { assertNotDemoClinic } from "@/lib/access/clinic-guards.server";
 import { appOrigin } from "@/lib/app-origin.server";
 import { throwIfRequiresLlamadaOSuscripcion } from "@/lib/billing.functions";
@@ -180,8 +181,7 @@ export const revokePortalAccess = createServerFn({ method: "POST" })
 function readPortalCookie(): string | null {
   const req = getRequest();
   const cookieHeader = req?.headers.get("cookie") ?? "";
-  const match = cookieHeader.match(new RegExp(`${PORTAL_COOKIE_NAME}=([^;]+)`));
-  return match ? decodeURIComponent(match[1]!) : null;
+  return leerCookieConAnterior(cookieHeader, PORTAL_COOKIE_NAME);
 }
 
 /** true si el token es de antes de la última revocación del paciente. */

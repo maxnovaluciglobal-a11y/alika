@@ -1,5 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 
+import { conNombreAnterior } from "@/lib/compat/nombres-anteriores";
+
 /**
  * Tokens del portal externo de laboratorio — mismo patrón que
  * `patients/portal-token.server.ts` (Opción C: URL firmada, sin login),
@@ -15,8 +17,8 @@ import { SignJWT, jwtVerify } from "jose";
 // deja escribir. 30 días + revocación por laboratorio
 // (`labs.portal_revoked_at`) + chequeo de `labs.is_active` en cada request.
 const DEFAULT_TTL_DAYS = 30;
-const ISSUER = "alika:lab-portal";
-const AUDIENCE = "alika:lab-portal:lab";
+const ISSUER = "esmalia:lab-portal";
+const AUDIENCE = "esmalia:lab-portal:lab";
 
 let devSecret: Uint8Array | null = null;
 
@@ -54,7 +56,10 @@ export async function signLabToken(
 }
 
 export async function verifyLabToken(token: string): Promise<VerifiedLabToken> {
-  const { payload } = await jwtVerify(token, getSecret(), { issuer: ISSUER, audience: AUDIENCE });
+  const { payload } = await jwtVerify(token, getSecret(), {
+    issuer: conNombreAnterior(ISSUER),
+    audience: conNombreAnterior(AUDIENCE),
+  });
   const labId = payload.lab_id as string | undefined;
   const clinicId = payload.clinic_id as string | undefined;
   if (!labId || !clinicId || typeof payload.iat !== "number") {
@@ -77,5 +82,5 @@ export function labTokenRevocado(
   return token.issuedAt.getTime() <= new Date(lab.portal_revoked_at).getTime();
 }
 
-export const LAB_PORTAL_COOKIE_NAME = "alika_lab_portal_session";
+export const LAB_PORTAL_COOKIE_NAME = "esmalia_lab_portal_session";
 export const LAB_PORTAL_COOKIE_MAX_AGE_SECONDS = DEFAULT_TTL_DAYS * 24 * 60 * 60;

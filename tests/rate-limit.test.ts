@@ -76,21 +76,21 @@ describe("checkRateLimit", () => {
 
 describe("clientIpFromRequest", () => {
   it("usa el primer valor de x-forwarded-for", () => {
-    const req = new Request("https://alika.app/api/health", {
+    const req = new Request("https://esmalia.com/api/health", {
       headers: { "x-forwarded-for": "1.2.3.4, 10.0.0.1" },
     });
     expect(clientIpFromRequest(req)).toBe("1.2.3.4");
   });
 
   it("cae a x-real-ip si no hay x-forwarded-for", () => {
-    const req = new Request("https://alika.app/api/health", {
+    const req = new Request("https://esmalia.com/api/health", {
       headers: { "x-real-ip": "5.6.7.8" },
     });
     expect(clientIpFromRequest(req)).toBe("5.6.7.8");
   });
 
   it("cae a 'unknown' sin ningún header de IP", () => {
-    const req = new Request("https://alika.app/api/health");
+    const req = new Request("https://esmalia.com/api/health");
     expect(clientIpFromRequest(req)).toBe("unknown");
   });
 });

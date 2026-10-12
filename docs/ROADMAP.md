@@ -1,6 +1,6 @@
 # Roadmap de producto
 
-Lo que Alika todavía no hace y está decidido construir. Lo que se promete en
+Lo que Esmalia todavía no hace y está decidido construir. Lo que se promete en
 la landing o en `/llms.txt` como "en el roadmap" tiene que estar acá, y al
 revés: si algo sale de esta lista, se saca también de esos textos.
 

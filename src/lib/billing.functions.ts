@@ -67,7 +67,7 @@ export const getMySubscription = createServerFn({ method: "GET" })
  * puede llamar la server function directo. Un solo lugar en vez de repetir
  * el mapeo de `subscriptions` en cada caller (whatsapp/efectividad/portal
  * empezaron repitiéndolo — consolidado acá, mismo criterio que
- * `requireAlikaStaffEmail` en `lib/admin/staff-gate.ts`).
+ * `requireEsmaliaStaffEmail` en `lib/admin/staff-gate.ts`).
  */
 export async function throwIfRequiresLlamadaOSuscripcion(
   supabase: SupabaseClient<Database>,

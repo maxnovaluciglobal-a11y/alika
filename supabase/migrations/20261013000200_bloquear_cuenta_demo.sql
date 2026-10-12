@@ -1,4 +1,4 @@
--- La cuenta de la demo pública (demo@alika.app) es compartida: su contraseña
+-- La cuenta de la demo pública (demo@esmalia.com) es compartida: su contraseña
 -- está publicada a propósito en /demo. La UI ya no deja cambiarla, pero
 -- cualquiera puede llamar a la API de Auth de Supabase con la clave pública
 -- y una sesión de la demo. Este trigger es la guarda real.
@@ -15,7 +15,7 @@ set search_path = ''
 as $$
 begin
   if current_user = 'supabase_auth_admin'
-     and lower(coalesce(old.email, '')) = 'demo@alika.app'
+     and lower(coalesce(old.email, '')) = 'demo@esmalia.com'
      and (
        new.encrypted_password is distinct from old.encrypted_password
        or new.email is distinct from old.email

@@ -146,7 +146,7 @@ function BarraInferior({
   );
 }
 
-const THEME_STORAGE_KEY = "alika:theme";
+const THEME_STORAGE_KEY = "esmalia:theme";
 
 function ThemeToggle() {
   // Arranca en "claro" para que el primer render coincida con el del server
@@ -292,7 +292,7 @@ export function AppShell({
     // pacientes quedarían en IndexedDB para el próximo que entre.
     await resetOfflineCache();
     // scope "local" a propósito: la clínica demo comparte una sola cuenta
-    // (demo@alika.app) entre todos los visitantes anónimos. El scope por
+    // (demo@esmalia.com) entre todos los visitantes anónimos. El scope por
     // defecto de Supabase ("global") revoca el refresh token en el server
     // para TODA sesión de ese user, así que cualquier visitante que cierre
     // sesión echaba de la demo a cualquier otro visitante concurrente.
