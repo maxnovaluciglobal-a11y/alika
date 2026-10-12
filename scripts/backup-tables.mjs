@@ -71,6 +71,7 @@ export const TABLES = [
   "waitlist_entries",
   "warehouses",
   "whatsapp_accounts",
+  "whatsapp_credentials",
   "whatsapp_leads",
 ];
 
