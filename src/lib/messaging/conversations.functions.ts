@@ -284,6 +284,7 @@ export const replyToConversation = createServerFn({ method: "POST" })
       if (cuenta) {
         try {
           const enviado = await sendMetaTextMessage({
+            clinicId: data.clinicId,
             phoneNumberId: cuenta.phone_number_id,
             to: destino,
             body: data.body,
