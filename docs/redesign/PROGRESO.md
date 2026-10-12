@@ -1,4 +1,4 @@
-# Rediseño Alika — progreso (checkpoint para retomar)
+# Rediseño Esmalia — progreso (checkpoint para retomar)
 
 Plan: [`PLAN_EJECUCION.md`](./PLAN_EJECUCION.md). Si la sesión se cortó: `git checkout` de la última rama listada abajo y seguir con el primer ítem sin tildar.
 
@@ -40,7 +40,7 @@ Plan: [`PLAN_EJECUCION.md`](./PLAN_EJECUCION.md). Si la sesión se cortó: `git 
 
 ## Registro
 
-- 06-oct: handoff copiado a `docs/design_handoff_alika_rediseno/`; plan y línea base escritos.
+- 06-oct: handoff copiado a `docs/design_handoff_rediseno/`; plan y línea base escritos.
 - 06-oct: Fase 1 cerrada. Nota: las pantallas autenticadas no se verificaron visualmente (el demo escribe un lead en prod); revisar con login real.
 - 06-oct: Fase 2 cerrada. Lighthouse móvil con brotli: 98/100/100/100 (prod actual: 55). `demo_click` = `cta_click {cta:"demo"}` (el CHECK de marketing_events no admite nombres nuevos sin migración). Testimonio y logos ocultos hasta tener permiso; `VITE_SALES_WHATSAPP` pendiente de Walter.
 - 06-oct: Fase 3 cerrada. Modelo en `src/lib/access/navegacion.ts` (+7 tests: ≤7 entradas por rol, permisos = beforeLoad). Ninguna ruta se movió → no hicieron falta redirects. ⌘K real: páginas + `buscarPacientes` (con permiso en servidor).

@@ -1,4 +1,4 @@
-# Alika en Vercel — variables de entorno
+# Esmalia en Vercel — variables de entorno
 
 Guía completa de las variables que necesita el proyecto al desplegarse en Vercel:
 qué son, ejemplos de valores, si son de **cliente** (build-time, viajan al navegador)
@@ -14,12 +14,12 @@ Todas se cargan en el mismo sitio:
 
 Para cada variable eliges:
 
-| Campo | Qué poner |
-|---|---|
-| **Key** | Nombre exacto (distingue mayúsculas) |
-| **Value** | El valor |
-| **Environments** | `Production`, `Preview`, `Development` (marca las que apliquen) |
-| **Sensitive** | Actívalo en todos los secretos de servidor (service role, API keys) |
+| Campo            | Qué poner                                                           |
+| ---------------- | ------------------------------------------------------------------- |
+| **Key**          | Nombre exacto (distingue mayúsculas)                                |
+| **Value**        | El valor                                                            |
+| **Environments** | `Production`, `Preview`, `Development` (marca las que apliquen)     |
+| **Sensitive**    | Actívalo en todos los secretos de servidor (service role, API keys) |
 
 Después de crear o cambiar una variable hay que **volver a desplegar**
 (Deployments → ⋯ → Redeploy). Vercel no reinyecta variables en un build existente.
@@ -43,11 +43,11 @@ En Vercel ambas se declaran en la misma pantalla; la diferencia la marca el pref
 
 ## 3. Variables de cliente (build-time, públicas)
 
-| Variable | Ejemplo | Para qué sirve |
-|---|---|---|
-| `VITE_SUPABASE_URL` | `https://abcdefghijkl.supabase.co` | Endpoint del backend que usa el navegador |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_2AbTDQeXrz...` | Clave pública del cliente; la seguridad real la impone RLS |
-| `VITE_SUPABASE_PROJECT_ID` | `abcdefghijkl` | Referencia del proyecto (utilidades y scripts) |
+| Variable                        | Ejemplo                            | Para qué sirve                                             |
+| ------------------------------- | ---------------------------------- | ---------------------------------------------------------- |
+| `VITE_SUPABASE_URL`             | `https://abcdefghijkl.supabase.co` | Endpoint del backend que usa el navegador                  |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_2AbTDQeXrz...`     | Clave pública del cliente; la seguridad real la impone RLS |
+| `VITE_SUPABASE_PROJECT_ID`      | `abcdefghijkl`                     | Referencia del proyecto (utilidades y scripts)             |
 
 Marca las tres en `Production`, `Preview` y `Development`. **No** las marques como
 Sensitive: Vercel oculta el valor incluso para el build y quedan vacías en el bundle.
@@ -56,49 +56,49 @@ Sensitive: Vercel oculta el valor incluso para el build y quedan vacías en el b
 
 ## 4. Variables de servidor (runtime, secretas)
 
-| Variable | Ejemplo | Para qué sirve | ¿Obligatoria? |
-|---|---|---|---|
-| `SUPABASE_URL` | `https://abcdefghijkl.supabase.co` | Mismo endpoint, usado desde el servidor | Sí |
-| `SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_2AbTDQeXrz...` | Lecturas públicas en SSR con RLS aplicada | Sí |
-| `SUPABASE_SERVICE_ROLE_KEY` | `sb_secret_9Kd...` (o JWT `eyJhbGci...`) | Operaciones privilegiadas que saltan RLS. **Solo servidor, siempre Sensitive** | Sí |
-| `SUPABASE_DB_URL` | `postgresql://postgres:CLAVE@db.abcdefghijkl.supabase.co:5432/postgres` | Migraciones y backups (CLI, no la app) | Opcional |
+| Variable                    | Ejemplo                                                                 | Para qué sirve                                                                 | ¿Obligatoria? |
+| --------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------- |
+| `SUPABASE_URL`              | `https://abcdefghijkl.supabase.co`                                      | Mismo endpoint, usado desde el servidor                                        | Sí            |
+| `SUPABASE_PUBLISHABLE_KEY`  | `sb_publishable_2AbTDQeXrz...`                                          | Lecturas públicas en SSR con RLS aplicada                                      | Sí            |
+| `SUPABASE_SERVICE_ROLE_KEY` | `sb_secret_9Kd...` (o JWT `eyJhbGci...`)                                | Operaciones privilegiadas que saltan RLS. **Solo servidor, siempre Sensitive** | Sí            |
+| `SUPABASE_DB_URL`           | `postgresql://postgres:CLAVE@db.abcdefghijkl.supabase.co:5432/postgres` | Migraciones y backups (CLI, no la app)                                         | Opcional      |
 
 ### Inteligencia artificial (notas clínicas, resúmenes, extracción estructurada)
 
-| Variable | Ejemplo | Notas |
-|---|---|---|
-| `LOVABLE_API_KEY` | `lov_...` | Solo funciona dentro del hosting de Lovable. **Fuera de Lovable no sirve**: en Vercel usa una clave propia |
-| `GEMINI_API_KEY` | `AIzaSyD...` | Clave propia de Google AI Studio; alternativa recomendada en Vercel |
-| `OPENAI_API_KEY` | `sk-proj-...` | Alternativa si prefieres OpenAI |
+| Variable          | Ejemplo       | Notas                                                                                                      |
+| ----------------- | ------------- | ---------------------------------------------------------------------------------------------------------- |
+| `LOVABLE_API_KEY` | `lov_...`     | Solo funciona dentro del hosting de Lovable. **Fuera de Lovable no sirve**: en Vercel usa una clave propia |
+| `GEMINI_API_KEY`  | `AIzaSyD...`  | Clave propia de Google AI Studio; alternativa recomendada en Vercel                                        |
+| `OPENAI_API_KEY`  | `sk-proj-...` | Alternativa si prefieres OpenAI                                                                            |
 
 Las funciones de IA requieren al menos una de estas claves; sin ninguna, los
 asistentes de notas devuelven error de configuración.
 
 ### Email (avisos de revisión clínica, pruebas de entregabilidad)
 
-| Variable | Ejemplo | Notas |
-|---|---|---|
-| `EMAIL_FROM` | `avisos@notificaciones.tuclinica.com` | Remitente; debe pertenecer al dominio verificado con SPF/DKIM/DMARC |
-| `RESEND_API_KEY` | `re_ABc123...` | Proveedor de envío fuera de Lovable |
-| `EMAIL_SANDBOX` | `true` | Bloquea envíos reales durante la validación. Déjalo en `true` en Preview |
-| `EMAIL_SANDBOX_REDIRECT_TO` | `qa@tuclinica.com` | Dirección a la que se redirige todo en sandbox |
+| Variable                    | Ejemplo                               | Notas                                                                    |
+| --------------------------- | ------------------------------------- | ------------------------------------------------------------------------ |
+| `EMAIL_FROM`                | `avisos@notificaciones.tuclinica.com` | Remitente; debe pertenecer al dominio verificado con SPF/DKIM/DMARC      |
+| `RESEND_API_KEY`            | `re_ABc123...`                        | Proveedor de envío fuera de Lovable                                      |
+| `EMAIL_SANDBOX`             | `true`                                | Bloquea envíos reales durante la validación. Déjalo en `true` en Preview |
+| `EMAIL_SANDBOX_REDIRECT_TO` | `qa@tuclinica.com`                    | Dirección a la que se redirige todo en sandbox                           |
 
 ### URL pública
 
-| Variable | Ejemplo | Notas |
-|---|---|---|
-| `PUBLIC_APP_URL` | `https://alika.tuclinica.com` | Enlaces absolutos en emails y retornos de OAuth. En Preview usa la URL de despliegue |
+| Variable         | Ejemplo                       | Notas                                                                                |
+| ---------------- | ----------------------------- | ------------------------------------------------------------------------------------ |
+| `PUBLIC_APP_URL` | `https://clinica.ejemplo.com` | Enlaces absolutos en emails y retornos de OAuth. En Preview usa la URL de despliegue |
 
 ---
 
 ## 5. Valores recomendados por entorno
 
-| Variable | Production | Preview | Development |
-|---|---|---|---|
-| `VITE_SUPABASE_*` / `SUPABASE_*` | proyecto productivo | proyecto de staging | proyecto local o de staging |
-| `EMAIL_SANDBOX` | `false` (solo tras validar el dominio) | `true` | `true` |
-| `PUBLIC_APP_URL` | dominio propio | URL del deployment | `http://localhost:3000` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Sensitive | Sensitive | Sensitive |
+| Variable                         | Production                             | Preview             | Development                 |
+| -------------------------------- | -------------------------------------- | ------------------- | --------------------------- |
+| `VITE_SUPABASE_*` / `SUPABASE_*` | proyecto productivo                    | proyecto de staging | proyecto local o de staging |
+| `EMAIL_SANDBOX`                  | `false` (solo tras validar el dominio) | `true`              | `true`                      |
+| `PUBLIC_APP_URL`                 | dominio propio                         | URL del deployment  | `http://localhost:3000`     |
+| `SUPABASE_SERVICE_ROLE_KEY`      | Sensitive                              | Sensitive           | Sensitive                   |
 
 ---
 
@@ -106,13 +106,13 @@ asistentes de notas devuelven error de configuración.
 
 El repositorio ya incluye `vercel.json`, así que **no hace falta tocar nada** en la UI:
 
-| Ajuste | Valor (ya definido en `vercel.json`) |
-|---|---|
-| Framework Preset | Other (`framework: null`) |
-| Install Command | `npm install` |
-| Build Command | `npm run build:vercel` (`NITRO_PRESET=vercel vite build`) |
-| Output Directory | `.vercel/output` (Build Output API que genera Nitro) |
-| Node.js Version | 22.x (fijada en `.nvmrc` y en `engines`) |
+| Ajuste           | Valor (ya definido en `vercel.json`)                      |
+| ---------------- | --------------------------------------------------------- |
+| Framework Preset | Other (`framework: null`)                                 |
+| Install Command  | `npm install`                                             |
+| Build Command    | `npm run build:vercel` (`NITRO_PRESET=vercel vite build`) |
+| Output Directory | `.vercel/output` (Build Output API que genera Nitro)      |
+| Node.js Version  | 22.x (fijada en `.nvmrc` y en `engines`)                  |
 
 Cómo funciona: `vite.config.ts` pasa el preset de Nitro desde `NITRO_PRESET`; con
 `vercel` el build produce la función de servidor en `.vercel/output/functions/__server.func`

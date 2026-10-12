@@ -10,7 +10,7 @@
 // Deliberadamente NO reusa `sendEmail` de `email.server.ts`: ese helper pasa
 // TODO por `resolveEmailRecipient` (gate de sandbox pensado para emails a
 // PACIENTES de una clínica). Un lead no tiene `clinic_id` — el destinatario
-// acá es el equipo de Esmalia (`ALIKA_STAFF_EMAILS`), no un paciente, así que
+// acá es el equipo de Esmalia (`ESMALIA_STAFF_EMAILS`), no un paciente, así que
 // aplicar ese gate sería la comprobación equivocada, no una de más.
 import { Resend } from "resend";
 
@@ -26,12 +26,14 @@ type DatosNotificacion = {
 
 /**
  * A quién le llega el aviso. `LEADS_NOTIFY_EMAILS` existe porque
- * `ALIKA_STAFF_EMAILS` también es la allowlist de `/admin`: Walter entra con
+ * `ESMALIA_STAFF_EMAILS` también es la allowlist de `/admin`: Walter entra con
  * su cuenta personal, pero los leads tienen que ir solo al correo de la
  * empresa. Sin la variable propia, se cae a la allowlist de siempre.
  */
 export function destinatariosStaff(env: NodeJS.ProcessEnv = process.env): string[] {
-  const lista = env.LEADS_NOTIFY_EMAILS?.trim() ? env.LEADS_NOTIFY_EMAILS : env.ALIKA_STAFF_EMAILS;
+  const lista = env.LEADS_NOTIFY_EMAILS?.trim()
+    ? env.LEADS_NOTIFY_EMAILS
+    : env.ESMALIA_STAFF_EMAILS;
   return (lista ?? "")
     .split(",")
     .map((e) => e.trim())
@@ -51,7 +53,7 @@ export async function notificarNuevoLead(datos: DatosNotificacion): Promise<void
     const staff = destinatariosStaff();
     if (!apiKey || !from || staff.length === 0) {
       console.warn(
-        "[leads] Sin notificar: falta RESEND_API_KEY, EMAIL_FROM o LEADS_NOTIFY_EMAILS/ALIKA_STAFF_EMAILS.",
+        "[leads] Sin notificar: falta RESEND_API_KEY, EMAIL_FROM o LEADS_NOTIFY_EMAILS/ESMALIA_STAFF_EMAILS.",
       );
       return;
     }

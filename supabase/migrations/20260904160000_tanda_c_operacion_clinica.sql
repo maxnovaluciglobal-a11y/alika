@@ -311,7 +311,7 @@ CREATE INDEX appointments_status_id_idx
   ON public.appointments (clinic_id, status_id) WHERE status_id IS NOT NULL;
 
 -- Siembra el vocabulario por defecto: los seis canónicos con su etiqueta
--- actual, más los cuatro que Dentalink distingue por canal y que Alika ya
+-- actual, más los cuatro que Dentalink distingue por canal y que Esmalia ya
 -- puede alimentar (el canal está en `messages` desde agosto).
 CREATE OR REPLACE FUNCTION public.seed_clinic_appointment_statuses()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
@@ -355,7 +355,7 @@ ON CONFLICT (clinic_id, label) DO NOTHING;
 
 -- ═══ 4 · FUSIÓN DE FICHAS DUPLICADAS ═════════════════════════════════════
 -- Poco glamoroso y decisivo en la venta: toda clínica que migra de otro
--- sistema llega con el mismo paciente cargado tres veces. Si Alika no fusiona,
+-- sistema llega con el mismo paciente cargado tres veces. Si Esmalia no fusiona,
 -- la limpieza es problema del cliente y el onboarding se muere ahí.
 
 ALTER TABLE public.patients

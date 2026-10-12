@@ -17,7 +17,7 @@ export const STORAGE_PAGE_SIZE = 1000;
  * La API de admin NO devuelve el hash de la contraseña (ni ningún secreto:
  * tokens de recuperación, factores MFA). Por eso un usuario restaurado tiene
  * que entrar con Google o pedir "olvidé mi contraseña" — ver
- * docs/BACKUPS_ALIKA.md, "Restaurar usuarios de auth".
+ * docs/BACKUPS.md, "Restaurar usuarios de auth".
  */
 export function projectAuthUser(user) {
   return {

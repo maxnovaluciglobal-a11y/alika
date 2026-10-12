@@ -7,7 +7,7 @@
 // Vercel KV) — decisión de infraestructura nueva que no se tomó acá. Esto
 // igual corta abuso de un mismo origen (scraping, loops de reintento, bots)
 // y protege el costo por invocación de Vercel/Supabase, que es el riesgo
-// que motivó el hallazgo (ver PLAN_REMEDIACION_TECNICA_CARLOS_ALIKA.md).
+// que motivó el hallazgo (ver PLAN_REMEDIACION_TECNICA_CARLOS.md).
 //
 // No se aplica a los webhooks (`api.stripe.webhook`, `api.whatsapp-webhook`):
 // ya están protegidos por verificación de firma, y un límite por IP ahí

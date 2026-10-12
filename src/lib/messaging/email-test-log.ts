@@ -188,7 +188,7 @@ export type EmailTestEntry = {
   errorCode: string | null;
 };
 
-const STORAGE_KEY = "alika:email-test-log";
+const STORAGE_KEY = "esmalia:email-test-log";
 const MAX_ENTRIES = 200;
 
 export function leerEmailTestLog(): EmailTestEntry[] {

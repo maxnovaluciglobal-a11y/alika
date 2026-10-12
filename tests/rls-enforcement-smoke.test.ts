@@ -82,7 +82,7 @@ describe("RLS enforcement smoke test (usuario real, sin bypass)", () => {
   let clinicaB: ClinicaSeed;
 
   async function sembrarClinica(nombre: string, pacienteNombre: string): Promise<ClinicaSeed> {
-    const email = `rls-smoke-${randomUUID()}@alika-test.invalid`;
+    const email = `rls-smoke-${randomUUID()}@esmalia-test.invalid`;
     const password = `Sm0ke-${randomUUID()}`;
 
     const { data: userRes, error: userErr } = await admin.auth.admin.createUser({

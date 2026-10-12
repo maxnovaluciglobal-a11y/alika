@@ -6,9 +6,9 @@ import type { Json } from "@/integrations/supabase/types";
 
 /**
  * Webhook de Stripe. Endpoint real creado en Stripe (test mode) el 01-sep-2026
- * apuntando a `https://alika-omega.vercel.app/api/stripe/webhook`. Con el
+ * apuntando a el dominio `.vercel.app` original. Con el
  * dominio propio (`esmalia.com`, 09-oct-2026) el endpoint se dejó a propósito
- * en el dominio viejo: `alika-omega.vercel.app` sigue vivo como alias del mismo
+ * en el dominio viejo: el dominio `.vercel.app` original sigue vivo como alias del mismo
  * proyecto y `vercel.json` no redirige `/api/*`, así que no hubo que rotar
  * `STRIPE_WEBHOOK_SECRET`. Moverlo es opcional (ver docs/DOMINIO_RUNBOOK.md). Eventos habilitados:
  *   - checkout.session.completed

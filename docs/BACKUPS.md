@@ -1,4 +1,4 @@
-# Backups de Esmalia (ex Alika)
+# Backups de Esmalia
 
 ## Qué respalda y qué no
 
@@ -7,7 +7,7 @@
 - **Usuarios de auth** (`auth.users`): desde el 10-oct-2026 van en el mismo JSON, bajo `auth_users`, exportados con `supabase.auth.admin.listUsers` (paginado): `id`, `email`, `phone`, `created_at`, `email_confirmed_at`, `phone_confirmed_at`, `last_sign_in_at`, `banned_until`, `user_metadata`, `app_metadata` e `identity_providers` (`email`, `google`…). **Sin hashes de contraseña**: la API de admin no los devuelve (y tampoco tokens ni factores MFA). Un usuario restaurado entra con Google o con "olvidé mi contraseña". Hasta esa fecha el backup NO tenía usuarios: restaurarlo dejaba a `profiles`/`clinic_members` apuntando a ids que no existían y nadie podía iniciar sesión.
 - **Archivos de Storage**: desde el 10-oct-2026, `scripts/backup-storage.mjs` recorre **todos** los buckets (`listBuckets`; hoy solo `clinical-documents`, privado: radiografías, imágenes, PDFs y firmas de presupuesto en `{clinic_id}/{patient_id}/…`), lista cada uno recursivamente y baja cada archivo. Se empaqueta en un `storage.tar.gz` aparte, con un `manifest.json` (bucket, ruta, tamaño, mimetype y la lista `failed`). Si falla un **listado**, el job queda en rojo; si falla la **descarga de un archivo**, se saltea, queda en `failed` y sale como `::warning::` en el run.
 - **Qué sigue sin respaldarse**:
-  - **La clave de Vault `alika_document_id_key`** (cifra `patients.document_id_enc` y firma `document_id_hash`). El backup trae esas columnas tal como están en la base, cifradas: sin la clave son ilegibles. Hoy no se pierde nada porque `document_id` en texto plano sigue siendo la fuente de verdad (Fase 1 de security-6), pero el día que se corte el texto plano, **la clave tiene que tener su propio respaldo** (guardarla junto a la clave de age en iCloud) o un restore pierde los RUT. En un proyecto nuevo sin la clave vieja: crear una nueva, dejar `document_id_enc`/`document_id_hash` en NULL y re-poblarlos con `set_patient_document_id` desde `document_id`.
+  - **La clave de Vault `esmalia_document_id_key`** (cifra `patients.document_id_enc` y firma `document_id_hash`). El backup trae esas columnas tal como están en la base, cifradas: sin la clave son ilegibles. Hoy no se pierde nada porque `document_id` en texto plano sigue siendo la fuente de verdad (Fase 1 de security-6), pero el día que se corte el texto plano, **la clave tiene que tener su propio respaldo** (guardarla junto a la clave de age en iCloud) o un restore pierde los RUT. En un proyecto nuevo sin la clave vieja: crear una nueva, dejar `document_id_enc`/`document_id_hash` en NULL y re-poblarlos con `set_patient_document_id` desde `document_id`.
   - Configuración del proyecto Supabase que no es SQL: proveedores de auth (Google OAuth, URLs de redirección), plantillas de email de auth (se cargan con `scripts/plantillas-auth-supabase.mjs`), SMTP, secretos de Edge Functions, variables de Vercel.
 - **Que la lista esté completa no depende de que alguien se acuerde**: `tests/backup-tables-sync.test.ts` compara esa lista contra los `CREATE TABLE` de `supabase/migrations/` y falla el CI nombrando la tabla que falte. Se agregó el 06-sep-2026, después de que el mismo olvido pasara dos veces (`procedure_supplies` e `inventory_counts` se crearon ese día y quedaron fuera del backup, con el workflow en verde). Si alguna tabla no se debe respaldar, va en `EXCLUDED_TABLES` con el motivo escrito.
 
@@ -17,19 +17,19 @@
 
 1. `scripts/backup-data.mjs` exporta todas las tablas + `auth_users` a un JSON gzipeado.
 2. `scripts/backup-storage.mjs` baja todos los archivos de Storage y se empaquetan en `storage.tar.gz`.
-3. Los dos se cifran con `age` usando la clave pública de Alika (hardcodeada en el workflow — es pública, no es secreto).
-4. Se suben a Backblaze B2: `alika-backups/db/alika_<stamp>.json.gz.age` y `alika-backups/storage/alika_storage_<stamp>.tar.gz.age`. ⚠️ Si la Application Key de B2 está restringida a un prefijo (`db/`), hay que ampliarla a todo el bucket o la subida de `storage/` falla. La regla de lifecycle de 90 días aplica a los dos prefijos.
+3. Los dos se cifran con `age` usando la clave pública de Esmalia (hardcodeada en el workflow — es pública, no es secreto).
+4. Se suben a Backblaze B2: `<B2_BUCKET>/db/esmalia_<stamp>.json.gz.age` y `<B2_BUCKET>/storage/esmalia_storage_<stamp>.tar.gz.age`. ⚠️ Si la Application Key de B2 está restringida a un prefijo (`db/`), hay que ampliarla a todo el bucket o la subida de `storage/` falla. La regla de lifecycle de 90 días aplica a los dos prefijos.
 
 También se puede disparar a mano desde GitHub → Actions → "Backup diario" → Run workflow.
 
 ## Setup (hecho)
 
-Bucket privado `alika-backups` en Backblaze B2 con una Application Key restringida a ese bucket, y los 4 secrets del workflow (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `B2_ACCOUNT_ID`, `B2_APPLICATION_KEY`) cargados en GitHub el 01-sep-2026. Desde entonces las corridas diarias están en verde (verificado el 06-oct-2026). Si hubiera que rehacerlo: `gh secret set <NOMBRE>` para cada uno, tomando los valores de Supabase del `.env` local.
+Bucket privado en Backblaze B2 (su nombre está en la variable de Actions `B2_BUCKET`) con una Application Key restringida a ese bucket, y los 4 secrets del workflow (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `B2_ACCOUNT_ID`, `B2_APPLICATION_KEY`) cargados en GitHub el 01-sep-2026. Desde entonces las corridas diarias están en verde (verificado el 06-oct-2026). Si hubiera que rehacerlo: `gh secret set <NOMBRE>` para cada uno, tomando los valores de Supabase del `.env` local.
 
 ## La clave privada de cifrado
 
 - **Pública** (segura en el repo): `age1xrwep8wxudjt6zy0ygnqf5xzr5tmpeakmn55yt8q37lg23ewqu2q2tzvqv`
-- **Privada**: generada el 2026-08-17, guardada en `~/Library/Mobile Documents/com~apple~CloudDocs/alika-backups/.alika-backup-age.key` (iCloud Drive de Walter, `chmod 600`). Sin ella, los `.json.gz.age` en B2 son ilegibles — no hay forma de recuperarla si se pierde.
+- **Privada**: generada el 2026-08-17, guardada en `~/Library/Mobile Documents/com~apple~CloudDocs/esmalia-backups/.esmalia-backup-age.key` (iCloud Drive de Walter, `chmod 600`). Sin ella, los `.json.gz.age` en B2 son ilegibles — no hay forma de recuperarla si se pierde.
 - Verificada por round-trip real el 2026-08-17: descifrado + descomprimido un backup real, confirmadas 33 tablas / 115 filas incluyendo el nombre de un paciente real.
 
 **Si hay que rotar la clave** (sospecha de compromiso): `age-keygen` una nueva, actualizar la pública en `backup.yml`, guardar la privada nueva junto a la vieja (los backups viejos solo se leen con la vieja).
@@ -40,11 +40,11 @@ Lo más rápido para practicar o verificar un backup: `scripts/restore-drill.sh`
 
 ```bash
 # 1) Bajar el backup cifrado de B2 (o usar el botón "download" en el dashboard de B2)
-rclone copy b2:alika-backups/db/alika_YYYYMMDD_HHMMSS.json.gz.age /tmp/
+rclone copy b2:<B2_BUCKET>/db/esmalia_YYYYMMDD_HHMMSS.json.gz.age /tmp/
 
 # 2) Descifrar + descomprimir
-age -d -i ~/Library/"Mobile Documents"/com~apple~CloudDocs/alika-backups/.alika-backup-age.key \
-  /tmp/alika_YYYYMMDD_HHMMSS.json.gz.age | gunzip > /tmp/alika-restore.json
+age -d -i ~/Library/"Mobile Documents"/com~apple~CloudDocs/esmalia-backups/.esmalia-backup-age.key \
+  /tmp/esmalia_YYYYMMDD_HHMMSS.json.gz.age | gunzip > /tmp/esmalia-restore.json
 
 # 3) El JSON tiene forma { exportedAt, tables: { patients: [...], ... }, auth_users: [...] }
 #    No es un dump SQL: se corre primero el esquema (supabase/migrations/ con
@@ -84,7 +84,7 @@ for (const u of backup.auth_users) {
 ### Restaurar archivos de Storage
 
 ```bash
-age -d -i <clave> alika_storage_<stamp>.tar.gz.age | tar -xzf - -C /tmp/storage-restore
+age -d -i <clave> esmalia_storage_<stamp>.tar.gz.age | tar -xzf - -C /tmp/storage-restore
 # /tmp/storage-restore/manifest.json  → buckets, rutas, tamaños, `failed`
 # /tmp/storage-restore/<bucket>/<ruta> → el archivo
 ```
@@ -95,7 +95,7 @@ El bucket `clinical-documents` lo crea la migración `20260826200000` (con sus l
 
 ### 2026-10-10 — primer ensayo, local
 
-- **Backup usado**: `alika_20260818_010623.json.gz.age` (copia en iCloud; exportado 2026-08-18 01:06 UTC, formato viejo: sin `auth_users` ni Storage). 33 tablas, 115 filas (21 tablas con datos, 12 vacías).
+- **Backup usado**: `esmalia_20260818_010623.json.gz.age` (copia en iCloud; exportado 2026-08-18 01:06 UTC, formato viejo: sin `auth_users` ni Storage). 33 tablas, 115 filas (21 tablas con datos, 12 vacías).
 - **Contra qué**: Postgres 16.x local descartable (Homebrew), puerto 55432, + **las 106 migraciones** de `supabase/migrations/` de `main` (esquema de octubre, datos de agosto: las columnas posteriores al backup toman su DEFAULT).
 - **Cómo**: `scripts/restore-drill.sh` (queda en el repo para repetirlo).
 
@@ -118,7 +118,7 @@ El bucket `clinical-documents` lo crea la migración `20260826200000` (con sus l
 4. `storage.buckets`, `storage.objects` (con RLS) y `storage.foldername()` — migración `20260826200000`.
 5. `vault.secrets`, `vault.decrypted_secrets`, `vault.create_secret()` — migraciones de security-6 (`20260822150000` y siguientes). Stub **vacío**: la clave real no está en ningún backup (ver arriba).
 6. Publicación `supabase_realtime` — `20260726161056` hace `ALTER PUBLICATION supabase_realtime ADD TABLE`.
-7. ⚠️ **Usuario demo `139dd209-8495-415c-b6cd-6bbc63367bad` (`demo@alika.app`) en `auth.users` ANTES de las migraciones**: `20261011000000` llama a `reset_demo_clinic()`, que inserta `inventory_counts.counted_by` con FK a ese usuario. En un Supabase nuevo esto **también falla**: crear ese usuario con `admin.createUser({ id: '139dd209-…', email: 'demo@alika.app' })` antes de aplicar migraciones.
+7. ⚠️ **Usuario demo `139dd209-8495-415c-b6cd-6bbc63367bad` (`demo@esmalia.com`) en `auth.users` ANTES de las migraciones**: `20261011000000` llama a `reset_demo_clinic()`, que inserta `inventory_counts.counted_by` con FK a ese usuario. En un Supabase nuevo esto **también falla**: crear ese usuario con `admin.createUser({ id: '139dd209-…', email: 'demo@esmalia.com' })` antes de aplicar migraciones.
 
 **Fallas y hallazgos**:
 
@@ -146,9 +146,9 @@ El bucket `clinical-documents` lo crea la migración `20260826200000` (con sus l
 
 ```bash
 scripts/restore-drill.sh \
-  ~/Downloads/alika_YYYYMMDD_HHMMSS.json.gz.age \
-  ~/Library/"Mobile Documents"/com~apple~CloudDocs/alika-backups/.alika-backup-age.key \
-  ~/Downloads/alika_storage_YYYYMMDD_HHMMSS.tar.gz.age
+  ~/Downloads/esmalia_YYYYMMDD_HHMMSS.json.gz.age \
+  ~/Library/"Mobile Documents"/com~apple~CloudDocs/esmalia-backups/.esmalia-backup-age.key \
+  ~/Downloads/esmalia_storage_YYYYMMDD_HHMMSS.tar.gz.age
 ```
 
 Requisitos: `age`, `node`, Postgres 16 en `/opt/homebrew/opt/postgresql@16/bin` (o `PGBIN=`). Solo imprime nombres de tabla y conteos; borra su directorio de trabajo al terminar (`KEEP=1` para inspeccionarlo, ojo que tiene datos reales).
@@ -156,4 +156,4 @@ Requisitos: `age`, `node`, Postgres 16 en `/opt/homebrew/opt/postgresql@16/bin` 
 ## Bitácora
 
 - **2026-08-17**: primer backup manual hecho a mano (no por el workflow, que todavía no tiene los secrets) — 33 tablas, 115 filas, verificado por round-trip. Cierra el riesgo de "cero backups con pacientes reales en prod" mientras se completa el setup de B2. Guardado también en iCloud junto a la clave privada (redundancia geográfica real desde el día uno, no solo local).
-- **2026-10-10**: el backup suma `auth_users` y los archivos de Storage (`storage.tar.gz.age` en `b2:alika-backups/storage/`). Primer ensayo de restauración, local, con el backup del 18-ago: 3,0 s, 33/33 tablas, 0 huérfanos (ver "Ensayo de restauración").
+- **2026-10-10**: el backup suma `auth_users` y los archivos de Storage (`storage.tar.gz.age` en `b2:<B2_BUCKET>/storage/`). Primer ensayo de restauración, local, con el backup del 18-ago: 3,0 s, 33/33 tablas, 0 huérfanos (ver "Ensayo de restauración").

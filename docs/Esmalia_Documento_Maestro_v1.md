@@ -1,31 +1,32 @@
-# Alika — Documento maestro de producto
+# Esmalia — Documento maestro de producto
+
 ### Software de gestión odontológica cloud-first para Latinoamérica
 
 Versión 1.0 · Documento de arquitectura, producto y estrategia
-Marca: **Alika** · Dirección visual: *Precision clinical mint* (teal `#0d9488`, acento IA violeta `#8b5cf6`, tipografía Outfit + Inter)
+Marca: **Esmalia** · Dirección visual: _Precision clinical mint_ (teal `#0d9488`, acento IA violeta `#8b5cf6`, tipografía Outfit + Inter)
 
 ---
 
 ## 1. Visión y posicionamiento
 
-Alika es el **sistema operativo de la clínica dental**: una sola plataforma donde ocurre la agenda, la historia clínica, el dinero y la relación con el paciente. No es un ERP con módulos pegados; es un producto con una superficie coherente, rápida y silenciosa.
+Esmalia es el **sistema operativo de la clínica dental**: una sola plataforma donde ocurre la agenda, la historia clínica, el dinero y la relación con el paciente. No es un ERP con módulos pegados; es un producto con una superficie coherente, rápida y silenciosa.
 
-**Tesis de producto:** el 60–70% del tiempo administrativo de una clínica dental latinoamericana se consume en tres actividades: confirmar/reagendar citas, escribir y buscar registros clínicos, y perseguir cobros. Alika ataca esas tres con automatización e IA antes que con más formularios.
+**Tesis de producto:** el 60–70% del tiempo administrativo de una clínica dental latinoamericana se consume en tres actividades: confirmar/reagendar citas, escribir y buscar registros clínicos, y perseguir cobros. Esmalia ataca esas tres con automatización e IA antes que con más formularios.
 
-**Promesa medible (North Star):** *horas administrativas ahorradas por sillón por semana*. Métricas satélite: tasa de ausencias, ocupación de box, ticket promedio, % de presupuestos aceptados, tiempo medio de registro clínico por consulta.
+**Promesa medible (North Star):** _horas administrativas ahorradas por sillón por semana_. Métricas satélite: tasa de ausencias, ocupación de box, ticket promedio, % de presupuestos aceptados, tiempo medio de registro clínico por consulta.
 
 ### Lectura del mercado
 
-| Plataforma | Fortaleza | Brecha que Alika explota |
-|---|---|---|
-| Dentalink / Dentidesk | Fuerte en LatAm, buen soporte local | UX con carga cognitiva alta, IA marginal, movilidad limitada |
-| Open Dental | Extensible, económico | On-premise, curva de aprendizaje alta, no cloud-native |
-| Dentrix | Profundidad clínica y de facturación | Legado Windows, caro, casi solo EE. UU. |
-| Curve Dental | Cloud real, UI decente | Poca automatización proactiva, débil fuera de EE. UU. |
-| CareStack | All-in-one con BI | Complejo de implementar en clínicas chicas |
-| NexHealth | Excelente capa de paciente y agendamiento | Es capa, no sistema de registro |
+| Plataforma            | Fortaleza                                 | Brecha que Esmalia explota                                   |
+| --------------------- | ----------------------------------------- | ------------------------------------------------------------ |
+| Dentalink / Dentidesk | Fuerte en LatAm, buen soporte local       | UX con carga cognitiva alta, IA marginal, movilidad limitada |
+| Open Dental           | Extensible, económico                     | On-premise, curva de aprendizaje alta, no cloud-native       |
+| Dentrix               | Profundidad clínica y de facturación      | Legado Windows, caro, casi solo EE. UU.                      |
+| Curve Dental          | Cloud real, UI decente                    | Poca automatización proactiva, débil fuera de EE. UU.        |
+| CareStack             | All-in-one con BI                         | Complejo de implementar en clínicas chicas                   |
+| NexHealth             | Excelente capa de paciente y agendamiento | Es capa, no sistema de registro                              |
 
-**Diferenciadores de Alika:** (1) IA operativa que explica y actúa, no solo transcribe; (2) predicción de ausencias con reagendamiento automático desde lista de espera; (3) historia clínica con autoguardado, versionado y firma digital nativa; (4) multi-tenant real con jerarquía red → sucursal → box; (5) API-first desde el día uno; (6) precio y facturación pensados para LatAm (moneda local, boleta/factura electrónica por país, WhatsApp como canal primario).
+**Diferenciadores de Esmalia:** (1) IA operativa que explica y actúa, no solo transcribe; (2) predicción de ausencias con reagendamiento automático desde lista de espera; (3) historia clínica con autoguardado, versionado y firma digital nativa; (4) multi-tenant real con jerarquía red → sucursal → box; (5) API-first desde el día uno; (6) precio y facturación pensados para LatAm (moneda local, boleta/factura electrónica por país, WhatsApp como canal primario).
 
 ---
 
@@ -121,16 +122,16 @@ clinics 1─┬─< branches 1──< operatories(box)
 
 ## 5. Roles y permisos
 
-| Rol | Alcance | Permisos clave |
-|---|---|---|
-| Owner / Director de red | Todas las sucursales | Todo, incluida facturación del SaaS y creación de sucursales |
-| Administrador de sucursal | Una sucursal | Usuarios, agenda, finanzas y reportes de su sucursal |
-| Odontólogo | Sus pacientes y agenda | Historia clínica, odontograma, presupuestos, firma |
-| Especialista externo | Interconsultas asignadas | Solo pacientes derivados, ventana de tiempo limitada |
-| Asistente dental | Box asignado | Check-in, insumos, adjuntar imágenes; sin acceso financiero |
-| Recepción | Sucursal | Agenda, pacientes (datos no clínicos), cobros, caja |
-| Contabilidad | Red | Finanzas y exportaciones; sin acceso clínico |
-| Paciente | Sus propios datos | Portal: reservas, pagos, documentos, resultados |
+| Rol                       | Alcance                  | Permisos clave                                               |
+| ------------------------- | ------------------------ | ------------------------------------------------------------ |
+| Owner / Director de red   | Todas las sucursales     | Todo, incluida facturación del SaaS y creación de sucursales |
+| Administrador de sucursal | Una sucursal             | Usuarios, agenda, finanzas y reportes de su sucursal         |
+| Odontólogo                | Sus pacientes y agenda   | Historia clínica, odontograma, presupuestos, firma           |
+| Especialista externo      | Interconsultas asignadas | Solo pacientes derivados, ventana de tiempo limitada         |
+| Asistente dental          | Box asignado             | Check-in, insumos, adjuntar imágenes; sin acceso financiero  |
+| Recepción                 | Sucursal                 | Agenda, pacientes (datos no clínicos), cobros, caja          |
+| Contabilidad              | Red                      | Finanzas y exportaciones; sin acceso clínico                 |
+| Paciente                  | Sus propios datos        | Portal: reservas, pagos, documentos, resultados              |
 
 Permisos por combinación `rol × recurso × acción`, evaluados en base de datos. El acceso a datos clínicos se registra siempre en `audit_log` (quién vio qué ficha y cuándo).
 
@@ -154,7 +155,7 @@ Permisos por combinación `rol × recurso × acción`, evaluados en base de dato
 DASHBOARD
 ┌──────────┬─────────────────────────────────────────────────┐
 │ Sidebar  │ Header: título · tema · usuario                 │
-│ Alika   ├─────────────────────────────────────────────────┤
+│ Esmalia   ├─────────────────────────────────────────────────┤
 │ Dashboard│ [KPI][KPI][KPI][Urgencias — bloque teal]        │
 │ Agenda   ├──────────────────────────────┬──────────────────┤
 │ Pacientes│ Agenda del día               │ Timeline clínico │
@@ -179,38 +180,42 @@ AGENDA                              FICHA DE PACIENTE
 
 ## 8. Roadmap
 
-### MVP (meses 0–4) — *implementado en este prototipo la capa de Agenda + Pacientes*
+### MVP (meses 0–4) — _implementado en este prototipo la capa de Agenda + Pacientes_
+
 Agenda multi-profesional y multi-box · Ficha de paciente con timeline · Recordatorios automáticos (WhatsApp + email) · Lista de espera · Usuarios y roles · Multi-tenant con RLS · Dashboard con KPIs base.
 
 ### V1 (meses 4–9) — clínica completa
+
 Historia clínica versionada con firma digital · Odontograma y periodontograma interactivos · Presupuestos con aceptación y pago online · Planes de tratamiento · Caja y finanzas básicas · Portal del paciente · IA: resumen de consulta y redacción de evolución.
 
 ### V2 (meses 9–16) — inteligencia y escala
+
 Predicción de ausencias · Optimización automática de agenda · Inventario y compras con consumo automático · Marketing y automatizaciones · NPS · BI configurable y exportación · Multi-sucursal avanzado · App móvil por rol · Chat interno tipo asistente sobre los datos de la clínica.
 
 ### V3 (meses 16–30) — plataforma
+
 Marketplace de integraciones y API pública documentada · Análisis asistido de radiografías (con validación clínica y marco regulatorio) · Forecast financiero y de demanda · Facturación electrónica por país (CL, MX, CO, PE, AR) · Financiamiento de tratamientos · Modo cadena con benchmarking entre sedes.
 
 ---
 
 ## 9. Backlog priorizado (extracto, RICE)
 
-| # | Épica | Historia | Prioridad |
-|---|---|---|---|
-| 1 | Agenda | Arrastrar una cita entre profesional y horario con validación de solapamiento | P0 |
-| 2 | Agenda | Confirmación automática 48 h / 3 h con respuesta por WhatsApp | P0 |
-| 3 | Pacientes | Búsqueda global ⌘K por nombre, documento o teléfono | P0 |
-| 4 | Pacientes | Ficha con timeline unificada (citas, imágenes, pagos, notas) | P0 |
-| 5 | Seguridad | RLS por `clinic_id` y `audit_log` de accesos clínicos | P0 |
-| 6 | Historia | Autoguardado + versionado con autor | P1 |
-| 7 | Historia | Odontograma por pieza y superficie | P1 |
-| 8 | Presupuestos | Envío, firma digital y abono con link de pago | P1 |
-| 9 | IA | Resumen de consulta editable antes de firmar | P1 |
-| 10 | Agenda | Score de ausencia y oferta automática a lista de espera | P2 |
-| 11 | Finanzas | Rentabilidad por profesional, tratamiento y sucursal | P2 |
-| 12 | Inventario | Descuento automático de insumos por procedimiento | P2 |
-| 13 | Marketing | Segmento "paciente perdido" con campaña automática | P2 |
-| 14 | BI | Dashboards configurables + export a Power BI / Looker | P3 |
+| #   | Épica        | Historia                                                                      | Prioridad |
+| --- | ------------ | ----------------------------------------------------------------------------- | --------- |
+| 1   | Agenda       | Arrastrar una cita entre profesional y horario con validación de solapamiento | P0        |
+| 2   | Agenda       | Confirmación automática 48 h / 3 h con respuesta por WhatsApp                 | P0        |
+| 3   | Pacientes    | Búsqueda global ⌘K por nombre, documento o teléfono                           | P0        |
+| 4   | Pacientes    | Ficha con timeline unificada (citas, imágenes, pagos, notas)                  | P0        |
+| 5   | Seguridad    | RLS por `clinic_id` y `audit_log` de accesos clínicos                         | P0        |
+| 6   | Historia     | Autoguardado + versionado con autor                                           | P1        |
+| 7   | Historia     | Odontograma por pieza y superficie                                            | P1        |
+| 8   | Presupuestos | Envío, firma digital y abono con link de pago                                 | P1        |
+| 9   | IA           | Resumen de consulta editable antes de firmar                                  | P1        |
+| 10  | Agenda       | Score de ausencia y oferta automática a lista de espera                       | P2        |
+| 11  | Finanzas     | Rentabilidad por profesional, tratamiento y sucursal                          | P2        |
+| 12  | Inventario   | Descuento automático de insumos por procedimiento                             | P2        |
+| 13  | Marketing    | Segmento "paciente perdido" con campaña automática                            | P2        |
+| 14  | BI           | Dashboards configurables + export a Power BI / Looker                         | P3        |
 
 ---
 
@@ -260,6 +265,7 @@ Convenciones: errores RFC 7807; `429` con `Retry-After`; webhooks firmados con H
 **Modelo:** base compartida con RLS por `clinic_id` (óptimo en costo y velocidad de despliegue) y jerarquía `organization → clinic → branch → operatory`. Cadenas grandes o clientes con exigencia regulatoria pueden migrar a esquema o base dedicada sin cambiar el código: el `tenant resolver` es una capa.
 
 **Escala a miles de clínicas:**
+
 1. Índices compuestos con `clinic_id` como primera columna en cada tabla caliente.
 2. Particionado por rango temporal en `appointments`, `audit_log` y `stock_movements`.
 3. Réplicas de lectura para BI y reportes; nunca reportes sobre la base transaccional.
@@ -285,4 +291,4 @@ Convenciones: errores RFC 7807; `429` con `Retry-After`; webhooks firmados con H
 
 ---
 
-*Documento maestro Alika v1.0 — acompaña al prototipo navegable de Dashboard, Agenda, Pacientes y Ficha clínica.*
+_Documento maestro Esmalia v1.0 — acompaña al prototipo navegable de Dashboard, Agenda, Pacientes y Ficha clínica._

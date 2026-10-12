@@ -1,7 +1,7 @@
 // src/lib/clinic-operations/appointments-import.functions.ts
 //
 // Importador CSV de citas FUTURAS (recomendación #4 del benchmark de
-// onboarding, 25-sep-2026 — ver memoria alika_onboarding_benchmark_20260925).
+// onboarding, 25-sep-2026 — ver memoria esmalia_onboarding_benchmark_20260925).
 // `importPatients` (patients.functions.ts) dejó las citas afuera a
 // propósito: matchear profesional/sucursal desde texto libre de un CSV
 // externo es mucho más riesgoso que insertar un paciente suelto, porque una

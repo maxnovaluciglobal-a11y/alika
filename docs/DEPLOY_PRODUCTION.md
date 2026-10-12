@@ -1,4 +1,4 @@
-# Deploy a producción — Esmalia (ex Alika)
+# Deploy a producción — Esmalia
 
 > **Histórico (ago-2026). Estado vigente: `docs/DOMINIO_RUNBOOK.md` y `00 - Gestion/ESTADO.md`** (tablero del proyecto, fuera del repo). Desde que se escribió: la marca es **Esmalia**, producción vive en `https://esmalia.com` (09-oct-2026), Vercel sigue en **Hobby** (Pro descartado), Supabase está en plan **Pro**, y Sentry, `/api/health`, el webhook de Stripe y los backups diarios a B2 ya están en producción. Los ítems de abajo se dejaron como registro; las correcciones obvias van marcadas "(actualizado oct-2026)".
 
@@ -10,7 +10,7 @@ Checklist paso a paso para el primer lanzamiento B2B con clínicas piloto. Cada 
 
 Estas cosas requieren decisión y firma de Walter antes de tocar código productivo.
 
-- [ ] **Confirmar el nombre "Alika"** o retomar la búsqueda. Ver `~/.claude/projects/-Users-walterlamadriz-Documents/memory/oralia_audit_fase6.md` para la investigación. Recomendación: seguir con Alika si el trademark check da libre.
+- [ ] **Confirmar el nombre "Esmalia"** o retomar la búsqueda. Ver `~/.claude/projects/-Users-walterlamadriz-Documents/memory/oralia_audit_fase6.md` para la investigación. Recomendación: seguir con Esmalia si el trademark check da libre.
 - [ ] **Trademark check formal** en INAPI (CL) + IMPI (MX) + INPI (AR) + USPTO clase 9 y 42. ~US$150 con abogado, 2-3 días. Sin este OK, no comprar dominio ni imprimir marketing.
 - [x] **Dominio** (actualizado oct-2026): se compró `esmalia.com` el 09-oct-2026.
 - [x] **Modelo de precios** (actualizado oct-2026: publicado en `/precios`, Solo US$29 / Clínica US$69 / Red a medida, trial 14 días) definido: ¿por seat/profesional/mes? ¿flat por clínica? ¿free trial 14 días? Requerido antes de configurar Stripe.
@@ -42,7 +42,7 @@ Estas cosas requieren decisión y firma de Walter antes de tocar código product
 ### 2.2 Vercel
 
 - [x] (actualizado oct-2026) **Vercel Pro descartado**: el proyecto sigue en Hobby, que alcanza para el dominio propio. Los crons horarios corren en GitHub Actions.
-- [x] Repo `maxnovaluciglobal-a11y/alika` conectado al proyecto Vercel `alika` (team `maxnovaluci-global`).
+- [x] Repo `maxnovaluciglobal-a11y/esmalia` conectado al proyecto Vercel `esmalia` (team `maxnovaluci-global`).
 - [x] (actualizado oct-2026) `esmalia.com` → Vercel (A `76.76.21.21`, CNAME `www`).
 - [ ] Environment Variables en Vercel (copiar de `.env.example`):
   - `SUPABASE_URL`
@@ -57,7 +57,7 @@ Estas cosas requieren decisión y firma de Walter antes de tocar código product
 
 - [x] **Resuelto** — se migró de Lovable Cloud al Supabase propio (`hvfkygoguxvpmwslrccb`, sa-east-1) el 2026-08-14. Ver `docs/SUPABASE_MIGRATION.md`. Prod corre contra el propio, verificado.
 - [x] (actualizado oct-2026) Supabase en plan **Pro** (org MaxnovaLuci).
-- [x] Backup diario propio a B2 (`docs/BACKUPS_ALIKA.md`), activo desde el 01-sep-2026.
+- [x] Backup diario propio a B2 (`docs/BACKUPS.md`), activo desde el 01-sep-2026.
 
 ### 2.4 Monitoreo
 
@@ -70,10 +70,10 @@ Estas cosas requieren decisión y firma de Walter antes de tocar código product
 
 - [ ] Cuenta Stripe con la LLC USA (Maxnova & Luci LLC) — ver memoria `user_business_context`.
 - [ ] Crear productos en Stripe:
-  - `Alika Clínica` con precio por seat (o flat) según decisión de pricing.
+  - `Esmalia Clínica` con precio por seat (o flat) según decisión de pricing.
   - Trial 14 días.
 - [ ] Copiar `STRIPE_SECRET_KEY` y `STRIPE_PUBLISHABLE_KEY` a Vercel env vars.
-- [x] (actualizado oct-2026) Webhook `/api/stripe/webhook` en producción; el endpoint LIVE sigue en `alika-omega.vercel.app` a propósito (`/api/*` no se redirige).
+- [x] (actualizado oct-2026) Webhook `/api/stripe/webhook` en producción; el endpoint LIVE sigue en el dominio `.vercel.app` original a propósito (`/api/*` no se redirige).
 - [ ] Copiar `STRIPE_WEBHOOK_SECRET`.
 
 ---

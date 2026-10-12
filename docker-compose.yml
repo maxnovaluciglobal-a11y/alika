@@ -1,12 +1,12 @@
 services:
-  alika:
+  esmalia:
     build:
       context: .
       args:
         VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
         VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY}
         VITE_SUPABASE_PROJECT_ID: ${VITE_SUPABASE_PROJECT_ID}
-    image: alika:latest
+    image: esmalia:latest
     restart: unless-stopped
     env_file:
       - .env

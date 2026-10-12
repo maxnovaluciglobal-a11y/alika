@@ -19,6 +19,7 @@ import loraRegular from "@fontsource/lora/files/lora-latin-400-normal.woff2?url"
 import cormorantRegular from "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff2?url";
 import { reportBoundaryError } from "../lib/error-reporting";
 import { SITE_URL, siteJsonLdScripts } from "@/lib/seo";
+import { migrarAlmacenamientoLocal } from "@/lib/compat/nombres-anteriores";
 import { captureException, initSentry } from "@/lib/sentry";
 import { attachOfflineCache, resetOfflineCache } from "@/lib/offline/offline-cache";
 import { registerServiceWorker } from "@/lib/offline/register-sw";
@@ -106,15 +107,19 @@ function ErrorComponent({ error: errorDesconocido, reset }: ErrorComponentProps)
 // hero (dentist-og.jpg) desde el rebrand a Esmalia (08-oct-2026).
 const SOCIAL_IMAGE_URL = `${SITE_URL}/landing/og-esmalia.png`;
 
+// Preferencias guardadas con el nombre anterior de la marca → claves nuevas,
+// antes del primer render (ver lib/compat/nombres-anteriores.ts).
+if (typeof window !== "undefined") migrarAlmacenamientoLocal();
+
 /**
  * Aplica el modo oscuro antes del primer pintado. El tema lo pone AppShell
  * en un useEffect, así que quien usa modo oscuro veía la pantalla clara un
  * instante en cada carga (auditoría 07-oct-2026). Va en el <head> por
  * `head().scripts`, que lleva el nonce de la CSP. Mismas reglas que
- * AppShell (clave `alika:theme`, si no hay elección sigue al sistema) y
+ * AppShell (clave `esmalia:theme`, si no hay elección sigue al sistema) y
  * solo en la app: las páginas públicas siguen siempre en claro.
  */
-const SCRIPT_TEMA_SIN_DESTELLO = `(function(){try{var p=location.pathname.split("/")[1]||"";var pub=["","auth","demo","docs","dpa","faq","nosotros","portal","portal-laboratorio","precios","privacidad","recursos","software-dental-latam","terminos","calculadora-rentabilidad-dental"];if(pub.indexOf(p)>=0)return;var t=localStorage.getItem("alika:theme");if(t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}})();`;
+const SCRIPT_TEMA_SIN_DESTELLO = `(function(){try{var p=location.pathname.split("/")[1]||"";var pub=["","auth","demo","docs","dpa","faq","nosotros","portal","portal-laboratorio","precios","privacidad","recursos","software-dental-latam","terminos","calculadora-rentabilidad-dental"];if(pub.indexOf(p)>=0)return;var t=localStorage.getItem("esmalia:theme");if(t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}})();`;
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -179,7 +184,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     // Organization + WebSite + SoftwareApplication: no dependen de la ruta,
     // por eso van acá y no repetidos por página (mayor impacto GEO, ver
-    // memoria alika_seo_geo_pendiente).
+    // memoria esmalia_seo_geo_pendiente).
     scripts: [{ children: SCRIPT_TEMA_SIN_DESTELLO }, ...siteJsonLdScripts()],
   }),
 

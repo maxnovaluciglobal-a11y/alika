@@ -15,7 +15,7 @@
 //
 //   BASE_URL=http://localhost:8098 node scripts/build-pdf-recursos.mjs
 //
-// Sin BASE_URL usa el puerto 8080 (el de `preview_start({name: "alika"})`,
+// Sin BASE_URL usa el puerto 8080 (el de `preview_start({name: "esmalia"})`,
 // ver CLAUDE.md del repo).
 //
 // Usa el Chromium de Playwright — instalado GLOBALMENTE en esta máquina

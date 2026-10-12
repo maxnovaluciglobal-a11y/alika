@@ -1,12 +1,12 @@
-# Prompt: Auditoría 360° de Alika (pre-implementación)
+# Prompt: Auditoría 360° de Esmalia (pre-implementación)
 
 > Uso: este documento es el brief para correr una auditoría multi-agente en rondas (investigación → contraauditoría → defensa → síntesis). Está pensado para ejecutarse con el tool `Workflow` de Claude Code (subagentes en paralelo, fases con barrera donde corresponde). No implementar nada hasta tener el reporte final aprobado por Walter.
 
 ## Contexto para el equipo
 
-**Qué es Alika**: SaaS de gestión odontológica para clínicas LatAm (target CL/MX/CO/PE). Stack: TanStack Start (SSR) + React 19 + Vite 8 + TS + Tailwind 4 + shadcn/ui + Supabase propio (`hvfkygoguxvpmwslrccb`, sa-east-1) + AI Gateway (Lovable → Gemini → OpenAI fallback). Repo: `github.com/walterlamadriz-ai/alika` (público). Prod: `alika-omega.vercel.app`. Piloto real: clínica "Patricia" (Chile).
+**Qué es Esmalia**: SaaS de gestión odontológica para clínicas LatAm (target CL/MX/CO/PE). Stack: TanStack Start (SSR) + React 19 + Vite 8 + TS + Tailwind 4 + shadcn/ui + Supabase propio (`hvfkygoguxvpmwslrccb`, sa-east-1) + AI Gateway (Lovable → Gemini → OpenAI fallback). Repo: `github.com/walterlamadriz-ai/esmalia` (público). Prod: el dominio `.vercel.app` original. Piloto real: clínica "Patricia" (Chile).
 
-**Estado al 2026-08-21**: Fases 0 a 6 (pacientes, agenda, odontograma, presupuestos/planes, pagos, WhatsApp) completas. Desde la última auditoría (15-ago) se sumó: offline-first completo (4 tandas, lectura+escritura con resolución de conflictos), WhatsApp Fase 1-4 completas (outreach aprobado por staff, lista de espera, captación de leads, comunidad/referidos), backups a B2 cifrados con age (falta que Walter cree el bucket), billing skeleton Stripe (tabla + webhook, sin gate duro todavía), isotipo/logo definitivo ("Cúspide"), naming reabierto (Alika vs Alik, sin decidir).
+**Estado al 2026-08-21**: Fases 0 a 6 (pacientes, agenda, odontograma, presupuestos/planes, pagos, WhatsApp) completas. Desde la última auditoría (15-ago) se sumó: offline-first completo (4 tandas, lectura+escritura con resolución de conflictos), WhatsApp Fase 1-4 completas (outreach aprobado por staff, lista de espera, captación de leads, comunidad/referidos), backups a B2 cifrados con age (falta que Walter cree el bucket), billing skeleton Stripe (tabla + webhook, sin gate duro todavía), isotipo/logo definitivo ("Cúspide"), naming reabierto (Esmalia vs Alik, sin decidir).
 
 **Auditoría previa (15-ago)**: 4 agentes (seguridad, arquitectura, producto, landing) sobre el código de esa fecha. Todos los críticos de esa ronda ya están resueltos y commiteados. **Esta auditoría NO es continuación de esa — es una auditoría nueva sobre todo lo construido hasta hoy**, con un objetivo adicional que la anterior no tuvo: decidir explícitamente qué agregar y qué sacar, no solo qué arreglar.
 
@@ -50,7 +50,7 @@ Cada dimensión la lleva el especialista más calificado disponible para esa ár
 - Distinguir explícitamente "bloqueante para pilotos pagados ya" vs. "importa cuando haya escala real" — la auditoría del 15-ago mezcló ambos una vez, no repetir el error.
 - Toda recomendación de "sacar/simplificar" debe decir explícitamente qué se pierde al sacarlo, no solo qué se gana.
 - Reporte final en español rioplatense, directo, sin relleno.
-- No tocar `10 - Personal/` ni nada fuera de `05 - Alika/`.
+- No tocar `10 - Personal/` ni nada fuera de `05 - Esmalia/`.
 - No commitear ni deployar nada — es solo diagnóstico.
 
 ## Entregable
@@ -60,5 +60,5 @@ Reporte único en markdown con:
 1. Resumen ejecutivo (5-8 líneas, veredicto general).
 2. Tabla de recomendaciones finales: Ítem | Agregar/Sacar/Mantener/Diferir | Impacto | Esfuerzo | Evidencia | Qué se pierde/gana.
 3. Detalle por dimensión: hallazgos que sobrevivieron el debate + los descartados en Ronda 2/3 y por qué (transparencia del proceso).
-4. Comparación competitiva resumida (tabla feature × Alika × competidores relevantes).
+4. Comparación competitiva resumida (tabla feature × Esmalia × competidores relevantes).
 5. Próximos pasos sugeridos — explícitamente fuera de esta auditoría, la implementación queda para después con aprobación de Walter.

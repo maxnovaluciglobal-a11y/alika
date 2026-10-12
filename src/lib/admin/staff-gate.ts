@@ -17,14 +17,14 @@ type SupabaseAdminClient = Awaited<
 
 /**
  * Tira `Error("No tienes permisos.")` si el usuario autenticado no está en
- * `ALIKA_STAFF_EMAILS`. Devuelve el email (en minúsculas) cuando sí está, por
+ * `ESMALIA_STAFF_EMAILS`. Devuelve el email (en minúsculas) cuando sí está, por
  * si el caller lo necesita (ej. logging de quién hizo qué).
  */
-export async function requireAlikaStaffEmail(
+export async function requireEsmaliaStaffEmail(
   supabaseAdmin: SupabaseAdminClient,
   userId: string,
 ): Promise<string> {
-  const permitidos = (process.env.ALIKA_STAFF_EMAILS ?? "")
+  const permitidos = (process.env.ESMALIA_STAFF_EMAILS ?? "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);

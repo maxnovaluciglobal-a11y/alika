@@ -43,7 +43,7 @@ export const DEFAULT_EMAIL_SANDBOX: EmailSandboxConfig = {
 
 export const MAX_ENTREGAS_PRODUCCION = 50;
 
-const STORAGE_KEY = "alika:email-sandbox";
+const STORAGE_KEY = "esmalia:email-sandbox";
 
 export const SANDBOX_SUBJECT_PREFIX = "[SANDBOX]";
 

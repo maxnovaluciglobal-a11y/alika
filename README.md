@@ -1,16 +1,16 @@
-# Alika
+# Esmalia
 
 Sistema operativo cloud-first para clínicas dentales en Latinoamérica. Nacido como
 prototipo en [Lovable](https://lovable.dev), en desarrollo activo desde este repo.
 
 > El nombre de proyecto en Lovable es "Aurora Dental OS"; la marca del producto,
-> en todo el código y la documentación, es **Alika**.
+> en todo el código y la documentación, es **Esmalia**.
 
 ## Estado actual (2026-08-13)
 
 Fases completas end-to-end verificadas contra la base de datos real:
 
-- **Fase 0** — higiene local + rebranding a Alika
+- **Fase 0** — higiene local + rebranding a Esmalia
 - **Fase 1** — Pacientes + Agenda reales (`patients`, `appointments`, `waitlist_entries`)
 - **Fase 2** — Odontograma versionado FDI con trigger de cierre inmutable
 - **Fase 3A** — Presupuestos → Planes de tratamiento (trigger de conversión)
@@ -24,7 +24,7 @@ completo de email/DNS.
 
 Ver [`docs/PLAN_ACCION.md`](docs/PLAN_ACCION.md) para detalle de cada fase,
 patrones establecidos y fases pendientes. Ver
-[`docs/Alika_Documento_Maestro_v1.md`](docs/Alika_Documento_Maestro_v1.md)
+[`docs/Esmalia_Documento_Maestro_v1.md`](docs/Esmalia_Documento_Maestro_v1.md)
 para visión de producto original.
 
 ## Desarrollo local

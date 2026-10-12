@@ -1,5 +1,7 @@
 import { createStore, del, get, set } from "idb-keyval";
 
+import { migrarColaOffline } from "@/lib/compat/nombres-anteriores";
+
 /**
  * Cola de operaciones capturadas sin conexión.
  *
@@ -8,7 +10,7 @@ import { createStore, del, get, set } from "idb-keyval";
  * equipo ya dio por hechos frente al paciente. Por eso tiene su propia base,
  * no caduca sola y nunca se borra "por las dudas".
  */
-const DB_NAME = "alika-offline-queue";
+const DB_NAME = "esmalia-offline-queue";
 const STORE_NAME = "queue";
 const QUEUE_KEY = "items";
 
@@ -78,9 +80,19 @@ function store() {
   return createStore(DB_NAME, STORE_NAME);
 }
 
+// La primera lectura o escritura espera a que la cola guardada con el nombre
+// anterior de la base pase a esta (ver lib/compat/nombres-anteriores.ts).
+let migracion: Promise<void> | null = null;
+
+async function storeListo() {
+  migracion ??= migrarColaOffline(store(), QUEUE_KEY);
+  await migracion;
+  return store();
+}
+
 async function leerColaInterna(): Promise<ItemCola[]> {
   try {
-    return (await get<ItemCola[]>(QUEUE_KEY, store())) ?? [];
+    return (await get<ItemCola[]>(QUEUE_KEY, await storeListo())) ?? [];
   } catch {
     return [];
   }
@@ -92,10 +104,10 @@ export async function leerCola(): Promise<ItemCola[]> {
 
 async function escribirCola(items: ItemCola[]) {
   if (items.length === 0) {
-    await del(QUEUE_KEY, store());
+    await del(QUEUE_KEY, await storeListo());
     return;
   }
-  await set(QUEUE_KEY, items, store());
+  await set(QUEUE_KEY, items, await storeListo());
 }
 
 /**

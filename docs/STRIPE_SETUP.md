@@ -1,4 +1,4 @@
-# Setup de Stripe — Esmalia (ex Alika)
+# Setup de Stripe — Esmalia
 
 ## Cuenta propia de Esmalia (decidido 10-oct-2026)
 
@@ -24,7 +24,7 @@ Hasta oct-2026 Esmalia cobraba desde la cuenta de Stripe que comparte con DypOS 
    Crea los productos (Solo US$29, Clínica US$69, mensuales), el portal de facturación y el webhook `https://esmalia.com/api/stripe/webhook`, y carga en Vercel los 4 IDs de precio y el signing secret (sin mostrarlo). Es idempotente.
 4. En Vercel (production) reemplazar a mano `STRIPE_SECRET_KEY` (la misma secret key) y `VITE_STRIPE_PUBLISHABLE_KEY` (pk_live de la cuenta nueva). Redeploy.
 5. Verificar: entrar a `/suscripcion` con una cuenta de prueba, abrir el Checkout (tiene que decir **Esmalia**), y en el dashboard → Webhooks ver el evento entregado. No completar un pago real si no hace falta: el trial de 14 días deja el checkout en $0.
-6. En la cuenta vieja (DypOS): archivar los productos "Alika"/"Esmalia" y **deshabilitar** (no borrar) el webhook `https://alika-omega.vercel.app/api/stripe/webhook`, después de confirmar que no hay suscripciones activas de Esmalia ahí. Si las hay, se dejan hasta que venzan o se migran con el soporte de Stripe.
+6. En la cuenta vieja (DypOS): archivar los productos viejos de Esmalia y **deshabilitar** (no borrar) el webhook el dominio `.vercel.app` original, después de confirmar que no hay suscripciones activas de Esmalia ahí. Si las hay, se dejan hasta que venzan o se migran con el soporte de Stripe.
 
 Los `stripe_customer_id` guardados en `subscriptions` son de la cuenta vieja: un cliente que ya pagó allá no existe en la nueva. Hoy no hay clínicas pagando, así que no hace falta migrar nada.
 
@@ -36,7 +36,7 @@ hoy**: `STRIPE_SECRET_KEY` de Vercel producción sigue siendo de **test**
 (`sk_test_...`), y solo 1 de las 4 env vars de price ID estaba cargada
 (`STRIPE_PRICE_ID_CLINIC_MONTHLY`) — faltaban las otras 3, así que el checkout
 del plan Solo tiraba error de servidor. Además **no existía ningún webhook
-endpoint de Alika en el dashboard de Stripe** (el único configurado en toda la
+endpoint de Esmalia en el dashboard de Stripe** (el único configurado en toda la
 cuenta era el de GastroCore360) — el `STRIPE_WEBHOOK_SECRET` que había en
 Vercel no correspondía a nada real.
 
@@ -44,7 +44,7 @@ Vercel no correspondía a nada real.
 price ID que faltaban se cargaron con los price IDs reales que ya existían en
 Stripe test (`price_1U7EiDRxn4y6AU3rmyBTh8AZ` Solo, `price_1U7EiDRxn4y6AU3reNFlzGSo`
 Clínica); se creó el webhook endpoint real (`we_1UAprHRxn4y6AU3r4BNjvOY9`) apuntando
-a `https://alika-omega.vercel.app/api/stripe/webhook` con los 5 eventos que el
+a el dominio `.vercel.app` original con los 5 eventos que el
 código maneja, y `STRIPE_WEBHOOK_SECRET` en Vercel se reemplazó por el signing
 secret real de ese endpoint nuevo.
 
@@ -70,17 +70,17 @@ Test configurado y verificado en vivo (01-sep-2026, ver corrección arriba). Liv
 
 ## 1. Cuenta Stripe
 
-**Ya existe** — es la misma cuenta de Maxnova & Luci LLC que ya procesa otros productos (GastroCore360). Alika es un producto nuevo dentro de esa cuenta, no una cuenta separada. No hay que registrar nada nuevo ni repetir KYC.
+**Ya existe** — es la misma cuenta de Maxnova & Luci LLC que ya procesa otros productos (GastroCore360). Esmalia es un producto nuevo dentro de esa cuenta, no una cuenta separada. No hay que registrar nada nuevo ni repetir KYC.
 
 ## 2. Crear producto y precio (dentro de la cuenta existente)
 
 En el dashboard de Stripe, **empezar en modo Test** (toggle arriba a la derecha) para probar el flujo completo antes de tocar Live:
 
-1. Products → el producto "Alika Clínica" ya existe (`prod_V5QKNBePgv0Gdm` en test) — no crear uno nuevo, se reusa para los dos precios.
-2. Add price → **Recurring / Monthly / USD / $29.00** (nickname "Alika Solo (fundador)", metadata `plan=solo`). Repetir con **$69.00** (nickname "Alika Clínica (fundador)", metadata `plan=clinica`).
+1. Products → el producto "Esmalia Clínica" ya existe (`prod_V5QKNBePgv0Gdm` en test) — no crear uno nuevo, se reusa para los dos precios.
+2. Add price → **Recurring / Monthly / USD / $29.00** (nickname "Esmalia Solo (fundador)", metadata `plan=solo`). Repetir con **$69.00** (nickname "Esmalia Clínica (fundador)", metadata `plan=clinica`).
 3. Copiar cada **Price ID** — van a `STRIPE_PRICE_ID_SOLO_MONTHLY` y `STRIPE_PRICE_ID_CLINIC_MONTHLY` respectivamente (y sus gemelas `VITE_` para que el cliente muestre el plan activo).
 4. El price viejo de $49 (default price anterior del producto) ya está archivado (`active=false`) en test — si existe un equivalente en Live, archivarlo ahí también recién cuando los dos nuevos estén verificados.
-5. Opcional pero recomendado: en el producto, setear un **statement descriptor suffix** (ej. "ALIKA") para que el cargo en el resumen de tarjeta de la clínica diga algo distinguible de GastroCore, ya que comparten la misma cuenta/entidad.
+5. Opcional pero recomendado: en el producto, setear un **statement descriptor suffix** (ej. "ESMALIA") para que el cargo en el resumen de tarjeta de la clínica diga algo distinguible de GastroCore, ya que comparten la misma cuenta/entidad.
 6. Repetir los pasos 1-3 en **modo Live** cuando el flujo de test ya esté verificado end-to-end y quieras empezar a cobrar de verdad con los tiers nuevos.
 
 ## 3. Configurar env vars
@@ -105,7 +105,7 @@ VITE_STRIPE_PRICE_ID_CLINIC_MONTHLY=price_...    # mismo valor que arriba
 
 En el dashboard de Stripe → Developers → Webhooks (en el mismo modo, Test o Live, en el que creaste el producto):
 
-1. Add endpoint → URL: `https://alika-omega.vercel.app/api/stripe/webhook` (se mantiene después del dominio propio `esmalia.com`: el alias no redirige `/api/*`) (proyecto Vercel real, `prj_2qH7NKthOoML1ZsCKLbKDV8rzan2`) — no hace falta esperar al dominio `alika.com`, se puede migrar el endpoint el día que exista.
+1. Add endpoint → URL: el dominio `.vercel.app` original (se mantiene después del dominio propio `esmalia.com`: el alias no redirige `/api/*`) (proyecto Vercel real, `prj_2qH7NKthOoML1ZsCKLbKDV8rzan2`) — no hace falta esperar al dominio `esmalia.com`, se puede migrar el endpoint el día que exista.
 2. Eventos a escuchar:
    - `checkout.session.completed`
    - `customer.subscription.created`

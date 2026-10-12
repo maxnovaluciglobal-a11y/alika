@@ -15,7 +15,7 @@ import type { PaisCaptacion } from "@/lib/marketing/leads";
 // Credenciales de la clínica demo pública, de solo lectura (bloqueo por
 // trigger, ver migración 20260815180000). No son un secreto: cualquiera
 // puede entrar a la demo, ese es el punto.
-const DEMO_PASSWORD = "AlikaDemo2026!";
+const DEMO_PASSWORD = "EsmaliaDemo2026!";
 
 export const Route = createFileRoute("/demo")({
   head: () => ({

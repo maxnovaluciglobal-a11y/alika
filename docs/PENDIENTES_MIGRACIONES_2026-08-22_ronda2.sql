@@ -7,10 +7,10 @@
 -- SQL Editor (reemplazar el comentario, no correrlo dos veces o se pierde
 -- acceso a lo ya cifrado con la clave vieja):
 --
---   select vault.create_secret(encode(gen_random_bytes(32),'hex'), 'alika_document_id_key');
+--   select vault.create_secret(encode(gen_random_bytes(32),'hex'), 'esmalia_document_id_key');
 --
 -- Confirmar que quedó:
---   select name from vault.decrypted_secrets where name = 'alika_document_id_key';
+--   select name from vault.decrypted_secrets where name = 'esmalia_document_id_key';
 --
 -- Enfoque: cifrado (pgp_sym_encrypt, recuperable) + HMAC-SHA256 determinístico
 -- como "blind index" para el dedup por igualdad que ya usa importPatients —
@@ -58,9 +58,9 @@ BEGIN
     RAISE EXCEPTION 'No tienes permisos para modificar este paciente.';
   END IF;
 
-  SELECT decrypted_secret INTO v_key FROM vault.decrypted_secrets WHERE name = 'alika_document_id_key';
+  SELECT decrypted_secret INTO v_key FROM vault.decrypted_secrets WHERE name = 'esmalia_document_id_key';
   IF v_key IS NULL THEN
-    RAISE EXCEPTION 'Falta la clave alika_document_id_key en Vault — generarla antes de usar esta función (ver comentario al inicio de esta migración).';
+    RAISE EXCEPTION 'Falta la clave esmalia_document_id_key en Vault — generarla antes de usar esta función (ver comentario al inicio de esta migración).';
   END IF;
 
   UPDATE public.patients
@@ -96,7 +96,7 @@ BEGIN
     RETURN NULL;
   END IF;
 
-  SELECT decrypted_secret INTO v_key FROM vault.decrypted_secrets WHERE name = 'alika_document_id_key';
+  SELECT decrypted_secret INTO v_key FROM vault.decrypted_secrets WHERE name = 'esmalia_document_id_key';
   RETURN pgp_sym_decrypt(v_enc, v_key);
 END;
 $$;

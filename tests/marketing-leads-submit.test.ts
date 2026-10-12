@@ -90,7 +90,7 @@ function datosBase(overrides: Partial<DatosLeadPrueba>): DatosLeadPrueba {
     countryCode: "CL",
     source: "calculadora",
     consent: true,
-    consentText: "Autorizo a Alika a usar estos datos de prueba automatizada — texto base.",
+    consentText: "Autorizo a Esmalia a usar estos datos de prueba automatizada — texto base.",
     consentWhatsapp: false,
     ...overrides,
   } as DatosLeadPrueba;

@@ -52,7 +52,7 @@ describe("requireFinanceView — regresión del P0 de finance-reports", () => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const ownerEmail = `finview-owner-${randomUUID()}@alika-test.invalid`;
+    const ownerEmail = `finview-owner-${randomUUID()}@esmalia-test.invalid`;
     const ownerPassword = `Fv0-${randomUUID()}`;
     const { data: ownerRes, error: ownerErr } = await admin.auth.admin.createUser({
       email: ownerEmail,
@@ -82,7 +82,7 @@ describe("requireFinanceView — regresión del P0 de finance-reports", () => {
       },
     );
 
-    const receptionEmail = `finview-reception-${randomUUID()}@alika-test.invalid`;
+    const receptionEmail = `finview-reception-${randomUUID()}@esmalia-test.invalid`;
     const receptionPassword = `Fv0-${randomUUID()}`;
     const { data: receptionRes, error: receptionErr } = await admin.auth.admin.createUser({
       email: receptionEmail,

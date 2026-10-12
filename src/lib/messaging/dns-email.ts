@@ -232,7 +232,7 @@ export function calcularAprobado(results: DnsCheckResult[]) {
 
 /* --------------------------- Estado persistido --------------------------- */
 
-const STORAGE_KEY = "alika:email-dns-verification";
+const STORAGE_KEY = "esmalia:email-dns-verification";
 
 export function leerVerificacion(): DnsVerification | null {
   if (typeof window === "undefined") return null;

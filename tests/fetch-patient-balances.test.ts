@@ -42,7 +42,7 @@ describe("fetchPatientBalances — saldo unificado", () => {
     });
 
     const { data: ownerRes, error: ownerErr } = await admin.auth.admin.createUser({
-      email: `balances-owner-${randomUUID()}@alika-test.invalid`,
+      email: `balances-owner-${randomUUID()}@esmalia-test.invalid`,
       password: `Bal-${randomUUID()}`,
       email_confirm: true,
     });

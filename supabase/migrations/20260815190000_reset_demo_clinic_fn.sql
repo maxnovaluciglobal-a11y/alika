@@ -15,7 +15,7 @@ SET search_path = public
 AS $$
 DECLARE
   v_clinic_id uuid := '20cea989-de9b-4a3e-852a-31347dc3fe83';
-  v_owner_id uuid := '139dd209-8495-415c-b6cd-6bbc63367bad'; -- demo@alika.app
+  v_owner_id uuid := '139dd209-8495-415c-b6cd-6bbc63367bad'; -- demo@esmalia.com
   v_branch_id uuid := '15bc36fd-a2a7-4958-b948-71d1c236780d';
   v_prof1 uuid := '4225ac34-0a93-4e43-bc3e-8257f6dc2b58'; -- Dra. Camila Herrera
   v_prof2 uuid := '420b5812-3a85-40df-94b0-912382e66018'; -- Dr. Matías Reyes
@@ -33,7 +33,7 @@ BEGIN
   DELETE FROM public.clinics WHERE id = v_clinic_id;
 
   INSERT INTO public.clinics (id, name, country, currency, timezone, onboarding_completed, created_by, is_demo)
-  VALUES (v_clinic_id, 'Clínica Demo Alika', 'CL', 'CLP', 'America/Santiago', true, v_owner_id, true);
+  VALUES (v_clinic_id, 'Clínica Demo Esmalia', 'CL', 'CLP', 'America/Santiago', true, v_owner_id, true);
 
   INSERT INTO public.clinic_members (clinic_id, user_id, role)
   VALUES (v_clinic_id, v_owner_id, 'owner')
@@ -56,10 +56,10 @@ BEGIN
     (v_proc3, v_clinic_id, 'ORTO-01', 'Control de ortodoncia', 'Ortodoncia', 45000, 'CLP', 30, v_owner_id);
 
   INSERT INTO public.patients (id, clinic_id, branch_id, primary_professional_id, full_name, document_id, birth_date, phone, email, status, created_by) VALUES
-    (v_pat1, v_clinic_id, v_branch_id, v_prof1, 'Valentina Muñoz Soto', '19.234.567-8', '1992-04-11', '+56 9 6123 4501', 'valentina.munoz@demo.alika.app', 'active', v_owner_id),
-    (v_pat2, v_clinic_id, v_branch_id, v_prof2, 'Benjamín Castro Vidal', '18.345.678-9', '1988-09-23', '+56 9 6123 4502', 'benjamin.castro@demo.alika.app', 'active', v_owner_id),
-    (v_pat3, v_clinic_id, v_branch_id, v_prof1, 'Isidora Fuentes León', '20.456.789-0', '2001-01-30', '+56 9 6123 4503', 'isidora.fuentes@demo.alika.app', 'new', v_owner_id),
-    (v_pat4, v_clinic_id, v_branch_id, v_prof2, 'Tomás Espinoza Bravo', '17.567.890-1', '1979-12-05', '+56 9 6123 4504', 'tomas.espinoza@demo.alika.app', 'active', v_owner_id);
+    (v_pat1, v_clinic_id, v_branch_id, v_prof1, 'Valentina Muñoz Soto', '19.234.567-8', '1992-04-11', '+56 9 6123 4501', 'valentina.munoz@demo.esmalia.com', 'active', v_owner_id),
+    (v_pat2, v_clinic_id, v_branch_id, v_prof2, 'Benjamín Castro Vidal', '18.345.678-9', '1988-09-23', '+56 9 6123 4502', 'benjamin.castro@demo.esmalia.com', 'active', v_owner_id),
+    (v_pat3, v_clinic_id, v_branch_id, v_prof1, 'Isidora Fuentes León', '20.456.789-0', '2001-01-30', '+56 9 6123 4503', 'isidora.fuentes@demo.esmalia.com', 'new', v_owner_id),
+    (v_pat4, v_clinic_id, v_branch_id, v_prof2, 'Tomás Espinoza Bravo', '17.567.890-1', '1979-12-05', '+56 9 6123 4504', 'tomas.espinoza@demo.esmalia.com', 'active', v_owner_id);
 
   INSERT INTO public.appointments (clinic_id, branch_id, patient_id, professional_id, treatment_label, starts_at, ends_at, status, created_by) VALUES
     (v_clinic_id, v_branch_id, v_pat1, v_prof1, 'Control y limpieza', (CURRENT_DATE - 6) + TIME '10:00', (CURRENT_DATE - 6) + TIME '10:30', 'finalizada', v_owner_id),

@@ -1,7 +1,7 @@
 // src/lib/csv/column-mapping.ts
 //
 // Recomendación #5 del benchmark de onboarding (25-sep-2026, ver memoria
-// alika_onboarding_benchmark_20260925): hasta ahora los importadores CSV
+// esmalia_onboarding_benchmark_20260925): hasta ahora los importadores CSV
 // (pacientes, citas) solo reconocían un diccionario fijo de alias de header
 // ("documento", "rut", "documento_paciente", ...). Cubre la mayoría de los
 // exports reales, pero cuando el CSV de quien migra trae un nombre de

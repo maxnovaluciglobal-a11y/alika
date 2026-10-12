@@ -9,7 +9,7 @@ import { EXCLUDED_TABLES, TABLES } from "../scripts/backup-tables.mjs";
  * menos: el script no tiene forma de saber que le falta algo, y el día que
  * haga falta restaurar, esa tabla no está.
  *
- * Ya pasó dos veces (memoria alika_backups_offsite): la última el
+ * Ya pasó dos veces (memoria esmalia_backups_offsite): la última el
  * 06-sep-2026, con `procedure_supplies` e `inventory_counts` creadas ese
  * mismo día. La primera vez se arregló con una nota de "mantener
  * sincronizado" en el script — es decir, dependiendo de que alguien se

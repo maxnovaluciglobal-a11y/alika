@@ -1,7 +1,7 @@
 // src/routes/index.tsx
 //
 // Landing (rediseño 06-oct-2026, panel 1b del handoff en
-// docs/design_handoff_alika_rediseno/). Orden: hero con la pantalla "Hoy"
+// docs/design_handoff_rediseno/). Orden: hero con la pantalla "Hoy"
 // construida en HTML → clínicas piloto → calculadora de fugas → tres
 // resultados → nota clínica → Patty (la IA) → seguridad de datos → precios →
 // cierre.

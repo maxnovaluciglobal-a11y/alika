@@ -3,24 +3,24 @@
 > **Estado (09-oct-2026): hecho con `esmalia.com`** (la app vive en la raíz, no en `app.`).
 >
 > - Cloudflare (registrador y DNS): `A esmalia.com → 76.76.21.21` y `CNAME www → cname.vercel-dns.com`, ambos _DNS only_. Resend: `resend._domainkey` (TXT), `send` y `rsend` (CNAME, _DNS only_), región São Paulo. Email Routing de Cloudflare: MX `route1-3.mx.cloudflare.net`, SPF `include:_spf.mx.cloudflare.net`, catch-all `*@esmalia.com → maxnovaluciglobal@gmail.com`. DMARC `p=none` con reportes a Cloudflare.
-> - Vercel: dominios `esmalia.com` y `www.esmalia.com` en el proyecto `alika`; `PUBLIC_APP_URL=https://esmalia.com`, `EMAIL_FROM=Esmalia <hola@esmalia.com>`, `ALIKA_STAFF_EMAILS`, `LIFECYCLE_EMAIL_REDIRECT_TO`. GitHub: variable `APP_URL=https://esmalia.com`.
-> - Supabase Auth: Site URL `https://esmalia.com`; Redirect URLs `https://esmalia.com/**`, `https://alika-omega.vercel.app/**`, `http://localhost:8080/**` (más las dos `/auth` previas).
-> - Stripe: **sin cambios a propósito** (el webhook sigue en `alika-omega`, que no se redirige en `/api/*`).
+> - Vercel: dominios `esmalia.com` y `www.esmalia.com` en el proyecto `esmalia`; `PUBLIC_APP_URL=https://esmalia.com`, `EMAIL_FROM=Esmalia <hola@esmalia.com>`, `ESMALIA_STAFF_EMAILS`, `LIFECYCLE_EMAIL_REDIRECT_TO`. GitHub: variable `APP_URL=https://esmalia.com`.
+> - Supabase Auth: Site URL `https://esmalia.com`; Redirect URLs `https://esmalia.com/**`, el dominio `.vercel.app` original, `http://localhost:8080/**` (más las dos `/auth` previas).
+> - Stripe: **sin cambios a propósito** (el webhook sigue en el dominio `.vercel.app` original, que no se redirige en `/api/*`).
 > - Vercel también tiene `RESEND_API_KEY` (clave `esmalia-prod`), `EMAIL_UNSUBSCRIBE_SECRET`, `VITE_SALES_WHATSAPP` y `LIFECYCLE_EMAILS_ENABLED=true` (en modo de prueba: todo va a `LIFECYCLE_EMAIL_REDIRECT_TO`).
 > - Supabase Auth: las 6 plantillas de correo con la marca Esmalia, generadas con `node scripts/plantillas-auth-supabase.mjs` (salen de `src/lib/email/plantillas-auth.ts`). Recuperar contraseña e invitación apuntan a `/auth/nueva-clave` con `token_hash`. SMTP propio (`smtp.resend.com:465`, usuario `resend`, remitente `hola@esmalia.com`): **activo y verificado** (correo de prueba con estado _Delivered_ en Resend el 09-oct).
 > - Google OAuth: pantalla de consentimiento **publicada en producción** el 09-oct con nombre y logo de Esmalia. Pendiente: volver a pedir la verificación de marca (_brand verification_) en Google Cloud.
 > - Search Console: `esmalia.com` verificado con un registro TXT `google-site-verification` en Cloudflare. **No borrar ese TXT**: sin él se pierde la propiedad verificada.
 > - Gmail "Enviar como": `hola@`, `soporte@` y `ventas@esmalia.com` configurados en `maxnovaluciglobal@gmail.com` vía `smtp.resend.com:465`.
-> - Avisos de leads: `LEADS_NOTIFY_EMAILS=maxnovaluciglobal@gmail.com` (separado de `ALIKA_STAFF_EMAILS`, que es la allowlist de `/admin`).
+> - Avisos de leads: `LEADS_NOTIFY_EMAILS=maxnovaluciglobal@gmail.com` (separado de `ESMALIA_STAFF_EMAILS`, que es la allowlist de `/admin`).
 > - Correos de ciclo de vida: `LIFECYCLE_EMAIL_REDIRECT_TO=maxnovaluciglobal@gmail.com` (modo de prueba). Pendiente: sacarla cuando Walter apruebe cómo se ven los correos.
 
-Lo que sigue es el runbook original (escrito antes de elegir el nombre, cuando todo vivía en `https://alika-omega.vercel.app`): queda como referencia de **cada** lugar que se tocó, en el orden que evita cortes. Inventario hecho el 06-oct-2026 con `grep` sobre el repo; si se agrega una integración nueva, sumarla acá.
+Lo que sigue es el runbook original (escrito antes de elegir el nombre, cuando todo vivía en el dominio `.vercel.app` original): queda como referencia de **cada** lugar que se tocó, en el orden que evita cortes. Inventario hecho el 06-oct-2026 con `grep` sobre el repo; si se agrega una integración nueva, sumarla acá.
 
 En los ejemplos, `app.NUEVO.com` es la app y `NUEVO.com` el dominio raíz. Ajustar a lo que se decida.
 
 ## Regla de oro
 
-**No dar de baja `alika-omega.vercel.app`.** Queda como alias del mismo proyecto en Vercel (no cuesta nada), porque ya hay URLs con ese dominio afuera:
+**No dar de baja el dominio `.vercel.app` original.** Queda como alias del mismo proyecto en Vercel (no cuesta nada), porque ya hay URLs con ese dominio afuera:
 
 - links del portal del paciente y del portal de laboratorio ya enviados por WhatsApp (se arman con `window.location.origin` en el momento de generarlos: `portal-link-button.tsx`, `laboratorios.tsx`);
 - emails de confirmación de cuenta ya enviados (`auth.tsx`, `emailRedirectTo`);
@@ -30,7 +30,7 @@ En los ejemplos, `app.NUEVO.com` es la app y `NUEVO.com` el dominio raíz. Ajust
 
 ### 1. DNS y Vercel (sin impacto)
 
-1. Vercel → proyecto `alika` (team `maxnovaluci-global`) → Settings → Domains → agregar `app.NUEVO.com` (y `NUEVO.com` si la landing va en la raíz).
+1. Vercel → proyecto `esmalia` (team `maxnovaluci-global`) → Settings → Domains → agregar `app.NUEVO.com` (y `NUEVO.com` si la landing va en la raíz).
 2. Cargar en el DNS los registros que indique Vercel. Esperar el ✅ y el certificado.
 3. Verificar: `curl -sI https://app.NUEVO.com/api/health` → 200, y que los headers de seguridad (CSP con nonce, HSTS) son los mismos que en el dominio viejo.
 
@@ -39,7 +39,7 @@ En los ejemplos, `app.NUEVO.com` es la app y `NUEVO.com` el dominio raíz. Ajust
 Dashboard `hvfkygoguxvpmwslrccb` → Authentication → URL Configuration:
 
 - **Site URL** → `https://app.NUEVO.com`.
-- **Redirect URLs**: agregar `https://app.NUEVO.com/**` y **mantener** `https://alika-omega.vercel.app/**`.
+- **Redirect URLs**: agregar `https://app.NUEVO.com/**` y **mantener** el dominio `.vercel.app` original.
 
 Sin esto, Google OAuth (`auth.tsx` → `redirectTo: origin + "/auth"`) y los links de confirmación por email rebotan.
 
@@ -49,10 +49,10 @@ Sin esto, Google OAuth (`auth.tsx` → `redirectTo: origin + "/auth"`) y los lin
 
 **Hoy, antes de anunciar la función** (Authentication → URL Configuration → Redirect URLs):
 
-- `https://alika-omega.vercel.app/auth/nueva-clave` (si ya está `https://alika-omega.vercel.app/**`, queda cubierta).
+- el dominio `.vercel.app` original (si ya está el dominio `.vercel.app` original, queda cubierta).
 - Para probar en local: `http://localhost:8080/auth/nueva-clave`.
 
-**El día del dominio:** sumar `https://esmalia.com/auth/nueva-clave` (o `https://app.esmalia.com/...`, según dónde viva la app; cubierto si se carga `https://<dominio>/**`) y **mantener** la de `alika-omega.vercel.app`: los enlaces ya enviados apuntan ahí y vencen solos en una hora.
+**El día del dominio:** sumar `https://esmalia.com/auth/nueva-clave` (o `https://app.esmalia.com/...`, según dónde viva la app; cubierto si se carga `https://<dominio>/**`) y **mantener** la del dominio `.vercel.app` original: los enlaces ya enviados apuntan ahí y vencen solos en una hora.
 
 **Plantilla "Reset Password"** (Authentication → Emails → Templates): la de fábrica está en inglés y sale de `noreply@mail.app.supabase.io`, con un límite de envío muy bajo. Cuando esté el SMTP propio con Resend (paso 6), configurarlo en Authentication → Emails → SMTP Settings y reescribir la plantilla con la marca Esmalia y en tuteo neutro (sin voseo, sin signos de exclamación). Sugerido: asunto "Crea tu contraseña nueva de Esmalia" y el enlace como `{{ .SiteURL }}/auth/nueva-clave?token_hash={{ .TokenHash }}&type=recovery`: con `token_hash` el enlace funciona aunque se abra en otro navegador o en la app de correo (la pantalla ya acepta ese formato, además del de fábrica `{{ .ConfirmationURL }}`). Con `{{ .SiteURL }}` la Site URL tiene que ser el dominio vigente.
 
@@ -101,7 +101,7 @@ Bienvenida, fin de prueba (T-3 y T-0), suscripción activa, pago fallido y "Tu s
 ### 7. Lo que vive en el repo (un PR)
 
 - `public/robots.txt` → línea `Sitemap:` (es estático, no lee `PUBLIC_APP_URL`).
-- Fallbacks `"https://alika-omega.vercel.app"` en `src/lib/seo.ts` y `src/routes/__root.tsx` → nuevo dominio. Solo aplican si falta `PUBLIC_APP_URL`, pero conviene que coincidan.
+- Fallbacks `"el dominio .vercel.app original"` en `src/lib/seo.ts` y `src/routes/__root.tsx` → nuevo dominio. Solo aplican si falta `PUBLIC_APP_URL`, pero conviene que coincidan.
 - Comentario de `src/routes/api.stripe.webhook.ts` con la URL del endpoint.
 - `CLAUDE.md` (tabla de ubicaciones) y el `CLAUDE.md` de negocio.
 

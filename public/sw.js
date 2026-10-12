@@ -22,10 +22,10 @@
  *  - Todo lo demás (server functions, Supabase, otros orígenes) → NO se toca.
  */
 
-const VERSION = "alika-v1";
+const VERSION = "esmalia-v1";
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
-const SHELL_KEY = "/__alika_shell__";
+const SHELL_KEY = "/__esmalia_shell__";
 
 self.addEventListener("install", () => {
   // Toma el control enseguida: si sale un arreglo, la clínica no debería tener

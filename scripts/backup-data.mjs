@@ -9,7 +9,7 @@
 //
 // Deliberadamente usa la API REST de Supabase (service role, bypassa RLS) en
 // vez de pg_dump: no depende de la contraseña directa de Postgres (rota sin
-// aviso, ver alika_backups_offsite en memoria), corre desde cualquier lado
+// aviso, ver esmalia_backups_offsite en memoria), corre desde cualquier lado
 // (CI, laptop) sin más que la URL + service role key, y esas dos ya son
 // secretos de despliegue existentes (Vercel), no uno nuevo.
 //

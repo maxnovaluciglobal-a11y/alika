@@ -11,7 +11,7 @@ import { z } from "zod";
 
 import { hashIp, normalizarTelefonoPorPais } from "@/lib/marketing/leads";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { requireAlikaStaffEmail } from "@/lib/admin/staff-gate";
+import { requireEsmaliaStaffEmail } from "@/lib/admin/staff-gate";
 
 const MAX_POR_IP_POR_HORA = 5;
 
@@ -542,7 +542,7 @@ export const listMarketingLeads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await requireAlikaStaffEmail(supabaseAdmin, context.userId);
+    await requireEsmaliaStaffEmail(supabaseAdmin, context.userId);
 
     const { data, error } = await supabaseAdmin
       .from("marketing_leads")

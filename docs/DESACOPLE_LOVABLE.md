@@ -1,6 +1,6 @@
 # Desacople de Lovable (2026-08-31)
 
-Alika salió de Lovable por completo. Este doc explica qué se sacó, por qué era
+Esmalia salió de Lovable por completo. Este doc explica qué se sacó, por qué era
 seguro y qué habría que revisar si algo se rompe.
 
 ## Por qué se pudo sacar
@@ -55,9 +55,9 @@ para encender la IA hay que cargar `GEMINI_API_KEY` o `OPENAI_API_KEY` en Vercel
 
 `src/lib/sentry.ts` hace `if (!dsn) return;` antes de `Sentry.init()`, y en
 producción **no existe ni `VITE_SENTRY_DSN` ni `SENTRY_DSN`**. Verificado en vivo:
-`window.__SENTRY__` es `undefined` en `alika-omega.vercel.app`.
+`window.__SENTRY__` es `undefined` en el dominio `.vercel.app` original.
 
-O sea que hoy Alika **no tiene ningún reporte de errores activo en producción**.
+O sea que hoy Esmalia **no tiene ningún reporte de errores activo en producción**.
 Esto no lo causó el desacople — el reporting de Lovable tampoco funcionaba fuera
 del editor, así que el estado es el mismo de antes. Pero conviene saberlo: para
 tener reporte real hay que cargar `VITE_SENTRY_DSN` en Vercel.
@@ -67,4 +67,4 @@ tener reporte real hay que cargar `VITE_SENTRY_DSN` en Vercel.
 - `.env.lovable-backup.1786756349` sigue en el disco local, **gitignored**. No se
   borró: puede tener valores de env que no estén en otro lado. Revisar y borrar.
 - El repo se puede renombrar sin romper nada de Lovable, si se decide alinear el
-  nombre con la marca Alika.
+  nombre con la marca Esmalia.

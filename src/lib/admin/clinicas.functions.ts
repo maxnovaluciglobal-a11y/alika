@@ -7,8 +7,8 @@
 //
 // Mismo gate que `listMarketingLeads` (leads.functions.ts): no hay rol
 // "staff de la empresa" en el schema, así que la autorización real es la
-// allowlist `ALIKA_STAFF_EMAILS`, ahora compartida vía
-// `requireAlikaStaffEmail` (src/lib/admin/staff-gate.ts).
+// allowlist `ESMALIA_STAFF_EMAILS`, ahora compartida vía
+// `requireEsmaliaStaffEmail` (src/lib/admin/staff-gate.ts).
 //
 // Con `supabaseAdmin` (service_role) a propósito: RLS de `clinics` y
 // `subscriptions` solo deja ver la propia clínica a sus miembros
@@ -18,7 +18,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { requireAlikaStaffEmail } from "@/lib/admin/staff-gate";
+import { requireEsmaliaStaffEmail } from "@/lib/admin/staff-gate";
 
 export type ClinicaStaffRow = {
   id: string;
@@ -62,7 +62,7 @@ export const listClinicsForStaff = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<ClinicaStaffRow[]> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await requireAlikaStaffEmail(supabaseAdmin, context.userId);
+    await requireEsmaliaStaffEmail(supabaseAdmin, context.userId);
 
     const { data: clinics, error } = await supabaseAdmin
       .from("clinics")
@@ -127,7 +127,7 @@ export const marcarLlamadaHecha = createServerFn({ method: "POST" })
   .validator((input: unknown) => z.object({ clinicId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await requireAlikaStaffEmail(supabaseAdmin, context.userId);
+    await requireEsmaliaStaffEmail(supabaseAdmin, context.userId);
 
     const { error } = await supabaseAdmin
       .from("clinics")

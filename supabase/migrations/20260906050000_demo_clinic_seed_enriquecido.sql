@@ -24,7 +24,7 @@ SET search_path = public
 AS $$
 DECLARE
   v_clinic_id uuid := '20cea989-de9b-4a3e-852a-31347dc3fe83';
-  v_owner_id uuid := '139dd209-8495-415c-b6cd-6bbc63367bad'; -- demo@alika.app
+  v_owner_id uuid := '139dd209-8495-415c-b6cd-6bbc63367bad'; -- demo@esmalia.com
   v_branch1 uuid := '15bc36fd-a2a7-4958-b948-71d1c236780d'; -- Providencia
   v_branch2 uuid := 'fdb43d6b-d729-4b05-8ade-4d1fc4c8775c'; -- Las Condes
   v_spec1 uuid := '675ed864-44dc-40b7-a493-775e9a3056f5'; -- Odontología general
@@ -73,7 +73,7 @@ BEGIN
   DELETE FROM public.clinics WHERE id = v_clinic_id;
 
   INSERT INTO public.clinics (id, name, country, currency, timezone, onboarding_completed, created_by, is_demo)
-  VALUES (v_clinic_id, 'Clínica Demo Alika', 'CL', 'CLP', 'America/Santiago', true, v_owner_id, true);
+  VALUES (v_clinic_id, 'Clínica Demo Esmalia', 'CL', 'CLP', 'America/Santiago', true, v_owner_id, true);
   -- handle_new_clinic() (trigger AFTER INSERT en clinics) ya deja sembrados
   -- clinic_members (owner) y las 13 plantillas de mensajería por su cuenta.
 
@@ -105,16 +105,16 @@ BEGIN
   -- clinics.currency — no se pasa acá a propósito (regla #14 del CLAUDE.md).
 
   INSERT INTO public.patients (id, clinic_id, branch_id, primary_professional_id, full_name, document_id, birth_date, phone, email, status, created_by) VALUES
-    (v_pat_valentina, v_clinic_id, v_branch1, v_prof1, 'Valentina Muñoz Soto', '19.234.567-8', '1992-04-11', '+56 9 6123 4501', 'valentina.munoz@demo.alika.app', 'active', v_owner_id),
-    (v_pat_benjamin, v_clinic_id, v_branch1, v_prof2, 'Benjamín Castro Vidal', '18.345.678-9', '1988-09-23', '+56 9 6123 4502', 'benjamin.castro@demo.alika.app', 'active', v_owner_id),
-    (v_pat_isidora, v_clinic_id, v_branch1, v_prof1, 'Isidora Fuentes León', '20.456.789-0', '2001-01-30', '+56 9 6123 4503', 'isidora.fuentes@demo.alika.app', 'new', v_owner_id),
-    (v_pat_tomas, v_clinic_id, v_branch1, v_prof2, 'Tomás Espinoza Bravo', '17.567.890-1', '1979-12-05', '+56 9 6123 4504', 'tomas.espinoza@demo.alika.app', 'active', v_owner_id),
-    (v_pat_josefina, v_clinic_id, v_branch2, v_prof3, 'Josefina Vargas Contreras', '16.678.901-2', '1995-06-18', '+56 9 6123 4505', 'josefina.vargas@demo.alika.app', 'active', v_owner_id),
-    (v_pat_agustin, v_clinic_id, v_branch2, v_prof4, 'Agustín Morales Peña', '15.789.012-3', '1985-03-02', '+56 9 6123 4506', 'agustin.morales@demo.alika.app', 'active', v_owner_id),
-    (v_pat_martina, v_clinic_id, v_branch2, v_prof4, 'Martina Silva Torres', '21.890.123-4', '2003-11-27', '+56 9 6123 4507', 'martina.silva@demo.alika.app', 'new', v_owner_id),
-    (v_pat_diego, v_clinic_id, v_branch1, v_prof1, 'Diego Fernández Rojas', '14.901.234-5', '1972-08-14', '+56 9 6123 4508', 'diego.fernandez@demo.alika.app', 'inactive', v_owner_id),
-    (v_pat_antonia, v_clinic_id, v_branch1, v_prof2, 'Antonia Pizarro Núñez', '19.012.345-6', '1998-02-09', '+56 9 6123 4509', 'antonia.pizarro@demo.alika.app', 'active', v_owner_id),
-    (v_pat_sebastian, v_clinic_id, v_branch2, v_prof3, 'Sebastián Guzmán Leiva', '13.123.456-7', '1990-07-21', '+56 9 6123 4510', 'sebastian.guzman@demo.alika.app', 'active', v_owner_id);
+    (v_pat_valentina, v_clinic_id, v_branch1, v_prof1, 'Valentina Muñoz Soto', '19.234.567-8', '1992-04-11', '+56 9 6123 4501', 'valentina.munoz@demo.esmalia.com', 'active', v_owner_id),
+    (v_pat_benjamin, v_clinic_id, v_branch1, v_prof2, 'Benjamín Castro Vidal', '18.345.678-9', '1988-09-23', '+56 9 6123 4502', 'benjamin.castro@demo.esmalia.com', 'active', v_owner_id),
+    (v_pat_isidora, v_clinic_id, v_branch1, v_prof1, 'Isidora Fuentes León', '20.456.789-0', '2001-01-30', '+56 9 6123 4503', 'isidora.fuentes@demo.esmalia.com', 'new', v_owner_id),
+    (v_pat_tomas, v_clinic_id, v_branch1, v_prof2, 'Tomás Espinoza Bravo', '17.567.890-1', '1979-12-05', '+56 9 6123 4504', 'tomas.espinoza@demo.esmalia.com', 'active', v_owner_id),
+    (v_pat_josefina, v_clinic_id, v_branch2, v_prof3, 'Josefina Vargas Contreras', '16.678.901-2', '1995-06-18', '+56 9 6123 4505', 'josefina.vargas@demo.esmalia.com', 'active', v_owner_id),
+    (v_pat_agustin, v_clinic_id, v_branch2, v_prof4, 'Agustín Morales Peña', '15.789.012-3', '1985-03-02', '+56 9 6123 4506', 'agustin.morales@demo.esmalia.com', 'active', v_owner_id),
+    (v_pat_martina, v_clinic_id, v_branch2, v_prof4, 'Martina Silva Torres', '21.890.123-4', '2003-11-27', '+56 9 6123 4507', 'martina.silva@demo.esmalia.com', 'new', v_owner_id),
+    (v_pat_diego, v_clinic_id, v_branch1, v_prof1, 'Diego Fernández Rojas', '14.901.234-5', '1972-08-14', '+56 9 6123 4508', 'diego.fernandez@demo.esmalia.com', 'inactive', v_owner_id),
+    (v_pat_antonia, v_clinic_id, v_branch1, v_prof2, 'Antonia Pizarro Núñez', '19.012.345-6', '1998-02-09', '+56 9 6123 4509', 'antonia.pizarro@demo.esmalia.com', 'active', v_owner_id),
+    (v_pat_sebastian, v_clinic_id, v_branch2, v_prof3, 'Sebastián Guzmán Leiva', '13.123.456-7', '1990-07-21', '+56 9 6123 4510', 'sebastian.guzman@demo.esmalia.com', 'active', v_owner_id);
 
   -- Agenda: -9 a +10 días, todos los estados, ambas sucursales.
   INSERT INTO public.appointments (clinic_id, branch_id, patient_id, professional_id, treatment_label, starts_at, ends_at, status, created_by) VALUES
@@ -253,17 +253,17 @@ BEGIN
   -- como ya respondida — el contrario exacto de lo que tiene que enseñar.
   INSERT INTO public.messages (clinic_id, patient_id, channel, direction, status, recipient, body, template_kind, created_at, sent_at, sent_by) VALUES
     (v_clinic_id, v_pat_valentina, 'whatsapp', 'outbound', 'delivered', '+56961234501',
-     'Hola Valentina, te recordamos tu cita de Control y limpieza mañana a las 10:00. Para confirmar respondé SÍ. — Clínica Demo Alika',
+     'Hola Valentina, te recordamos tu cita de Control y limpieza mañana a las 10:00. Para confirmar respondé SÍ. — Clínica Demo Esmalia',
      'appointment_reminder', now() - interval '1 days 3 hours', now() - interval '1 days 3 hours', v_owner_id),
     (v_clinic_id, v_pat_josefina, 'whatsapp', 'outbound', 'read', '+56961234505',
-     'Hola Josefina, te comparto el presupuesto DEMO-0002 por $180.000. Cualquier duda me decís. — Clínica Demo Alika',
+     'Hola Josefina, te comparto el presupuesto DEMO-0002 por $180.000. Cualquier duda me decís. — Clínica Demo Esmalia',
      'quote_sent', now() - interval '6 days', now() - interval '6 days', v_owner_id),
     (v_clinic_id, v_pat_benjamin, 'whatsapp', 'outbound', 'sent', '+56961234502',
      'Hola Benjamín, en unas horas es tu cita de Instalación de brackets a las 10:00 en Sucursal Providencia. ¡Te esperamos!',
      'appointment_reminder', now() - interval '2 days', now() - interval '2 days', v_owner_id);
 
   -- Mensajes ENTRANTES: sin esto la bandeja de /conversaciones se ve vacía en
-  -- la demo, que es justo la pantalla que muestra por qué Alika no es solo un
+  -- la demo, que es justo la pantalla que muestra por qué Esmalia no es solo un
   -- historial de envíos. Se siembran tres situaciones distintas a propósito:
   --   · Valentina  → escribió hace 2h y nadie contestó: SIN RESPONDER, ventana de 24h ABIERTA.
   --   · Benjamín   → dos mensajes seguidos sin respuesta: muestra el contador de racha.

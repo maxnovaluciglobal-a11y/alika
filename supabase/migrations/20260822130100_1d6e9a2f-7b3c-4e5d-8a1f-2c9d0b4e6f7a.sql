@@ -1,6 +1,6 @@
 -- Audit finding product-2 (continuación de 20260822130000): agrega la
 -- variable opcional {link_resena} al final de la plantilla sembrada de
--- review_request para clínicas NUEVAS. El motor de templates de Alika
+-- review_request para clínicas NUEVAS. El motor de templates de Esmalia
 -- (renderTemplate en src/lib/messaging.ts) es reemplazo simple de {variable},
 -- sin condicionales — por eso el "if hay link" vive en el cliente
 -- (recordatorios.tsx arma el VALOR de la variable, no solo la URL: si hay

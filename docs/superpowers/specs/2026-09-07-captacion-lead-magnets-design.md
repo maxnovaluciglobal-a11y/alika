@@ -7,7 +7,7 @@
 
 ## 1. Qué problema resuelve
 
-Alika no tiene forma de captar un contacto. Hoy la superficie pública (`/`, `/faq`, `/demo`,
+Esmalia no tiene forma de captar un contacto. Hoy la superficie pública (`/`, `/faq`, `/demo`,
 `/software-dental-latam`, `/docs/*`, `/nosotros`) **no tiene un solo formulario**: el único canal
 es un `mailto:maxnovaluciglobal@gmail.com` repetido en 5 lugares. Un dentista que visita el sitio,
 lo encuentra interesante y no está listo para registrarse, se va sin dejar rastro y no hay manera
@@ -46,8 +46,8 @@ Todo lo de esta sección fue verificado leyendo el código en el commit `e18ebc0
 
 - **`RESEND_API_KEY` y `EMAIL_FROM` no existen en Vercel producción.** Verificado con
   `vercel env ls production`: están `PORTAL_TOKEN_SECRET`, `CRON_SECRET`, Stripe y Supabase
-  completos, y `NUMVERIFY_API_KEY`. Email no. **Alika no puede enviar un solo correo hoy.**
-- **No hay dominio propio.** `SITE_URL` cae a `https://alika-omega.vercel.app` (`seo.ts:7`).
+  completos, y `NUMVERIFY_API_KEY`. Email no. **Esmalia no puede enviar un solo correo hoy.**
+- **No hay dominio propio.** `SITE_URL` cae a el dominio `.vercel.app` original (`seo.ts:7`).
   Cadena de bloqueo: `comprar dominio → verificar en Resend → RESEND_API_KEY → entregar por email`.
   Mandar marketing desde un `vercel.app` va a spam de forma sistemática.
 
@@ -152,10 +152,10 @@ Estos principios salen de auditar lo que DypOS hizo bien y lo que le salió mal.
 gobiernan las decisiones chicas durante la implementación.
 
 1. **No prometas en el lead magnet lo que el producto no entrega.** Si la calculadora muestra un
-   indicador, el dentista tiene que encontrar ese mismo indicador dentro de Alika. Los rangos y
+   indicador, el dentista tiene que encontrar ese mismo indicador dentro de Esmalia. Los rangos y
    fórmulas del lead magnet son los mismos del producto.
 2. **Cumplimiento legal nunca se paywallea.** DypOS dejó la facturación fiscal fuera del gate por
-   principio. En Alika el equivalente es más fuerte: historia clínica, notas firmadas y
+   principio. En Esmalia el equivalente es más fuerte: historia clínica, notas firmadas y
    consentimientos informados **nunca** se bloquean. Son obligación de custodia del profesional.
 3. **Operar siempre abierto; entender se activa.** El trial bloquea informes, no el trabajo diario.
 4. **Buckets, nunca valores, en la analítica.** Se registra `margen_bucket: "bajo"`, jamás
@@ -259,11 +259,11 @@ alter table public.marketing_leads enable row level security;
 
 #### 5.1.2 Quién lee los leads
 
-Alika no tiene concepto de "staff de la empresa": todos los roles son de clínica. Crear uno es
+Esmalia no tiene concepto de "staff de la empresa": todos los roles son de clínica. Crear uno es
 sobreingeniería para este trabajo.
 
 **Solución:** una server function `listMarketingLeads` con `requireSupabaseAuth` que además
-verifica que el email del usuario esté en `ALIKA_STAFF_EMAILS` (env var, lista separada por
+verifica que el email del usuario esté en `ESMALIA_STAFF_EMAILS` (env var, lista separada por
 comas). Sin la env var, la función devuelve error para todos. Lectura con `supabaseAdmin`.
 
 Es el mismo espíritu que el gate `super_admin` de DypOS (que existe porque `demo_leads` no tiene
@@ -336,7 +336,7 @@ antes.
 
 #### 5.1.5 Consentimiento y bajas
 
-DypOS resuelve el consentimiento con una línea de copy. Para Alika, con datos de profesionales de
+DypOS resuelve el consentimiento con una línea de copy. Para Esmalia, con datos de profesionales de
 la salud en LatAm, no alcanza:
 
 - **Checkbox no premarcado**, obligatorio, con el texto del consentimiento visible al lado.
@@ -418,9 +418,9 @@ elegida por país:
 
 | Input                              | Cálculo                                     | Por qué está                                                                   |
 | ---------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------ |
-| Citas al mes + % de ausencias      | `citas × %ausencia × ticket promedio`       | Es la métrica satélite #1 del doc maestro y el dolor que Alika ataca           |
+| Citas al mes + % de ausencias      | `citas × %ausencia × ticket promedio`       | Es la métrica satélite #1 del doc maestro y el dolor que Esmalia ataca         |
 | Presupuestos emitidos + % aceptado | `emitidos × (referencia − actual) × ticket` | `conversionRate` es una métrica real del producto (`getQuoteConversionReport`) |
-| Retención de medios de pago        | Ya calculada en el bloque A                 | Es plata que se va sin que nadie la mire; Alika la muestra hoy                 |
+| Retención de medios de pago        | Ya calculada en el bloque A                 | Es plata que se va sin que nadie la mire; Esmalia la muestra hoy               |
 
 **Salida B:** "Estás dejando $X al mes en sillones vacíos y $Y en presupuestos que nadie siguió."
 
@@ -428,10 +428,10 @@ Los tres números salen de indicadores que **el producto sí calcula**, cumplien
 
 #### 5.2.3 Coherencia con el producto
 
-Cada indicador de la calculadora tiene su pantalla dentro de Alika, y eso se dice explícitamente en
+Cada indicador de la calculadora tiene su pantalla dentro de Esmalia, y eso se dice explícitamente en
 el resultado ("esto lo ves actualizado en el panel de desempeño"):
 
-| Indicador de la calculadora | Pantalla en Alika                             |
+| Indicador de la calculadora | Pantalla en Esmalia                           |
 | --------------------------- | --------------------------------------------- |
 | Ingreso neto tras retención | `/finanzas` (`getFinanceSummary`, `netCents`) |
 | Resultado del período       | `/finanzas`                                   |
@@ -502,7 +502,7 @@ Nunca los montos. El cálculo entero ocurre en el cliente y no viaja.
 
 **El cálculo va en un módulo puro con tests, separado de la UI.** DypOS tiene 896 líneas en un solo
 archivo sin un solo test de sus fórmulas de dinero — y la auditoría del 04-sep encontró 3 bugs de
-dinero en código recién construido de Alika. Estructura:
+dinero en código recién construido de Esmalia. Estructura:
 
 ```
 src/lib/marketing/calculadora.ts          ← funciones puras, sin React, sin Supabase
@@ -539,7 +539,7 @@ edita un `.tsx`, no se rehace un binario.
 Aplicando results-first: **la página se lee gratis y completa**. El contacto se pide sólo para
 llevarse el PDF, que se sirve desde un handler propio (no desde `public/`, que no se puede gatear).
 
-Cada fuga es un problema del dueño que Alika resuelve, escrito sin nombrar la feature. Candidatas,
+Cada fuga es un problema del dueño que Esmalia resuelve, escrito sin nombrar la feature. Candidatas,
 todas ancladas en módulos que existen: sillón vacío por ausencias · presupuestos aceptados que
 nadie agendó · presupuestos enviados sin seguimiento · retención de medios de pago que nadie mira ·
 convenios liquidados de memoria · laboratorio sin trazabilidad de costo ni fecha · insumos que se
@@ -642,7 +642,7 @@ Copiando lo que DypOS hace bien y arreglando lo que hace mal:
 - **Grilla de dos columnas: "Abierto en tu prueba" vs "Se activa al suscribirte."** Nunca esconder
   qué hay del otro lado — convierte mejor y no se siente trampa.
 - Título personalizado según la pantalla que intentó abrir.
-- Salida sin fricción: "Seguir usando Alika" vuelve a la agenda.
+- Salida sin fricción: "Seguir usando Esmalia" vuelve a la agenda.
 - **Sólo se ofrecen vías que funcionan de punta a punta.** Si se agrega "agendar una llamada", el
   mecanismo que efectivamente desbloquea tiene que existir antes que el botón (principio 6).
 
