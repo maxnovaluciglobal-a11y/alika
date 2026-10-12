@@ -23,7 +23,6 @@ import {
   PLANTILLAS_META,
   type KindConPlantillaMeta,
 } from "@/lib/messaging/meta-plantillas";
-import { tokenWhatsAppDeClinica } from "@/lib/messaging/token-whatsapp.server";
 
 type WhatsAppAccountRow = {
   id: string;
@@ -71,6 +70,14 @@ function requireMetaAppConfig() {
     );
   }
   return { appId, appSecret };
+}
+
+// Los módulos .server se cargan con import dinámico: este archivo también
+// llega al bundle del cliente (las server functions se referencian desde
+// las rutas) y el plugin de TanStack Start bloquea imports estáticos de *.server.
+async function tokenDeClinica(clinicId: string): Promise<string> {
+  const { tokenWhatsAppDeClinica } = await import("@/lib/messaging/token-whatsapp.server");
+  return tokenWhatsAppDeClinica(clinicId);
 }
 
 /** Error de la Graph API en texto legible, sin volcar el JSON entero. */
@@ -247,6 +254,8 @@ export const completeWhatsAppEmbeddedSignup = createServerFn({ method: "POST" })
     }
 
     // 3) Registrar el número para Cloud API con un PIN propio de la clínica.
+    const { cifrarCredencial, nuevoPinWhatsApp } =
+      await import("@/lib/messaging/credenciales-whatsapp.server");
     const pin = nuevoPinWhatsApp();
     const registerRes = await fetch(
       `https://graph.facebook.com/${version}/${data.phoneNumberId}/register`,
@@ -321,7 +330,7 @@ export const resincronizarPlantillasWhatsApp = createServerFn({ method: "POST" }
     if (!account || account.status !== "connected") {
       throw new Error("Primero conecta el número de WhatsApp de tu clínica.");
     }
-    const token = await tokenWhatsAppDeClinica(data.clinicId);
+    const token = await tokenDeClinica(data.clinicId);
     return sincronizarPlantillasMeta({
       clinicId: data.clinicId,
       wabaId: account.waba_id,
@@ -361,7 +370,7 @@ export async function sendMetaTemplateMessage(params: {
   templateLanguage: string;
   bodyParams: string[];
 }): Promise<MetaSendResult> {
-  const token = await tokenWhatsAppDeClinica(params.clinicId);
+  const token = await tokenDeClinica(params.clinicId);
   const version = metaApiVersion();
 
   const res = await fetch(
@@ -465,7 +474,7 @@ export async function sendMetaTextMessage(params: {
   to: string;
   body: string;
 }): Promise<MetaSendResult> {
-  const token = await tokenWhatsAppDeClinica(params.clinicId);
+  const token = await tokenDeClinica(params.clinicId);
   const version = metaApiVersion();
 
   const res = await fetch(
