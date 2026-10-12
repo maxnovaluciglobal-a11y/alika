@@ -3,6 +3,9 @@ import type {} from "@tanstack/react-start";
 
 interface SitemapEntry {
   path: string;
+  /** Fecha del último cambio de CONTENIDO (AAAA-MM-DD), a mano: la fecha del
+   *  build marcaría todas las páginas como nuevas en cada deploy. */
+  lastmod: string;
   changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
   priority?: string;
 }
@@ -22,27 +25,58 @@ export const Route = createFileRoute("/sitemap.xml")({
         // Solo rutas públicas indexables: /auth tiene robots:noindex (ver auth.tsx) —
         // no tiene sentido listarla acá, generaba una contradicción con el meta tag.
         const entries: SitemapEntry[] = [
-          { path: "/", changefreq: "weekly", priority: "1.0" },
-          { path: "/precios", changefreq: "monthly", priority: "0.9" },
-          { path: "/software-dental-latam", changefreq: "monthly", priority: "0.8" },
-          { path: "/calculadora-rentabilidad-dental", changefreq: "monthly", priority: "0.8" },
-          { path: "/recursos/fugas-clinica-dental", changefreq: "monthly", priority: "0.7" },
-          { path: "/faq", changefreq: "monthly", priority: "0.6" },
-          { path: "/nosotros", changefreq: "monthly", priority: "0.4" },
-          { path: "/docs", changefreq: "monthly", priority: "0.5" },
-          { path: "/docs/primeros-pasos", changefreq: "monthly", priority: "0.4" },
-          { path: "/docs/whatsapp", changefreq: "monthly", priority: "0.4" },
-          { path: "/docs/portal-pacientes", changefreq: "monthly", priority: "0.4" },
-          { path: "/docs/datos-y-seguridad", changefreq: "monthly", priority: "0.4" },
-          { path: "/privacidad", changefreq: "yearly", priority: "0.3" },
-          { path: "/terminos", changefreq: "yearly", priority: "0.3" },
-          { path: "/dpa", changefreq: "yearly", priority: "0.3" },
+          { path: "/", lastmod: "2026-10-11", changefreq: "weekly", priority: "1.0" },
+          { path: "/precios", lastmod: "2026-10-11", changefreq: "monthly", priority: "0.9" },
+          {
+            path: "/software-dental-latam",
+            lastmod: "2026-10-11",
+            changefreq: "monthly",
+            priority: "0.8",
+          },
+          {
+            path: "/calculadora-rentabilidad-dental",
+            lastmod: "2026-10-08",
+            changefreq: "monthly",
+            priority: "0.8",
+          },
+          {
+            path: "/recursos/fugas-clinica-dental",
+            lastmod: "2026-10-10",
+            changefreq: "monthly",
+            priority: "0.7",
+          },
+          { path: "/faq", lastmod: "2026-10-09", changefreq: "monthly", priority: "0.6" },
+          { path: "/nosotros", lastmod: "2026-10-11", changefreq: "monthly", priority: "0.4" },
+          { path: "/docs", lastmod: "2026-10-08", changefreq: "monthly", priority: "0.5" },
+          {
+            path: "/docs/primeros-pasos",
+            lastmod: "2026-10-10",
+            changefreq: "monthly",
+            priority: "0.4",
+          },
+          { path: "/docs/whatsapp", lastmod: "2026-10-10", changefreq: "monthly", priority: "0.4" },
+          {
+            path: "/docs/portal-pacientes",
+            lastmod: "2026-10-10",
+            changefreq: "monthly",
+            priority: "0.4",
+          },
+          {
+            path: "/docs/datos-y-seguridad",
+            lastmod: "2026-10-10",
+            changefreq: "monthly",
+            priority: "0.4",
+          },
+          { path: "/privacidad", lastmod: "2026-10-10", changefreq: "yearly", priority: "0.3" },
+          { path: "/terminos", lastmod: "2026-10-10", changefreq: "yearly", priority: "0.3" },
+          { path: "/dpa", lastmod: "2026-10-10", changefreq: "yearly", priority: "0.3" },
         ];
 
         const urls = entries.map((e) =>
           [
             `  <url>`,
             `    <loc>${BASE_URL}${e.path}</loc>`,
+            `    <lastmod>${e.lastmod}</lastmod>`,
             e.changefreq ? `    <changefreq>${e.changefreq}</changefreq>` : null,
             e.priority ? `    <priority>${e.priority}</priority>` : null,
             `  </url>`,

@@ -35,7 +35,7 @@ function Nosotros() {
             escríbeme — te respondo yo."
           </p>
           <p className="mt-3 text-sm font-medium text-muted-foreground">
-            Walter · fundador de Esmalia
+            Walter La Madriz · fundador de Esmalia
           </p>
         </div>
       </div>

@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/accordion";
 import { buttonVariants } from "@/components/ui/button";
 import { registrarEvento } from "@/lib/marketing/eventos";
-import { canonicalHead, faqJsonLdScript, SITE_URL } from "@/lib/seo";
+import { canonicalHead, faqJsonLdScript } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 const TITULO = "Precios · Esmalia — software dental desde US$29";
@@ -56,46 +56,6 @@ const preguntas: { q: string; a: string }[] = [
   },
 ];
 
-function productoJsonLd() {
-  const url = `${SITE_URL}/precios`;
-  return {
-    type: "application/ld+json",
-    children: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "Product",
-      name: "Esmalia",
-      description:
-        "Software de gestión para clínicas dentales: agenda, ficha clínica, odontograma, presupuestos, caja y recordatorios por WhatsApp.",
-      brand: { "@type": "Brand", name: "Esmalia" },
-      url,
-      offers: {
-        "@type": "AggregateOffer",
-        priceCurrency: "USD",
-        lowPrice: "29",
-        highPrice: "69",
-        offerCount: 2,
-        url,
-        offers: [
-          {
-            "@type": "Offer",
-            name: "Solo",
-            price: "29",
-            priceCurrency: "USD",
-            description: "1 profesional, pago mensual. 14 días gratis.",
-          },
-          {
-            "@type": "Offer",
-            name: "Clínica",
-            price: "69",
-            priceCurrency: "USD",
-            description: "Hasta 3 profesionales, pago mensual. 14 días gratis.",
-          },
-        ],
-      },
-    }),
-  };
-}
-
 export const Route = createFileRoute("/precios")({
   head: () => {
     const canonical = canonicalHead("/precios");
@@ -110,7 +70,9 @@ export const Route = createFileRoute("/precios")({
         ...canonical.meta,
       ],
       links: canonical.links,
-      scripts: [productoJsonLd(), ...faqJsonLdScript(preguntas)],
+      // Las ofertas viven en el SoftwareApplication sitewide (lib/seo.ts): un
+      // Product aparte duplicaba la entidad.
+      scripts: faqJsonLdScript(preguntas),
     };
   },
   component: PaginaPrecios,
@@ -123,8 +85,10 @@ function PaginaPrecios() {
 
       <main id="main-content">
         <section className="mx-auto max-w-6xl px-6 pt-14 pb-16 sm:pt-20">
-          <p className="kicker mb-4">Precios</p>
-          <PreciosPlanes encabezado="h1" lugar="pagina-precios" />
+          {/* El H1 nombra el producto y el precio; "Precio fundador, de por vida"
+              queda como H2 dentro de PreciosPlanes. */}
+          <h1 className="kicker mb-4">Precios de Esmalia, software dental desde US$29/mes</h1>
+          <PreciosPlanes encabezado="h2" lugar="pagina-precios" />
         </section>
 
         <section className="mx-auto max-w-6xl px-6 pb-20">
@@ -136,7 +100,9 @@ function PaginaPrecios() {
               {preguntas.map((p, i) => (
                 <AccordionItem key={p.q} value={`p-${i}`}>
                   <AccordionTrigger className="text-left text-base">{p.q}</AccordionTrigger>
-                  <AccordionContent className="leading-relaxed text-muted-foreground">
+                  {/* forceMount: igual que /faq, la respuesta queda en el HTML del SSR
+                      y coincide con el FAQPage del JSON-LD. */}
+                  <AccordionContent forceMount className="leading-relaxed text-muted-foreground">
                     {p.a}
                   </AccordionContent>
                 </AccordionItem>
